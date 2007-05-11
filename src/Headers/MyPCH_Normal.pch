@@ -1,0 +1,78 @@
+		/* MY BUILD OPTIONS */ 
+
+#define	OEM				0
+#define	SHAREWARE		1
+
+#define	QUESA_OS_MACINTOSH	1
+
+		/* HEADERS */
+		
+#include <Carbon/Carbon.h>
+#include <Quicktime/Movies.h>
+
+
+
+#include <IOKit/IOKitLib.h>
+#include <IOKit/IOCFPlugIn.h>
+#include <IOKit/hid/IOHIDLib.h>
+#include <IOKit/hid/IOHIDKeys.h>
+#include <Kernel/IOKit/hidsystem/IOHIDUsageTables.h>
+
+#include <ppc_intrinsics.h>
+
+#include <Quesa/Quesa.h>
+#include <Quesa/QuesaErrors.h>
+#include <Quesa/QuesaMath.h>
+#include <Quesa/QuesaGeometry.h>
+#include <Quesa/QuesaCamera.h>
+#include <Quesa/QuesaDrawContext.h>
+#include <Quesa/QuesaRenderer.h>
+#include <Quesa/QuesaShader.h>
+#include <Quesa/QuesaStyle.h>
+#include <Quesa/QuesaView.h>
+#include <Quesa/QuesaPick.h>
+#include <Quesa/QuesaLight.h>
+
+#include <DrawSprocket/DrawSprocket.h>
+
+
+#include "globals.h"
+#include "mobjtypes.h"
+#include "objects.h"
+#include "windows.h"
+#include "main.h"
+#include "misc.h"
+#include "bones.h"
+#include "skeletonobj.h"
+#include "skeletonanim.h"
+#include "skeletonjoints.h"
+#include "camera.h"
+#include "player_control.h"
+#include "sound2.h"
+#include "3dmf.h"
+#include "file.h"
+#include 	"input.h"
+#include 	"terrain.h"
+#include "myguy.h"
+#include "enemy.h"
+#include "3dmath.h"
+#include 	"selfrundemo.h"
+#include "items.h"
+#include "highscores.h"
+#include "qd3d_geometry.h"
+#include "environmentmap.h"
+#include "infobar.h"
+#include "morphobj.h"
+#include "title.h"
+#include "effects.h"
+#include "miscscreens.h"
+#include "fences.h"
+#include "mainmenu.h"
+#include "bonusscreen.h"
+#include "liquids.h"
+#include "internet.h"
+#include "collision.h"
+#include "mytraps.h"
+#include "triggers.h"
+#include "pick.h"
+
