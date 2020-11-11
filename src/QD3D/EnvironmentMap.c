@@ -385,7 +385,7 @@ got_uv:
 /*********************** REFLECT VECTOR *************************/
 //
 // compute reflection vector 
-// which is N(2(N¥V)) - V 
+// which is N(2(N.V)) - V 
 // N - Surface Normal 
 // V - View Direction 
 //

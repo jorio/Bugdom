@@ -1,6 +1,6 @@
 /****************************/
 /*    	DRAGONFLY.C	        */
-/*  ©1999 Pangea Software   */
+/* (c)1999 Pangea Software  */
 /* By Brian Greenstone      */
 /****************************/
 
