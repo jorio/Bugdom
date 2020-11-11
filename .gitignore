@@ -1,0 +1,18 @@
+# External libraries
+extern/SDL*
+
+# Automatically-generated headers
+src/Headers/version.h
+
+# Build directories
+/build*/
+/cmake-build*/
+
+# IDEs
+.vs/
+/.vscode
+/.idea
+
+# macOS metadata
+.DS_Store
+
