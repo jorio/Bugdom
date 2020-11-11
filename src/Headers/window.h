@@ -1,5 +1,5 @@
 //
-// windows.h
+// window.h
 //
 
 #define GAME_VIEW_WIDTH		(1280)
