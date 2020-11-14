@@ -17,7 +17,7 @@ extern	float				gFramesPerSecondFrac,gFramesPerSecond;
 /*    PROTOTYPES            */
 /****************************/
 
-inline float MaskAngle(float angle);
+static inline float MaskAngle(float angle);
 
 
 /****************************/
@@ -348,7 +348,7 @@ float	dot,angle;
 // Given an arbitrary angle, it limits it to between 0 and 2*PI
 //
 
-inline float MaskAngle(float angle)
+static inline float MaskAngle(float angle)
 {
 int		n;
 Boolean	neg;

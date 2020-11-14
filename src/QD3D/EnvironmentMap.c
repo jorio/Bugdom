@@ -23,7 +23,7 @@ extern	TQ3TriMeshData	**gLocalTriMeshesOfSkelType;
 
 static void CalcEnvMap_Recurse(TQ3Object obj);
 static void EnvironmentMapTriMesh(TQ3Object theTriMesh, TQ3TriMeshData *inData);
-inline void ReflectVector(const float viewX, const float viewY, const float viewZ, const TQ3Vector3D *N,
+static inline void ReflectVector(const float viewX, const float viewY, const float viewZ, const TQ3Vector3D *N,
 				 TQ3Vector3D *out);
 
 /****************************/
@@ -391,7 +391,7 @@ got_uv:
 //
 //
 
-inline void ReflectVector(const float viewX, const float viewY, const float viewZ, const TQ3Vector3D *N,
+static inline void ReflectVector(const float viewX, const float viewY, const float viewZ, const TQ3Vector3D *N,
 				 TQ3Vector3D *out)
 {
 float	normalX,normalY,normalZ;
