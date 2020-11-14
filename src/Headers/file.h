@@ -76,9 +76,6 @@ OSErr DrawPictureIntoGWorld(FSSpec *myFSSpec, GWorldPtr *theGWorld);
 void GetDemoTimer(void);
 void SaveDemoTimer(void);
 
-void SetDefaultDirectory(void);
-void CreatePathToDataFolder(void);
-
 
 
 

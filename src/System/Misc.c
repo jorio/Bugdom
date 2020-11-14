@@ -485,41 +485,17 @@ void DrawCString(char *string)
 void VerifySystem(void)
 {
 OSErr	iErr;
-//NumVersion	nVers;
 long		createdDirID;
 
-	SetDefaultDirectory();							// be sure to get the default directory
-
 			/* MAKE FSSPEC FOR DATA FOLDER */
-		
-	CreatePathToDataFolder();
+			// Source port note: our custom main sets gDataSpec already
 
-#if 0			
-					
-#if DEMO			
-	iErr = FSMakeFSSpec(0, 0, "\p::Resources:DemoData:Images", &gDataSpec);
+	iErr = FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons", &gDataSpec);
 	if (iErr)
 	{
-		DoAlertNum(133);
+		DoAlert("Can't find game assets!");
 		CleanQuit();
 	}
-#elif SHAREWARE
-	iErr = FSMakeFSSpec(0, 0, "\p::Resources:Data:Images", &gDataSpec);
-	if (iErr)
-	{
-		DoAlertNum(133);
-		CleanQuit();
-	}
-#else
-	iErr = FSMakeFSSpec(0, 0, "\p::Resources:Data:Images", &gDataSpec);
-	if (iErr)
-	{
-		DoAlertNum(133);
-		CleanQuit();
-	}
-#endif	
-
-#endif
 
 
 
