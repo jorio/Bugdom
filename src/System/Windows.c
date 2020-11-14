@@ -45,7 +45,6 @@ long					gScreenXOffset,gScreenYOffset;
 WindowPtr				gCoverWindow = nil;
 DSpContextReference 	gDisplayContext = nil;
 Boolean					gLoadedDrawSprocket = false;
-RgnHandle 				gMyRegion;
 
 
 float		gGammaFadePercent;

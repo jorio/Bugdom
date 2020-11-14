@@ -10,7 +10,6 @@
 /***************/
 
 
-extern	EventRecord		gTheEvent;
 extern	short			gMainAppRezFile;
 extern	Byte			gCurrentLevel,gMyCharacterType;
 extern	Boolean			gAbortedFlag,gGameOverFlag;

@@ -12,7 +12,6 @@
 
 
 
-extern	EventRecord			gTheEvent;
 extern	NewObjectDefinitionType	gNewObjectDefinition;
 extern	ObjNode				*gPlayerNode[];
 extern	QD3DSetupOutputType		*gGameViewInfoPtr;
