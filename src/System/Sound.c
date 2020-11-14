@@ -151,7 +151,7 @@ static EffectType	gEffectsTable[] =
 void InitSoundTools(void)
 {
 #if 1
-	SOURCE_PORT_PLACEHOLDER();
+	SOURCE_PORT_MINOR_PLACEHOLDER();
 #else
 OSErr		iErr;
 short		i;

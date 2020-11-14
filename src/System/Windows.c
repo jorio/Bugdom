@@ -515,7 +515,7 @@ Rect	destRect;
 void DumpGWorld2(GWorldPtr thisWorld, WindowPtr thisWindow,Rect *destRect)
 {
 #if 1
-	SOURCE_PORT_PLACEHOLDER();
+	SOURCE_PORT_MINOR_PLACEHOLDER();
 #else
 PixMapHandle pm;
 GDHandle		oldGD;
@@ -557,7 +557,7 @@ Rect			r;
 void DumpGWorld3(GWorldPtr thisWorld, WindowPtr thisWindow,Rect *srcRect, Rect *destRect)
 {
 #if 1
-	SOURCE_PORT_PLACEHOLDER();
+	SOURCE_PORT_MINOR_PLACEHOLDER();
 #else
 PixMapHandle pm;
 GDHandle		oldGD;
@@ -615,7 +615,7 @@ Rect			r;
 	GetPortBounds(thisWorld, &r);
 				
 #if 1
-	SOURCE_PORT_PLACEHOLDER();
+	SOURCE_PORT_MINOR_PLACEHOLDER();
 #else
 	CopyBits((BitMap *)*pm, GetPortBitMapForCopyBits(GetWindowPort(thisWindow)),
 			 &r,

@@ -1250,7 +1250,7 @@ short					**xlateTableHand,*xlateTbl;
 OSErr DrawPictureIntoGWorld(FSSpec *myFSSpec, GWorldPtr *theGWorld)
 {
 #if 1
-	SOURCE_PORT_PLACEHOLDER();
+	SOURCE_PORT_MINOR_PLACEHOLDER();
 #else
 OSErr						iErr;
 GraphicsImportComponent		gi;
