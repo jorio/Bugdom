@@ -396,7 +396,12 @@ long	row,col,y;
 	col = x*gOneOver_TERRAIN_POLYGON_SIZE;	 							// calc map row/col that the coord lies on
 	row = y*gOneOver_TERRAIN_POLYGON_SIZE;
 
+#if 1
+	SOURCE_PORT_PLACEHOLDER();
+	return -1;
+#else
 	return(GetPathTileNumAtRowCol(row,col));
+#endif
  }
 
 #if USE_PATH_LAYER

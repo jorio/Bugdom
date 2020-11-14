@@ -20,7 +20,9 @@ extern	Boolean		gEnteringName;
 
 static short FindSilentChannel(void);
 static void Calc3DEffectVolume(short effectNum, TQ3Point3D *where, float volAdjust, u_long *leftVolOut, u_long *rightVolOut);
+#if 0
 static pascal void CallBackFn (SndChannelPtr chan, SndCommand *cmd) ;
+#endif
 
 
 /****************************/
@@ -148,6 +150,9 @@ static EffectType	gEffectsTable[] =
 
 void InitSoundTools(void)
 {
+#if 1
+	SOURCE_PORT_PLACEHOLDER();
+#else
 OSErr		iErr;
 short		i;
 ExtSoundHeader	sndHdr;
@@ -244,6 +249,7 @@ const double	crap = rate44khz;
 		if (gMusicBuffer == nil)
 			DoFatalAlert("\pInitSoundTools: gMusicBuffer == nil");
 	}
+#endif
 }
 
 
@@ -253,6 +259,7 @@ const double	crap = rate44khz;
 // the sound is done playing.
 //
 
+#if 0
 static pascal void CallBackFn (SndChannelPtr chan, SndCommand *cmd) 
 {
 SndCommand      theCmd;
@@ -267,6 +274,7 @@ SndCommand      theCmd;
     // Just reuse the callBackCmd that got us here in the first place
     SndDoCommand (chan, cmd, true);
 }
+#endif
 
 
 
@@ -814,7 +822,11 @@ Byte			bankNum,soundNum;
 OSErr			myErr;
 u_long			lv2,rv2;
 static UInt32          loopStart, loopEnd;
+#if 1
+SOURCE_PORT_MINOR_PLACEHOLDER();
+#else
 SoundHeaderPtr   sndPtr;
+#endif
 
 
 	
@@ -881,6 +893,10 @@ SoundHeaderPtr   sndPtr;
     
     		/* SEE IF THIS IS A LOOPING EFFECT */    		
     
+#if 1
+	SOURCE_PORT_MINOR_PLACEHOLDER();
+#else
+	
     sndPtr = (SoundHeaderPtr)(((long)*gSndHandles[bankNum][soundNum])+gSndOffsets[bankNum][soundNum]);
     loopStart = sndPtr->loopStart;
     loopEnd = sndPtr->loopEnd;
@@ -895,6 +911,7 @@ SoundHeaderPtr   sndPtr;
     	gNumLoopingEffects++;
 	}
 	else
+#endif
 		gChannelInfo[theChan].isLooping = false;
 		
 

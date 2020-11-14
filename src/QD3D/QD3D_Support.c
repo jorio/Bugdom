@@ -346,6 +346,9 @@ TQ3Uns32	hints;
 
 static void CreateDrawContext(QD3DViewDefType *viewDefPtr)
 {
+#if 1
+	SOURCE_PORT_PLACEHOLDER();
+#else
 TQ3DrawContextData		drawContexData;
 TQ3MacDrawContextData	myMacDrawContextData;
 Rect					r;
@@ -397,6 +400,7 @@ Rect					r;
 	gQD3D_DrawContext = Q3MacDrawContext_New(&myMacDrawContextData);
 	if (gQD3D_DrawContext == nil)
 		DoFatalAlert("\pQ3MacDrawContext_New Failed!");
+#endif
 }
 
 
@@ -404,6 +408,9 @@ Rect					r;
 
 static void CreateDrawContext_Pixmap(QD3DViewDefType *viewDefPtr)
 {
+#if 1
+	SOURCE_PORT_PLACEHOLDER();
+#else
 TQ3DrawContextData			drawContexData;
 TQ3PixmapDrawContextData	myPixDrawContextData;
 Rect						r;
@@ -461,6 +468,7 @@ long					pixelSize;
 	gQD3D_DrawContext = Q3PixmapDrawContext_New(&myPixDrawContextData);
 	if (gQD3D_DrawContext == nil)
 		DoFatalAlert("\pQ3PixmapDrawContext_New Failed!");
+#endif
 }
 
 
@@ -1230,6 +1238,9 @@ TQ3SurfaceShaderObject		shader;
 
 static void DrawPICTIntoMipmap(PicHandle pict,long width, long height, TQ3Mipmap *mipmap, Boolean blackIsAlpha)
 {
+#if 1
+    SOURCE_PORT_PLACEHOLDER();
+#else
 Rect 					rectGW;
 GWorldPtr 				pGWorld;
 PixMapHandle 			hPixMap;
@@ -1295,6 +1306,7 @@ short					depth;
 	
 	SetGWorld (oldGW, oldGD);
 	DisposeGWorld (pGWorld);
+#endif
 }
 
 
@@ -1309,6 +1321,9 @@ short					depth;
 
 void QD3D_GWorldToMipMap(GWorldPtr pGWorld, TQ3Mipmap *mipmap, Boolean pointToGWorld, Boolean blackIsAlpha)
 {
+#if 1
+	SOURCE_PORT_PLACEHOLDER();
+#else
 unsigned long 			pictMapAddr;
 PixMapHandle 			hPixMap;
 unsigned long 			pictRowBytes;
@@ -1410,6 +1425,7 @@ short					depth;
 	mipmap->mipmaps[0].height = height;
 	mipmap->mipmaps[0].rowBytes = pictRowBytes;
 	mipmap->mipmaps[0].offset = 0;
+#endif
 }
 
 
@@ -1730,6 +1746,7 @@ Str255			s;
 		if (gFramesPerSecond < DEFAULT_FPS)			// (avoid divide by 0's later)
 			gFramesPerSecond = DEFAULT_FPS;
 	
+#if 0
 		if (GetKeyState(KEY_F8))
 		{
 			RGBColor	color;
@@ -1745,6 +1762,7 @@ Str255			s;
 			DrawChar(' ');
 			RGBForeColor(&color);
 		}
+#endif
 		
 		if (gFramesPerSecond < 9.0f)					// this is the minimum we let it go
 			gFramesPerSecond = 9.0f;

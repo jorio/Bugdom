@@ -399,9 +399,7 @@ OSErr		iErr;
 		iErr = NewGWorld(&gSprites[gNumSprites], 16, &r, nil, nil, 0);	// try app mem
 		if (iErr)
 		{
-			iErr = NewGWorld(&gSprites[gNumSprites], 16, &r, nil, nil, useTempMem);	// try sys mem
-			if (iErr)
-				DoFatalAlert("\pLoadInfobarArt: NewGWorld failed");
+			DoFatalAlert("\pLoadInfobarArt: NewGWorld failed");
 		}
 					
 		GetGWorld(&oldGW, &oldGD);										// save current port

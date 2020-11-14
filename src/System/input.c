@@ -18,8 +18,10 @@ extern	float	gFramesPerSecondFrac;
 /*     PROTOTYPES     */
 /**********************/
 
+#if 0
 static pascal OSStatus MyKeyboardEventHandler(EventHandlerCallRef eventhandler, EventRef pEventRef, void *userdata);
 static pascal OSStatus MyMouseEventHandler(EventHandlerCallRef eventhandler, EventRef pEventRef, void *userdata);
+#endif
 static Boolean WeAreFrontProcess(void);
 
 
@@ -34,11 +36,13 @@ static Boolean WeAreFrontProcess(void);
 /*     VARIABLES      */
 /**********************/
 
+#if 0
 static	EventHandlerUPP			gMouseEventHandlerUPP = nil;
 static	EventHandlerRef			gMouseEventHandlerRef = 0;
 
 static	EventHandlerUPP			gKeyboardEventHandlerUPP = nil;
 static	EventHandlerRef			gKeyboardEventHandlerRef = 0;
+#endif
 
 long					gMouseDeltaX = 0;
 long					gMouseDeltaY = 0;
@@ -61,6 +65,9 @@ Boolean	gKeyStates[255];
 
 void InstallMouseEventHandler(void)
 {
+#if 1
+	SOURCE_PORT_MINOR_PLACEHOLDER();
+#else
 EventTypeSpec			mouseEvents[5] ={{kEventClassMouse, kEventMouseMoved},
 										{kEventClassMouse, kEventMouseDragged},
 										{kEventClassMouse, kEventMouseUp},
@@ -80,6 +87,7 @@ EventTypeSpec			mouseEvents[5] ={{kEventClassMouse, kEventMouseMoved},
 
 	InstallEventHandler(GetApplicationEventTarget(), gMouseEventHandlerUPP,	5,
 						mouseEvents, nil, &gMouseEventHandlerRef);
+#endif
 }
 
 
@@ -87,6 +95,9 @@ EventTypeSpec			mouseEvents[5] ={{kEventClassMouse, kEventMouseMoved},
 
 void InstallKeyboardEventHandler(void)
 {
+#if 1
+	SOURCE_PORT_MINOR_PLACEHOLDER();
+#else
 EventTypeSpec			events[3] ={
 										{kEventClassKeyboard, kEventRawKeyDown},
 										{kEventClassKeyboard, kEventRawKeyRepeat},
@@ -106,11 +117,13 @@ EventTypeSpec			events[3] ={
 
 	InstallEventHandler(GetApplicationEventTarget(), gKeyboardEventHandlerUPP,	3,
 						events, nil, &gKeyboardEventHandlerRef);
+#endif
 }
 
 
 
 
+#if 0
 /**************** MY MOUSE EVENT HANDLER *************************/
 //
 // Every time WaitNextEvent() is called this callback will be invoked.
@@ -275,6 +288,7 @@ UInt32		modifiers;
 	return(result);
 }
 
+#endif
 
 
 /******************* REMOVE MOUSE EVENT HANDLER *************************/
@@ -282,6 +296,9 @@ UInt32		modifiers;
 void RemoveMouseEventHandler(void)
 {
 
+#if 1
+	SOURCE_PORT_MINOR_PLACEHOLDER();
+#else
 	//	if the handler has been installed, remove it
 
 	if (gMouseEventHandlerRef != 0)
@@ -293,6 +310,7 @@ void RemoveMouseEventHandler(void)
 		gMouseEventHandlerUPP = nil;
 	}
 	
+#endif
 }
 
 
@@ -301,6 +319,9 @@ void RemoveMouseEventHandler(void)
 void RemoveKeyboardEventHandler(void)
 {
 
+#if 1
+	SOURCE_PORT_MINOR_PLACEHOLDER();
+#else
 	//	if the handler has been installed, remove it
 
 	if (gKeyboardEventHandlerRef != 0)
@@ -312,6 +333,7 @@ void RemoveKeyboardEventHandler(void)
 		gKeyboardEventHandlerUPP = nil;
 	}
 	
+#endif
 }
 
 
@@ -324,6 +346,10 @@ void RemoveKeyboardEventHandler(void)
 
 static Boolean WeAreFrontProcess(void)
 {
+#if 1
+	SOURCE_PORT_MINOR_PLACEHOLDER();
+	return true;
+#else
 ProcessSerialNumber	frontProcess, myProcess;
 Boolean				same;
 
@@ -333,6 +359,7 @@ Boolean				same;
 	SameProcess(&frontProcess, &myProcess, &same);		// if they're the same then we're in front
 
 	return(same);
+#endif
 }
 
 

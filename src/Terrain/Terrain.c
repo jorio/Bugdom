@@ -2845,6 +2845,7 @@ long	i,w;
 }
 
 
+#if 0 // SOURCE PORT NOTE: GetTileAttribsAtRowCol is missing some stuff...
 /***************** GET TILE ATTRIBS ******************/
 //
 // Given a world x/z coord, return the attribs there
@@ -2896,6 +2897,7 @@ u_short	tile,texMapNum,attribBits;
 	return(attribBits);
 }
 #endif
+#endif // #if 0 (Source port)
 
 
 #if USE_PATH_LAYER

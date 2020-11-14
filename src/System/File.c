@@ -42,9 +42,11 @@ extern	short			gNumGoldClovers;
 
 static void ReadDataFromSkeletonFile(SkeletonDefType *skeleton, FSSpec *fsSpec);
 static void ReadDataFromPlayfieldFile(FSSpec *specPtr);
+#if 0 // Source port removal
 pascal void myEventProc(NavEventCallbackMessage callBackSelector, NavCBRecPtr callBackParms,
 						NavCallBackUserData callBackUD);
 pascal Boolean myFilterProc(AEDesc*theItem,void*info, NavCallBackUserData callBackUD, NavFilterModes filterMode);
+#endif
 
 
 /****************************/
@@ -1247,6 +1249,9 @@ short					**xlateTableHand,*xlateTbl;
 
 OSErr DrawPictureIntoGWorld(FSSpec *myFSSpec, GWorldPtr *theGWorld)
 {
+#if 1
+	SOURCE_PORT_PLACEHOLDER();
+#else
 OSErr						iErr;
 GraphicsImportComponent		gi;
 Rect						r;
@@ -1292,6 +1297,7 @@ ComponentResult				result;
 		DisposeGWorld (*theGWorld);
 		return(result);
 	}
+#endif
 	return(noErr);
 }
 
@@ -1678,6 +1684,7 @@ long				count;
 #pragma mark -
 
 
+#if 0 // Source port removal
 /************************ NAV SERVICES:  EVENT PROC *****************************/
 
 pascal void myEventProc(NavEventCallbackMessage callBackSelector, NavCBRecPtr callBackParms,
@@ -1719,6 +1726,7 @@ NavFileOrFolderInfo	*theInfo = (NavFileOrFolderInfo*)info;
 				
 	return display;
 }
+#endif
 
 
 
@@ -1730,6 +1738,9 @@ NavFileOrFolderInfo	*theInfo = (NavFileOrFolderInfo*)info;
 
 void SetDefaultDirectory(void)
 {
+#if 1
+	SOURCE_PORT_PLACEHOLDER();
+#else
 ProcessSerialNumber serial;
 ProcessInfoRec info;
 FSSpec	app_spec;
@@ -1751,6 +1762,7 @@ OSErr	iErr;
 	wpb.ioNamePtr = NULL;
 	
 	iErr = PBHSetVolSync(&wpb);
+#endif
 }			
 
 
@@ -1764,6 +1776,9 @@ OSErr	iErr;
 
 void CreatePathToDataFolder(void)
 {
+#if 1
+	SOURCE_PORT_PLACEHOLDER();
+#else
 ProcessSerialNumber PSN = {0, kCurrentProcess};
 FSRef				pathRef;
 FSRef				fileRef;
@@ -1794,6 +1809,7 @@ const char			*dataSubPath = "/Contents/Resources/Data/Images";
 
 	err = FSGetCatalogInfo (&fileRef, kFSCatInfoNone, NULL, NULL, &gDataSpec, NULL);	// get fsspec from fsref
 
+#endif
 }
 
 

@@ -664,7 +664,9 @@ QD3DSetupInputType	viewDef;
 		/* DRAW INITIAL INFOBAR */
 				
 	InitInventoryForArea();					// must call after terrain is loaded!!
+#if 0 // SOURCE PORT TODO
 	InitInfobar();			
+#endif
 	
 
 			/* INIT OTHER MANAGERS */

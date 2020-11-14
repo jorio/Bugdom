@@ -43,7 +43,9 @@ static void MoveFadeEvent(ObjNode *theNode);
 
 long					gScreenXOffset,gScreenYOffset;
 WindowPtr				gCoverWindow = nil;
+#if 0  // Source port removal
 DSpContextReference 	gDisplayContext = nil;
+#endif
 Boolean					gLoadedDrawSprocket = false;
 
 
@@ -56,6 +58,9 @@ void InitWindowStuff(void)
 OSErr			iErr;
 
 
+#if 1
+	SOURCE_PORT_MINOR_PLACEHOLDER();
+#else
 #if 0
 			/* INIT WITH DRAW SPROCKETS */
 			
@@ -80,6 +85,7 @@ OSErr			iErr;
 
 #endif		
 		
+#endif  // SOURCE_PORT_PLACEHOLDER
 		
 	gScreenXOffset = 0;										// calc offsets to center it
 	gScreenYOffset = 0;	
@@ -99,6 +105,9 @@ OSErr			iErr;
 
 static void PrepDrawSprockets(void)
 {
+#if 1
+	SOURCE_PORT_PLACEHOLDER();
+#else
 DSpContextAttributes 	displayConfig,realConfig;
 OSStatus 				theError;
 Boolean					confirmIt = false;
@@ -192,6 +201,7 @@ Boolean					confirmIt = false;
 #if ALLOW_FADE	
 	DSpContext_FadeGamma(MONITORS_TO_FADE,100,nil);
 #endif	
+#endif
 }
 
 
@@ -262,6 +272,9 @@ void GammaOn(void)
 
 void CleanupDisplay(void)
 {
+#if 1
+	SOURCE_PORT_MINOR_PLACEHOLDER();
+#else
 OSStatus 		theError;
 	
 	if(gDisplayContext != nil)
@@ -286,6 +299,7 @@ OSStatus 		theError;
 		theError = DSpShutdown();
 		gLoadedDrawSprocket = false;
 	}
+#endif
 }
 
 
@@ -469,10 +483,14 @@ GWorldPtr	oldGW;
 	if ((pm2 == nil) | (*pm2 == nil) )
 		DoAlert("\pPixMap Handle or Ptr = Null?!");
 
+#if 1
+	SOURCE_PORT_PLACEHOLDER();
+#else
 		
 	CopyBits((BitMap *)*pm,(BitMap *)*pm2,
 			srcRect,destRect,srcCopy,0);
 
+#endif
 	SetGWorld(oldGW,oldGD);								// restore gworld
 
 }
@@ -496,6 +514,9 @@ Rect	destRect;
 
 void DumpGWorld2(GWorldPtr thisWorld, WindowPtr thisWindow,Rect *destRect)
 {
+#if 1
+	SOURCE_PORT_PLACEHOLDER();
+#else
 PixMapHandle pm;
 GDHandle		oldGD;
 GWorldPtr		oldGW;
@@ -525,6 +546,7 @@ Rect			r;
 	
 	QDFlushPortBuffer(GetWindowPort(thisWindow), nil);				
 	
+#endif
 }
 
 /*********************** DUMP GWORLD 3 **********************/
@@ -534,6 +556,9 @@ Rect			r;
 
 void DumpGWorld3(GWorldPtr thisWorld, WindowPtr thisWindow,Rect *srcRect, Rect *destRect)
 {
+#if 1
+	SOURCE_PORT_PLACEHOLDER();
+#else
 PixMapHandle pm;
 GDHandle		oldGD;
 GWorldPtr		oldGW;
@@ -559,6 +584,7 @@ GWorldPtr		oldGW;
 	
 	QDFlushPortBuffer(GetWindowPort(thisWindow), nil);				
 	
+#endif
 }
 
 
@@ -588,10 +614,14 @@ Rect			r;
 
 	GetPortBounds(thisWorld, &r);
 				
+#if 1
+	SOURCE_PORT_PLACEHOLDER();
+#else
 	CopyBits((BitMap *)*pm, GetPortBitMapForCopyBits(GetWindowPort(thisWindow)),
 			 &r,
 			 destRect,
 			 srcCopy|transparent, 0);
+#endif
 
 	SetGWorld(oldGW,oldGD);								// restore gworld
 

@@ -377,6 +377,7 @@ void InitMyRandomSeed(void)
 }
 
 
+#if 0
 #pragma mark -
 
 
@@ -420,6 +421,7 @@ long	i,f;
 		string[++string[0]] = sf[i+1];	// copy fraction into string
 	}
 }
+#endif
 
 #pragma mark -
 
@@ -798,6 +800,10 @@ game_not_registered:
 
 static Boolean ValidateRegistrationNumber(unsigned char *regInfo)
 {
+#if 1
+	SOURCE_PORT_MINOR_PLACEHOLDER();
+	return true;
+#else
 int		c;
 short   i,j;
 static unsigned char pirateNumbers[6][REG_LENGTH] =
@@ -881,6 +887,7 @@ next2:
 
 
     return(true);
+#endif
 }
 
 
@@ -889,6 +896,9 @@ next2:
 
 static void DoRegistrationDialog(unsigned char *out)
 {
+#if 1
+	SOURCE_PORT_PLACEHOLDER();
+#else
 DialogPtr 		myDialog;
 Boolean			dialogDone = false, isValid;
 short			itemType,itemHit;
@@ -938,6 +948,7 @@ Str255          regInfo;
 	}
 	DisposeDialog(myDialog);
 	HideCursor();
+#endif
 }
 
 

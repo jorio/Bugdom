@@ -142,6 +142,9 @@ bail:
 
 Boolean DoLevelCheatDialog(void)
 {
+#if 1
+	SOURCE_PORT_PLACEHOLDER();
+#else
 DialogPtr 		myDialog;
 short			itemHit;
 Boolean			dialogDone = false;
@@ -174,6 +177,7 @@ Boolean			dialogDone = false;
 	HideCursor();
 	GammaFadeOut();
 	GameScreenToBlack();
+#endif
 	return(false);
 }
 
@@ -184,6 +188,9 @@ Boolean			dialogDone = false;
 
 void DoSettingsDialog(void)
 {
+#if 1
+	SOURCE_PORT_PLACEHOLDER();
+#else
 DialogPtr 		myDialog;
 Boolean			dialogDone;
 short			itemType,itemHit;
@@ -239,6 +246,7 @@ Rect			itemRect;
 		}
 	}
 	DisposeDialog(myDialog);
+#endif
 	
 	SavePrefs(&gGamePrefs);
 }

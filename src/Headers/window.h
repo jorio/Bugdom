@@ -8,7 +8,9 @@
 
 
 
+#if 0  // Source port removal
 extern	DSpContextReference 	gDisplayContext;
+#endif
 
 
 
@@ -18,10 +20,6 @@ extern void	DumpGWorld(GWorldPtr, WindowPtr);
 extern void	DumpGWorld2(GWorldPtr, WindowPtr, Rect *);
 extern void	DumpGWorldToGWorld(GWorldPtr, GWorldPtr, Rect *, Rect *);
 extern void	DoLockPixels(GWorldPtr);
-extern	pascal void DoBold (WindowPtr dlogPtr, short item);
-extern	pascal void DoOutline (WindowPtr dlogPtr, short item);
-extern	void Home(void);
-extern	void DoCR(void);
 extern	void MakeFadeEvent(Boolean	fadeIn);
 void DumpGWorld(GWorldPtr thisWorld, WindowPtr thisWindow);
 void DumpGWorld2(GWorldPtr thisWorld, WindowPtr thisWindow,Rect *destRect);
