@@ -37,6 +37,25 @@
 #include <DrawSprocket/DrawSprocket.h>
 #endif
 
+#include "Pomme.h"
+
+#include <Quesa.h>
+#include <QuesaErrors.h>
+#include <QuesaMath.h>
+#include <QuesaGeometry.h>
+#include <QuesaCamera.h>
+#include <QuesaDrawContext.h>
+#include <QuesaRenderer.h>
+#include <QuesaShader.h>
+#include <QuesaStyle.h>
+#include <QuesaView.h>
+#include <QuesaPick.h>
+#include <QuesaLight.h>
+#include <QuesaTransform.h>
+
+#define GL_SRC_ALPHA			0x0302
+#define GL_ONE					1
+
 
 #include "globals.h"
 #include "mobjtypes.h"
@@ -78,3 +97,15 @@
 #include "triggers.h"
 #include "pick.h"
 
+#define SOURCE_PORT_PLACEHOLDER() DoFatalAlert2("Source port: this function is not implemented yet", __func__)
+#define SOURCE_PORT_MINOR_PLACEHOLDER() printf("Source port: TODO: %s:%d\n", __func__, __LINE__)
+
+// ----------------------------------
+// THE FOLLOWING BELONGS TO POMME
+
+enum ESndVolume
+{
+	kFullVolume = 0x0100,
+	kNoVolume = 0,
+};
+typedef UInt8 KeyMapByteArray[16];
