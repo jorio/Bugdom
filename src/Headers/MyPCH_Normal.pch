@@ -91,7 +91,6 @@
 #include "mainmenu.h"
 #include "bonusscreen.h"
 #include "liquids.h"
-#include "internet.h"
 #include "collision.h"
 #include "mytraps.h"
 #include "triggers.h"

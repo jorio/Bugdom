@@ -246,7 +246,6 @@ void ToolBoxInit(void)
 {
 long		response;
 FSSpec		spec;
-DateTimeRec	dateTime;
 u_long		seconds, seconds2;
 int			i;
 	
@@ -294,10 +293,6 @@ int			i;
 	gGamePrefs.reserved[1] 			= false;
 	gGamePrefs.reserved[2] 			= false;
 	gGamePrefs.reserved[3] 			= false;	
-	
-	gGamePrefs.lastVersCheckDate.year = 0;
-	for (i = 0; i < MAX_HTTP_NOTES; i++)
-		gGamePrefs.didThisNote[i] = false;				
 	gGamePrefs.reserved[0] 			= 0;
 	gGamePrefs.reserved[1] 			= 0;				
 	gGamePrefs.reserved[2] 			= 0;
@@ -322,29 +317,6 @@ int			i;
 #else
     gGameIsRegistered = true;
 #endif    
-
-		/**********************************/
-		/* SEE IF SHOULD DO VERSION CHECK */
-		/**********************************/
-
-#if !DEMO
-	if (gGameIsRegistered)
-	{
-		GetTime(&dateTime);								// get date time
-		DateToSeconds(&dateTime, &seconds);			
-				
-		DateToSeconds(&gGamePrefs.lastVersCheckDate, &seconds2);			
-		
-		if ((seconds - seconds2) > 604000)				// see if a week has passed since last check
-		{
-			FlushEvents ( everyEvent, REMOVE_ALL_EVENTS);
-			gGamePrefs.lastVersCheckDate = dateTime;	// update time
-			SavePrefs(&gGamePrefs);
-			
-			ReadHTTPData_VersionInfo();					// do version check (also checks serial #'s)
-		}	
-	}
-#endif
 
 }
 #pragma mark -

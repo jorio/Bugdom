@@ -341,14 +341,10 @@ typedef struct
 
 		/* PREFERENCES */
 		
-#define	MAX_HTTP_NOTES	1000
-		
 typedef struct
 {
 	Boolean	easyMode;
 	Boolean	playerRelativeKeys;
-	DateTimeRec	lastVersCheckDate;
-	Byte	didThisNote[MAX_HTTP_NOTES];
 	Byte	reserved[8];
 }PrefsType;
 

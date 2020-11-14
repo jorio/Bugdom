@@ -97,7 +97,6 @@ set(GAME_SOURCES
 	${GAME_SRCDIR}/Skeleton/SkeletonObj.c
 	${GAME_SRCDIR}/System/Collision.c
 	${GAME_SRCDIR}/System/File.c
-	${GAME_SRCDIR}/System/Internet.c
 	${GAME_SRCDIR}/System/Main.c
 	${GAME_SRCDIR}/System/Misc.c
 	${GAME_SRCDIR}/System/Objects.c
@@ -133,7 +132,6 @@ set(GAME_HEADERS
 	${GAME_SRCDIR}/Headers/highscores.h
 	${GAME_SRCDIR}/Headers/infobar.h
 	${GAME_SRCDIR}/Headers/input.h
-	${GAME_SRCDIR}/Headers/internet.h
 	${GAME_SRCDIR}/Headers/items.h
 	${GAME_SRCDIR}/Headers/liquids.h
 	${GAME_SRCDIR}/Headers/main.h
