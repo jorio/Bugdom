@@ -9,7 +9,7 @@
 /*    EXTERNALS             */
 /****************************/
 
-#include "3dMath.h"
+#include "3dmath.h"
 
 extern	float				gFramesPerSecondFrac,gFramesPerSecond;
 extern	TQ3Point3D			gCoord;
