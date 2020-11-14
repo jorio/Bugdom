@@ -43,7 +43,6 @@ set(GAME_SRCDIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.h.in ${GAME_SRCDIR}/Headers/version.h)
 
 set(GAME_SOURCES
-	${GAME_SRCDIR}/Glue/Q3FSSpecStorage.cpp
 	${GAME_SRCDIR}/Glue/WIPFunctions.c
 	${GAME_SRCDIR}/Enemies/Enemy.c
 	${GAME_SRCDIR}/Enemies/Enemy_Ant.c
@@ -163,7 +162,13 @@ set(GAME_HEADERS
 	${GAME_SRCDIR}/Headers/worldmap.h
 )
 
+set(GAME_GLUE_SOURCES
+	${GAME_SRCDIR}/Main.cpp
+	${GAME_SRCDIR}/Glue/Q3FSSpecStorage.cpp
+)
+
 set(GAME_ALL_SOURCES
+	${GAME_GLUE_SOURCES}
 	${GAME_SOURCES}
 	${GAME_HEADERS}
 )

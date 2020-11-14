@@ -42,7 +42,7 @@ static void MoveFadeEvent(ObjNode *theNode);
 /**********************/
 
 long					gScreenXOffset,gScreenYOffset;
-WindowPtr				gCoverWindow = nil;
+extern WindowPtr		gCoverWindow;
 #if 0  // Source port removal
 DSpContextReference 	gDisplayContext = nil;
 #endif

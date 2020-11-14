@@ -36,7 +36,7 @@ enum
 //=================================================
 
 
-extern	int main(void);
+extern	int GameMain(void);
 extern	void ToolBoxInit(void);
 extern	void UpdateGame_Server(void);
 

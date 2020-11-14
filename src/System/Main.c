@@ -827,7 +827,7 @@ static void ShowDebug(void)
 /************************************************************/
 
 
-int main(void)
+int GameMain(void)
 {
 unsigned long	someLong;
 

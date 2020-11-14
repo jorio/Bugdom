@@ -1,5 +1,7 @@
 // Toolbox functions missing an implementation
 
+#include "Pomme.h"
+
 void FrameArc(const Rect* r, short startAngle, short arcAngle)
 {
 	SOURCE_PORT_MINOR_PLACEHOLDER();
