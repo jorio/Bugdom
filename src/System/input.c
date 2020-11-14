@@ -4,7 +4,9 @@
 /* By Brian Greenstone      */
 /****************************/
 
+#if 0  // Source port removal
 #include <mach/mach_port.h>
+#endif
 
 /***************/
 /* EXTERNALS   */

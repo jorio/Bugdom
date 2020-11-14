@@ -3,6 +3,7 @@
 #define	OEM				0
 #define	SHAREWARE		1
 
+#if 0  // Source port removal
 #define	QUESA_OS_MACINTOSH	1
 
 		/* HEADERS */
@@ -34,6 +35,7 @@
 #include <Quesa/QuesaLight.h>
 
 #include <DrawSprocket/DrawSprocket.h>
+#endif
 
 
 #include "globals.h"
