@@ -255,9 +255,9 @@ Byte	group,type;
 		
 		DoAlert("\pMakeNewDisplayGroupObject: type > gNumObjectsInGroupList[]!");
 		
-		NumToString(group, s);
+		NumToStringC(group, s);
 		DoAlert(s);
-		NumToString(type,s);
+		NumToStringC(type,s);
 		DoFatalAlert(s);
 	}
 	
@@ -759,11 +759,11 @@ void DeleteObject(ObjNode	*theNode)
 	{
 		Str255	errString;		//-----------
 		DoAlert("\pAttempted to Double Delete an Object.  Object was already deleted!");
-		NumToString(theNode->Genre,errString);		//------------
+		NumToStringC(theNode->Genre,errString);		//------------
 		DoAlert(errString);					//---------
-		NumToString(theNode->Group,errString);		//------------
+		NumToStringC(theNode->Group,errString);		//------------
 		DoAlert(errString);					//---------
-		NumToString(theNode->Type,errString);		//------------
+		NumToStringC(theNode->Type,errString);		//------------
 		DoFatalAlert(errString);					//---------
 	}
 

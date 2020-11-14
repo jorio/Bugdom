@@ -58,11 +58,13 @@ void ShowSystemErr(long err)
 {
 Str255		numStr;
 
+#if 0
 	if (gDisplayContext)
 		GammaOn();
 	FlushEvents ( everyEvent, REMOVE_ALL_EVENTS);
 	UseResFile(gMainAppRezFile);
-	NumToString(err, numStr);
+#endif
+	NumToStringC(err, numStr);
 	DoAlert (numStr);
 	CleanQuit();
 }
@@ -75,11 +77,13 @@ void ShowSystemErr_NonFatal(long err)
 {
 Str255		numStr;
 
+#if 0
 	if (gDisplayContext)
 		GammaOn();
+#endif
 	FlushEvents ( everyEvent, REMOVE_ALL_EVENTS);
 //	UseResFile(gMainAppRezFile);
-	NumToString(err, numStr);
+	NumToStringC(err, numStr);
 	DoAlert (numStr);
 }
 
@@ -88,6 +92,10 @@ Str255		numStr;
 void DoAlert(Str255 s)
 {
 
+#if 1
+	printf("BUGDOM ALERT: %s\n", s);
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", s, NULL);
+#else
 	if (gDisplayContext)
 		GammaOn();
 	FlushEvents ( everyEvent, REMOVE_ALL_EVENTS);
@@ -96,6 +104,7 @@ void DoAlert(Str255 s)
 	ParamText(s,NIL_STRING,NIL_STRING,NIL_STRING);
 	NoteAlert(ERROR_ALERT_ID,nil);
 	
+#endif
 }
 
 
@@ -104,12 +113,18 @@ void DoAlert(Str255 s)
 void DoAlertNum(int n)
 {
 
+#if 1
+	static char alertbuf[1024];
+	snprintf(alertbuf, 1024, "Alert #%d", n);
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", alertbuf, NULL);
+#else
 	if (gDisplayContext)
 		GammaOn();
 	FlushEvents ( everyEvent, REMOVE_ALL_EVENTS);
 	InitCursor();
 	NoteAlert(n,nil);
 	
+#endif
 }
 
 
@@ -118,6 +133,10 @@ void DoAlertNum(int n)
 
 void DoFatalAlert(Str255 s)
 {
+#if 1
+	printf("BUGDOM FATAL ALERT: %s\n", s);
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", s, NULL);
+#else
 OSErr	iErr;
 	
 	if (gDisplayContext)
@@ -128,6 +147,7 @@ OSErr	iErr;
 	InitCursor();
 	ParamText(s,NIL_STRING,NIL_STRING,NIL_STRING);
 	iErr = NoteAlert(ERROR_ALERT_ID,nil);
+#endif
 	CleanQuit();
 }
 
@@ -135,6 +155,12 @@ OSErr	iErr;
 
 void DoFatalAlert2(Str255 s1, Str255 s2)
 {
+#if 1
+	printf("BUGDOM FATAL ALERT: %s - %s\n", s1, s2);
+	static char alertbuf[1024];
+	snprintf(alertbuf, 1024, "%s\n%s", s1, s2);
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", alertbuf, NULL);
+#else
 	if (gDisplayContext)
 		GammaOn();
 	FlushEvents ( everyEvent, REMOVE_ALL_EVENTS);
@@ -143,6 +169,7 @@ void DoFatalAlert2(Str255 s1, Str255 s2)
 	ParamText(s1,s2,NIL_STRING,NIL_STRING);
 	Alert(402,nil);
 //	ShowMenuBar();
+#endif
 	ExitToShell();
 }
 

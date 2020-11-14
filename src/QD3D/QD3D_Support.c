@@ -313,7 +313,7 @@ TQ3Uns32	hints;
 	if (gQD3D_RendererObject == nil)
 	{
 //		DoFatalAlert("\pQ3Renderer_NewFromType Failed!");
-		NoteAlert(135,nil);
+		DoAlert("QuickDraw 3D does not appear to be installed correctly.");
 		CleanQuit();
 	}
 
@@ -1787,7 +1787,7 @@ Str255		s;
 	else
 	if (q3Err != 0)
 	{
-		NumToString(q3Err,s);
+		snprintf(s, sizeof(s), "QD3D Error %d\nLook up error code in QuesaErrors.h", q3Err);
 		DoFatalAlert(s);
 	}
 }
@@ -1798,7 +1798,7 @@ void QD3D_DoMemoryError(void)
 {
 	FlushEvents (everyEvent, REMOVE_ALL_EVENTS);	
 	InitCursor();
-	NoteAlert(129,nil);
+	DoAlert("ERROR:  QuickDraw 3D has run out of available System Memory!");
 	CleanQuit();
 }
 

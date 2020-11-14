@@ -527,7 +527,7 @@ Str255		s;
 		DoFatalAlert2(errString,"\pFILE NOT FOUND.");
 	else
 	{
-		NumToString(iErr,s);
+		NumToStringC(iErr,s);
 		DoFatalAlert2(errString,s);
 	}
 }
