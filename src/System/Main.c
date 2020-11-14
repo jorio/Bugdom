@@ -244,7 +244,6 @@ static const TQ3ColorARGB	gLevelFogColor[NUM_LEVELS] =
 
 void ToolBoxInit(void)
 {
-long		response;
 FSSpec		spec;
 u_long		seconds, seconds2;
 int			i;
@@ -273,17 +272,6 @@ int			i;
 
 
 
-		/* SEE IF PROCESSOR SUPPORTS frsqrte */
-	
-	if (!Gestalt(gestaltNativeCPUtype, &response))
-	{
-		switch(response)
-		{
-			case	gestaltCPU601:				// 601 is only that doesnt support it
-					DoFatalAlert("\pSorry, but this app will not run on a PowerPC 601, only on newer Macintoshes.");
-					break;
-		}
-	}
 
 			/* INIT PREFERENCES */
 			
