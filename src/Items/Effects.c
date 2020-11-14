@@ -158,11 +158,11 @@ short	i;
 		
 			shader	= QD3D_GetTextureMap(130+i, nil, true);				// make PICT into shader
 			if (shader == nil)
-				DoFatalAlert("\pInitParticleSystem: QD3D_GetTextureMap failed!");
+				DoFatalAlert("InitParticleSystem: QD3D_GetTextureMap failed!");
 			
 			gParticleShader[i] = Q3AttributeSet_New();					// new attrib set
 			if (gParticleShader[i] == nil)
-				DoFatalAlert("\pInitParticleSystem: Q3AttributeSet_New failed!");
+				DoFatalAlert("InitParticleSystem: Q3AttributeSet_New failed!");
 				
 			Q3AttributeSet_Add(gParticleShader[i], kQ3AttributeTypeSurfaceShader, &shader);	// put shader in attrib set
 			Q3Object_Dispose(shader);														// nuke extra ref
@@ -278,14 +278,14 @@ TQ3Param2D				*uv;
 			tm->vertexAttributeTypes[0].attributeUseArray 	= nil;
 			tm->vertexAttributeTypes[0].data 				= (TQ3Param2D *)AllocPtr(sizeof(TQ3Param2D) * MAX_PARTICLES * 4);
 			if (tm->vertexAttributeTypes[0].data == nil)
-				DoFatalAlert("\pNewParticleGroup: AllocPtr failed!");
+				DoFatalAlert("NewParticleGroup: AllocPtr failed!");
 
 			tm->triangleAttributeTypes						= (TQ3TriMeshAttributeData *)AllocPtr(sizeof(TQ3TriMeshAttributeData) * tm->numTriangleAttributeTypes);
 			tm->triangleAttributeTypes[0].attributeType 	= kQ3AttributeTypeTransparencyColor;
 			tm->triangleAttributeTypes[0].attributeUseArray = nil;
 			tm->triangleAttributeTypes[0].data 				= (TQ3ColorRGB *)AllocPtr(sizeof(TQ3ColorRGB) * MAX_PARTICLES * 2);
 			if (tm->triangleAttributeTypes[0].data == nil)
-				DoFatalAlert("\pNewParticleGroup: AllocPtr failed!");
+				DoFatalAlert("NewParticleGroup: AllocPtr failed!");
 
 			tm->bBox.isEmpty 			= kQ3False;
 
@@ -325,7 +325,7 @@ TQ3Param2D				*uv;
 	
 			/* NOTHING FREE */
 			
-//	DoFatalAlert("\pNewParticleGroup: no free groups!");
+//	DoFatalAlert("NewParticleGroup: no free groups!");
 	return(-1);	
 }
 
@@ -340,13 +340,13 @@ Boolean AddParticleToGroup(short groupNum, TQ3Point3D *where, TQ3Vector3D *delta
 short	p;
 
 	if ((groupNum < 0) || (groupNum >= MAX_PARTICLE_GROUPS))
-		DoFatalAlert("\pAddParticleToGroup: illegal group #");
+		DoFatalAlert("AddParticleToGroup: illegal group #");
 
 	if (gParticleGroups[groupNum] == nil)
 	{
 		return(true);
-//		DoAlert("\pAddParticleToGroup: this group is nil");
-//		DebugStr("\pdebug me!");
+//		DoAlert("AddParticleToGroup: this group is nil");
+//		DebugStr("debug me!");
 	}
 
 
@@ -716,7 +716,7 @@ TQ3ViewObject	view = setupInfo->viewObject;
 					/* DRAW IT */
 		
 			if (Q3TriMesh_Submit(tm, view) == kQ3Failure)
-				DoFatalAlert("\pDrawParticleGroup: Q3TriMesh_Submit failed!"); 
+				DoFatalAlert("DrawParticleGroup: Q3TriMesh_Submit failed!");
 		}
 	}
 	

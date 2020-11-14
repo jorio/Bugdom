@@ -415,7 +415,7 @@ ObjNode	*newObj;
 	gNewObjectDefinition.scale 		= BAT_SCALE;
 	newObj = MakeNewSkeletonObject(&gNewObjectDefinition);
 	if (newObj == nil)
-		DoFatalAlert("\pMakeBat: MakeNewSkeletonObject failed!");
+		DoFatalAlert("MakeBat: MakeNewSkeletonObject failed!");
 				
 
 	newObj->CType		= CTYPE_BLOCKCAMERA;					// no collision
@@ -535,7 +535,7 @@ CollisionBoxType *boxPtr;
 int		rot;
 		
 	if (gLevelType != LEVEL_TYPE_FOREST)
-		DoFatalAlert("\pAddThorn: not on this level!");
+		DoFatalAlert("AddThorn: not on this level!");
 
 	if (itemPtr->parm[3] & 1)										// get rotation
 		rot = MyRandomLong()&3;
@@ -1159,7 +1159,7 @@ Boolean AddFloorSpike(TerrainItemEntryType *itemPtr, long  x, long z)
 ObjNode	*newObj;
 
 	if (gLevelType != LEVEL_TYPE_HIVE)
-		DoFatalAlert("\pAddFloorSpike: not on this level!");
+		DoFatalAlert("AddFloorSpike: not on this level!");
 
 	gNewObjectDefinition.group 		= MODEL_GROUP_LEVELSPECIFIC;	
 	gNewObjectDefinition.type 		= HIVE_MObjType_FloorSpike;	

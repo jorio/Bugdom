@@ -814,7 +814,7 @@ int		j;
 				break;
 				
 		default:
-				DoFatalAlert("\pMovePlayerBug_BeingEaten: how did we get here?");
+				DoFatalAlert("MovePlayerBug_BeingEaten: how did we get here?");
 	}
 
 

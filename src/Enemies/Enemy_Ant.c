@@ -210,7 +210,7 @@ ObjNode	*newObj;
 				
 	newObj = MakeEnemySkeleton(SKELETON_TYPE_ANT,x,z, ANT_SCALE);
 	if (newObj == nil)
-		DoFatalAlert("\pMakeAntObject: MakeEnemySkeleton failed!");
+		DoFatalAlert("MakeAntObject: MakeEnemySkeleton failed!");
 
 	newObj->HasSpear = false;									// assume no spear
 	

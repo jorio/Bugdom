@@ -245,7 +245,7 @@ Rect		r;
 
 			/* DO TOP */
 			
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, "\p:images:infobartop", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":images:infobartop", &spec);
 	DrawPictureIntoGWorld(&spec, &gInfoBarTop);
 	SetRect(&r, 0,0, 640,62);
 	DumpGWorld2(gInfoBarTop, gCoverWindow,&r);
@@ -253,7 +253,7 @@ Rect		r;
 	
 			/* DO BOTTOM */
 			
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, "\p:images:infobarbottom", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":images:infobarbottom", &spec);
 	DrawPictureIntoGWorld(&spec, &gworld);
 	SetRect(&r, 0,480-60, 640,480);
 	DumpGWorld2(gworld, gCoverWindow, &r);
@@ -347,13 +347,13 @@ FSSpec	spec;
 
 			/* READ NUMBER SPRITES */
 			
-//	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, "\p:Sprites:Numbers", &spec);
+//	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Sprites:Numbers", &spec);
 //	LoadSpriteResources(&spec);
 		
 		
 			/* READ MISC SPRITES */
 						
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, "\p:Sprites:Infobar", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Sprites:Infobar", &spec);
 	LoadSpriteResources(&spec);
 	
 	
@@ -374,14 +374,14 @@ OSErr		iErr;
 
 	fRefNum = FSpOpenResFile(spec,fsRdPerm);
 	if (fRefNum == -1)
-		DoFatalAlert("\pLoadInfobarArt: Error opening Infobar Rez file");	
+		DoFatalAlert("LoadInfobarArt: Error opening Infobar Rez file");
 	UseResFile(fRefNum);
 			
 			/* READ 'EM IN */
 				
 	n = Count1Resources('PICT');						// get # PICTs in here
 	if (gNumSprites+n > MAX_SPRITES)
-		DoFatalAlert("\pLoadInfobarArt: numPicts > MAX_SPRITES");
+		DoFatalAlert("LoadInfobarArt: numPicts > MAX_SPRITES");
 	
 	for (i = 0; i < n; i++)
 	{
@@ -399,7 +399,7 @@ OSErr		iErr;
 		iErr = NewGWorld(&gSprites[gNumSprites], 16, &r, nil, nil, 0);	// try app mem
 		if (iErr)
 		{
-			DoFatalAlert("\pLoadInfobarArt: NewGWorld failed");
+			DoFatalAlert("LoadInfobarArt: NewGWorld failed");
 		}
 					
 		GetGWorld(&oldGW, &oldGD);										// save current port
@@ -425,7 +425,7 @@ static void DrawSprite(long spriteNum, long x, long y)
 Rect	r, pr;
 
 	if (spriteNum >= gNumSprites)
-		DoFatalAlert("\pDrawSprite: illegal sprite #");
+		DoFatalAlert("DrawSprite: illegal sprite #");
 
 	GetPortBounds(gSprites[spriteNum], &pr);
 
@@ -448,7 +448,7 @@ Rect	r, pr;
 		return;
 
 	if (spriteNum >= gNumSprites)
-		DoFatalAlert("\pDrawSprite: illegal sprite #");
+		DoFatalAlert("DrawSprite: illegal sprite #");
 
 	GetPortBounds(gSprites[spriteNum], &pr);
 
@@ -468,7 +468,7 @@ static short GetSpriteWidth(long spriteNum)
 Rect	r;
 
 	if (spriteNum >= gNumSprites)
-		DoFatalAlert("\pGetSpriteWidth: illegal sprite #");
+		DoFatalAlert("GetSpriteWidth: illegal sprite #");
 
 	GetPortBounds(gSprites[spriteNum], &r);
 
@@ -642,7 +642,7 @@ void LoseBallTime(float amount)
 void GetKey(long keyID)
 {
 	if (keyID >= MAX_KEY_TYPES)			// make sure its legal
-		DoFatalAlert("\pGetKey: illegal key ID#");
+		DoFatalAlert("GetKey: illegal key ID#");
 		
 	gGotKey[keyID] = true;
 	

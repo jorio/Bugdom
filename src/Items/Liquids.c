@@ -370,7 +370,7 @@ static const float	yTable[] = {900,950,0,0,0,0};
 static const float	yTable2[] = {-540,-540,-540,-540,-370,-540,-540,-540};
 
 	if (!gWaterShader)
-		DoFatalAlert("\pAddWaterPatch: water not activated on this level");
+		DoFatalAlert("AddWaterPatch: water not activated on this level");
 		
 	x -= (int)x % (int)TERRAIN_POLYGON_SIZE;				// round down to nearest tile & center
 	x += TERRAIN_POLYGON_SIZE/2;
@@ -442,9 +442,9 @@ static const float	yTable2[] = {-540,-540,-540,-540,-370,-540,-540,-540};
 		depth = 4;
 		
 	if (width > MAX_WATER_SIZE)
-		DoFatalAlert("\pAddWaterPatch: width > MAX_WATER_SIZE");
+		DoFatalAlert("AddWaterPatch: width > MAX_WATER_SIZE");
 	if (depth > MAX_WATER_SIZE)
-		DoFatalAlert("\pAddWaterPatch: depth > MAX_WATER_SIZE");
+		DoFatalAlert("AddWaterPatch: depth > MAX_WATER_SIZE");
 		
 
 			/* CALC BSPHERE */
@@ -731,7 +731,7 @@ TQ3TriMeshTriangleData	*t;
 	z = theNode->Coord.z;
 	
 	if ((theNode->PatchWidth & 1) || (theNode->PatchDepth & 1))		// widths cannot be odd!
-		DoFatalAlert("\pDrawWaterPatchTesselated: water patches cannot be odd sizes! Must be even numbers.");
+		DoFatalAlert("DrawWaterPatchTesselated: water patches cannot be odd sizes! Must be even numbers.");
 	
 	width2 = theNode->PatchWidth/2;
 	depth2 = theNode->PatchDepth/2;
@@ -927,7 +927,7 @@ float				width,depth;
 static const float	yTable[] = {-620,-580,-550,-600,0,0};
 
 	if (!gHoneyShader)
-		DoFatalAlert("\pAddHoneyPatch: honey not activated on this level");
+		DoFatalAlert("AddHoneyPatch: honey not activated on this level");
 		
 	x -= (int)x % (int)TERRAIN_POLYGON_SIZE;				// round down to nearest tile & center
 	x += TERRAIN_POLYGON_SIZE/2;
@@ -955,9 +955,9 @@ static const float	yTable[] = {-620,-580,-550,-600,0,0};
 		depth = 4;
 		
 	if (width > MAX_HONEY_SIZE)
-		DoFatalAlert("\pAddHoneyPatch: width > MAX_HONEY_SIZE");
+		DoFatalAlert("AddHoneyPatch: width > MAX_HONEY_SIZE");
 	if (depth > MAX_HONEY_SIZE)
-		DoFatalAlert("\pAddHoneyPatch: depth > MAX_HONEY_SIZE");
+		DoFatalAlert("AddHoneyPatch: depth > MAX_HONEY_SIZE");
 		
 
 			/* CALC BSPHERE */
@@ -1259,7 +1259,7 @@ float				width,depth;
 static const float	yTable[] = {0,-200,0,0,0,0};
 
 	if (!gSlimeShader)
-		DoFatalAlert("\pAddSlimePatch: slime not activated on this level");
+		DoFatalAlert("AddSlimePatch: slime not activated on this level");
 		
 	x -= (int)x % (int)TERRAIN_POLYGON_SIZE;				// round down to nearest tile & center
 	x += TERRAIN_POLYGON_SIZE/2;
@@ -1289,9 +1289,9 @@ static const float	yTable[] = {0,-200,0,0,0,0};
 		depth = 4;
 		
 	if (width > MAX_SLIME_SIZE)
-		DoFatalAlert("\pAddSlimePatch: width > MAX_SLIME_SIZE");
+		DoFatalAlert("AddSlimePatch: width > MAX_SLIME_SIZE");
 	if (depth > MAX_SLIME_SIZE)
-		DoFatalAlert("\pAddSlimePatch: depth > MAX_SLIME_SIZE");
+		DoFatalAlert("AddSlimePatch: depth > MAX_SLIME_SIZE");
 		
 
 			/* CALC BSPHERE */
@@ -1592,7 +1592,7 @@ float				width,depth;
 static const float	yTable[] = {-230,-230,-230,0,0,0};
 
 	if (!gLavaShader)
-		DoFatalAlert("\pAddLavaPatch: slime not activated on this level");
+		DoFatalAlert("AddLavaPatch: slime not activated on this level");
 		
 	x -= (int)x % (int)TERRAIN_POLYGON_SIZE;				// round down to nearest tile & center
 	x += TERRAIN_POLYGON_SIZE/2;
@@ -1620,9 +1620,9 @@ static const float	yTable[] = {-230,-230,-230,0,0,0};
 		depth = 4;
 		
 	if (width > MAX_LAVA_SIZE)
-		DoFatalAlert("\pAddLavaPatch: width > MAX_LAVA_SIZE");
+		DoFatalAlert("AddLavaPatch: width > MAX_LAVA_SIZE");
 	if (depth > MAX_LAVA_SIZE)
-		DoFatalAlert("\pAddLavaPatch: depth > MAX_LAVA_SIZE");
+		DoFatalAlert("AddLavaPatch: depth > MAX_LAVA_SIZE");
 		
 
 			/* CALC BSPHERE */

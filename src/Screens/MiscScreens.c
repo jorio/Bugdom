@@ -85,7 +85,7 @@ float		dummy;
 			if (pict == nil)
 			{
 			    OSErr   iErr = ResError();
-				DoAlert("\pDoPaused: GetPicture failed!  Probably ran out of memory.");
+				DoAlert("DoPaused: GetPicture failed!  Probably ran out of memory.");
 				ShowSystemErr_NonFatal(iErr);
 				goto bail;
 			}
@@ -155,7 +155,7 @@ Boolean			dialogDone = false;
 	InitCursor();
 	myDialog = GetNewDialog(132,nil,MOVE_TO_FRONT);
 	if (!myDialog)
-		DoFatalAlert("\pDoLevelCheatDialog: GetNewDialog failed!");
+		DoFatalAlert("DoLevelCheatDialog: GetNewDialog failed!");
 	GammaFadeIn();
 	
 				/* DO IT */
@@ -265,7 +265,7 @@ FSSpec	spec;
 			/*************/
 
 	SetRect(&r,0,0,GAME_VIEW_WIDTH,GAME_VIEW_HEIGHT);
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, "\p:images:credits", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":images:credits", &spec);
 	DrawPictureIntoGWorld(&spec, &gworld);
 	DumpGWorld2(gworld, gCoverWindow, &r);
 	DisposeGWorld(gworld);	
@@ -273,7 +273,7 @@ FSSpec	spec;
 
 	UpdateInput();
 
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, "\p:images:help2", &spec);	// load next page
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":images:help2", &spec);	// load next page
 	DrawPictureIntoGWorld(&spec, &gworld);
 
 	do
@@ -296,7 +296,7 @@ FSSpec	spec;
 	UpdateInput();
 	
 #if !DEMO	
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, "\p:images:help", &spec);	// load next page
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":images:help", &spec);	// load next page
 	DrawPictureIntoGWorld(&spec, &gworld);
 #endif
 		
@@ -384,7 +384,7 @@ Boolean			fo = false;
 
 			/* LOAD ART */
 			
-	err = FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, "\p:models:Pangea.3dmf", &spec);		// load other models
+	err = FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:Pangea.3dmf", &spec);		// load other models
 	LoadGrouped3DMF(&spec,MODEL_GROUP_TITLE);	
 
 
@@ -519,9 +519,9 @@ OSErr		err;
 	SetRect(&r,0,0,GAME_VIEW_WIDTH,GAME_VIEW_HEIGHT);
 	
 #if SHAREWARE
-	err= FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, "\p:images:legal", &spec);
+	err= FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":images:legal", &spec);
 #else
-	err= FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, "\p:images:info1", &spec);
+	err= FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":images:info1", &spec);
 #endif	
 
 	
@@ -560,7 +560,7 @@ Rect		r;
 FSSpec	spec;
 
 	SetRect(&r,0,0,GAME_VIEW_WIDTH,GAME_VIEW_HEIGHT);
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, "\p:images:info2", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":images:info2", &spec);
 	DrawPictureIntoGWorld(&spec, &gworld);
 	DumpGWorld2(gworld, gCoverWindow, &r);
 	DisposeGWorld(gworld);
@@ -593,7 +593,7 @@ FSSpec	spec;
 
 
 	SetRect(&r,0,0,GAME_VIEW_WIDTH,GAME_VIEW_HEIGHT);
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, "\p:images:info3", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":images:info3", &spec);
 	DrawPictureIntoGWorld(&spec, &gworld);
 	DumpGWorld2(gworld, gCoverWindow, &r);
 	DisposeGWorld(gworld);
@@ -627,7 +627,7 @@ FSSpec	spec;
 
 
 	SetRect(&r,0,0,GAME_VIEW_WIDTH,GAME_VIEW_HEIGHT);
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, "\p:images:swexit", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":images:swexit", &spec);
 	DrawPictureIntoGWorld(&spec, &gworld);
 	DumpGWorld2(gworld, gCoverWindow, &r);
 	DisposeGWorld(gworld);

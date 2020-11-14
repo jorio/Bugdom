@@ -712,7 +712,7 @@ TerrainItemEntryType	*itemPtr;
 	}
 	
 	if (gNumQueenBases == 0)
-		DoFatalAlert("\pFindQueenBases: none found!");
+		DoFatalAlert("FindQueenBases: none found!");
 	
 }
 

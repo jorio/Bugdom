@@ -184,7 +184,7 @@ QD3DSetupInputType		viewDef;
 		/* LOAD MODELS */
 		/***************/
 		
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, "\p:models:HighScores.3dmf", &file);		
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:HighScores.3dmf", &file);
 	LoadGrouped3DMF(&file, MODEL_GROUP_HIGHSCORES);
 
 	
@@ -195,7 +195,7 @@ QD3DSetupInputType		viewDef;
 	
 		/* LOAD AUDIO */
 		
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, "\p:Audio:Main.sounds", &file);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:Main.sounds", &file);
 	LoadSoundBank(&file, SOUND_BANK_DEFAULT);
 }
 
@@ -211,13 +211,13 @@ long				count;
 
 				/* OPEN FILE */
 					
-	FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, "\p:Bugdom:HighScores", &file);
+	FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, ":Bugdom:HighScores", &file);
 	iErr = FSpOpenDF(&file, fsRdPerm, &refNum);	
 	if (iErr == fnfErr)
 		ClearHighScores();
 	else
 	if (iErr)
-		DoFatalAlert("\pLoadHighScores: Error opening High Scores file!");
+		DoFatalAlert("LoadHighScores: Error opening High Scores file!");
 	else
 	{
 		count = sizeof(HighScoreType) * NUM_SCORES;
@@ -226,7 +226,7 @@ long				count;
 		{
 			FSClose(refNum);			
 			FSpDelete(&file);												// file is corrupt, so delete
-//			DoAlert("\pLoadHighScores: FSRead failed!");
+//			DoAlert("LoadHighScores: FSRead failed!");
 //			ShowSystemErr(iErr);
 			return;
 		}
@@ -246,7 +246,7 @@ long				count;
 
 				/* CREATE BLANK FILE */
 				
-	FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, "\p:Bugdom:HighScores", &file);
+	FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, ":Bugdom:HighScores", &file);
 	FSpDelete(&file);															// delete any existing file
 	iErr = FSpCreate(&file, 'BalZ', 'Skor', smSystemScript);					// create blank file
 	if (iErr)
@@ -255,12 +255,12 @@ long				count;
 
 				/* OPEN FILE */
 					
-	FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, "\p:Bugdom:HighScores", &file);
+	FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, ":Bugdom:HighScores", &file);
 	iErr = FSpOpenDF(&file, fsRdWrPerm, &refNum);
 	if (iErr)
 	{
 err:	
-		DoAlert("\pUnable to Save High Scores file!");
+		DoAlert("Unable to Save High Scores file!");
 		return;
 	}
 

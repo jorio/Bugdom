@@ -44,7 +44,7 @@ unsigned long seed0 = 0, seed1 = 0, seed2 = 0;
 Boolean     gGameIsRegistered = false;
 
 unsigned char	gRegInfo[64];
-Str255  gRegFileName = "\p:Bugdom:Info";
+Str255  gRegFileName = ":Bugdom:Info";
 
 
 /**********************/
@@ -247,7 +247,7 @@ short i;
 
 unsigned char *NumToHex2(unsigned long n, short digits)
 {
-static unsigned char format[] = "\p$XXXXXXXX";				// Declare format static so we can return a pointer to it
+static unsigned char format[] = "$XXXXXXXX";				// Declare format static so we can return a pointer to it
 char *conv = "0123456789ABCDEF";
 short i;
 
@@ -268,7 +268,7 @@ short i;
 
 unsigned char *NumToDec(unsigned long n)
 {
-static unsigned char format[] = "\pXXXXXXXX";				// Declare format static so we can return a pointer to it
+static unsigned char format[] = "XXXXXXXX";				// Declare format static so we can return a pointer to it
 char *conv = "0123456789";
 short		 i,digits;
 unsigned long temp;
@@ -434,7 +434,7 @@ Handle	hand;
 	hand = NewHandle(size);							// alloc in APPL
 	if (hand == nil)
 	{
-		DoAlert("\pAllocHandle: failed!");
+		DoAlert("AllocHandle: failed!");
 		return(nil);
 	}
 	return(hand);									
@@ -504,9 +504,9 @@ long		createdDirID;
 	iErr = FindFolder(kOnSystemDisk,kPreferencesFolderType,kDontCreateFolder,		// locate the folder
 					&gPrefsFolderVRefNum,&gPrefsFolderDirID);
 	if (iErr != noErr)
-		DoAlert("\pWarning: Cannot locate the Preferences folder.");
+		DoAlert("Warning: Cannot locate the Preferences folder.");
 
-	iErr = DirCreate(gPrefsFolderVRefNum,gPrefsFolderDirID,"\pBugdom",&createdDirID);		// make folder in there
+	iErr = DirCreate(gPrefsFolderVRefNum,gPrefsFolderDirID,"Bugdom",&createdDirID);		// make folder in there
 	
 
 
@@ -618,10 +618,10 @@ StringPtr				macName			= nil,
 
 	if (macName != nil)
 	{
-		if ((CompareString(macName, "\pPowerMac2,2", nil) == 0) 	||			// see if either machine name is an EXACT match
-			(CompareString(macName, "\pPowerBook2,2", nil) == 0) 	||
-			(CompareString(macName, "\pPowerMac2,1", nil) == 0) 	||
-			(CompareString(macName, "\pPowerBook2,1", nil) == 0))
+		if ((CompareString(macName, "PowerMac2,2", nil) == 0) 	||			// see if either machine name is an EXACT match
+			(CompareString(macName, "PowerBook2,2", nil) == 0) 	||
+			(CompareString(macName, "PowerMac2,1", nil) == 0) 	||
+			(CompareString(macName, "PowerBook2,1", nil) == 0))
 		{
 			result = true;
 		}
@@ -909,7 +909,7 @@ Str255          regInfo;
                     }
                     else
                     {
-                        DoAlert("\pSorry, that registration code is not valid.  Please try again.");
+                        DoAlert("Sorry, that registration code is not valid.  Please try again.");
                     }
 					break;
 

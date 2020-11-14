@@ -85,7 +85,7 @@ long	numTriMeshes,i;
 float	rotY;
 
 	if (gPlayerMode != PLAYER_MODE_BUG)
-		DoFatalAlert("\pInitPlayer_Ball: to become ball, player must be bug");
+		DoFatalAlert("InitPlayer_Ball: to become ball, player must be bug");
 					
 	gPlayerKnockOnButt = false;
 					
@@ -164,7 +164,7 @@ float	rotY;
 					
 		triMeshObj = Q3TriMesh_New(data);										// convert data into trimesh
 		if (triMeshObj == nil)
-			DoFatalAlert("\pInitPlayer_Ball: Q3TriMesh_New failed!");
+			DoFatalAlert("InitPlayer_Ball: Q3TriMesh_New failed!");
 		AttachGeometryToDisplayGroupObject(newObj, triMeshObj);					// add to display group
 		Q3Object_Dispose(triMeshObj);											// nuke extra ref
 	}			

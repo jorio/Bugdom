@@ -198,12 +198,12 @@ int						i;
 			
 	LoadASkeleton(SKELETON_TYPE_LADYBUG);
 			
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, "\p:models:BonusScreen.3dmf", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:BonusScreen.3dmf", &spec);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_MENU);	
 
 				/* LOAD SOUNDS */
 	
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, "\p:Audio:bonus.sounds", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:bonus.sounds", &spec);
 	LoadSoundBank(&spec, SOUND_BANK_BONUS);
 
 			/*******************/

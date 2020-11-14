@@ -170,7 +170,7 @@ tryagain:
 
 		case	1:				// SCORES
 #if DEMO		
-				DoAlert("\pThis does not work in the demo.");
+				DoAlert("This does not work in the demo.");
 				goto tryagain;
 #endif				
 				break;
@@ -190,7 +190,7 @@ tryagain:
 
 		case	4:				// RESTORE
 #if DEMO		
-				DoAlert("\pThis does not work in the demo.");
+				DoAlert("This does not work in the demo.");
 				goto tryagain;
 #else
 				if (LoadSavedGame())					// try loading saved game
@@ -289,7 +289,7 @@ ObjNode					*newObj;
 			/************/
 			
 	LoadASkeleton(SKELETON_TYPE_SPIDER);
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, "\p:models:MainMenu.3dmf", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:MainMenu.3dmf", &spec);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_MENU);	
 
 

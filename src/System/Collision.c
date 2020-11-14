@@ -313,7 +313,7 @@ next:
 #endif
 
 	if (gNumCollisions > MAX_COLLISIONS)											// see if overflowed (memory corruption ensued)
-		DoFatalAlert("\pCollisionDetect: gNumCollisions > MAX_COLLISIONS");
+		DoFatalAlert("CollisionDetect: gNumCollisions > MAX_COLLISIONS");
 }
 
 
@@ -947,7 +947,7 @@ float				m00,m01,m02,m10,m11,m12,m20,m21,m22,m30,m31,m32;
 			
 		gNumCollTriangles++;										// inc counter				
 		if (gNumCollTriangles > MAX_TEMP_COLL_TRIANGLES)
-			DoFatalAlert("\pGetTrianglesFromTriMesh: too many triangles in list!");							
+			DoFatalAlert("GetTrianglesFromTriMesh: too many triangles in list!");
 	}
 	
 			/* CLEANUP */
@@ -966,13 +966,13 @@ static void AllocateCollisionTriangleMemory(ObjNode *theNode, long numTriangles)
 		DisposeCollisionTriangleMemory(theNode);
 
 	if (numTriangles == 0)
-		DoFatalAlert("\pAllocateCollisionTriangleMemory: numTriangles = 0?");
+		DoFatalAlert("AllocateCollisionTriangleMemory: numTriangles = 0?");
 	
 			/* ALLOC MEMORY */
 			
 	theNode->CollisionTriangles = (TriangleCollisionList *)AllocPtr(sizeof(TriangleCollisionList));				// alloc main block
 	if (theNode->CollisionTriangles == nil)
-		DoFatalAlert("\pAllocateCollisionTriangleMemory: Alloc failed!");
+		DoFatalAlert("AllocateCollisionTriangleMemory: Alloc failed!");
 	
 	theNode->CollisionTriangles->triangles = (CollisionTriangleType *)AllocPtr(sizeof(CollisionTriangleType) * numTriangles);	// alloc triangle array
 

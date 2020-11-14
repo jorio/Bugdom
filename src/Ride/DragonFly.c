@@ -89,7 +89,7 @@ ObjNode		*newObj;
 TQ3Point3D	where;
 
 	if (gLevelType != LEVEL_TYPE_FOREST)					// verify level
-		DoFatalAlert("\pAddDragonFly: wrong level");
+		DoFatalAlert("AddDragonFly: wrong level");
 		
 	where.x = x;
 	where.y = GetTerrainHeightAtCoord(x, z, FLOOR)+DRAGONFLY_BOTTOM_OFF;

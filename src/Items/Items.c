@@ -157,11 +157,11 @@ int		n;
 float	s;
 	
 	if (gLevelType != LEVEL_TYPE_LAWN)
-		DoFatalAlert("\pAddClover: not on this level!");
+		DoFatalAlert("AddClover: not on this level!");
 				
 	n = itemPtr->parm[0];
 	if (n > 1)
-		DoFatalAlert("\pAddClover: illegal clover type");
+		DoFatalAlert("AddClover: illegal clover type");
 				
 	gNewObjectDefinition.group 		= LAWN2_MGroupNum_Clover;	
 	gNewObjectDefinition.type 		= LAWN2_MObjType_Clover + n;	
@@ -203,7 +203,7 @@ ObjNode	*newObj;
 
 	n = itemPtr->parm[0];
 	if (n > 1)
-		DoFatalAlert("\pAddGrass: illegal grass type");
+		DoFatalAlert("AddGrass: illegal grass type");
 			
 	switch(gLevelType)
 	{
@@ -223,7 +223,7 @@ ObjNode	*newObj;
 				break;
 	
 		default:
-				DoFatalAlert("\pAddGrass: not on this level, buddy!");
+				DoFatalAlert("AddGrass: not on this level, buddy!");
 	}
 			
 	gNewObjectDefinition.coord.x 	= x;
@@ -437,7 +437,7 @@ float	y;
 CollisionBoxType *boxPtr;
 	
 	if (gLevelType != LEVEL_TYPE_FOREST)
-		DoFatalAlert("\pAddTree: not on this level, Bud");
+		DoFatalAlert("AddTree: not on this level, Bud");
 
 			/***************/
 			/* CREATE TREE */
@@ -547,7 +547,7 @@ CollisionBoxType 	*boxPtr;
 float				y;
 	
 	if (gLevelType != LEVEL_TYPE_FOREST)
-		DoFatalAlert("\pAddStump: not on this level, Bud");
+		DoFatalAlert("AddStump: not on this level, Bud");
 
 			/***************/
 			/* CREATE STUMP */
@@ -814,7 +814,7 @@ Boolean AddCatTail(TerrainItemEntryType *itemPtr, long  x, long z)
 ObjNode	*newObj;
 	
 	if (gLevelType != LEVEL_TYPE_POND)
-		DoFatalAlert("\pAddCatTail: not on this level!");
+		DoFatalAlert("AddCatTail: not on this level!");
 
 			
 	gNewObjectDefinition.group 		= POND_MGroupNum_CatTail;	
@@ -849,7 +849,7 @@ Boolean AddDuckWeed(TerrainItemEntryType *itemPtr, long  x, long z)
 ObjNode	*newObj;
 	
 	if (gLevelType != LEVEL_TYPE_POND)
-		DoFatalAlert("\pAddDuckWeed: not on this level!");
+		DoFatalAlert("AddDuckWeed: not on this level!");
 
 			
 	gNewObjectDefinition.group 		= POND_MGroupNum_DuckWeed;	
@@ -883,7 +883,7 @@ Boolean AddLilyFlower(TerrainItemEntryType *itemPtr, long  x, long z)
 ObjNode	*newObj;
 	
 	if (gLevelType != LEVEL_TYPE_POND)
-		DoFatalAlert("\pAddLilyFlower: not on this level!");
+		DoFatalAlert("AddLilyFlower: not on this level!");
 
 			
 	gNewObjectDefinition.group 		= POND_MGroupNum_LilyFlower;	
@@ -919,7 +919,7 @@ Boolean AddLilyPad(TerrainItemEntryType *itemPtr, long  x, long z)
 ObjNode	*newObj;
 	
 	if (gLevelType != LEVEL_TYPE_POND)
-		DoFatalAlert("\pAddLilyPad: not on this level!");
+		DoFatalAlert("AddLilyPad: not on this level!");
 
 			
 	gNewObjectDefinition.group 		= POND_MGroupNum_LilyPad;	
@@ -952,10 +952,10 @@ Boolean AddPondGrass(TerrainItemEntryType *itemPtr, long  x, long z)
 ObjNode	*newObj;
 	
 	if (gLevelType != LEVEL_TYPE_POND)
-		DoFatalAlert("\pAddPondGrass: not on this level!");
+		DoFatalAlert("AddPondGrass: not on this level!");
 
 	if (itemPtr->parm[0] > 2)
-		DoFatalAlert("\pAddPondGrass:parm[0] out of range!");
+		DoFatalAlert("AddPondGrass:parm[0] out of range!");
 
 
 			
@@ -990,10 +990,10 @@ Boolean AddReed(TerrainItemEntryType *itemPtr, long  x, long z)
 ObjNode	*newObj;
 	
 	if (gLevelType != LEVEL_TYPE_POND)
-		DoFatalAlert("\pAddReed: not on this level!");
+		DoFatalAlert("AddReed: not on this level!");
 
 	if (itemPtr->parm[0] > 1)
-		DoFatalAlert("\pAddReed:parm[0] out of range!");
+		DoFatalAlert("AddReed:parm[0] out of range!");
 
 			
 	gNewObjectDefinition.group 		= POND_MGroupNum_Reed;	
@@ -1238,7 +1238,7 @@ Boolean AddWoodPost(TerrainItemEntryType *itemPtr, long  x, long z)
 ObjNode	*newObj;
 				
 	if (gLevelType != LEVEL_TYPE_FOREST)
-		DoFatalAlert("\pAddWoodPost: not on this level!");
+		DoFatalAlert("AddWoodPost: not on this level!");
 				
 	gNewObjectDefinition.group 		= MODEL_GROUP_LEVELSPECIFIC;	
 	gNewObjectDefinition.type 		= FOREST_MObjType_WoodPost;

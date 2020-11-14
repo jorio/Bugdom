@@ -86,7 +86,7 @@ ObjNode	*newObj;
 int		id;
 
 	if (!(gLevelTypeMask & ((1<<LEVEL_TYPE_HIVE) | (1<<LEVEL_TYPE_NIGHT))))
-		DoFatalAlert("\pAddFirecracker: not on this level!");
+		DoFatalAlert("AddFirecracker: not on this level!");
 
 
 		/* SEE IF DETONATOR ALREADY EXPLODED */
@@ -283,7 +283,7 @@ int		id;
 Byte	rot,color;
 	
 	if (gLevelType != LEVEL_TYPE_HIVE)
-		DoFatalAlert("\pAddHiveDoor: not on this level!");
+		DoFatalAlert("AddHiveDoor: not on this level!");
 
 	rot = itemPtr->parm[1];
 	color = itemPtr->parm[2];
@@ -471,7 +471,7 @@ Boolean AddDock(TerrainItemEntryType *itemPtr, long  x, long z)
 ObjNode	*newObj;
 	
 	if (gLevelType != LEVEL_TYPE_POND)
-		DoFatalAlert("\pAddDock: not on this level!");
+		DoFatalAlert("AddDock: not on this level!");
 
 			/* GET Y COORD */
 			
@@ -553,7 +553,7 @@ ObjNode	*newObj,*h;
 float	scaleFactor = itemPtr->parm[2];	
 	
 	if (gLevelType != LEVEL_TYPE_ANTHILL)
-		DoFatalAlert("\pAddRootSwing: not on this level!");
+		DoFatalAlert("AddRootSwing: not on this level!");
 
 			/* CREATE ROOT OBJ */
 			
@@ -569,7 +569,7 @@ float	scaleFactor = itemPtr->parm[2];
 	gNewObjectDefinition.rot 		= (float)itemPtr->parm[0] * (PI2/8.0);
 	newObj = MakeNewSkeletonObject(&gNewObjectDefinition);
 	if (newObj == nil)
-		DoFatalAlert("\pAddRootSwing: MakeNewSkeletonObject failed!");
+		DoFatalAlert("AddRootSwing: MakeNewSkeletonObject failed!");
 
 	newObj->TerrainItemPtr = itemPtr;								// keep ptr to item list
 	
@@ -594,7 +594,7 @@ float	scaleFactor = itemPtr->parm[2];
 	newObj->Skeleton->AnimSpeed = 0;				// these dont animate on their own
 	newObj->RootSync = itemPtr->parm[1];
 	if (newObj->RootSync >= MAX_ROOT_SYNCS)
-		DoFatalAlert("\pAddRootSwing: illegal Root Sync value");
+		DoFatalAlert("AddRootSwing: illegal Root Sync value");
 	
 	SetRootAnimTimeIndex(newObj);
 	
@@ -696,7 +696,7 @@ Boolean AddRock(TerrainItemEntryType *itemPtr, long  x, long z)
 ObjNode	*newObj;
 	
 	if (!(gLevelTypeMask & ((1<<LEVEL_TYPE_LAWN) | (1<<LEVEL_TYPE_NIGHT) | (1<<LEVEL_TYPE_FOREST))))
-		DoFatalAlert("\pAddRock: not on this level!");
+		DoFatalAlert("AddRock: not on this level!");
 
 			/* MAKE OBJ */
 			
@@ -793,7 +793,7 @@ int		n;
 		 n = 2;
 	
 	if (gLevelType != LEVEL_TYPE_HIVE)
-		DoFatalAlert("\pAddHoneyTube: not on this level!");
+		DoFatalAlert("AddHoneyTube: not on this level!");
 
 	s = ((float)itemPtr->parm[2] * .5f) + 1.0f;
 	
@@ -1007,7 +1007,7 @@ Boolean AddFaucet(TerrainItemEntryType *itemPtr, long  x, long z)
 ObjNode	*newObj;
 	
 	if (gLevelType != LEVEL_TYPE_LAWN)
-		DoFatalAlert("\pAddFaucet: not on this level!");
+		DoFatalAlert("AddFaucet: not on this level!");
 
 			/* GET Y COORD */
 			

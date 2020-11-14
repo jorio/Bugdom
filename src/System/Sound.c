@@ -224,7 +224,7 @@ const double	crap = rate44khz;
 		mySndCmd.param2 = (long)&sndHdr;
 		if ((iErr = SndDoImmediate(gSndChannel[gMaxChannels], &mySndCmd)) != noErr)
 		{
-			DoAlert("\pInitSoundTools: SndDoImmediate failed!");
+			DoAlert("InitSoundTools: SndDoImmediate failed!");
 			ShowSystemErr_NonFatal(iErr);
 		}
 		
@@ -234,7 +234,7 @@ const double	crap = rate44khz;
 		mySndCmd.param2 = initNoInterp|initStereo;
 		if ((iErr = SndDoImmediate(gSndChannel[gMaxChannels], &mySndCmd)) != noErr)
 		{
-			DoAlert("\pInitSoundTools: SndDoImmediate failed 2!");
+			DoAlert("InitSoundTools: SndDoImmediate failed 2!");
 			ShowSystemErr_NonFatal(iErr);
 		}
 			
@@ -247,7 +247,7 @@ const double	crap = rate44khz;
 	{
 		gMusicBuffer = AllocPtr(STREAM_BUFFER_SIZE);
 		if (gMusicBuffer == nil)
-			DoFatalAlert("\pInitSoundTools: gMusicBuffer == nil");
+			DoFatalAlert("InitSoundTools: gMusicBuffer == nil");
 	}
 #endif
 }
@@ -289,7 +289,7 @@ OSErr			iErr;
 	StopAllEffectChannels();
 
 	if (bankNum >= MAX_SOUND_BANKS)
-		DoFatalAlert("\pLoadSoundBank: bankNum >= MAX_SOUND_BANKS");
+		DoFatalAlert("LoadSoundBank: bankNum >= MAX_SOUND_BANKS");
 
 			/* DISPOSE OF EXISTING BANK */
 			
@@ -300,7 +300,7 @@ OSErr			iErr;
 			
 	srcFile1 = FSpOpenResFile(spec, fsRdPerm);
 	if (srcFile1 == -1)
-		DoFatalAlert("\pLoadSoundBank: OpenResFile failed!");
+		DoFatalAlert("LoadSoundBank: OpenResFile failed!");
 
 			/****************************/
 			/* LOAD ALL EFFECTS IN BANK */
@@ -309,7 +309,7 @@ OSErr			iErr;
 	UseResFile( srcFile1 );												// open sound resource fork
 	numSoundsInBank = Count1Resources('snd ');							// count # snd's in this bank
 	if (numSoundsInBank > MAX_EFFECTS)
-		DoFatalAlert("\pLoadSoundBank: numSoundsInBank > MAX_EFFECTS");
+		DoFatalAlert("LoadSoundBank: numSoundsInBank > MAX_EFFECTS");
 
 	for (i=0; i < numSoundsInBank; i++)
 	{
@@ -319,9 +319,9 @@ OSErr			iErr;
 		if (gSndHandles[bankNum][i] == nil) 
 		{
 			iErr = ResError();
-			DoAlert("\pLoadSoundBank: GetResource failed!");
+			DoAlert("LoadSoundBank: GetResource failed!");
 			if (iErr == memFullErr)
-				DoFatalAlert("\pLoadSoundBank: Out of Memory");		
+				DoFatalAlert("LoadSoundBank: Out of Memory");
 			else
 				ShowSystemErr(iErr);
 		}
@@ -464,7 +464,7 @@ SCStatus				theStatus;
 
 void PlaySong(short songNum, Boolean loopFlag)
 {
-Str255	errStr = "\pPlaySong: Couldnt Open Music AIFF File.";
+Str255	errStr = "PlaySong: Couldnt Open Music AIFF File.";
 static	SndCommand 		mySndCmd;
 int		volume;
 
@@ -491,67 +491,67 @@ int		volume;
 	switch(songNum)
 	{
 		case	SONG_MENU:
-				OpenGameFile("\p:audio:MenuSong.aiff",&gMusicFileRefNum,errStr);		
+				OpenGameFile(":audio:MenuSong.aiff",&gMusicFileRefNum,errStr);
 				volume = FULL_CHANNEL_VOLUME;
 				break;
 	
 		case	SONG_GARDEN:
-				OpenGameFile("\p:audio:LawnSong.aiff",&gMusicFileRefNum,errStr);		
+				OpenGameFile(":audio:LawnSong.aiff",&gMusicFileRefNum,errStr);
 				volume = FULL_CHANNEL_VOLUME;
 				break;
 
 		case	SONG_PANGEA:
-				OpenGameFile("\p:audio:song_pangea",&gMusicFileRefNum,errStr);		
+				OpenGameFile(":audio:song_pangea",&gMusicFileRefNum,errStr);
 				volume = FULL_CHANNEL_VOLUME;
 				break;
 			
 		case	SONG_HIGHSCORES:
-				OpenGameFile("\p:audio:HighScores.aiff",&gMusicFileRefNum,errStr);		
+				OpenGameFile(":audio:HighScores.aiff",&gMusicFileRefNum,errStr);
 				volume = FULL_CHANNEL_VOLUME;
 				break;
 
 		case	SONG_NIGHT:
-				OpenGameFile("\p:audio:Night.aiff",&gMusicFileRefNum,errStr);		
+				OpenGameFile(":audio:Night.aiff",&gMusicFileRefNum,errStr);
 				volume = FULL_CHANNEL_VOLUME;
 				break;
 
 		case	SONG_FOREST:
-				OpenGameFile("\p:audio:Forest.aiff",&gMusicFileRefNum,errStr);		
+				OpenGameFile(":audio:Forest.aiff",&gMusicFileRefNum,errStr);
 				volume = FULL_CHANNEL_VOLUME;
 				break;
 
 		case	SONG_POND:
-				OpenGameFile("\p:audio:PondSong.aiff",&gMusicFileRefNum,errStr);		
+				OpenGameFile(":audio:PondSong.aiff",&gMusicFileRefNum,errStr);
 				volume = FULL_CHANNEL_VOLUME;
 				break;
 
 		case	SONG_ANTHILL:
-				OpenGameFile("\p:audio:AntHillSong.aiff",&gMusicFileRefNum,errStr);		
+				OpenGameFile(":audio:AntHillSong.aiff",&gMusicFileRefNum,errStr);
 				volume = FULL_CHANNEL_VOLUME;
 				break;
 				
 		case	SONG_HIVE:
-				OpenGameFile("\p:audio:HiveLevel.aiff",&gMusicFileRefNum,errStr);		
+				OpenGameFile(":audio:HiveLevel.aiff",&gMusicFileRefNum,errStr);
 				volume = FULL_CHANNEL_VOLUME;
 				break;
 				
 		case	SONG_WIN:
-				OpenGameFile("\p:audio:WinSong.aiff",&gMusicFileRefNum,errStr);		
+				OpenGameFile(":audio:WinSong.aiff",&gMusicFileRefNum,errStr);
 				volume = FULL_CHANNEL_VOLUME;
 				break;
 
 		case	SONG_LOSE:
-				OpenGameFile("\p:audio:LoseSong.aiff",&gMusicFileRefNum,errStr);		
+				OpenGameFile(":audio:LoseSong.aiff",&gMusicFileRefNum,errStr);
 				volume = FULL_CHANNEL_VOLUME;
 				break;
 
 		case	SONG_BONUS:
-				OpenGameFile("\p:audio:BonusSong.aiff",&gMusicFileRefNum,errStr);		
+				OpenGameFile(":audio:BonusSong.aiff",&gMusicFileRefNum,errStr);
 				volume = FULL_CHANNEL_VOLUME;
 				break;
 
 		default:
-				DoFatalAlert("\pPlaySong: unknown song #");
+				DoFatalAlert("PlaySong: unknown song #");
 	}
 
 	gCurrentSong = songNum;
@@ -586,7 +586,7 @@ stream_again:
 	{
 		FSClose(gMusicFileRefNum);								// close the file
 		gMusicFileRefNum = 0x0ded;
-		DoAlert("\pPlaySong: SndStartFilePlay failed!");
+		DoAlert("PlaySong: SndStartFilePlay failed!");
 		ShowSystemErr(iErr);
 	}
 #endif	
@@ -617,13 +617,13 @@ OSErr	iErr;
 //	SndStopFilePlay(gMusicChannel, true);								// stop it
 	
 	if (gMusicFileRefNum == 0x0ded)
-		DoAlert("\pKillSong: gMusicFileRefNum == 0x0ded");
+		DoAlert("KillSong: gMusicFileRefNum == 0x0ded");
 	else
 	{
 		iErr = FSClose(gMusicFileRefNum);								// close the file
 		if (iErr)
 		{
-			DoAlert("\pKillSong: FSClose failed!");
+			DoAlert("KillSong: FSClose failed!");
 			ShowSystemErr_NonFatal(iErr);
 		}
 	}
@@ -654,7 +654,7 @@ u_long					leftVol, rightVol;
 
 	if (soundNum >= gNumSndsInBank[bankNum])					// see if illegal sound #
 	{
-		DoAlert("\pIllegal sound number!");
+		DoAlert("Illegal sound number!");
 		ShowSystemErr(effectNum);	
 	}
 
@@ -695,7 +695,7 @@ u_long			leftVol, rightVol;
 
 	if (soundNum >= gNumSndsInBank[bankNum])					// see if illegal sound #
 	{
-		DoAlert("\pIllegal sound number!");
+		DoAlert("Illegal sound number!");
 		ShowSystemErr(effectNum);	
 	}
 
@@ -837,7 +837,7 @@ SoundHeaderPtr   sndPtr;
 
 	if (soundNum >= gNumSndsInBank[bankNum])					// see if illegal sound #
 	{
-		DoAlert("\pIllegal sound number!");
+		DoAlert("Illegal sound number!");
 		ShowSystemErr(effectNum);	
 	}
 

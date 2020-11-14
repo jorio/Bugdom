@@ -73,7 +73,7 @@ TQ3Point3D	where;
 Boolean		isPaidFor;
 
 	if (gLevelType != LEVEL_TYPE_POND)					// verify level
-		DoFatalAlert("\pAddWaterBug: wrong level");
+		DoFatalAlert("AddWaterBug: wrong level");
 		
 	isPaidFor = itemPtr->flags & ITEM_FLAGS_USER1;		// see if this guy has been paid for
 		

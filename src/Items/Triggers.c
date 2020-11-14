@@ -460,7 +460,7 @@ float	h;
 
 
 	if (gLevelType != LEVEL_TYPE_HIVE)
-		DoFatalAlert("\pAddHoneycombPlatform: not on this level!");
+		DoFatalAlert("AddHoneycombPlatform: not on this level!");
 
 	if (itemPtr->parm[1] == 0)
 		h = 11;
@@ -620,7 +620,7 @@ TQ3Point3D		where;
 u_long			isPlunged;	
 	
 	if (gLevelType != LEVEL_TYPE_HIVE)
-		DoFatalAlert("\pAddDetonator: not on this level!");
+		DoFatalAlert("AddDetonator: not on this level!");
 	
 	isPlunged = itemPtr->flags & ITEM_FLAGS_USER1;					// see if plunger already down
 	
@@ -770,7 +770,7 @@ Byte	aim,keyID;
 Boolean	isOpen;
 
 	if (!(gLevelTypeMask & ((1<<LEVEL_TYPE_LAWN) | (1<<LEVEL_TYPE_NIGHT))))
-		DoFatalAlert("\pAddLawnDoor: not on this level!");
+		DoFatalAlert("AddLawnDoor: not on this level!");
 
 	keyID = itemPtr->parm[0];
 	aim = itemPtr->parm[1];
@@ -1060,7 +1060,7 @@ static const Byte	keyTypes[NUM_LEVELS] =
 				break;
 				
 		default:
-				DoFatalAlert("\pMakePowerup: this type not supported yet");				
+				DoFatalAlert("MakePowerup: this type not supported yet");
 				break;
 
 	}
@@ -1252,7 +1252,7 @@ static Boolean DoTrig_Powerup(ObjNode *theNode, ObjNode *whoNode, Byte sideBits)
 				break;
 								
 		default:
-				DoFatalAlert("\pDoTrig_Powerup: powerup type not implemented yet");
+				DoFatalAlert("DoTrig_Powerup: powerup type not implemented yet");
 	}	
 				
 	PlayEffect3D(EFFECT_GETPOW, &theNode->Coord);	// play sound
@@ -1332,7 +1332,7 @@ TQ3Point3D		where;
 u_long			isOpen;	
 	
 	if (gLevelType != LEVEL_TYPE_ANTHILL)
-		DoFatalAlert("\pAddWaterValve: not on this level!");
+		DoFatalAlert("AddWaterValve: not on this level!");
 
 	isOpen = itemPtr->flags & ITEM_FLAGS_USER1;					// see if valve already open
 	

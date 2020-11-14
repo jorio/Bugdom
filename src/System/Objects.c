@@ -85,10 +85,10 @@ void InitObjectManager(void)
 	{
 		gKeepBackfaceStyleObject = Q3BackfacingStyle_New(kQ3BackfacingStyleBoth);
 		if (gKeepBackfaceStyleObject == nil)
-			DoFatalAlert("\pInitObjectManager: Q3BackfacingStyle_New failed!");
+			DoFatalAlert("InitObjectManager: Q3BackfacingStyle_New failed!");
 	}
 	else
-		DoFatalAlert("\pInitObjectManager: gKeepBackfaceStyleObject != nil");
+		DoFatalAlert("InitObjectManager: gKeepBackfaceStyleObject != nil");
 
 }
 
@@ -110,7 +110,7 @@ unsigned long flags = newObjDef->flags;
 	
 	newNodePtr = (ObjNode *)AllocPtr(sizeof(ObjNode));
 	if (newNodePtr == nil)
-		DoFatalAlert("\pMakeNewObject: Alloc Ptr failed!");
+		DoFatalAlert("MakeNewObject: Alloc Ptr failed!");
 
 	slot = newObjDef->slot;
 
@@ -253,7 +253,7 @@ Byte	group,type;
 	{
 		Str255	s;
 		
-		DoAlert("\pMakeNewDisplayGroupObject: type > gNumObjectsInGroupList[]!");
+		DoAlert("MakeNewDisplayGroupObject: type > gNumObjectsInGroupList[]!");
 		
 		NumToStringC(group, s);
 		DoAlert(s);
@@ -306,7 +306,7 @@ void ResetDisplayGroupObject(ObjNode *theNode)
 	CreateBaseGroup(theNode);											// create new group object
 
 	if (theNode->Type >= gNumObjectsInGroupList[theNode->Group])							// see if illegal
-		DoFatalAlert("\pResetDisplayGroupObject: type > gNumObjectsInGroupList[]!");
+		DoFatalAlert("ResetDisplayGroupObject: type > gNumObjectsInGroupList[]!");
 	
 	AttachGeometryToDisplayGroupObject(theNode,gObjectGroupList[theNode->Group][theNode->Type]);	// attach geometry to group
 
@@ -326,7 +326,7 @@ TQ3GroupPosition	groupPosition;
 
 	groupPosition = (TQ3GroupPosition)Q3Group_AddObject(theNode->BaseGroup,geometry);
 	if (groupPosition == nil)
-		DoFatalAlert("\pError: AttachGeometryToDisplayGroupObject");
+		DoFatalAlert("Error: AttachGeometryToDisplayGroupObject");
 }
 
 
@@ -350,14 +350,14 @@ TQ3TransformObject		transObject;
 	theNode->BaseGroup = (TQ3Object)Q3OrderedDisplayGroup_New();
 	if (theNode->BaseGroup == nil)
 	{
-		DoAlert("\pCreateBaseGroup: Q3DisplayGroup_New failed!");
+		DoAlert("CreateBaseGroup: Q3DisplayGroup_New failed!");
 		QD3D_ShowRecentError();
 	}
 
 					/* SETUP BASE MATRIX */
 			
 	if ((theNode->Scale.x == 0) || (theNode->Scale.y == 0) || (theNode->Scale.z == 0))
-		DoFatalAlert("\pCreateBaseGroup: A scale component == 0");
+		DoFatalAlert("CreateBaseGroup: A scale component == 0");
 		
 			
 	Q3Matrix4x4_SetScale(&scaleMatrix, theNode->Scale.x, theNode->Scale.y,		// make scale matrix
@@ -382,11 +382,11 @@ TQ3TransformObject		transObject;
 
 	transObject = (TQ3TransformObject)Q3MatrixTransform_New(&theNode->BaseTransformMatrix);			// make matrix xform object
 	if (transObject == nil)
-		DoFatalAlert("\pCreateBaseGroup: Q3MatrixTransform_New Failed!");
+		DoFatalAlert("CreateBaseGroup: Q3MatrixTransform_New Failed!");
 
 	myGroupPosition = (TQ3GroupPosition)Q3Group_AddObject(theNode->BaseGroup, transObject);		// add to base group
 	if (myGroupPosition == nil)
-		DoFatalAlert("\pQ3Group_AddObject Failed!");
+		DoFatalAlert("Q3Group_AddObject Failed!");
 		
 	theNode->BaseTransformObject = transObject;									// keep extra LEGAL ref (remember to dispose later)
 }
@@ -668,7 +668,7 @@ short			skelType;
 					{
 						myStatus = Q3Object_Submit(theNode->BaseGroup, view);
 						if ( myStatus == kQ3Failure )
-							DoFatalAlert("\pDrawObjects: Q3Object_Submit failed!");
+							DoFatalAlert("DrawObjects: Q3Object_Submit failed!");
 					}
 					break;
 					
@@ -758,7 +758,7 @@ void DeleteObject(ObjNode	*theNode)
 	if (theNode->CType == INVALID_NODE_FLAG)		// see if already deleted
 	{
 		Str255	errString;		//-----------
-		DoAlert("\pAttempted to Double Delete an Object.  Object was already deleted!");
+		DoAlert("Attempted to Double Delete an Object.  Object was already deleted!");
 		NumToStringC(theNode->Genre,errString);		//------------
 		DoAlert(errString);					//---------
 		NumToStringC(theNode->Group,errString);		//------------
@@ -970,7 +970,7 @@ TQ3Status	status;
 	{
 		status = Q3Object_Dispose(theNode->BaseGroup);
 		if (status != kQ3Success)
-			DoFatalAlert("\pDisposeObjectBaseGroup: Q3Object_Dispose Failed!");
+			DoFatalAlert("DisposeObjectBaseGroup: Q3Object_Dispose Failed!");
 
 		theNode->BaseGroup = nil;
 	}
@@ -1094,7 +1094,7 @@ TQ3Status 				error;
 	{
 		error = Q3MatrixTransform_Set(theNode->BaseTransformObject,&theNode->BaseTransformMatrix);
 		if (error != kQ3Success)
-			DoFatalAlert("\pQ3MatrixTransform_Set Failed!");
+			DoFatalAlert("Q3MatrixTransform_Set Failed!");
 	}
 }
 
@@ -1108,14 +1108,14 @@ void MakeObjectKeepBackfaces(ObjNode *theNode)
 //TQ3Status			status;
 
 	if (theNode->BaseGroup == nil)
-		DoFatalAlert("\pMakeObjectKeepBackfaces: BaseGroup == nil");
+		DoFatalAlert("MakeObjectKeepBackfaces: BaseGroup == nil");
 
 //	status = Q3Group_GetFirstPosition(theNode->BaseGroup, &position);
 //	if ((status == kQ3Failure) || (position == nil))
-//		DoFatalAlert("\pMakeObjectKeepBackfaces: Q3Group_GetFirstPosition failed!");
+//		DoFatalAlert("MakeObjectKeepBackfaces: Q3Group_GetFirstPosition failed!");
 	
 	if (Q3Group_AddObject(theNode->BaseGroup, gKeepBackfaceStyleObject) == nil)
-		DoFatalAlert("\pMakeObjectKeepBackfaces: Q3Group_AddObject failed!");
+		DoFatalAlert("MakeObjectKeepBackfaces: Q3Group_AddObject failed!");
 }
 
 
@@ -1137,11 +1137,11 @@ TQ3ColorRGB			transColor;
 TQ3AttributeType	attribType;
 
 	if (theNode->BaseGroup == nil)
-		DoFatalAlert("\pMakeObjectTransparent: BaseGroup == nil");
+		DoFatalAlert("MakeObjectTransparent: BaseGroup == nil");
 
 //	oType = Q3Group_GetType(theNode->BaseGroup);
 //	if (oType == kQ3ObjectTypeInvalid)
-//		DoFatalAlert("\pMakeObjectTransparent: BaseGroup is not a Group Object!");
+//		DoFatalAlert("MakeObjectTransparent: BaseGroup is not a Group Object!");
 
 
 			/* GET CURRENT ATTRIBUTE OBJECT OR MAKE NEW ONE */
@@ -1151,7 +1151,7 @@ TQ3AttributeType	attribType;
 	{
 		status = Q3Group_GetPositionObject(theNode->BaseGroup, position, &attrib);				// get the attribute object
 		if (status == kQ3Failure)
-			DoFatalAlert("\pMakeObjectTransparent: Q3Group_GetPositionObject failed");
+			DoFatalAlert("MakeObjectTransparent: Q3Group_GetPositionObject failed");
 
 		if (transPercent >= 1.0f)															// if totally opaque then remove this attrib
 		{
@@ -1179,12 +1179,12 @@ TQ3AttributeType	attribType;
 
 		attrib = Q3AttributeSet_New();														// make new attrib set
 		if (attrib == nil)
-			DoFatalAlert("\pMakeObjectTransparent: Q3AttributeSet_New failed");
+			DoFatalAlert("MakeObjectTransparent: Q3AttributeSet_New failed");
 			
 				/* ADD NEW ATTRIB SET TO GROUP */
 					
 		if (Q3Group_AddObject(theNode->BaseGroup, attrib) == nil)
-			DoFatalAlert("\pMakeObjectTransparent: Q3Group_AddObject failed!");
+			DoFatalAlert("MakeObjectTransparent: Q3Group_AddObject failed!");
 	}
 				
 					/* ADD TRANSPARENCY */
@@ -1192,7 +1192,7 @@ TQ3AttributeType	attribType;
 	transColor.r = transColor.g = transColor.b = transPercent;
 	status = Q3AttributeSet_Add(attrib, kQ3AttributeTypeTransparencyColor, &transColor);
 	if (status == kQ3Failure)
-		DoFatalAlert("\pQ3AttributeSet_Add: Q3Group_GetPositionObject failed");
+		DoFatalAlert("Q3AttributeSet_Add: Q3Group_GetPositionObject failed");
 	
 bye:
 	Q3Object_Dispose(attrib);								// dispose of extra ref

@@ -177,7 +177,7 @@ void InitTerrainManager(void)
 	{
 		gTempTextureBuffer = (u_short *)AllocPtr(TEMP_TEXTURE_BUFF_SIZE * TEMP_TEXTURE_BUFF_SIZE * sizeof(u_short *));
 		if (gTempTextureBuffer == nil)
-			DoFatalAlert("\pQD3D_DuplicateTriMeshData: AllocPtr failed!");								 
+			DoFatalAlert("QD3D_DuplicateTriMeshData: AllocPtr failed!");
 	}
 }
 
@@ -430,12 +430,12 @@ static const int				textureSize[NUM_LOD] = {SUPERTILE_TEXMAP_SIZE, SUPERTILE_TEX
 	
 				blankTexHand = AllocHandle(size * size * sizeof(short));	// alloc memory for texture
 				if (blankTexHand == nil)
-					DoFatalAlert("\pCreateSuperTileMemoryList: AllocHandle failed!");
+					DoFatalAlert("CreateSuperTileMemoryList: AllocHandle failed!");
 				HLockHi(blankTexHand);
 		
 				blankTexObject = QD3D_Data16ToTexture_NoMip(*blankTexHand, size, size);	// create texture from buffer
 				if (blankTexObject == nil)
-					DoFatalAlert("\pCreateSuperTileMemoryList: QD3D_Data16ToTexture_NoMip failed!");
+					DoFatalAlert("CreateSuperTileMemoryList: QD3D_Data16ToTexture_NoMip failed!");
 				
 				gTerrainTextureBuffers[i][j][lod] = blankTexHand;				// keep this pointer since we need to manually dispose of this later
 				
@@ -444,11 +444,11 @@ static const int				textureSize[NUM_LOD] = {SUPERTILE_TEXMAP_SIZE, SUPERTILE_TEX
 							
 				geometryAttribSet = Q3AttributeSet_New();						// make attrib set
 				if (geometryAttribSet == nil)
-					DoFatalAlert("\pCreateSuperTileMemoryList: Q3AttributeSet_New failed!");
+					DoFatalAlert("CreateSuperTileMemoryList: Q3AttributeSet_New failed!");
 				
 				status = Q3AttributeSet_Add(geometryAttribSet, kQ3AttributeTypeSurfaceShader, &blankTexObject);	
 				if (status == kQ3Failure)
-					DoFatalAlert("\pCreateSuperTileMemoryList: Q3AttributeSet_Add failed!");	
+					DoFatalAlert("CreateSuperTileMemoryList: Q3AttributeSet_Add failed!");
 				Q3Object_Dispose(blankTexObject);								// free extra ref to shader
 	
 				gSuperTileMemoryList[i].texture[lod][j] = geometryAttribSet;	// save this reference to the attrib set
@@ -499,13 +499,13 @@ static const int				textureSize[NUM_LOD] = {SUPERTILE_TEXMAP_SIZE, SUPERTILE_TEX
 			tempTriMesh = Q3TriMesh_New(&triMeshData);					// make the temp trimesh
 			if (tempTriMesh == nil)
 			{
-				DoAlert("\pCreateSuperTileMemoryList: Q3TriMesh_New failed!");
+				DoAlert("CreateSuperTileMemoryList: Q3TriMesh_New failed!");
 				QD3D_ShowRecentError();
 			}				
 			
 			if (Q3TriMesh_GetData(tempTriMesh, &gSuperTileMemoryList[i].triMeshData[j]) == kQ3Failure)	// get the data
 			{
-				DoAlert("\pCreateSuperTileMemoryList: Q3TriMesh_GetData failed!");
+				DoAlert("CreateSuperTileMemoryList: Q3TriMesh_GetData failed!");
 				QD3D_ShowRecentError();
 			}
 			
@@ -594,7 +594,7 @@ short	i;
 		}
 	}
 
-	DoFatalAlert("\pNo Free Supertiles!");
+	DoFatalAlert("No Free Supertiles!");
 	return(-1);											// ERROR, NO FREE BLOCKS!!!! SHOULD NEVER GET HERE!
 }
 
@@ -954,17 +954,17 @@ static  TQ3Vector3D	tempVertexNormalList[NUM_VERTICES_IN_SUPERTILE];
 		{
 			mipmapStorage = QD3D_GetMipmapStorageObjectFromAttrib(gSuperTileMemoryList[superTileNum].texture[0][j]);// get storage object of LOD #0
 			if (mipmapStorage == nil)
-				DoFatalAlert("\pmipmapStorage == nil");
+				DoFatalAlert("mipmapStorage == nil");
 			
 			if (Q3MemoryStorage_GetBuffer(mipmapStorage, &buffer, &validSize, &bufferSize) == kQ3Failure)	// get ptr to the buffer
-				DoFatalAlert("\pQ3MemoryStorage_GetBuffer failed!");
+				DoFatalAlert("Q3MemoryStorage_GetBuffer failed!");
 			
 			ShrinkSuperTileTextureMap(gTempTextureBuffer,(u_short *)buffer);								// shrink to 128x128
 			superTilePtr->hasLOD[0] = true;
 		}
 			
 		if (Q3MemoryStorage_SetBuffer(mipmapStorage, buffer, validSize, bufferSize) == kQ3Failure)
-			DoFatalAlert("\pBuildTerrainSuperTile: Q3MemoryStorage_SetBuffer failed!");			
+			DoFatalAlert("BuildTerrainSuperTile: Q3MemoryStorage_SetBuffer failed!");
 		Q3Object_Dispose(mipmapStorage);												// nuke the mipmap storage object
 
 				/***********************/
@@ -1020,7 +1020,7 @@ int					size,numLayers;
 		return;
 		
 	if (lod >= NUM_LOD)
-		DoFatalAlert("\pBuildSuperTileLOD: lod overflow");
+		DoFatalAlert("BuildSuperTileLOD: lod overflow");
 		
 	superTilePtr->hasLOD[lod] = true;								// has LOD now
 
@@ -1191,7 +1191,7 @@ u_short		*sPtr,*tileDataS;
 
 	if (texMapNum >= gNumTerrainTextureTiles)					// make sure not illegal tile #
 	{
-//		DoFatalAlert("\pDrawTileIntoMipmap: illegal tile #");
+//		DoFatalAlert("DrawTileIntoMipmap: illegal tile #");
 		texMapNum = 0;
 	}
 				/* CALC PTRS */
@@ -2171,7 +2171,7 @@ use_1:
 			myStatus = Q3TriMesh_Submit(&gSuperTileMemoryList[i].triMeshData[j],view);				
 			if ( myStatus == kQ3Failure )
 			{
-				DoAlert("\pDrawTerrain: Q3TriMesh_Submit failed!");	
+				DoAlert("DrawTerrain: Q3TriMesh_Submit failed!");
 				QD3D_ShowRecentError();	
 			}
 		}		
@@ -2365,7 +2365,7 @@ TQ3Vector2D	look;
 	if (superRow > gCurrentSuperTileRow)
 	{
 		if (superRow > (gCurrentSuperTileRow+1))						// check for overload scroll
-			DoFatalAlert("\pDoMyTerrainUpdate: scrolled up > 1 tile!");
+			DoFatalAlert("DoMyTerrainUpdate: scrolled up > 1 tile!");
 		ScrollTerrainUp(superRow,superCol);
 		gCurrentSuperTileRow = superRow;
 	}
@@ -2375,7 +2375,7 @@ TQ3Vector2D	look;
 	if (superRow < gCurrentSuperTileRow)
 	{
 		if (superRow < (gCurrentSuperTileRow-1))						// check for overload scroll
-			DoFatalAlert("\pDoMyTerrainUpdate: scrolled down < -1 tile!");
+			DoFatalAlert("DoMyTerrainUpdate: scrolled down < -1 tile!");
 		ScrollTerrainDown(superRow,superCol);
 		gCurrentSuperTileRow = superRow;
 	}
@@ -2385,7 +2385,7 @@ TQ3Vector2D	look;
 	if (superCol > gCurrentSuperTileCol)
 	{
 		if (superCol > (gCurrentSuperTileCol+1))						// check for overload scroll
-			DoFatalAlert("\pDoMyTerrainUpdate: scrolled left > 1 tile!");
+			DoFatalAlert("DoMyTerrainUpdate: scrolled left > 1 tile!");
 		ScrollTerrainLeft();
 	}
 	else
@@ -2394,7 +2394,7 @@ TQ3Vector2D	look;
 	if (superCol < gCurrentSuperTileCol)
 	{
 		if (superCol < (gCurrentSuperTileCol-1))						// check for overload scroll
-			DoFatalAlert("\pDoMyTerrainUpdate: scrolled right < -1 tile!");
+			DoFatalAlert("DoMyTerrainUpdate: scrolled right < -1 tile!");
 		ScrollTerrainRight(superCol,superRow,tileCol,tileRow);
 		gCurrentSuperTileCol = superCol;
 	}

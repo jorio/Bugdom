@@ -58,7 +58,7 @@ int						i;
 					
 	myErr = Q3View_StartPicking(gGameViewInfoPtr->viewObject,myPickObject);
 	if (myErr == kQ3Failure)
-		DoFatalAlert("\p PICK: Q3View_StartRendering failed!");
+		DoFatalAlert(" PICK: Q3View_StartRendering failed!");
 	do
 	{
 		for (i = 0;i < NUM_MENU_ICONS; i++)
@@ -116,7 +116,7 @@ TQ3PickObject			myPickObject;
 			
 	myPickObject = Q3WindowPointPick_New(&myWPPickData);
 	if (myPickObject == nil)
-		DoFatalAlert("\p Q3WindowPointPick_New failed!");
+		DoFatalAlert(" Q3WindowPointPick_New failed!");
 		
 	return(myPickObject);
 }
@@ -149,7 +149,7 @@ TQ3Status				myErr;
 					
 	myErr = Q3View_StartPicking(gGameViewInfoPtr->viewObject,myPickObject);
 	if (myErr == kQ3Failure)
-		DoFatalAlert("\pPickSaveGameIcon: Q3View_StartRendering failed!");
+		DoFatalAlert("PickSaveGameIcon: Q3View_StartRendering failed!");
 	do
 	{
 		Q3Object_Submit(gSaveYes->BaseGroup, gGameViewInfoPtr->viewObject);

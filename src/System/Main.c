@@ -263,11 +263,11 @@ int			i;
 
 		/* OPEN TEXTURES RESOURCE FILE */
 				
-	if (FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, "\p:Sprites:Textures", &spec) != noErr)
-		DoFatalAlert("\pToolBoxInit: cannot find Sprites:Textures file");
+	if (FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Sprites:Textures", &spec) != noErr)
+		DoFatalAlert("ToolBoxInit: cannot find Sprites:Textures file");
 	gTextureRezfile = FSpOpenResFile(&spec, fsRdPerm);
 	if (gTextureRezfile == -1)
-		DoFatalAlert("\pToolBoxInit: Cannot locate Textures resource file!");
+		DoFatalAlert("ToolBoxInit: Cannot locate Textures resource file!");
 	UseResFile(gTextureRezfile);
 
 
@@ -347,7 +347,7 @@ static void PlayGame(void)
 		if (!gGameIsRegistered)						// dont allow full access until registered
 			if (gRealLevel > 2)
 			{
-				DoAlert("\pYou cannot play additional levels until you have registred this copy of Bugdom.");
+				DoAlert("You cannot play additional levels until you have registred this copy of Bugdom.");
 				HideCursor();
 				break;
 			}

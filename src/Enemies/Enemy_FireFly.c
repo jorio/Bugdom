@@ -96,7 +96,7 @@ Boolean AddFireFly(TerrainItemEntryType *itemPtr, long x, long z)
 ObjNode	*newObj,*glow;
 
 	if (gLevelType != LEVEL_TYPE_NIGHT)
-		DoFatalAlert("\pAddFireFly: not on this level, bud!");
+		DoFatalAlert("AddFireFly: not on this level, bud!");
 
 			/************************/
 			/* MAKE SKELETON OBJECT */
@@ -117,7 +117,7 @@ ObjNode	*newObj,*glow;
 	gNewObjectDefinition.scale 		= FIREFLY_SCALE;
 	newObj = MakeNewSkeletonObject(&gNewObjectDefinition);
 	if (newObj == nil)
-		DoFatalAlert("\pAddFireFly: MakeNewSkeletonObject failed!");
+		DoFatalAlert("AddFireFly: MakeNewSkeletonObject failed!");
 
 	newObj->TerrainItemPtr = itemPtr;								// keep ptr to item list
 	
@@ -597,7 +597,7 @@ TerrainItemEntryType	*itemPtr;
 		}
 	}
 			
-	DoFatalAlert("\pFindFireFlyTarget: no targets found!");
+	DoFatalAlert("FindFireFlyTarget: no targets found!");
 }
 
 

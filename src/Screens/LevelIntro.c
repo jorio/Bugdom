@@ -225,7 +225,7 @@ TQ3Vector3D				fillDirection2 = { -.7, -.2, -.9 };			// fill
 
 			/* LOAD SOUNDS */
 			
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, "\p:Audio:Main.sounds", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:Main.sounds", &spec);
 	LoadSoundBank(&spec, SOUND_BANK_DEFAULT);
 
 
@@ -265,7 +265,7 @@ TQ3Vector3D				fillDirection2 = { -.7, -.2, -.9 };			// fill
 			/* LOAD ART */
 			/************/
 
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, "\p:models:LevelIntro.3dmf", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:LevelIntro.3dmf", &spec);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_LEVELINTRO);	
 
 	switch(gRealLevel)

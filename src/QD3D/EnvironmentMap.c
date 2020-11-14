@@ -75,7 +75,7 @@ TQ3Status	status;
 		else
 			status = Q3TriMesh_Submit(&gReflectionMapQueue[i], viewInfo->viewObject);	
 		if (status != kQ3Success)
-			DoFatalAlert("\pSubmitReflectionMapQueue: Q3TriMesh_Submit failed!");
+			DoFatalAlert("SubmitReflectionMapQueue: Q3TriMesh_Submit failed!");
 	}
 		
 }
@@ -216,7 +216,7 @@ register 	float	x,y,z;
 			/* GET POINTER TO TRIMESH DATA STRUCTURE */
 			
 	if (gReflectionMapQueueSize >= MAX_REFLECTIONMAP_QUEUESIZE)
-		DoFatalAlert("\pEnvironmentMapTriMesh: gReflectionMapQueueSize >= MAX_REFLECTIONMAP_QUEUESIZE");
+		DoFatalAlert("EnvironmentMapTriMesh: gReflectionMapQueueSize >= MAX_REFLECTIONMAP_QUEUESIZE");
 		
 				/* GET TRIMESH INFO */
 				
@@ -232,7 +232,7 @@ register 	float	x,y,z;
 		
 		status = Q3TriMesh_GetData(theTriMesh, triMeshDataPtr);						// get trimesh data
 		if (status != kQ3Success) 
-			DoFatalAlert("\pEnvironmentMapTriMesh: Q3TriMesh_GetData failed!");
+			DoFatalAlert("EnvironmentMapTriMesh: Q3TriMesh_GetData failed!");
 	}		
 	
 	numFaces 		= triMeshDataPtr->numTriangles;

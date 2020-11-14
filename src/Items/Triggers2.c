@@ -450,7 +450,7 @@ Boolean AddKingWaterPipe(TerrainItemEntryType *itemPtr, long  x, long z)
 ObjNode	*newObj;
 	
 	if (gRealLevel != LEVEL_NUM_ANTKING)
-		DoFatalAlert("\pAddKingWaterPipe: not on this level!");
+		DoFatalAlert("AddKingWaterPipe: not on this level!");
 	
 			
 	gNewObjectDefinition.group 		= MODEL_GROUP_LEVELSPECIFIC;	
@@ -663,7 +663,7 @@ float	y;
 		gNewObjectDefinition.scale 		= LADYBUG_CAGE_SCALE;
 		post[i] = MakeNewDisplayGroupObject(&gNewObjectDefinition);
 		if (post[i] == nil)
-			DoFatalAlert("\pAddLadyBugBonus: MakeNewDisplayGroupObject failed!");
+			DoFatalAlert("AddLadyBugBonus: MakeNewDisplayGroupObject failed!");
 	
 		if (i == 0)
 			post[0]->TerrainItemPtr = itemPtr;			// keep ptr to item list
@@ -712,7 +712,7 @@ float	y;
 	gNewObjectDefinition.scale 		= LADYBUG_SCALE;
 	bug = MakeNewSkeletonObject(&gNewObjectDefinition);
 	if (bug == nil)
-		DoFatalAlert("\pAddLadyBugBonus: MakeNewSkeletonObject failed!");
+		DoFatalAlert("AddLadyBugBonus: MakeNewSkeletonObject failed!");
 	
 	cage->ChainNode = bug;
 	

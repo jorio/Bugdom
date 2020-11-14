@@ -56,7 +56,7 @@ void StartRecordingDemo(void)
 			
 	gDemoCacheHandle = (DemoCacheKeyType **)AllocHandle(MAX_DEMO_SIZE);	// alloc memory for it
 	if (gDemoCacheHandle == nil)
-		DoFatalAlert("\pCant allocate memory for record buffer.");
+		DoFatalAlert("Cant allocate memory for record buffer.");
 	HLockHi((Handle)gDemoCacheHandle);
 	gDemoCachePtr = *gDemoCacheHandle;
 	gDemoCacheIndex = 0;									// start @ -1 b/c 1st instance will ++ it.
@@ -107,10 +107,10 @@ Handle		resHandle;
 			/* SAVE DATA AS RESOURCE */
 			
 	resHandle = (Handle)gDemoCacheHandle;
-	AddResource(resHandle, 'dEmo', 1000, "\pDemo Data" );		// add resource
+	AddResource(resHandle, 'dEmo', 1000, "Demo Data" );		// add resource
 
 	if ( ResError() )
-		DoFatalAlert("\pSaveDemoData: AddResource failed!");
+		DoFatalAlert("SaveDemoData: AddResource failed!");
 	WriteResource( resHandle );									// update it
 	ReleaseResource(resHandle);									// nuke resource / recorded data
 
@@ -137,7 +137,7 @@ void InitDemoPlayback(void)
 
 	gDemoCacheHandle = (DemoCacheKeyType **)GetResource('dEmo',1000);	// read the resource
 	if (gDemoCacheHandle == nil)
-		DoFatalAlert("\pError reading Demo Resource!");
+		DoFatalAlert("Error reading Demo Resource!");
 			
 	DetachResource((Handle)gDemoCacheHandle);						// detach resource	
 	HLockHi((Handle)gDemoCacheHandle);

@@ -71,14 +71,14 @@ OSErr			iErr;
 				
 	iErr = DSpContext_GetFrontBuffer(gDisplayContext,(CGrafPtr *)&gCoverWindow);
 	if (iErr)
-		DoFatalAlert("\pInitWindowStuff: DSpContext_GetFrontBuffer failed!");
+		DoFatalAlert("InitWindowStuff: DSpContext_GetFrontBuffer failed!");
 #else
 
 	{
 		Rect	r;
 		
 		SetRect(&r, 0,0, 1024, 768);
-		gCoverWindow = NewCWindow(0L, &r, "\pBugdom", true, noGrowDocProc, (WindowPtr) - 1L, true, 0);
+		gCoverWindow = NewCWindow(0L, &r, "Bugdom", true, noGrowDocProc, (WindowPtr) - 1L, true, 0);
 
 	}
 
@@ -117,7 +117,7 @@ Boolean					confirmIt = false;
 	theError = DSpStartup();
 	if( theError )
 	{
-		DoFatalAlert("\pDSpStartup failed!");
+		DoFatalAlert("DSpStartup failed!");
 	}
 	gLoadedDrawSprocket = true;
 
@@ -167,14 +167,14 @@ Boolean					confirmIt = false;
 		theError = DSpFindBestContext( &displayConfig, &gDisplayContext );
 		if (theError)
 		{
-			DoFatalAlert("\pPrepDrawSprockets: DSpFindBestContext failed");
+			DoFatalAlert("PrepDrawSprockets: DSpFindBestContext failed");
 		}
 	}
 				/* RESERVE IT */
 
 	theError = DSpContext_Reserve( gDisplayContext, &displayConfig );
 	if( theError )
-		DoFatalAlert("\pPrepDrawSprockets: DSpContext_Reserve failed");
+		DoFatalAlert("PrepDrawSprockets: DSpContext_Reserve failed");
 		
 		
 			/* MAKE STATE ACTIVE */
@@ -189,7 +189,7 @@ Boolean					confirmIt = false;
 	{
 		DSpContext_Release( gDisplayContext );
 		gDisplayContext = nil;
-		DoFatalAlert("\pPrepDrawSprockets: DSpContext_SetState failed");
+		DoFatalAlert("PrepDrawSprockets: DSpContext_SetState failed");
 		return;
 	}
 
@@ -477,11 +477,11 @@ GWorldPtr	oldGW;
 
 	pm = GetGWorldPixMap(thisWorld);	
 	if ((pm == nil) | (*pm == nil) )
-		DoAlert("\pPixMap Handle or Ptr = Null?!");
+		DoAlert("PixMap Handle or Ptr = Null?!");
 
 	pm2 = GetGWorldPixMap(destWorld);	
 	if ((pm2 == nil) | (*pm2 == nil) )
-		DoAlert("\pPixMap Handle or Ptr = Null?!");
+		DoAlert("PixMap Handle or Ptr = Null?!");
 
 #if 1
 	SOURCE_PORT_PLACEHOLDER();
@@ -527,7 +527,7 @@ Rect			r;
 	GetGWorld (&oldGW,&oldGD);
 	pm = GetGWorldPixMap(thisWorld);	
 	if ((pm == nil) | (*pm == nil) )
-		DoAlert("\pPixMap Handle or Ptr = Null?!");
+		DoAlert("PixMap Handle or Ptr = Null?!");
 
 	SetPort(GetWindowPort(thisWindow));
 
@@ -568,7 +568,7 @@ GWorldPtr		oldGW;
 	GetGWorld (&oldGW,&oldGD);
 	pm = GetGWorldPixMap(thisWorld);	
 	if ((pm == nil) | (*pm == nil) )
-		DoAlert("\pPixMap Handle or Ptr = Null?!");
+		DoAlert("PixMap Handle or Ptr = Null?!");
 
 	SetPort(GetWindowPort(thisWindow));
 
@@ -605,7 +605,7 @@ Rect			r;
 	GetGWorld (&oldGW,&oldGD);
 	pm = GetGWorldPixMap(thisWorld);	
 	if ((pm == nil) | (*pm == nil) )
-		DoAlert("\pPixMap Handle or Ptr = Null?!");
+		DoAlert("PixMap Handle or Ptr = Null?!");
 
 	SetPort(GetWindowPort(thisWindow));
 
@@ -636,7 +636,7 @@ PixMapHandle pm;
 	
 	pm = GetGWorldPixMap(world);
 	if (LockPixels(pm) == false)
-		DoFatalAlert("\pPixMap Went Bye,Bye?!");
+		DoFatalAlert("PixMap Went Bye,Bye?!");
 }
 
 
