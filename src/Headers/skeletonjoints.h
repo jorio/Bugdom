@@ -1,6 +1,7 @@
 //
 // skeletonJoints.h
 //
+#pragma once
 
 enum
 {

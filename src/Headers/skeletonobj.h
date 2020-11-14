@@ -1,6 +1,7 @@
 //
 // SkeletonObj.h
 //
+#pragma once
 
 #define 	MAX_SKELETON_TYPES	24
 

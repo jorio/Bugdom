@@ -1,6 +1,7 @@
 //
 // file.h
 //
+#pragma once
 
 		/***********************/
 		/* RESOURCE STURCTURES */

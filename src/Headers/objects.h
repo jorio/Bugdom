@@ -1,6 +1,8 @@
 //
 // Object.h
 //
+#pragma once
+
 #include "qd3d_support.h"
 
 #define INVALID_NODE_FLAG	0xdeadbeef			// put into CType when node is deleted

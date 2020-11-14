@@ -1,6 +1,7 @@
 //
 // anim.h
 //
+#pragma once
 
 
 		/* ANIM EVENTS */

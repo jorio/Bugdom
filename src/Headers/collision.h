@@ -1,6 +1,7 @@
 //
 // collision.h
 //
+#pragma once
 
 enum
 {
