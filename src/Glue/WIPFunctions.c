@@ -19,18 +19,6 @@ void SndDoCommand(SndChannelPtr chan, SndCommand cmd, Boolean noWait)
 	SOURCE_PORT_MINOR_PLACEHOLDER();
 }
 
-Rect* GetPortBounds(CGrafPtr port, const Rect* rect)
-{
-	SOURCE_PORT_PLACEHOLDER();
-	return NULL;
-}
-
-CGrafPtr GetWindowPort(WindowPtr window)
-{
-	SOURCE_PORT_MINOR_PLACEHOLDER();
-	return NULL;
-}
-
 void OffsetRect(Rect* rect, short dh, short dv)
 {
 	SOURCE_PORT_MINOR_PLACEHOLDER();
