@@ -89,7 +89,7 @@ Str255		numStr;
 
 /*********************** DO ALERT *******************/
 
-void DoAlert(Str255 s)
+void DoAlert(const char* s)
 {
 
 #if 1
@@ -131,7 +131,7 @@ void DoAlertNum(int n)
 		
 /*********************** DO FATAL ALERT *******************/
 
-void DoFatalAlert(Str255 s)
+void DoFatalAlert(const char* s)
 {
 #if 1
 	printf("BUGDOM FATAL ALERT: %s\n", s);
@@ -153,7 +153,7 @@ OSErr	iErr;
 
 /*********************** DO FATAL ALERT 2 *******************/
 
-void DoFatalAlert2(Str255 s1, Str255 s2)
+void DoFatalAlert2(const char* s1, const char* s2)
 {
 #if 1
 	printf("BUGDOM FATAL ALERT: %s - %s\n", s1, s2);

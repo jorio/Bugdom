@@ -10,8 +10,9 @@
 
 
 extern	void ShowSystemErr(long err);
-extern void	DoAlert(Str255);
-extern void	DoFatalAlert(Str255);
+extern void	DoAlert(const char*);
+extern void	DoFatalAlert(const char*);
+extern	void DoFatalAlert2(const char* s1, const char* s2);
 void Wait(u_long ticks);
 extern unsigned char	*NumToHex(unsigned short);
 extern unsigned char	*NumToHex2(unsigned long, short);
@@ -26,7 +27,6 @@ extern	void PStringToC(char *pString, char *cString);
 extern	void DrawCString(char *string);
 extern	void InitMyRandomSeed(void);
 extern	void VerifySystem(void);
-extern	void DoFatalAlert2(Str255 s1, Str255 s2);
 extern	float RandomFloat(void);
 u_short	RandomRange(unsigned short min, unsigned short max);
 extern	void RegulateSpeed(short fps);
