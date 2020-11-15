@@ -464,6 +464,8 @@ Boolean			fo = false;
 			MakeFadeEvent(false);
 			fo = true;
 		}		
+
+		DoSDLMaintenance();
 	}
 
 
