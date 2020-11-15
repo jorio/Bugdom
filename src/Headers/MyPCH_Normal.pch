@@ -100,6 +100,7 @@
 #include "pick.h"
 
 #include "gamepatches.h"
+#include "structformats.h"
 
 #define SOURCE_PORT_PLACEHOLDER() DoFatalAlert2("Source port: this function is not implemented yet", __func__)
 #define SOURCE_PORT_MINOR_PLACEHOLDER() printf("Source port: TODO: %s:%d\n", __func__, __LINE__)

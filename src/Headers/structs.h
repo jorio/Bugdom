@@ -127,11 +127,12 @@ typedef struct
 
 
 		/* CURRENT JOINT STATE */
+		// (READ IN FROM FILE -- MUST BE BYTESWAPPED!)
 		
 typedef struct
 {
-	long		tick;					// time at which this state exists
-	long		accelerationMode;		// mode of in/out acceleration
+	int32_t		tick;					// time at which this state exists
+	int32_t		accelerationMode;		// mode of in/out acceleration
 	TQ3Point3D	coord;					// current 3D coords of joint (relative to link)
 	TQ3Vector3D	rotation;				// current rotation values of joint (relative to link)
 	TQ3Vector3D	scale;					// current scale values of joint mesh
@@ -147,10 +148,11 @@ typedef struct
 }JointKeyFrameHeader;
 
 			/* ANIM EVENT TYPE */
-			
+			// (READ IN FROM FILE -- MUST BE BYTESWAPPED!)
+
 typedef struct
 {
-	short	time;
+	int16_t	time;
 	Byte	type;
 	Byte	value;
 }AnimEventType;
