@@ -481,6 +481,9 @@ int		volume;
 	gCurrentSong 	= songNum;
 	gResetSong 		= false;
 	gLoopSongFlag 	= loopFlag;
+#if 1
+	SOURCE_PORT_MINOR_PLACEHOLDER();
+#else
 	KillSong();
 	DoSoundMaintenance();
 
@@ -577,6 +580,7 @@ int		volume;
 			
 			/* START PLAYING FROM FILE */
 
+#endif
 stream_again:					
 #if 0
 	iErr = SndStartFilePlay(gMusicChannel, gMusicFileRefNum, 0, STREAM_BUFFER_SIZE, gMusicBuffer,

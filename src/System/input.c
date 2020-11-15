@@ -347,7 +347,12 @@ void RemoveKeyboardEventHandler(void)
 static Boolean WeAreFrontProcess(void)
 {
 #if 1
-	SOURCE_PORT_MINOR_PLACEHOLDER();
+	static Boolean once = false;
+	if (!once)
+	{
+		SOURCE_PORT_MINOR_PLACEHOLDER();
+		once = true;
+	}
 	return true;
 #else
 ProcessSerialNumber	frontProcess, myProcess;
