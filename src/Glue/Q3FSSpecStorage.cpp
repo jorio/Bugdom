@@ -2,10 +2,7 @@
 #include <QuesaStorage.h>  // For TQ3StorageObject
 //#include "QD3DStorage.h"
 
-extern "C"
-{
-	TQ3StorageObject Q3FSSpecStorage_New(const FSSpec* spec);
-}
+#include "gamepatches.h"
 
 //-----------------------------------------------------------------------------
 // Pomme extensions for Quesa
