@@ -169,7 +169,7 @@ TQ3Object		myObject;
 			if (myGroup)
 				Q3Object_Dispose(myGroup);
 
-			DoAlert("MyRead3DMFModel: Q3File_ReadObject Failed!");
+			printf("!!! MyRead3DMFModel: Q3File_ReadObject Failed!\n");
 			QD3D_ShowRecentError();
 			break;
 		}

@@ -23,7 +23,6 @@ extern	QD3DSetupOutputType		*gGameViewInfoPtr;
 /****************************/
 
 static void CreateDrawContext(QD3DViewDefType *viewDefPtr);
-static void CreateDrawContext_Pixmap(QD3DViewDefType *viewDefPtr);
 static void SetStyles(QD3DStyleDefType *styleDefPtr);
 static void CreateCamera(QD3DSetupInputType *setupDefPtr);
 static void CreateLights(QD3DLightDefType *lightDefPtr);
@@ -70,6 +69,12 @@ static TQ3ColorARGB	gFogColor;
 float			gYon;
 
 Boolean		gQD3DInitialized = false;
+
+
+		/* SOURCE PORT EXTRAS */
+
+static Boolean gQD3D_FreshDrawContext = false;
+
 
 
 		/* RAVE INFO */
@@ -135,7 +140,7 @@ TQ3Vector3D			fillDirection2 = { -.8, .8, -.2 };
 	else
 		viewDef->view.useWindow 	=	true;							// assume going to window
 	viewDef->view.displayWindow 	= theWindow;
-	viewDef->view.rendererType 		= kQ3RendererTypeInteractive;
+	viewDef->view.rendererType 		= kQ3RendererTypeOpenGL;
 	viewDef->view.clearColor 		= clearColor;
 	viewDef->view.paneClip.left 	= 0;
 	viewDef->view.paneClip.right 	= 0;
@@ -346,23 +351,19 @@ TQ3Uns32	hints;
 
 static void CreateDrawContext(QD3DViewDefType *viewDefPtr)
 {
-#if 1
-	SOURCE_PORT_PLACEHOLDER();
-#else
 TQ3DrawContextData		drawContexData;
-TQ3MacDrawContextData	myMacDrawContextData;
-Rect					r;
+TQ3SDLDrawContextData	myMacDrawContextData;
+extern SDL_Window*		gSDLWindow;
+
+	int ww, wh;
+	SDL_GL_GetDrawableSize(gSDLWindow, &ww, &wh);
 
 			/* SEE IF DOING PIXMAP CONTEXT */
 			
 	if (!viewDefPtr->useWindow)
 	{
-		CreateDrawContext_Pixmap(viewDefPtr);
-		return;	
+		DoFatalAlert("Pixmap context not supported!");
 	}
-
-	GetPortBounds(GetWindowPort(viewDefPtr->displayWindow), &r);
-
 
 			/* FILL IN DRAW CONTEXT DATA */
 
@@ -372,103 +373,31 @@ Rect					r;
 		drawContexData.clearImageMethod = kQ3ClearMethodWithColor;		
 	
 	drawContexData.clearImageColor = viewDefPtr->clearColor;				// color to clear to
-	drawContexData.pane.min.x = viewDefPtr->paneClip.left;					// set bounds?
-	drawContexData.pane.max.x = r.right-viewDefPtr->paneClip.right;
-	drawContexData.pane.min.y = viewDefPtr->paneClip.top;
-	drawContexData.pane.max.y = r.bottom-viewDefPtr->paneClip.bottom;
-	
-	drawContexData.pane.min.x += gAdditionalClipping;						// offset bounds by user clipping
-	drawContexData.pane.max.x -= gAdditionalClipping;
-	drawContexData.pane.min.y += gAdditionalClipping*.75;
-	drawContexData.pane.max.y -= gAdditionalClipping*.75;
-	
-	
-	
+	drawContexData.pane = GetAdjustedPane(ww, wh, viewDefPtr->paneClip);
+
+#if DEBUG_WIREFRAME
+	drawContexData.clearImageColor.a = 1.0f;
+	drawContexData.clearImageColor.r = 0.0f;
+	drawContexData.clearImageColor.g = 0.5f;
+	drawContexData.clearImageColor.b = 1.0f;
+#endif
+
 	drawContexData.paneState = kQ3True;										// use bounds?
 	drawContexData.maskState = kQ3False;									// no mask
 	drawContexData.doubleBufferState = kQ3True;								// double buffering
 
 	myMacDrawContextData.drawContextData = drawContexData;					// set MAC specifics
-	myMacDrawContextData.window = (CWindowPtr)viewDefPtr->displayWindow;	// assign window to draw to
-	myMacDrawContextData.library = kQ3Mac2DLibraryNone;						// use standard QD libraries (no GX crap!)
-	myMacDrawContextData.viewPort = nil;									// (for GX only)
-	myMacDrawContextData.grafPort = GetWindowPort(viewDefPtr->displayWindow);	// assign grafport
+	myMacDrawContextData.sdlWindow = gSDLWindow;							// assign window to draw to
 
 
 			/* CREATE DRAW CONTEXT */
 
-	gQD3D_DrawContext = Q3MacDrawContext_New(&myMacDrawContextData);
+	gQD3D_DrawContext = Q3SDLDrawContext_New(&myMacDrawContextData);
 	if (gQD3D_DrawContext == nil)
 		DoFatalAlert("Q3MacDrawContext_New Failed!");
-#endif
-}
 
 
-/**************** CREATE DRAW CONTEXT: PIXMAP *********************/
-
-static void CreateDrawContext_Pixmap(QD3DViewDefType *viewDefPtr)
-{
-#if 1
-	SOURCE_PORT_PLACEHOLDER();
-#else
-TQ3DrawContextData			drawContexData;
-TQ3PixmapDrawContextData	myPixDrawContextData;
-Rect						r;
-TQ3Pixmap					pixmap;
-PixMapHandle 			hPixMap;
-long					width,height;
-GWorldPtr				theGWorld;
-long					pixelSize;
-
-		/* GET GWORLD INFO */
-		
-	theGWorld = viewDefPtr->gworld;
-	
-	GetPortBounds(theGWorld, &r);
-
-	width = r.right-r.left;
-	height = r.bottom-r.top;
-
-	hPixMap = GetGWorldPixMap(theGWorld);							// calc addr & rowbytes
-	NoPurgePixels(hPixMap);
-	LockPixels(hPixMap);
-		
-	pixelSize = (**hPixMap).pixelSize;
-
-		/* CREATE PIXMAP DATA */
-			
-	pixmap.image		= GetPixBaseAddr(hPixMap);
-	pixmap.width 		= width;
-	pixmap.height		= height;
-	pixmap.rowBytes 	= (**hPixMap).rowBytes & 0x7fff;
-	pixmap.pixelSize 	= pixelSize;
-	if (pixelSize == 16)
-		pixmap.pixelType	= kQ3PixelTypeRGB16;
-	else
-		pixmap.pixelType	= kQ3PixelTypeARGB32;
-	pixmap.bitOrder		= kQ3EndianBig;
-	pixmap.byteOrder	= kQ3EndianBig;
-
-
-			/* FILL IN DRAW CONTEXT DATA */
-
-	drawContexData.clearImageMethod = kQ3ClearMethodWithColor;				// how to clear
-	drawContexData.clearImageColor = viewDefPtr->clearColor;				// color to clear to
-	
-	drawContexData.paneState = kQ3False;									// use bounds?
-	drawContexData.maskState = kQ3False;									// no mask
-	drawContexData.doubleBufferState = kQ3False;								// double buffering
-
-	myPixDrawContextData.drawContextData = drawContexData;					// set PIXMAP specifics
-	myPixDrawContextData.pixmap = pixmap;
-
-
-			/* CREATE DRAW CONTEXT */
-
-	gQD3D_DrawContext = Q3PixmapDrawContext_New(&myPixDrawContextData);
-	if (gQD3D_DrawContext == nil)
-		DoFatalAlert("Q3PixmapDrawContext_New Failed!");
-#endif
+	gQD3D_FreshDrawContext = true;
 }
 
 
@@ -496,7 +425,11 @@ static void SetStyles(QD3DStyleDefType *styleDefPtr)
 
 				/* SET POLYGON FILL STYLE */
 						
+#if DEBUG_WIREFRAME
+	gQD3D_FillStyle = Q3FillStyle_New(kQ3FillStyleEdges);
+#else
 	gQD3D_FillStyle = Q3FillStyle_New(styleDefPtr->fill);
+#endif
 	if ( gQD3D_FillStyle == nil )
 		DoFatalAlert(" Q3FillStyle_New Failed!");
 
