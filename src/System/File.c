@@ -78,19 +78,20 @@ typedef struct
 
 
 		/* PLAYFIELD HEADER */
+		// (READ IN FROM FILE -- MUST BE BYTESWAPPED!)
 		
 typedef struct
 {
 	NumVersion	version;							// version of file
-	long		numItems;							// # items in map
-	long		mapWidth;							// width of map
-	long		mapHeight;							// height of map	
-	long		numTilePages;						// # tile pages
-	long		numTilesInList;						// # extracted tiles in list
+	int32_t		numItems;							// # items in map
+	int32_t		mapWidth;							// width of map
+	int32_t		mapHeight;							// height of map
+	int32_t		numTilePages;						// # tile pages
+	int32_t		numTilesInList;						// # extracted tiles in list
 	float		tileSize;							// 3D unit size of a tile
 	float		minY,maxY;							// min/max height values
-	long		numSplines;							// # splines
-	long		numFences;							// # fences
+	int32_t		numSplines;							// # splines
+	int32_t		numFences;							// # fences
 }PlayfieldHeaderType;
 
 		/* FENCE STRUCTURE IN FILE */
@@ -99,14 +100,15 @@ typedef struct
 		//		since the game uses a slightly different
 		//		data structure.
 		//
+		// (READ IN FROM FILE -- MUST BE BYTESWAPPED!)
 		
 typedef struct
 {
-	u_short			type;				// type of fence
-	short			numNubs;			// # nubs in fence
-	FencePointType	**nubList;			// handle to nub list	
+	uint16_t		type;				// type of fence
+	int16_t			numNubs;			// # nubs in fence
+	int32_t 		_junkptr1;
 	Rect			bBox;				// bounding box of fence area	
-}FileFenceDefType;
+} File_FenceDefType;
 
 
 /**********************/
@@ -913,8 +915,9 @@ short					**xlateTableHand,*xlateTbl;
 		DoAlert("ReadDataFromPlayfieldFile: Error reading header resource!");
 		return;
 	}
-	
-	header = (PlayfieldHeaderType **)hand;	
+
+	BYTESWAP_STRUCT_ARRAY_HANDLE_2(PlayfieldHeaderType, 1, hand);
+	header = (PlayfieldHeaderType **)hand;
 	gNumTerrainItems		= (**header).numItems;
 	gTerrainTileWidth		= (**header).mapWidth;
 	gTerrainTileDepth		= (**header).mapHeight;	
@@ -945,6 +948,7 @@ short					**xlateTableHand,*xlateTbl;
 	else
 	{
 		DetachResource(hand);							// lets keep this data around
+		BYTESWAP_SCALAR_ARRAY_HANDLE(u_short, hand);
 		gTileDataHandle = (u_short **)hand;
 	}
 
@@ -971,6 +975,7 @@ short					**xlateTableHand,*xlateTbl;
 	{
 		DetachResource(hand);
 		HLockHi(hand);									// hold on to this rez until we're done reading maps below
+		BYTESWAP_SCALAR_ARRAY_HANDLE(short, hand);
 		xlateTableHand = (short **)hand;
 		xlateTbl = *xlateTableHand;
 	}
@@ -991,8 +996,8 @@ short					**xlateTableHand,*xlateTbl;
 		DoFatalAlert("ReadDataFromPlayfieldFile: Error reading floor resource!");
 	else																			// copy rez into 2D array
 	{
-		u_short	*src;
-		src = (u_short *)*hand;					
+		BYTESWAP_SCALAR_ARRAY_HANDLE_2(u_short, gTerrainTileDepth*gTerrainTileWidth, hand);
+		u_short	*src = *hand;
 		for (row = 0; row < gTerrainTileDepth; row++)
 			for (col = 0; col < gTerrainTileWidth; col++)
 			{
@@ -1017,8 +1022,8 @@ short					**xlateTableHand,*xlateTbl;
 			DoFatalAlert("ReadDataFromPlayfieldFile: Error reading ceiling resource!");
 		else																			// copy rez into 2D array
 		{
-			u_short	*src;
-			src = (u_short *)*hand;					
+			BYTESWAP_SCALAR_ARRAY_HANDLE_2(u_short, gTerrainTileDepth*gTerrainTileWidth, hand);
+			u_short	*src = *hand;
 			for (row = 0; row < gTerrainTileDepth; row++)
 				for (col = 0; col < gTerrainTileWidth; col++)
 				{
@@ -1045,8 +1050,8 @@ short					**xlateTableHand,*xlateTbl;
 		DoFatalAlert("ReadDataFromPlayfieldFile: Error reading ceiling resource!");
 	else																			// copy rez into 2D array
 	{
-		u_short	*src;
-		src = (u_short *)*hand;					
+		BYTESWAP_SCALAR_ARRAY_HANDLE_2(u_short, gTerrainTileDepth*gTerrainTileWidth, hand);
+		u_short	*src = (u_short *)*hand;
 		for (row = 0; row < gTerrainTileDepth; row++)
 			for (col = 0; col < gTerrainTileWidth; col++)
 			{
@@ -1068,14 +1073,13 @@ short					**xlateTableHand,*xlateTbl;
 	
 	for (i = 0; i < numLayers; i++)
 	{		
-		float	*src;
-	
 		hand = GetResource('YCrd',1000+i);
 		if (hand == nil)
 			DoAlert("ReadDataFromPlayfieldFile: Error reading height data resource!");
 		else
 		{
-			src = (float *)*hand;					
+			BYTESWAP_SCALAR_ARRAY_HANDLE_2(float, (gTerrainTileDepth+1)*(gTerrainTileWidth+1), hand);
+			float* src = *hand;
 			for (row = 0; row <= gTerrainTileDepth; row++)
 				for (col = 0; col <= gTerrainTileWidth; col++)
 					gMapYCoords[row][col].layerY[i] = *src++ * yScale;
@@ -1089,8 +1093,6 @@ short					**xlateTableHand,*xlateTbl;
 	
 	for (i = 0; i < numLayers; i++)
 	{		
-		u_short	*src;
-
 		Alloc_2d_array(u_short, gVertexColors[i], gTerrainTileDepth+1, gTerrainTileWidth+1);	// alloc 2D array for map
 		if (gVertexColors[i] == nil)
 			DoFatalAlert("ReadDataFromPlayfieldFile: Alloc_2d_array failed!");
@@ -1100,7 +1102,8 @@ short					**xlateTableHand,*xlateTbl;
 			DoFatalAlert("ReadDataFromPlayfieldFile: Error reading color data resource!");
 		else
 		{
-			src = (u_short *)*hand;					
+			BYTESWAP_SCALAR_ARRAY_HANDLE_2(u_short, (gTerrainTileDepth+1)*(gTerrainTileWidth+1), hand);
+			u_short* src = *hand;
 			for (row = 0; row <= gTerrainTileDepth; row++)
 				for (col = 0; col <= gTerrainTileWidth; col++)
 					gVertexColors[i][row][col] = *src++;
@@ -1114,14 +1117,12 @@ short					**xlateTableHand,*xlateTbl;
 	
 	for (i = 0; i < numLayers; i++)												// floor & ceiling
 	{		
-		Byte	*src;
-	
 		hand = GetResource('Splt',1000+i);
 		if (hand == nil)
 			DoFatalAlert("ReadDataFromPlayfieldFile: Error reading splitmode data resource!");
 		else
 		{	
-			src = (Byte *)*hand;					
+			Byte* src = (Byte*)*hand;  // no need to byteswap - it's just bytes
 			for (row = 0; row < gTerrainTileDepth; row++)						
 				for (col = 0; col < gTerrainTileWidth; col++)
 					gMapInfoMatrix[row][col].splitMode[i] = *src++;
@@ -1144,6 +1145,7 @@ short					**xlateTableHand,*xlateTbl;
 		DetachResource(hand);							// lets keep this data around		
 		HLockHi(hand);									// LOCK this one because we have the lookup table into this
 		gMasterItemList = (TerrainItemEntryType **)hand;
+		BYTESWAP_STRUCT_ARRAY_HANDLE_2(TerrainItemEntryType, gNumTerrainItems, gMasterItemList);
 	}
 		
 	
@@ -1158,7 +1160,25 @@ short					**xlateTableHand,*xlateTbl;
 	{	
 		DetachResource(hand);
 		HLockHi(hand);
-		gSplineList = (SplineDefType **)hand;
+
+		// SOURCE PORT NOTE: we have to convert this structure manually,
+		// because the original contains 4-byte pointers
+		BYTESWAP_STRUCT_ARRAY_HANDLE_2(File_SplineDefType, gNumSplines, hand);
+
+		gSplineList = (SplineDefType **) NewHandleClear(gNumSplines * sizeof(SplineDefType));
+
+		for (i = 0; i < gNumSplines; i++)
+		{
+			const File_SplineDefType*	srcSpline = &(*((File_SplineDefType **) hand))[i];
+			SplineDefType*				dstSpline = &(*gSplineList)[i];
+
+			dstSpline->numItems		= srcSpline->numItems;
+			dstSpline->numNubs		= srcSpline->numNubs;
+			dstSpline->numPoints	= srcSpline->numPoints;
+			dstSpline->bBox			= srcSpline->bBox;
+		}
+
+		DisposeHandle(hand);
 	}
 	else
 		gNumSplines = 0;	
@@ -1173,6 +1193,7 @@ short					**xlateTableHand,*xlateTbl;
 		{	
 			DetachResource(hand);
 			HLockHi(hand);
+			BYTESWAP_STRUCT_ARRAY_HANDLE_2(SplinePointType, (*gSplineList)[i].numPoints, hand);
 			(*gSplineList)[i].pointList = (SplinePointType **)hand;
 		}
 		else
@@ -1189,6 +1210,7 @@ short					**xlateTableHand,*xlateTbl;
 		{	
 			DetachResource(hand);
 			HLockHi(hand);
+			BYTESWAP_STRUCT_ARRAY_HANDLE_2(SplineItemType, (*gSplineList)[i].numItems, hand);
 			(*gSplineList)[i].itemList = (SplineItemType **)hand;
 		}
 		else
@@ -1205,13 +1227,14 @@ short					**xlateTableHand,*xlateTbl;
 	hand = GetResource('Fenc',1000);
 	if (hand)
 	{	
-		FileFenceDefType *inData;
+		File_FenceDefType *inData;
 
 		gFenceList = (FenceDefType *)AllocPtr(sizeof(FenceDefType) * gNumFences);	// alloc new ptr for fence data
 		if (gFenceList == nil)
 			DoFatalAlert("ReadDataFromPlayfieldFile: AllocPtr failed");
-			
-		inData = (FileFenceDefType *)*hand;								// get ptr to input fence list
+
+		BYTESWAP_STRUCT_ARRAY_HANDLE_2(File_FenceDefType, gNumFences, hand);
+		inData = (File_FenceDefType *)*hand;							// get ptr to input fence list
 		
 		for (i = 0; i < gNumFences; i++)								// copy data from rez to new list
 		{
@@ -1238,6 +1261,7 @@ short					**xlateTableHand,*xlateTbl;
 		{	
 			DetachResource(hand);
 			HLockHi(hand);
+			BYTESWAP_STRUCT_ARRAY_HANDLE_2(FencePointType, gFenceList[i].numNubs, hand);
 			gFenceList[i].nubList = (FencePointType **)hand;
 		}
 		else

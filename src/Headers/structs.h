@@ -32,19 +32,34 @@
 			/* SPLINE STRUCTURES */
 			/*********************/
 
+		// (READ IN FROM FILE -- MUST BE BYTESWAPPED!)
 typedef	struct
 {
 	float	x,z;
 }SplinePointType;
 
+		// (READ IN FROM FILE -- MUST BE BYTESWAPPED!)
 typedef struct
 {
 	float			placement;			// where on spline to start item (0=front, 1.0 = end)
-	u_short			type;
+	uint16_t		type;
 	Byte			parm[4];
-	u_short			flags;
+	uint16_t		flags;
 }SplineItemType;
 
+		// (READ IN FROM FILE -- MUST BE BYTESWAPPED!)
+typedef struct
+{
+	int16_t			numNubs;			// # nubs in spline
+	int16_t 		_pad1;
+	int32_t			_junkptr1;
+	int32_t			numPoints;			// # points in spline
+	int32_t			_junkptr2;
+	int16_t			numItems;			// # items on the spline
+	int16_t 		_pad2;
+	int32_t			_junkptr3;
+	Rect			bBox;				// bounding box of spline area
+}File_SplineDefType;
 
 typedef struct
 {
@@ -239,13 +254,14 @@ typedef struct
 
 
 			/* TERRAIN ITEM ENTRY TYPE */
+			// (READ IN FROM FILE -- MUST BE BYTESWAPPED!)
 
 typedef struct
 {
-	u_short							x,y;
-	u_short							type;
+	uint16_t						x,y;
+	uint16_t						type;
 	Byte							parm[4];
-	u_short							flags;									
+	uint16_t						flags;
 }TerrainItemEntryType;
 
 

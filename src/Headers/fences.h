@@ -5,9 +5,10 @@
 #ifndef FENCE_H
 #define FENCE_H
 
+		// (READ IN FROM FILE -- MUST BE BYTESWAPPED!)
 typedef	struct
 {
-	long	x,z;
+	int32_t	x,z;
 }FencePointType;
 
 
