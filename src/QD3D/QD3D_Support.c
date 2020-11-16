@@ -1039,7 +1039,7 @@ char				pictHeader[PICT_HEADER_SIZE];
 	{
 				/* LOAD PICT FROM FILE */
 	
-		iErr = FSpOpenDF(myFSSpec,fsCurPerm,&fRefNum);
+		iErr = FSpOpenDF(myFSSpec,fsRdPerm,&fRefNum);
 		if (iErr)
 		{
 			DoAlert("Sorry, can open that PICT file!");

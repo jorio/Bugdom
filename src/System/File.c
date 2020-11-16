@@ -841,7 +841,7 @@ short	fRefNum;
 			
 				/* OPEN THE REZ-FORK */
 			
-	fRefNum = FSpOpenResFile(specPtr,fsCurPerm);
+	fRefNum = FSpOpenResFile(specPtr,fsRdPerm);
 	if (fRefNum == -1)
 		DoFatalAlert("LoadPlayfield: FSpOpenResFile failed");
 	UseResFile(fRefNum);
