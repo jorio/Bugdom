@@ -724,7 +724,7 @@ check_x:
 /*============================== COLLISION TRIANGLES =======================================*/
 /*==========================================================================================*/
 
-#pragma mark ########## COLLISION TRIANGLE GENERATION ################
+#pragma mark ========== COLLISION TRIANGLE GENERATION ==========
 
 #if 0
 /******************* CREATE COLLISION TRIANGES FOR OBJECT *************************/
@@ -997,7 +997,7 @@ void DisposeCollisionTriangleMemory(ObjNode *theNode)
 
 #endif
 
-#pragma mark ############ POINT COLLISION #################
+#pragma mark ========== POINT COLLISION ==========
 
 /****************** IS POINT IN POLY ****************************/
 /*
@@ -1894,7 +1894,7 @@ got_it:
 #endif
 
 
-#pragma mark ######### TERRAIN COLLISION #################
+#pragma mark ========== TERRAIN COLLISION ==========
 
 
 
