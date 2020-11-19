@@ -468,6 +468,7 @@ float fps;
 		DoMyTerrainUpdate();
 		QD3D_DrawScene(gGameViewInfoPtr,DrawTerrain);
 		QD3D_CalcFramesPerSecond();
+		DoSDLMaintenance();
 		gDisableHiccupTimer = false;
 
 

@@ -500,6 +500,7 @@ static Boolean TitleWaitAndDraw(float duration)
 		QD3D_MoveParticles();
 		QD3D_DrawScene(gGameViewInfoPtr,TitleDrawStuff);
 		QD3D_CalcFramesPerSecond();				
+		DoSDLMaintenance();
 		duration -= gFramesPerSecondFrac;
 		
 		if (Button())

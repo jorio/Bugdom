@@ -1463,6 +1463,7 @@ static Boolean WaitAndDraw(float duration)
 		QD3D_MoveParticles();
 		QD3D_DrawScene(gGameViewInfoPtr,IntroDrawStuff);
 		QD3D_CalcFramesPerSecond();				
+		DoSDLMaintenance();
 		duration -= gFramesPerSecondFrac;
 		
 		if (Button())
