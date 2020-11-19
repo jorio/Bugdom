@@ -132,15 +132,23 @@ enum
 	kKey_LowerVolume 		= KEY_MINUS,
 	
 	kKey_MorphPlayer		= KEY_SPACE,
+#if __APPLE__
 	kKey_Jump				= KEY_APPLE,
+#else
+	kKey_Jump				= KEY_OPTION,
+#endif
 	
 	kKey_AutoWalk			= KEY_SHIFT,
 	kKey_Forward			= KEY_UP,
 	kKey_Backward			= KEY_DOWN,
 	kKey_Left				= KEY_LEFT,
 	kKey_Right				= KEY_RIGHT,
-	
+
+#if __APPLE__
 	kKey_KickBoost			= KEY_OPTION,
+#else
+	kKey_KickBoost			= KEY_CTRL,
+#endif
 	kKey_BuddyAttack		= KEY_TAB,
 	
 	kKey_Quit				= KEY_Q
