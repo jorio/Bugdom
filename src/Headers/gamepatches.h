@@ -12,6 +12,8 @@ TQ3Area GetAdjustedPane(int windowWidth, int windowHeight, Rect paneClip);
 
 void DoSDLMaintenance(void);
 
+OSErr DrawPictureIntoGWorld(FSSpec *myFSSpec, GWorldPtr *theGWorld);
+
 OSErr DrawPictureToScreen(FSSpec* spec, short x, short y);
 
 //-----------------------------------------------------------------------------

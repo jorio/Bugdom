@@ -48,6 +48,37 @@ TQ3Area GetAdjustedPane(int windowWidth, int windowHeight, Rect paneClip)
 	return pane;
 }
 
+OSErr DrawPictureIntoGWorld(FSSpec* spec, GWorldPtr* theGWorld)
+{
+	short refNum;
+
+	OSErr error = FSpOpenDF(spec, fsRdPerm, &refNum);
+	if (noErr != error)
+	{
+		return error;
+	}
+
+	auto& stream = Pomme::Files::GetStream(refNum);
+	auto pict = Pomme::Graphics::ReadPICT(stream, true);
+	FSClose(refNum);
+
+	Rect boundsRect;
+	boundsRect.left = 0;
+	boundsRect.top = 0;
+	boundsRect.right = pict.width;
+	boundsRect.bottom = pict.height;
+
+	NewGWorld(theGWorld, 32, &boundsRect, 0, 0, 0);
+
+	GrafPtr oldPort;
+	GetPort(&oldPort);
+	SetPort(*theGWorld);
+	Pomme::Graphics::DrawARGBPixmap(0, 0, pict);
+	SetPort(oldPort);
+
+	return noErr;
+}
+
 OSErr DrawPictureToScreen(FSSpec* spec, short x, short y)
 {
 	short refNum;
@@ -55,7 +86,6 @@ OSErr DrawPictureToScreen(FSSpec* spec, short x, short y)
 	OSErr error = FSpOpenDF(spec, fsRdPerm, &refNum);
 	if (noErr != error)
 	{
-		TODO2("Couldn't open picture: " << spec->cName);
 		return error;
 	}
 

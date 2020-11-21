@@ -514,9 +514,6 @@ Rect	destRect;
 
 void DumpGWorld2(GWorldPtr thisWorld, WindowPtr thisWindow,Rect *destRect)
 {
-#if 1
-	SOURCE_PORT_MINOR_PLACEHOLDER();
-#else
 PixMapHandle pm;
 GDHandle		oldGD;
 GWorldPtr		oldGW;
@@ -536,17 +533,18 @@ Rect			r;
 
 	GetPortBounds(thisWorld, &r);
 				
-	CopyBits((BitMap *)*pm, GetPortBitMapForCopyBits(GetWindowPort(thisWindow)),
-			 &r,
-			 destRect,
-			 srcCopy, 0);
+	CopyBits(/*(BitMap *)*/ *pm,
+			GetPortBitMapForCopyBits(GetWindowPort(thisWindow)),
+			&r,
+			destRect,
+			srcCopy,
+			0);
 
 	SetGWorld(oldGW,oldGD);								// restore gworld
 	
 	
-	QDFlushPortBuffer(GetWindowPort(thisWindow), nil);				
-	
-#endif
+	//QDFlushPortBuffer(GetWindowPort(thisWindow), nil);
+
 }
 
 /*********************** DUMP GWORLD 3 **********************/
@@ -556,9 +554,6 @@ Rect			r;
 
 void DumpGWorld3(GWorldPtr thisWorld, WindowPtr thisWindow,Rect *srcRect, Rect *destRect)
 {
-#if 1
-	SOURCE_PORT_MINOR_PLACEHOLDER();
-#else
 PixMapHandle pm;
 GDHandle		oldGD;
 GWorldPtr		oldGW;
@@ -575,16 +570,17 @@ GWorldPtr		oldGW;
 	ForeColor(blackColor);
 	BackColor(whiteColor);
 				
-	CopyBits((BitMap *)*pm, GetPortBitMapForCopyBits(GetWindowPort(thisWindow)),
-			 srcRect,
-			 destRect,
-			 srcCopy, 0);
+	CopyBits(/*(BitMap *)*/ *pm,
+			GetPortBitMapForCopyBits(GetWindowPort(thisWindow)),
+			srcRect,
+			destRect,
+			srcCopy,
+			0);
 
 	SetGWorld(oldGW,oldGD);								// restore gworld
 	
-	QDFlushPortBuffer(GetWindowPort(thisWindow), nil);				
+//	QDFlushPortBuffer(GetWindowPort(thisWindow), nil);
 	
-#endif
 }
 
 
@@ -614,14 +610,12 @@ Rect			r;
 
 	GetPortBounds(thisWorld, &r);
 				
-#if 1
-	SOURCE_PORT_MINOR_PLACEHOLDER();
-#else
-	CopyBits((BitMap *)*pm, GetPortBitMapForCopyBits(GetWindowPort(thisWindow)),
-			 &r,
-			 destRect,
-			 srcCopy|transparent, 0);
-#endif
+	CopyBits(/*(BitMap *)*/ *pm,
+			GetPortBitMapForCopyBits(GetWindowPort(thisWindow)),
+			&r,
+			destRect,
+			srcCopy|transparent,
+			0);
 
 	SetGWorld(oldGW,oldGD);								// restore gworld
 

@@ -1270,6 +1270,7 @@ short					**xlateTableHand,*xlateTbl;
 }
 
 
+#if 0  // Source port: full rewrite in GamePatches
 
 /**************** DRAW PICTURE INTO GWORLD ***********************/
 //
@@ -1336,6 +1337,7 @@ ComponentResult				result;
 	return(noErr);
 }
 
+#endif
 
 #pragma mark -
 

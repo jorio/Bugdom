@@ -225,6 +225,7 @@ TerrainItemEntryType	*itemPtr;
 void InitInfobar(void)
 {
 FSSpec		spec;
+Rect		r;
 
 	SetPort(GetWindowPort(gCoverWindow));
 
@@ -244,7 +245,9 @@ FSSpec		spec;
 			/* DO TOP */
 			
 	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":images:infobartop", &spec);
-	DrawPictureToScreen(&spec, 0, 0);
+	DrawPictureIntoGWorld(&spec, &gInfoBarTop);
+	SetRect(&r, 0,0, 640,62);
+	DumpGWorld2(gInfoBarTop, gCoverWindow,&r);
 	
 	
 			/* DO BOTTOM */

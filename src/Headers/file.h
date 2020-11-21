@@ -58,7 +58,6 @@ extern	Ptr	LoadAFile(FSSpec *fsSpec);
 void LoadPlayfield(FSSpec *specPtr);
 
 void LoadLevelArt(void);
-OSErr DrawPictureIntoGWorld(FSSpec *myFSSpec, GWorldPtr *theGWorld);
 
 
 
