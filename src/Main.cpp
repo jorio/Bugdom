@@ -2,11 +2,12 @@
 #include "PommeInit.h"
 #include "PommeFiles.h"
 #include "PommeGraphics.h"
-//#include "GamePatches.h"
 #include "version.h"
 
 #include <Quesa.h>
 #include <SDL.h>
+
+#include "gamepatches.h"
 
 #include <iostream>
 #include <cstring>
@@ -80,12 +81,10 @@ int CommonMain(int argc, const char** argv)
 	gCoverWindowPixPtr = (UInt32*) GetPixBaseAddr(GetGWorldPixMap(gCoverWindow));
 
 	// Clear window
-	/*
 	ExclusiveOpenGLMode_Begin();
 	ClearBackdrop(0xFFA5A5A5);
 	RenderBackdropQuad(BACKDROP_FILL);
 	ExclusiveOpenGLMode_End();
-	*/
 
 	FindGameData();
 #if !(__APPLE__)

@@ -414,6 +414,7 @@ float fps;
 	QD3D_DrawScene(gGameViewInfoPtr,DrawTerrain);
 	MakeFadeEvent(true);
 	
+	ClearBackdrop(0xFF0000FF);
 
 		/******************/
 		/* MAIN GAME LOOP */
@@ -456,6 +457,8 @@ float fps;
 			/* DRAW OBJECTS & TERRAIN */
 					
 		UpdateInfobar();
+		RenderBackdropQuad(BACKDROP_FILL);
+
 		DoMyTerrainUpdate();
 		QD3D_DrawScene(gGameViewInfoPtr,DrawTerrain);
 		QD3D_CalcFramesPerSecond();

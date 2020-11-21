@@ -2,8 +2,8 @@
 // window.h
 //
 
-#define GAME_VIEW_WIDTH		(1280)
-#define GAME_VIEW_HEIGHT	(768)
+#define GAME_VIEW_WIDTH		(640)
+#define GAME_VIEW_HEIGHT	(480)
 
 
 

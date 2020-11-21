@@ -274,6 +274,8 @@ QD3DSetupOutputType	*data;
 	if (data == nil)												// see if this setup exists
 		DoFatalAlert("QD3D_DisposeWindowSetup: data == nil");
 
+	DisposeBackdropTexture(); // Source port addition - release backdrop GL texture
+
 	Q3Object_Dispose(data->viewObject);
 	Q3Object_Dispose(data->interpolationStyle);
 	Q3Object_Dispose(data->backfacingStyle);
@@ -671,6 +673,21 @@ TQ3ViewStatus			myViewStatus;
 	}
 
 	CalcCameraMatrixInfo(setupInfo);						// update camera matrix
+
+
+			/* SOURCE PORT STUFF */
+
+	if (gQD3D_FreshDrawContext)
+	{
+		SDL_GL_SetSwapInterval(gGamePrefs.vsync ? 1 : 0);
+
+		AllocBackdropTexture(); // Source port addition - alloc GL backdrop texture
+		// (must be after StartRendering so we have a valid GL context)
+
+		gQD3D_FreshDrawContext = false;
+	}
+
+
 
 			/***************/
 			/* RENDER LOOP */
