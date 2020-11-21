@@ -413,8 +413,7 @@ float fps;
 	
 	QD3D_DrawScene(gGameViewInfoPtr,DrawTerrain);
 	MakeFadeEvent(true);
-	
-	ClearBackdrop(0xFF0000FF);
+
 
 		/******************/
 		/* MAIN GAME LOOP */
@@ -659,9 +658,7 @@ QD3DSetupInputType	viewDef;
 		/* DRAW INITIAL INFOBAR */
 				
 	InitInventoryForArea();					// must call after terrain is loaded!!
-#if 0 // SOURCE PORT TODO
 	InitInfobar();			
-#endif
 	
 
 			/* INIT OTHER MANAGERS */
