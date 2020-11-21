@@ -16,12 +16,8 @@ extern	DSpContextReference 	gDisplayContext;
 
 
 extern void	InitWindowStuff(void);
-extern void	DumpGWorld(GWorldPtr, WindowPtr);
-extern void	DumpGWorld2(GWorldPtr, WindowPtr, Rect *);
-extern void	DumpGWorldToGWorld(GWorldPtr, GWorldPtr, Rect *, Rect *);
 extern void	DoLockPixels(GWorldPtr);
 extern	void MakeFadeEvent(Boolean	fadeIn);
-void DumpGWorld(GWorldPtr thisWorld, WindowPtr thisWindow);
 void DumpGWorld2(GWorldPtr thisWorld, WindowPtr thisWindow,Rect *destRect);
 
 extern	void CleanupDisplay(void);

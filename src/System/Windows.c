@@ -452,61 +452,6 @@ Rect	r;
 
 #pragma mark -
 
-/*********************** DUMP GWORLD TO GWORLD **********************/
-//
-//    copies RECT to RECT
-//
-
-void DumpGWorldToGWorld(GWorldPtr thisWorld, GWorldPtr destWorld,Rect *srcRect,Rect *destRect)
-{
-PixMapHandle pm,pm2;
-GDHandle	oldGD;
-GWorldPtr	oldGW;
-
-	GetGWorld (&oldGW,&oldGD);
-	SetGWorld(destWorld,nil);	
-	ForeColor(blackColor);
-	BackColor(whiteColor);
-
-	SetGWorld(thisWorld,nil);	
-	ForeColor(blackColor);
-	BackColor(whiteColor);
-
-	DoLockPixels(destWorld);
-	DoLockPixels(thisWorld);
-
-	pm = GetGWorldPixMap(thisWorld);	
-	if ((pm == nil) | (*pm == nil) )
-		DoAlert("PixMap Handle or Ptr = Null?!");
-
-	pm2 = GetGWorldPixMap(destWorld);	
-	if ((pm2 == nil) | (*pm2 == nil) )
-		DoAlert("PixMap Handle or Ptr = Null?!");
-
-#if 1
-	SOURCE_PORT_PLACEHOLDER();
-#else
-		
-	CopyBits((BitMap *)*pm,(BitMap *)*pm2,
-			srcRect,destRect,srcCopy,0);
-
-#endif
-	SetGWorld(oldGW,oldGD);								// restore gworld
-
-}
-
-/*********************** DUMP GWORLD **********************/
-
-void DumpGWorld(GWorldPtr thisWorld, WindowPtr thisWindow)
-{
-Rect	destRect;
-
-	GetPortBounds(GetWindowPort(thisWindow), &destRect);
-	
-	DumpGWorld2(thisWorld, thisWindow, &destRect);
-	
-}
-
 /*********************** DUMP GWORLD 2 **********************/
 //
 //    copies to a destination RECT
