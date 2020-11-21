@@ -1172,7 +1172,33 @@ TQ3SurfaceShaderObject		shader;
 static void DrawPICTIntoMipmap(PicHandle pict,long width, long height, TQ3Mipmap *mipmap, Boolean blackIsAlpha)
 {
 #if 1
-    SOURCE_PORT_PLACEHOLDER();
+	if (width  != (**pict).picFrame.right  - (**pict).picFrame.left) DoFatalAlert("DrawPICTIntoMipmap: unexpected width");
+	if (height != (**pict).picFrame.bottom - (**pict).picFrame.top)  DoFatalAlert("DrawPICTIntoMipmap: unexpected height");
+	
+	Ptr pictMapAddr = (**pict).__pomme_pixelsARGB32;
+	long pictRowBytes = width * (32 / 8);
+
+	if (blackIsAlpha)
+	{
+		// this function was taken from my nanosaur port. Nanosaur doesn't have blackIsAlpha, so, TODO
+		SOURCE_PORT_MINOR_PLACEHOLDER();
+	}
+	
+	mipmap->image = Q3MemoryStorage_New((unsigned char*)pictMapAddr, pictRowBytes * height);
+
+	if (mipmap->image == nil)
+		DoFatalAlert("Q3MemoryStorage_New Failed!");
+
+	mipmap->useMipmapping = kQ3False;							// not actually using mipmaps (just 1 srcmap)
+	mipmap->pixelType = kQ3PixelTypeARGB32;						// if 32bit, assume alpha
+
+	mipmap->bitOrder = kQ3EndianBig;
+	mipmap->byteOrder = kQ3EndianBig;
+	mipmap->reserved = 0;
+	mipmap->mipmaps[0].width = width;
+	mipmap->mipmaps[0].height = height;
+	mipmap->mipmaps[0].rowBytes = pictRowBytes;
+	mipmap->mipmaps[0].offset = 0;
 #else
 Rect 					rectGW;
 GWorldPtr 				pGWorld;
