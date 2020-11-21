@@ -12,6 +12,8 @@ TQ3Area GetAdjustedPane(int windowWidth, int windowHeight, Rect paneClip);
 
 void DoSDLMaintenance(void);
 
+OSErr DrawPictureToScreen(FSSpec* spec, short x, short y);
+
 //-----------------------------------------------------------------------------
 // Backdrop
 

@@ -1,6 +1,7 @@
 #include "MyPCH_Normal.pch"
 #include "PommeInit.h"
-
+#include "PommeFiles.h"
+#include "PommeGraphics.h"
 
 extern "C"
 {
@@ -45,6 +46,30 @@ TQ3Area GetAdjustedPane(int windowWidth, int windowHeight, Rect paneClip)
 	pane.max.y *= windowHeight / (float)(GAME_VIEW_HEIGHT);
 
 	return pane;
+}
+
+OSErr DrawPictureToScreen(FSSpec* spec, short x, short y)
+{
+	short refNum;
+
+	OSErr error = FSpOpenDF(spec, fsRdPerm, &refNum);
+	if (noErr != error)
+	{
+		TODO2("Couldn't open picture: " << spec->cName);
+		return error;
+	}
+
+	auto& stream = Pomme::Files::GetStream(refNum);
+	auto pict = Pomme::Graphics::ReadPICT(stream, true);
+	FSClose(refNum);
+
+	GrafPtr oldPort;
+	GetPort(&oldPort);
+	SetPort(Pomme::Graphics::GetScreenPort());
+	Pomme::Graphics::DrawARGBPixmap(x, y, pict);
+	SetPort(oldPort);
+
+	return noErr;
 }
 
 // Called when the game window gets resized.
