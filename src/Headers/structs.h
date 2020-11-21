@@ -364,6 +364,8 @@ typedef struct
 {
 	Boolean	easyMode;
 	Boolean	playerRelativeKeys;
+	Boolean	vsync;
+	Boolean textureFiltering;
 	Byte	reserved[8];
 }PrefsType;
 

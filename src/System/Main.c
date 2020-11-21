@@ -275,20 +275,11 @@ int			i;
 
 			/* INIT PREFERENCES */
 			
+	memset(&gGamePrefs, 0, sizeof(PrefsType));
 	gGamePrefs.easyMode				= false;	
 	gGamePrefs.playerRelativeKeys	= false;	
-	gGamePrefs.reserved[0] 			= false;
-	gGamePrefs.reserved[1] 			= false;
-	gGamePrefs.reserved[2] 			= false;
-	gGamePrefs.reserved[3] 			= false;	
-	gGamePrefs.reserved[0] 			= 0;
-	gGamePrefs.reserved[1] 			= 0;				
-	gGamePrefs.reserved[2] 			= 0;
-	gGamePrefs.reserved[3] 			= 0;				
-	gGamePrefs.reserved[4] 			= 0;
-	gGamePrefs.reserved[5] 			= 0;				
-	gGamePrefs.reserved[6] 			= 0;				
-	gGamePrefs.reserved[7] 			= 0;				
+	gGamePrefs.vsync				= true;
+	gGamePrefs.textureFiltering		= true;
 				
 	LoadPrefs(&gGamePrefs);							// attempt to read from prefs file		
 	
