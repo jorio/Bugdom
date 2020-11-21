@@ -1458,7 +1458,11 @@ long	size = width * height * 2;
 	mipmap->useMipmapping 	= kQ3False;							// not actually using mipmaps (just 1 srcmap)
 	mipmap->pixelType 		= kQ3PixelTypeRGB16;						
 	mipmap->bitOrder 		= kQ3EndianBig;
-	mipmap->byteOrder 		= kQ3EndianBig;
+
+	// Source port note: these images come from 'Timg' resources read in File.c.
+	// File.c byteswaps the entire Timg, so they're little-endian now.
+	mipmap->byteOrder 		= kQ3EndianLittle;
+
 	mipmap->reserved 		= nil;
 	mipmap->mipmaps[0].width 	= width;
 	mipmap->mipmaps[0].height 	= height;
