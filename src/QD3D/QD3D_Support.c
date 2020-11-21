@@ -175,7 +175,7 @@ TQ3Vector3D			fillDirection2 = { -.8, .8, -.2 };
 	viewDef->lights.fogEnd 		= 1.0;
 	viewDef->lights.fogDensity	= 1.0;
 	
-	viewDef->lights.fogMode 	= kQAFogMode_Linear;
+	viewDef->lights.fogMode		= kQ3FogModePlaneBasedLinear;
 }
 
 /************** SETUP QD3D WINDOW *******************/
@@ -1899,7 +1899,13 @@ void QD3D_ReEnableFog(const QD3DSetupOutputType *setupInfo)
 {
 		TQ3FogStyleData	fogData;
 		
+#if 1
+		// SOURCE PORT TODO: incorrect fog hither/yon
+		static unsigned long long warning = 0; if (!(warning++ % 1000)) SOURCE_PORT_MINOR_PLACEHOLDER();
+		fogData.state		= kQ3Off;
+#else
 		fogData.state		= kQ3On;
+#endif
 		fogData.mode		= gFogMode;
 		fogData.fogStart	= setupInfo->yon * gFogStart;
 		fogData.fogEnd		= setupInfo->yon * gFogEnd;
