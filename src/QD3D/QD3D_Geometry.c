@@ -286,6 +286,7 @@ TQ3Object theObject;
 		
 	if (theNode->Genre == SKELETON_GENRE)
 	{
+		DoAlert("Trying to explode skeleton geometry! Maybe that's fine? I dunno!");
 #if 0	
 		short	numTriMeshes,i,skelType;
 		
@@ -432,6 +433,11 @@ long				i;
 		gParticles[i].points[2].x -= centerPt.x;											// offset coords to be around center
 		gParticles[i].points[2].y -= centerPt.y;
 		gParticles[i].points[2].z -= centerPt.z;
+
+		// Source port fix: Quesa needs some bounding box for the particle to render.
+		gParticles[i].triMesh.bBox.isEmpty = false;
+		gParticles[i].triMesh.bBox.min = gParticles[i].points[0];
+		gParticles[i].triMesh.bBox.max = centerPt;
 		
 		
 				/* DO VERTEX NORMALS */
@@ -625,7 +631,8 @@ Boolean	usingNull = false;
 		}
 	}
 	
-	Q3Push_Submit(view);												// restore state
+	// Source port fix: this used to be Q3Push_Submit, which I think is a mistake, even though it seems to work either way (???)
+	Q3Pop_Submit(view);													// restore state
 	if (usingNull)
 		Q3Shader_Submit(setupInfo->shaderObject, view);
 }
