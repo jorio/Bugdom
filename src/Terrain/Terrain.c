@@ -148,6 +148,12 @@ const static	Byte			gTileTriangles2_B[SUPERTILE_SIZE][SUPERTILE_SIZE][3] =
 	24,25,31,	25,26,32,	26,27,33,	27,28,34,	28,29,35
 };
 
+const static	Byte			gTileTriangleWinding[2][3] =
+{
+	{ 2, 1, 0 },  // floor
+	{ 0, 1, 2 },  // ceiling
+};
+
 
 TQ3Point3D		gWorkGrid[SUPERTILE_SIZE+1][SUPERTILE_SIZE+1];
 u_short			*gTempTextureBuffer = nil;
@@ -774,28 +780,29 @@ static  TQ3Vector3D	tempVertexNormalList[NUM_VERTICES_IN_SUPERTILE];
 
 
 						/* SET SPLITTING INFO */
-		
+
+				const Byte* tri1;
+				const Byte* tri2;
+
 				if (gMapInfoMatrix[row][col].splitMode[j] == SPLIT_BACKWARD)	// set coords & uv's based on splitting
 				{
 						/* \ */
-					triangleList[i].pointIndices[0] 	= gTileTriangles1_B[row2][col2][2];
-					triangleList[i].pointIndices[1] 	= gTileTriangles1_B[row2][col2][1];
-					triangleList[i++].pointIndices[2] 	= gTileTriangles1_B[row2][col2][0];
-					triangleList[i].pointIndices[0] 	= gTileTriangles2_B[row2][col2][2];
-					triangleList[i].pointIndices[1] 	= gTileTriangles2_B[row2][col2][1];
-					triangleList[i++].pointIndices[2] 	= gTileTriangles2_B[row2][col2][0];
+					tri1 = gTileTriangles1_B[row2][col2];
+					tri2 = gTileTriangles2_B[row2][col2];
 				}
 				else
 				{
 						/* / */
-						
-					triangleList[i].pointIndices[0] 	= gTileTriangles1_A[row2][col2][2];
-					triangleList[i].pointIndices[1] 	= gTileTriangles1_A[row2][col2][1];
-					triangleList[i++].pointIndices[2] 	= gTileTriangles1_A[row2][col2][0];
-					triangleList[i].pointIndices[0] 	= gTileTriangles2_A[row2][col2][2];
-					triangleList[i].pointIndices[1] 	= gTileTriangles2_A[row2][col2][1];
-					triangleList[i++].pointIndices[2] 	= gTileTriangles2_A[row2][col2][0];
-				}			
+					tri1 = gTileTriangles1_A[row2][col2];
+					tri2 = gTileTriangles2_A[row2][col2];
+				}
+
+				triangleList[i].pointIndices[0] 	= tri1[gTileTriangleWinding[j][0]];
+				triangleList[i].pointIndices[1] 	= tri1[gTileTriangleWinding[j][1]];
+				triangleList[i++].pointIndices[2] 	= tri1[gTileTriangleWinding[j][2]];
+				triangleList[i].pointIndices[0] 	= tri2[gTileTriangleWinding[j][0]];
+				triangleList[i].pointIndices[1] 	= tri2[gTileTriangleWinding[j][1]];
+				triangleList[i++].pointIndices[2] 	= tri2[gTileTriangleWinding[j][2]];
 			}
 		}
 		
@@ -803,20 +810,10 @@ static  TQ3Vector3D	tempVertexNormalList[NUM_VERTICES_IN_SUPERTILE];
 						
 		for (i = 0; i < NUM_TRIS_IN_SUPERTILE; i++)
 		{
-			if (j != 0)  // ceiling
-			{
-				CalcFaceNormal(&pointList[triangleList[i].pointIndices[2]],			
-								&pointList[triangleList[i].pointIndices[1]],
-								&pointList[triangleList[i].pointIndices[0]],
-								&faceNormal[i]);		
-			}
-			else
-			{
-				CalcFaceNormal( &pointList[triangleList[i].pointIndices[0]],			
-								&pointList[triangleList[i].pointIndices[1]],
-								&pointList[triangleList[i].pointIndices[2]],
-								&faceNormal[i]);																										
-			}
+			CalcFaceNormal( &pointList[triangleList[i].pointIndices[0]],
+							&pointList[triangleList[i].pointIndices[1]],
+							&pointList[triangleList[i].pointIndices[2]],
+							&faceNormal[i]);
 		}			
 				
 				/******************************/
