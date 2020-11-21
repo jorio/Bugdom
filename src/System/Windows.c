@@ -605,8 +605,8 @@ Rect			r;
 
 	SetPort(GetWindowPort(thisWindow));
 
-	ForeColor(blackColor);
-	BackColor(whiteColor);
+	ForeColor(whiteColor);
+	BackColor(blackColor);
 
 	GetPortBounds(thisWorld, &r);
 				
