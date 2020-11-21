@@ -56,7 +56,7 @@ static Boolean		gOldMouseButtonState[3] = {0,0,0};
 static KeyMapByteArray gKeyMap,gNewKeys,gOldKeys;
 
 
-Boolean	gPlayerUsingKeyControl 	= false;
+Boolean	gPlayerUsingKeyControl 	= true;
 
 Boolean	gKeyStates[255];
 
