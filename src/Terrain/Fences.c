@@ -680,6 +680,17 @@ FencePointType			*nubs;
 	gFenceTriMeshData.numTriangles = (numNubs-1) * 2;			// 2 faces per nub (minus 1st)
 
 
+		/* SET TRIMESH BBOX X/Z (Y WILL BE COMPUTED LATER) */
+
+	gFenceTriMeshData.bBox.isEmpty = false;
+	gFenceTriMeshData.bBox.min.x = gFenceList[f].bBox.left;
+	gFenceTriMeshData.bBox.max.x = gFenceList[f].bBox.right;
+	gFenceTriMeshData.bBox.min.y = FLT_MAX;
+	gFenceTriMeshData.bBox.max.y = -FLT_MAX;
+	gFenceTriMeshData.bBox.min.z = gFenceList[f].bBox.top;
+	gFenceTriMeshData.bBox.max.z = gFenceList[f].bBox.bottom;
+
+
 			/************************************/
 			/* BUILD POINTS, UV's & TRANSP LIST */
 			/************************************/
@@ -737,6 +748,10 @@ FencePointType			*nubs;
 		gFencePoints[j+1].x = x;
 		gFencePoints[j+1].y = y2;
 		gFencePoints[j+1].z = z;		
+
+		// Update mesh bbox y min/max
+		if (y  < gFenceTriMeshData.bBox.min.y) gFenceTriMeshData.bBox.min.y = y;
+		if (y2 > gFenceTriMeshData.bBox.max.y) gFenceTriMeshData.bBox.max.y = y2;
 		
 		if (i > 0)
 			u += Q3Point3D_Distance(&gFencePoints[j], &gFencePoints[j-2]) * gFenceTextureW[type];
