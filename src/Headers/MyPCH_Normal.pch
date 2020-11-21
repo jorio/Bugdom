@@ -1,9 +1,9 @@
 		/* MY BUILD OPTIONS */ 
 
+#if 0  // Source port removal
 #define	OEM				0
 #define	SHAREWARE		1
 
-#if 0  // Source port removal
 #define	QUESA_OS_MACINTOSH	1
 
 		/* HEADERS */

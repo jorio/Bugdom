@@ -65,7 +65,6 @@ static	ObjNode *gLadyBug;
 
 void DoTitleScreen(void)
 {
-#if !DEMO
 			/*********/
 			/* SETUP */
 			/*********/
@@ -93,7 +92,6 @@ bail:
 	FreeAllSkeletonFiles(-1);
 	DeleteAll3DMFGroups();
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);		
-#endif	
 }
 
 

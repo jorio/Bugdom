@@ -60,8 +60,6 @@ void LoadPlayfield(FSSpec *specPtr);
 void LoadLevelArt(void);
 OSErr DrawPictureIntoGWorld(FSSpec *myFSSpec, GWorldPtr *theGWorld);
 
-void GetDemoTimer(void);
-void SaveDemoTimer(void);
 
 
 

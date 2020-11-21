@@ -2,13 +2,6 @@
 // misc.h
 //
 
-        /* REGISTRATION */
-
-
-#define REG_LENGTH      12
-
-
-
 extern	void ShowSystemErr(long err);
 extern void	DoAlert(const char*);
 extern void	DoFatalAlert(const char*);
@@ -34,12 +27,3 @@ extern	void CopyPStr(ConstStr255Param	inSourceStr, StringPtr	outDestStr);
 extern	void ShowSystemErr_NonFatal(long err);
 extern	void ApplyFrictionToDeltas(float f,TQ3Vector3D *d);
 void DoAlertNum(int n);
-void CheckGameRegistration(void);
-
-
-
-
-
-
-
-

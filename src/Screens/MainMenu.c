@@ -21,7 +21,6 @@ extern	FSSpec		gDataSpec;
 extern	PrefsType	gGamePrefs;
 extern	u_short		gLevelType;
 extern	TQ3Matrix4x4	gCameraWindowToWorldMatrix;
-extern	Boolean	gGameIsRegistered;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -132,7 +131,6 @@ tryagain:
 		QD3D_CalcFramesPerSecond();
 		UpdateInput();									// keys get us out
 		
-#if !DEMO		
 				/* UPDATE TIMER */
 				
 		if ((oldMouse.h != mouse.h) || (mouse.v != oldMouse.v))		// reset timer if mouse moved
@@ -147,7 +145,6 @@ tryagain:
 				goto getout;
 			}
 		}
-#endif		
 	}
 	
 		/***********************/
@@ -169,33 +166,18 @@ tryagain:
 				break;
 
 		case	1:				// SCORES
-#if DEMO		
-				DoAlert("This does not work in the demo.");
-				goto tryagain;
-#endif				
 				break;
 
 		case	2:				// PLAY
 				break;
 
 		case	3:				// QUIT
-#if DEMO
-				DoDemoExitScreen();
-#elif SHAREWARE
-				if (!gGameIsRegistered)
-					DoDemoExitScreen();				
-#endif		
 				CleanQuit();
 				break;
 
 		case	4:				// RESTORE
-#if DEMO		
-				DoAlert("This does not work in the demo.");
-				goto tryagain;
-#else
 				if (LoadSavedGame())					// try loading saved game
 					goto tryagain;
-#endif					
 				break;
 
 		case	5:				// SETTINGS

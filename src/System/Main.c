@@ -10,7 +10,7 @@
 /****************************/
 
 
-extern	Boolean			gAbortDemoFlag,gGameIsDemoFlag,gSongPlayingFlag,gDisableHiccupTimer,gGameIsRegistered;
+extern	Boolean			gAbortDemoFlag,gGameIsDemoFlag,gSongPlayingFlag,gDisableHiccupTimer;
 extern	NewObjectDefinitionType	gNewObjectDefinition;
 extern	float			gFramesPerSecond,gFramesPerSecondFrac,gAutoFadeStartDist;
 extern	Byte		gDemoMode,gPlayerMode;
@@ -59,8 +59,6 @@ typedef struct
 /****************************/
 /*    VARIABLES             */
 /****************************/
-
-float	gDemoVersionTimer = 0;
 
 static LevelType	gLevelTable[NUM_LEVELS] =
 					{
@@ -285,18 +283,6 @@ int			i;
 	
 	FlushEvents ( everyEvent, REMOVE_ALL_EVENTS);
 
-
-
-			/************************************/
-            /* SEE IF GAME IS REGISTERED OR NOT */
-			/************************************/
-
-#if 0	//SHAREWARE
-    CheckGameRegistration();
-#else
-    gGameIsRegistered = true;
-#endif    
-
 }
 #pragma mark -
 
@@ -315,9 +301,6 @@ static void PlayGame(void)
 
 			/* CHEAT: LET USER SELECT STARTING LEVEL & AREA */
 
-#if DEMO
-	gRealLevel = 0;
-#else
 	UpdateInput();
 	
 	if (GetKeyState(KEY_F10))						// see if do level cheat
@@ -325,7 +308,7 @@ static void PlayGame(void)
 	else
 	if (!gRestoringSavedGame)							// otherwise start @ 0 if not restoring
 		gRealLevel = 0;
-#endif
+
 			/**********************/
 			/* GO THRU EACH LEVEL */
 			/**********************/
@@ -335,14 +318,6 @@ static void PlayGame(void)
 					
 	for (; gRealLevel < NUM_LEVELS; gRealLevel++)
 	{
-		if (!gGameIsRegistered)						// dont allow full access until registered
-			if (gRealLevel > 2)
-			{
-				DoAlert("You cannot play additional levels until you have registred this copy of Bugdom.");
-				HideCursor();
-				break;
-			}
-			
 			/* GET LEVEL TYPE & AREA FOR THIS LEVEL */
 
 		gLevelType = gLevelTable[gRealLevel].levelType;
@@ -365,16 +340,12 @@ static void PlayGame(void)
 		GammaFadeOut();
 		GameScreenToBlack();		
 		
-#if DEMO
-		return;
-#else		
 		if (gGameOverFlag)
 			goto game_over;
 			
 		/* DO END-LEVEL BONUS SCREEN */
 			
 		DoBonusScreen();
-#endif		
 	}
 	
 			/*************/
@@ -402,9 +373,6 @@ static void PlayArea(void)
 float killDelay = KILL_DELAY;						// time to wait after I'm dead before fading out
 float fps;
 	
-    if (!gGameIsRegistered)                     // if not registered, then time demo
-        GetDemoTimer();
-	
 	UpdateInput();
 	QD3D_CalcFramesPerSecond();						// prime this
 	QD3D_CalcFramesPerSecond();
@@ -423,13 +391,6 @@ float fps;
 	{
 		fps = gFramesPerSecondFrac;
 		UpdateInput();
-
-#if DEMO
-		gDemoVersionTimer += fps;							// count the seconds for DEMO
-#elif SHAREWARE
-	    if (!gGameIsRegistered)                    			// if not registered, then time demo
-			gDemoVersionTimer += fps;						// count the seconds for DEMO
-#endif	
 
 				/* SEE IF DEMO ENDED */				
 		
@@ -511,10 +472,6 @@ float fps;
 		}	
 	}
 	
-	
-    if (!gGameIsRegistered)                     // if not registered, then save demo timer
-        SaveDemoTimer();
-			
 }
 
 
@@ -850,13 +807,6 @@ unsigned long	someLong;
 	GetDateTime ((unsigned long *)(&someLong));		// init random seed
 	SetMyRandomSeed(someLong);
 	HideCursor();
-
-			/* SEE IF DEMO VERSION EXPIRED */
-			
-#if DEMO
-	GetDemoTimer();
-#endif	
-
 
 
 			/* DO INTRO */
