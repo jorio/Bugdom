@@ -485,6 +485,7 @@ try_cull:
 		}
 		
 		
+#if 0 // Source port removal: X/Y culling is buggy
 
 				/* CALC WORLD X & Y */
 				
@@ -518,6 +519,8 @@ try_cull:
 		if ((py - ry) > 1.0f)
 			goto draw_off;
 				
+#endif
+
 draw_on:
 		theNode->StatusBits &= ~STATUS_BIT_ISCULLED;							// clear cull bit
 		goto next;

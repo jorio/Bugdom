@@ -3143,6 +3143,8 @@ TQ3RationalPoint4D	outPoint4D[2];
 			goto draw_off;
 	}
 
+#if 0 // Source port removal: X/Y culling is buggy
+
 			/*****************************/
 			/* SEE IF WITHIN VISION CONE */
 			/*****************************/
@@ -3173,6 +3175,8 @@ TQ3RationalPoint4D	outPoint4D[2];
 	if ((py - ry) > 1.0f)
 		goto draw_off;
 				
+#endif
+
 	return(true);
 
 draw_off:
