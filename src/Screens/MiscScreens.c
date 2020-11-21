@@ -509,42 +509,31 @@ static void MoveLogoBG(ObjNode *theNode)
 
 void ShowIntroScreens(void)
 {
-GWorldPtr	gworld;
-Rect		r;
 FSSpec	spec;
 OSErr		err;
-//Handle	versionHand;
-//VersRec	*vers;
 
 			/* DO PAGE 1 */
 
-	SetRect(&r,0,0,GAME_VIEW_WIDTH,GAME_VIEW_HEIGHT);
-	
-#if SHAREWARE
-	err= FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":images:legal", &spec);
-#else
-	err= FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":images:info1", &spec);
-#endif	
-
-	
-
-	DrawPictureIntoGWorld(&spec, &gworld);
-	DumpGWorld2(gworld, gCoverWindow, &r);
-	DisposeGWorld(gworld);
+	err = FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":images:Info1", &spec);
+	DrawPictureToScreen(&spec, 0, 0);
 
 	UpdateInput();
-		
-	
+
+	ExclusiveOpenGLMode_Begin();
+
 	do
 	{
 		UpdateInput();
+		RenderBackdropQuad(BACKDROP_FIT);
 		DoSoundMaintenance();
+		DoSDLMaintenance();
 		
 		if (Button())
 			break;
 		
 	}while(!AreAnyNewKeysPressed());
 
+	ExclusiveOpenGLMode_End();
 
 //	GammaFadeOut();
 //	GameScreenToBlack();
