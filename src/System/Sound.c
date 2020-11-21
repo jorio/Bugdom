@@ -307,6 +307,10 @@ OSErr			iErr;
 				/* GET OFFSET INTO IT */
 				
 		GetSoundHeaderOffset(gSndHandles[bankNum][i], &gSndOffsets[bankNum][i]);		
+
+				/* PRE-DECOMPRESS IT (Source port addition) */
+
+		Pomme_DecompressSoundResource(&gSndHandles[bankNum][i], &gSndOffsets[bankNum][i]);
 	}
 
 	UseResFile(gMainAppRezFile );								// go back to normal res file
