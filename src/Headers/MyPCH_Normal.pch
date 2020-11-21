@@ -104,13 +104,3 @@
 
 #define SOURCE_PORT_PLACEHOLDER() DoFatalAlert2("Source port: this function is not implemented yet", __func__)
 #define SOURCE_PORT_MINOR_PLACEHOLDER() printf("Source port: TODO: %s:%d\n", __func__, __LINE__)
-
-// ----------------------------------
-// THE FOLLOWING BELONGS TO POMME
-
-enum ESndVolume
-{
-	kFullVolume = 0x0100,
-	kNoVolume = 0,
-};
-typedef UInt8 KeyMapByteArray[16];
