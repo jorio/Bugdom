@@ -56,16 +56,16 @@ float	gCheckPointRot;
 #define	DropletScaleXI	SpecialF[0]
 #define	DropletScaleYI	SpecialF[1]
 #define	DropletScaleZI	SpecialF[2]
-#define	CheckPointNum	Special[0]
+#define	CheckPointNum	SpecialL[0]
 #define	PlayerRot		SpecialF[3]
 
 
-#define	PipeID			Special[0]
+#define	PipeID			SpecialL[0]
 #define	SpewWaterRegulator	SpecialF[0]
 #define	WaterTimer		SpecialF[1]
 #define	RefillTimer		SpecialF[2]
 #define	SpewWater		Flag[0]
-#define	FireParticleMagicNum	Special[3]
+#define	FireParticleMagicNum	SpecialL[3]
 
 
 /************************* ADD CHECKPOINT *********************************/

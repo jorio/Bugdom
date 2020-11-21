@@ -83,8 +83,8 @@ static void DrawLavaPatchTesselated(ObjNode *theNode, TQ3ViewObject view);
 /*    VARIABLES      */
 /*********************/
 
-#define PatchWidth		Special[0]
-#define PatchDepth		Special[1]
+#define PatchWidth		SpecialL[0]
+#define PatchDepth		SpecialL[1]
 
 
 		/* WATER */
@@ -103,7 +103,7 @@ static float gWaterU, gWaterV;				// uv offsets values for Water
 static float gWaterU2, gWaterV2;
 static short gNumWaterPatches;
 
-#define	PatchID			Special[2]
+#define	PatchID			SpecialL[2]
 #define	TesselatePatch	Flag[0]
 #define	PatchHasRisen	Flag[1]				// true when water has flooded up
 

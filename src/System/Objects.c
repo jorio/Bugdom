@@ -140,12 +140,12 @@ unsigned long flags = newObjDef->flags;
 	newNodePtr->Flag[3] = 
 	newNodePtr->Flag[4] = 
 	newNodePtr->Flag[5] = 
-	newNodePtr->Special[0] = 
-	newNodePtr->Special[1] = 
-	newNodePtr->Special[2] = 
-	newNodePtr->Special[3] = 
-	newNodePtr->Special[4] = 
-	newNodePtr->Special[5] = 
+	newNodePtr->SpecialL[0] =
+	newNodePtr->SpecialL[1] =
+	newNodePtr->SpecialL[2] =
+	newNodePtr->SpecialL[3] =
+	newNodePtr->SpecialL[4] =
+	newNodePtr->SpecialL[5] =
 	newNodePtr->SpecialF[0] = 
 	newNodePtr->SpecialF[1] = 
 	newNodePtr->SpecialF[2] = 
@@ -173,6 +173,13 @@ unsigned long flags = newObjDef->flags;
 	newNodePtr->BoundingSphere.origin.z = 0;			
 	newNodePtr->BoundingSphere.radius = 40;
 	
+	newNodePtr->SpecialPtr[0] =
+	newNodePtr->SpecialPtr[1] =
+	newNodePtr->SpecialPtr[2] =
+	newNodePtr->SpecialPtr[3] =
+	newNodePtr->SpecialPtr[4] =
+	newNodePtr->SpecialPtr[5] = nil;
+
 	newNodePtr->AccelVector.x =
 	newNodePtr->AccelVector.y = 0;
 	

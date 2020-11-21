@@ -789,7 +789,7 @@ static Byte	letters[] = {LINTRO_MObjType_L, LINTRO_MObjType_E, LINTRO_MObjType_V
 		fish->Delta.y = 3800;
 		fish->Delta.z = 800;			
 		fish->Skeleton->AnimSpeed = .8;
-		fish->Special[0] = i;
+		fish->SpecialL[0] = i;
 			
 	}
 
@@ -827,7 +827,7 @@ ObjNode	*l;
 		if (gCoord.z > -80.0f)
 		{
 			theNode->Flag[2] = true;
-			i = theNode->Special[0];
+			i = theNode->SpecialL[0];
 			theNode->ChainNode = gLetterObj[i];		// chain letter to fish
 		}
 	}
@@ -938,7 +938,7 @@ int		i;
 
 	GetObjectInfo(theNode);
 	
-	switch(theNode->Special[0])
+	switch(theNode->SpecialL[0])
 	{
 			/* MOVE FOOT DOWN */
 			
@@ -952,7 +952,7 @@ int		i;
 				{
 					gDelta.y = 0;
 					gCoord.y = -30;
-					theNode->Special[0] = 1;
+					theNode->SpecialL[0] = 1;
 					
 					for (i = 0; i < 6; i++)						// squash letters
 					{
@@ -969,7 +969,7 @@ int		i;
 				theNode->SpecialF[0] += fps;
 				if (theNode->SpecialF[0] > 1.0f)
 				{
-					theNode->Special[0] = 2;
+					theNode->SpecialL[0] = 2;
 					SetSkeletonAnim(theNode->Skeleton, 1);
 				}
 				break;
@@ -1043,12 +1043,12 @@ ObjNode	*letter,*chute;
 		/* SEE IF DROP ANOTHER LETTER */
 		/******************************/
 		
-	if (theNode->Special[0] < 6)
+	if (theNode->SpecialL[0] < 6)
 	{
 		theNode->SpecialF[0] += fps;
 		if (theNode->SpecialF[0] > .5f)
 		{
-			if (theNode->Special[0] == 5)
+			if (theNode->SpecialL[0] == 5)
 				theNode->SpecialF[0] = -.4;
 			else
 				theNode->SpecialF[0] = 0;
@@ -1057,7 +1057,7 @@ ObjNode	*letter,*chute;
 					/* CREATE LETTER */
 		
 			gNewObjectDefinition.group 		= MODEL_GROUP_LEVELINTRO;	
-			gNewObjectDefinition.type 		= letters[theNode->Special[0]++];	
+			gNewObjectDefinition.type 		= letters[theNode->SpecialL[0]++];
 			gNewObjectDefinition.coord		= gCoord;
 			gNewObjectDefinition.coord.y 	-= 100;
 			gNewObjectDefinition.slot 		= 200;

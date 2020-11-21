@@ -83,7 +83,7 @@ enum
 #define BreathRegulator	SpecialF[3]				// timer for fire spewing regulation
 
 #define	ButtTimer			SpecialF[0]			// timer for on butt
-#define FireParticleMagicNum Special[2]
+#define FireParticleMagicNum SpecialL[2]
 #define FireTimer 			SpecialF[1]
 
 

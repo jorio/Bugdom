@@ -113,7 +113,7 @@ enum
 #define	Aggressive		Flag[3]					// set if ant should walk after player
 #define	RockThrower		Flag[5]		
 
-#define	ThrownSpear			Special[0]			// objnode of thrown spear
+#define	ThrownSpear			SpecialPtr[0]		// objnode of thrown spear
 #define	ButtTimer			SpecialF[0]			// timer for on butt
 #define	DeathTimer			SpecialF[1]			// amount of time has been dead
 #define	MadeGhost			Flag[4]				// true after ghost has been made
@@ -122,7 +122,7 @@ enum
 
 		/* SPEAR */
 		
-#define SpearOwner			Special[0]			// objnode of ant who threw spear
+#define SpearOwner			SpecialPtr[0]		// objnode of ant who threw spear
 #define	SpearIsInGround		Flag[0]				// set when spear is stuck in ground
 
 
@@ -304,7 +304,7 @@ ObjNode	*spearObj;
 						/* VERIFY SPEAR */
 						
 				spearObj = (ObjNode *)theNode->ThrownSpear;												// get objnode of spear
-				if ((spearObj->SpearOwner != (int)theNode) || (spearObj->CType == INVALID_NODE_FLAG))	// see if isnt valid anymore
+				if ((spearObj->SpearOwner != theNode) || (spearObj->CType == INVALID_NODE_FLAG))	// see if isnt valid anymore
 				{
 					theNode->Mode = ANT_MODE_NONE;
 					break;				
@@ -403,7 +403,7 @@ ObjNode		*spearObj;
 						/* VERIFY SPEAR */
 						
 				spearObj = (ObjNode *)theNode->ThrownSpear;												// get objnode of spear
-				if ((spearObj->SpearOwner != (int)theNode) || (spearObj->CType == INVALID_NODE_FLAG))	// see if isnt valid anymore
+				if ((spearObj->SpearOwner != theNode) || (spearObj->CType == INVALID_NODE_FLAG))		// see if isnt valid anymore
 				{
 					theNode->Mode = ANT_MODE_NONE;
 					break;				
@@ -535,7 +535,7 @@ ObjNode	*spearObj;
 				/* VERIFY SPEAR */
 				
 		spearObj = (ObjNode *)theNode->ThrownSpear;												// get objnode of spear
-		if ((spearObj->SpearOwner == (int)theNode) && (spearObj->CType != INVALID_NODE_FLAG))	// make sure spear obj is valid
+		if ((spearObj->SpearOwner == theNode) && (spearObj->CType != INVALID_NODE_FLAG))		// make sure spear obj is valid
 			DeleteObject(spearObj);																// delete the old spear
 			
 		GiveAntASpear(theNode);																// give it a new spear (even if old is invalid)
@@ -1017,8 +1017,8 @@ float					rot,speed;
 
 		/* SETUP NEW LINKS TO REMEMBER SPEAR */
 		
-	theEnemy->ThrownSpear = (int)spearObj;		// remember the ObjNode to the spear so I can go get it
-	spearObj->SpearOwner = (int)theEnemy;		// remember node of ant 
+	theEnemy->ThrownSpear = spearObj;			// remember the ObjNode to the spear so I can go get it
+	spearObj->SpearOwner = theEnemy;			// remember node of ant
 
 
 		/* DETACH FROM CHAIN */

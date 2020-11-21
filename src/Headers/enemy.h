@@ -75,7 +75,7 @@ enum
 	FIREANT_ANIM_COPYRIGHT
 };
 
-#define	BreathParticleGroup	Special[3]
+#define	BreathParticleGroup	SpecialL[3]
 
 #define	QUEENBEE_HEALTH				7.0f
 #define	ANTKING_HEALTH				5.0f

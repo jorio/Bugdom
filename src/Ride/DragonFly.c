@@ -73,10 +73,10 @@ ObjNode *gCurrentDragonFly = nil;
 
 
 #define SparkTimer	SpecialF[0]
-#define	PGroupA		Special[0]
-#define	PGroupB		Special[1]
-#define	PGroupAMagic	Special[2]
-#define	PGroupBMagic	Special[3]
+#define	PGroupA		SpecialL[0]
+#define	PGroupB		SpecialL[1]
+#define	PGroupAMagic	SpecialL[2]
+#define	PGroupBMagic	SpecialL[3]
 
 /********************** ADD DRAGONFLY *************************/
 //

@@ -64,11 +64,11 @@ float gHoneyTubeU,gHoneyTubeV;
 
 static float	gRootAnimTimeIndex[MAX_ROOT_SYNCS];
 
-#define	RootSync		Special[0]
+#define	RootSync		SpecialL[0]
 
-#define	DetonatorID		Special[0]
-#define	DoorAim			Special[1]
-#define	DoorColor		Special[2]
+#define	DetonatorID		SpecialL[0]
+#define	DoorAim			SpecialL[1]
+#define	DoorColor		SpecialL[2]
 
 #define	ZigZag			Flag[0]
 

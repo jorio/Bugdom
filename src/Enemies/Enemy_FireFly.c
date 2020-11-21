@@ -83,7 +83,7 @@ ObjNode	*gCurrentChasingFireFly = nil;			// only 1 firefly can chase at a time
 
 float	gFireFlyTargetX,gFireFlyTargetZ;
 
-#define	FireFlyTargetID	Special[0]
+#define	FireFlyTargetID	SpecialL[0]
 
 
 /************************ ADD FIREFLY *************************/

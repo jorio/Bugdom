@@ -3,7 +3,7 @@
 //
 
 #define	TRIGGER_SLOT	4					// needs to be early in the collision list
-#define	TriggerSides	Special[5]
+#define	TriggerSides	SpecialL[5]
 
 
 		/* TRIGGER TYPES */

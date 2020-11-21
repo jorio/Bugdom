@@ -109,11 +109,11 @@ ObjNode	*gCurrentEatingBat;
 #define	GotPlayer		Flag[1]
 
 #define	PTimer			SpecialF[0]
-#define	PGroupMagic		Special[1]
+#define	PGroupMagic		SpecialL[1]
 #define	WallRot			Flag[2]
-#define WallLength		Special[0]
+#define WallLength		SpecialL[0]
 
-#define ValveID			Special[2]
+#define ValveID			SpecialL[2]
 #define	ExtinguishTimer SpecialF[1]
 
 

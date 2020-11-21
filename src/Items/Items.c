@@ -67,7 +67,7 @@ ObjNode	*gHiveObj;
 
 float	gCycScale;
 
-#define	ValveID		Special[0]
+#define	ValveID		SpecialL[0]
 #define	ValvePipe	Flag[0]
 #define	SpewWater	Flag[1]
 #define	SpewWaterTimer SpecialF[0]

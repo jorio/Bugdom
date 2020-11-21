@@ -100,12 +100,12 @@ static float		gStaffCharge;
 #define	ButtTimer	SpecialF[1]
 #define	DeathTimer	SpecialF[1]
 #define	FireTimer	SpecialF[2]
-#define	FireParticleMagicNum	Special[3]
+#define	FireParticleMagicNum	SpecialL[3]
 
 #define	SparkTimer	SpecialF[0]
 
-#define	PGroupA		Special[0]
-#define	PGroupB		Special[1]
+#define	PGroupA		SpecialL[0]
+#define	PGroupB		SpecialL[1]
 
 
 

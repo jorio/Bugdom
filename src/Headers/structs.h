@@ -316,8 +316,9 @@ struct ObjNode
 	signed char		Mode;				// mode
 	
 	signed char		Flag[6];
-	long			Special[6];
+	long			SpecialL[6];
 	float			SpecialF[6];
+	void*			SpecialPtr[6];		// source port addition for 64-bit compat
 	
 	float			Health;				// health 0..1
 	float			Damage;				// damage

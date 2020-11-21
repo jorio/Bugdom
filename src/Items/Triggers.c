@@ -75,26 +75,25 @@ enum
 
 #define	RegenerateNut			Flag[1]
 #define	DetonateNut				Flag[2]
-#define NutContents				Special[0]
-#define NutParm1				Special[1]
-#define	NutDetonatorID			Special[3]
+#define NutContents				SpecialL[0]
+#define NutParm1				SpecialL[1]
+#define	NutDetonatorID			SpecialL[3]
 
 #define	ParticleTimer			SpecialF[0]
 
-#define DetonatorID				Special[0]
+#define DetonatorID				SpecialL[0]
 #define	IsPlunging				Flag[0]
 
-#define	KeyNum					Special[1]
-#define	PowerupNutTerrainPtr	Special[2]		// terrain ptr to nut which created powerup
+#define	KeyNum					SpecialL[1]
+#define	PowerupNutTerrainPtr	SpecialPtr[2]	// terrain ptr to nut which created powerup
 
-#define	DoorMode				Special[1]
-#define	DoorAim					Special[2]
+#define	DoorAim					SpecialL[2]
 #define	DoorSwingSpeed			SpecialF[0]
 #define DoorSwingMax			SpecialF[1]
 
 #define	ResurfacePlatform		Flag[0]
 
-#define	ValveID					Special[0]
+#define	ValveID					SpecialL[0]
 
 Boolean gDetonatorBlown[MAX_DETONATOR_IDS];
 Boolean	gValveIsOpen[MAX_VALVE_IDS];
@@ -1111,7 +1110,7 @@ static const Byte	keyTypes[NUM_LEVELS] =
 
 		/* REMEMBER TERRAIN PTR TO NUT THAT CREATED THIS */
 		
-	newObj->PowerupNutTerrainPtr = (long)theNut->TerrainItemPtr;
+	newObj->PowerupNutTerrainPtr = theNut->TerrainItemPtr;
 
 }
 
