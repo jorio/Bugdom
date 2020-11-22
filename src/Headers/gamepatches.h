@@ -16,6 +16,8 @@ OSErr DrawPictureIntoGWorld(FSSpec *myFSSpec, GWorldPtr *theGWorld);
 
 OSErr DrawPictureToScreen(FSSpec* spec, short x, short y);
 
+void FlushQuesaErrors(void);
+
 //-----------------------------------------------------------------------------
 // Backdrop
 

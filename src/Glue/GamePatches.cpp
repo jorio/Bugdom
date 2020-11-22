@@ -103,6 +103,15 @@ OSErr DrawPictureToScreen(FSSpec* spec, short x, short y)
 	return noErr;
 }
 
+void FlushQuesaErrors()
+{
+	TQ3Error err = Q3Error_Get(nil);
+	if (err != kQ3ErrorNone)
+	{
+		printf("%s: %d\n", __func__, err);
+	}
+}
+
 // Called when the game window gets resized.
 // Adjusts the clipping pane and camera aspect ratio.
 static void QD3D_OnWindowResized(int windowWidth, int windowHeight)
