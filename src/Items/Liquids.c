@@ -602,7 +602,12 @@ TQ3ColorRGB		color;
 
 	width = right - left;
 	depth = front - back;
-	
+
+	// Source port mod: water is made of 2 overlapping faces to achieve a UV
+	// scrolling effect in 2 directions. Prevent the water faces from Z-fighting
+	// (well, actually, Y-fighting) by moving them apart slightly.
+	float y1 = y - 0.0f;
+	float y2 = y - 1.0f;
 
 			/******************/
 			/* BUILD GEOMETRY */
@@ -612,35 +617,35 @@ TQ3ColorRGB		color;
 				
 	p = gWaterMesh.points;
 	p[0].x = left;
-	p[0].y = y;
+	p[0].y = y1;
 	p[0].z = back;
 
 	p[1].x = left;
-	p[1].y = y;
+	p[1].y = y1;
 	p[1].z = front;
 
 	p[2].x = right;
-	p[2].y = y;
+	p[2].y = y1;
 	p[2].z = front;
 
 	p[3].x = right;
-	p[3].y = y;
+	p[3].y = y1;
 	p[3].z = back;
 
 	p[4].x = left;
-	p[4].y = y;
+	p[4].y = y2;
 	p[4].z = back;
 
 	p[5].x = left;
-	p[5].y = y;
+	p[5].y = y2;
 	p[5].z = front;
 
 	p[6].x = right;
-	p[6].y = y;
+	p[6].y = y2;
 	p[6].z = front;
 
 	p[7].x = right;
-	p[7].y = y;
+	p[7].y = y2;
 	p[7].z = back;
 
 			/* UPDATE BBOX */
