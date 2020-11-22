@@ -17,6 +17,7 @@
 #define	CHAR_LEFT			0x1c
 #define	CHAR_RIGHT			0x1d
 #define	CHAR_DELETE			0x08
+#define CHAR_FORWARD_DELETE	0x7f
 #define	CHAR_APOSTROPHE		0x27
 
 

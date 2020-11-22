@@ -19,6 +19,7 @@ extern	TQ3Object		gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
 extern	short	gPrefsFolderVRefNum;
 extern	long	gPrefsFolderDirID;
 extern	FSSpec	gDataSpec;
+extern	char	gTypedAsciiKey;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -412,15 +413,24 @@ EventRecord	theEvent;
 				/* CHECK FOR KEY */
 				
 		UpdateInput();
-#if 1
-		SOURCE_PORT_MINOR_PLACEHOLDER();
-#else
-		if (GetNextEvent(keyDownMask, &theEvent))		// see if keydown
+
+		char newKey = '\0';
+		if (GetNewKeyState(kVK_LeftArrow))
+			newKey = CHAR_LEFT;
+		else if (GetNewKeyState(kVK_RightArrow))
+			newKey = CHAR_RIGHT;
+		else if (GetNewKeyState(kVK_Delete))
+			newKey = CHAR_DELETE;
+		else if (GetNewKeyState(kVK_ForwardDelete))
+			newKey = CHAR_FORWARD_DELETE;
+		else
+			newKey = gTypedAsciiKey;
+
+		if (newKey)
 		{
-			TypeNewKey(theEvent.message & charCodeMask);
+			TypeNewKey(newKey);
 			UpdateNameAndCursor(true,LEFT_EDGE,0,0);
 		}
-#endif
 		
 				/* MOVE CAMERA */
 				
@@ -469,6 +479,17 @@ short	i;
 		}
 		return;
 	}
+
+				/* FORWARD DELETE */
+
+	if (c == CHAR_FORWARD_DELETE)
+	{
+		for (i = gCursorPosition; i < (MAX_NAME_LENGTH-1); i++)
+			gNewName.name[i] = gNewName.name[i+1];
+		gNewName.name[MAX_NAME_LENGTH-1] = ' ';
+		return;
+	}
+
 				/* LEFT ARROW */
 		
 	if (c == CHAR_LEFT)

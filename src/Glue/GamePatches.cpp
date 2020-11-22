@@ -15,6 +15,7 @@ extern "C"
 	extern PrefsType gGamePrefs;
 	extern short gPrefsFolderVRefNum;
 	extern long gPrefsFolderDirID;
+	char gTypedAsciiKey = '\0';
 }
 
 static struct
@@ -154,6 +155,9 @@ void DoSDLMaintenance()
 	}
 #endif
 
+	// Reset typed ASCII key on every frame
+	gTypedAsciiKey = '\0';
+
 	SDL_Event event;
 	while (SDL_PollEvent(&event))
 	{
@@ -173,6 +177,14 @@ void DoSDLMaintenance()
 					case SDL_WINDOWEVENT_RESIZED:
 						QD3D_OnWindowResized(event.window.data1, event.window.data2);
 						break;
+				}
+				break;
+
+			case SDL_TEXTINPUT:
+				// The text event gives us UTF-8. Use the key only if it's a printable ASCII character.
+				if (event.text.text[0] >= ' ' && event.text.text[0] <= '~')
+				{
+					gTypedAsciiKey = event.text.text[0];
 				}
 				break;
 		}
