@@ -105,8 +105,8 @@ float		dummy;
 			break;
 		}
 	
-	}while(!Button());
-	while(Button());										// wait for button up
+	}while(!FlushMouseButtonPress());
+	while(FlushMouseButtonPress());							// wait for button up
 	
 
 			/* HANDLE RESULT */
@@ -446,7 +446,7 @@ Boolean			fo = false;
 		QD3D_CalcFramesPerSecond();					
 	
 		UpdateInput();
-		if (AreAnyNewKeysPressed())
+		if (AreAnyNewKeysPressed() || FlushMouseButtonPress())
 		{
 			if (!fo)
 				GammaFadeOut();
@@ -528,7 +528,7 @@ OSErr		err;
 		DoSoundMaintenance();
 		DoSDLMaintenance();
 		
-		if (Button())
+		if (FlushMouseButtonPress())
 			break;
 		
 	}while(!AreAnyNewKeysPressed());

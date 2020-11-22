@@ -15,6 +15,7 @@ extern "C"
 	extern PrefsType gGamePrefs;
 	extern short gPrefsFolderVRefNum;
 	extern long gPrefsFolderDirID;
+	Boolean gMouseButtonPressed = false;
 	char gTypedAsciiKey = '\0';
 }
 
@@ -112,6 +113,13 @@ void FlushQuesaErrors()
 	}
 }
 
+Boolean FlushMouseButtonPress()
+{
+	Boolean rc = gMouseButtonPressed;
+	gMouseButtonPressed = false;
+	return rc;
+}
+
 // Called when the game window gets resized.
 // Adjusts the clipping pane and camera aspect ratio.
 static void QD3D_OnWindowResized(int windowWidth, int windowHeight)
@@ -164,8 +172,9 @@ void DoSDLMaintenance()
 	}
 #endif
 
-	// Reset typed ASCII key on every frame
+	// Reset these on every new frame
 	gTypedAsciiKey = '\0';
+	gMouseButtonPressed = false;
 
 	SDL_Event event;
 	while (SDL_PollEvent(&event))
@@ -195,6 +204,10 @@ void DoSDLMaintenance()
 				{
 					gTypedAsciiKey = event.text.text[0];
 				}
+				break;
+
+			case SDL_MOUSEBUTTONDOWN:
+				gMouseButtonPressed = true;
 				break;
 		}
 	}

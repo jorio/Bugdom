@@ -535,7 +535,7 @@ float	fps;
 		fps = gFramesPerSecondFrac;			
 		duration -= fps;
 		
-		if (Button())
+		if (FlushMouseButtonPress())
 			return(true);
 		if (AreAnyNewKeysPressed())
 			return(true);		

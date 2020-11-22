@@ -118,7 +118,7 @@ TQ3Vector3D	camDelta = {0,0,0};
 		DoSDLMaintenance();
 
 		UpdateInput();
-		if (Button())
+		if (FlushMouseButtonPress())
 			break;
 		if (AreAnyNewKeysPressed())
 			break;		

@@ -117,7 +117,7 @@ tryagain:
 		
 				/* SEE IF USER CLICKED SOMETHING */
 				
-		if (Button())
+		if (FlushMouseButtonPress())
 		{
 			TQ3Point2D	pt;
 			
@@ -413,14 +413,14 @@ float		d,fps = gFramesPerSecondFrac;
 
 static void WalkSpiderToIcon(void)
 {
-Boolean	b = Button();
+Boolean	b = FlushMouseButtonPress();
 
 
 	MorphToSkeletonAnim(gSpider->Skeleton, 2, 6);
 
 	while(true)	
 	{		
-		if (Button())			// see if user wants to hurry up
+		if (FlushMouseButtonPress())			// see if user wants to hurry up
 		{
 			if (!b)
 				break;

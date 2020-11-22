@@ -797,7 +797,7 @@ TQ3StyleObject	pick;
 		QD3D_CalcFramesPerSecond();				
 		DoSDLMaintenance();
 		
-		if (Button())
+		if (FlushMouseButtonPress())
 		{
 			Point		mouse;
 			TQ3Point2D	pt;
