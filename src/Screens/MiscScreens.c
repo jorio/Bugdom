@@ -21,6 +21,7 @@ extern	short		gTextureRezfile;
 extern	NewObjectDefinitionType	gNewObjectDefinition;
 extern	Boolean		gSongPlayingFlag,gResetSong,gDisableAnimSounds,gSongPlayingFlag;
 extern	PrefsType	gGamePrefs;
+extern	SDL_Window*	gSDLWindow;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -47,6 +48,43 @@ static void MoveLogoBG(ObjNode *theNode);
 
 void DoPaused(void)
 {
+	const SDL_MessageBoxButtonData buttons[] =
+	{
+		{ SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT|SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, 0, "Resume" },
+		{ 0, 1, "End" },
+		{ 0, 2, "Quit" },
+	};
+
+	const SDL_MessageBoxData messageboxdata =
+	{
+		SDL_MESSAGEBOX_INFORMATION,
+		gSDLWindow,
+		"GAME PAUSED",
+		"TODO: Implement Pretty Pause Screen!",
+		SDL_arraysize(buttons),
+		buttons,
+		NULL
+	};
+
+	int buttonid;
+	if (SDL_ShowMessageBox(&messageboxdata, &buttonid) < 0)
+	{
+		CleanQuit();
+		return;
+	}
+
+	switch (buttonid) {
+		case 2: // quit
+			CleanQuit();
+			return;
+		case 1: // end
+			gGameOverFlag = gAbortedFlag = true;
+			break;
+		default: // resume
+			break;
+	}
+
+#if 0
 PicHandle	pict;
 Rect		r;
 int			i,n;
@@ -134,6 +172,7 @@ bail:
 	gPlayerObj->AccelVector.y = 0;
 
 	GetMouseDelta(&dummy,&dummy);				// read this once to prevent mouse boom
+#endif
 }
 
 
@@ -142,9 +181,52 @@ bail:
 
 Boolean DoLevelCheatDialog(void)
 {
-#if 1
-	SOURCE_PORT_PLACEHOLDER();
-#else
+	const SDL_MessageBoxButtonData buttons[] =
+	{
+		{ 0, 0, "1" },
+		{ 0, 1, "2" },
+		{ 0, 2, "3" },
+		{ 0, 3, "4" },
+		{ 0, 4, "5" },
+		{ 0, 5, "6" },
+		{ 0, 6, "7" },
+		{ 0, 7, "8" },
+		{ 0, 8, "9" },
+		{ 0, 9, "10" },
+		{ 0, 10, "Quit" },
+	};
+
+	const SDL_MessageBoxData messageboxdata =
+	{
+		SDL_MESSAGEBOX_INFORMATION,		// .flags
+		gSDLWindow,						// .window
+		"LEVEL SELECT",					// .title
+		"PICK A LEVEL",					// .message
+		SDL_arraysize(buttons),			// .numbuttons
+		buttons,						// .buttons
+		NULL							// .colorScheme
+	};
+
+	int buttonid;
+	if (SDL_ShowMessageBox(&messageboxdata, &buttonid) < 0)
+	{
+		DoAlert(SDL_GetError());
+		CleanQuit();
+		return false;
+	}
+
+	switch (buttonid) {
+		case 10: // quit
+			CleanQuit();
+			return false;
+		default: // resume
+			gRealLevel = buttonid;
+			break;
+	}
+
+	return false;
+
+#if 0
 DialogPtr 		myDialog;
 short			itemHit;
 Boolean			dialogDone = false;
