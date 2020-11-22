@@ -1207,8 +1207,18 @@ static void DrawPICTIntoMipmap(PicHandle pict,long width, long height, TQ3Mipmap
 
 	if (blackIsAlpha)
 	{
-		// this function was taken from my nanosaur port. Nanosaur doesn't have blackIsAlpha, so, TODO
-		SOURCE_PORT_MINOR_PLACEHOLDER();
+		uint32_t*	rowPtr = (uint32_t *)pictMapAddr;
+
+		for (int y = 0; y < height; y++)
+		{
+			for (int x = 0; x < width; x++)
+			{
+				uint32_t pixel = rowPtr[x];
+				if (!(pixel & 0xFFFFFF00))
+					rowPtr[x] &= 0xFFFFFF00;
+			}
+			rowPtr += pictRowBytes / 4;
+		}
 	}
 	
 	mipmap->image = Q3MemoryStorage_New((unsigned char*)pictMapAddr, pictRowBytes * height);
