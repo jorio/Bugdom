@@ -59,6 +59,10 @@
 #define GL_SRC_ALPHA			0x0302
 #define GL_ONE					1
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 #include "globals.h"
 #include "mobjtypes.h"
@@ -98,6 +102,11 @@
 #include "mytraps.h"
 #include "triggers.h"
 #include "pick.h"
+
+#ifdef __cplusplus
+};
+#endif
+
 
 #include "gamepatches.h"
 #include "structformats.h"
