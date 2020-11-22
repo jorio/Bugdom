@@ -22,6 +22,7 @@ extern	TQ3Vector3D				gLightDirection1;
 extern	u_short					gLevelType;
 extern	Byte					gPlayerMode;
 extern	CollisionRec			gCollisionList[];
+extern	SDL_Window*				gSDLWindow;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -552,7 +553,6 @@ float			cx,cy;
 float			dx,dy,length;
 TQ3Vector3D		axis,lookAtVector,sunVector;
 TQ3ColorRGB		transColor;
-Rect			r;
 
 	if (!gDrawLensFlare)
 		return;
@@ -604,11 +604,12 @@ Rect			r;
 //		return;
 		
 			/* CALC CENTER OF SCREEN */
+
+	int windowWidth, windowHeight;
+	SDL_GetWindowSize(gSDLWindow, &windowWidth, &windowHeight);
 			
-	GetPortBounds(GetWindowPort(setupInfo->window), &r);
-			
-	cx = (r.right - r.left)/2;
-	cy = (r.bottom - r.top)/2;
+	cx = windowWidth/2;
+	cy = windowHeight/2;
 	
 
 			/* CALC VECTOR FROM CENTER TO LIGHT */
@@ -652,6 +653,10 @@ Rect			r;
 		else
 			s = gFlareScaleTable[i];
 		
+		// Source port addition: adjust lens flare scale to window dimensions
+		// (Original dimensions are valid for 640x480)
+		s *= windowHeight / 480.0f;
+
 		x = cx + axis.x * length * o;
 		y = cy + axis.y * length * o;
 				
