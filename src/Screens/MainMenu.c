@@ -129,6 +129,7 @@ tryagain:
 		}
 		
 		QD3D_CalcFramesPerSecond();
+		DoSDLMaintenance();
 		UpdateInput();									// keys get us out
 		
 				/* UPDATE TIMER */
@@ -450,6 +451,7 @@ Boolean	b = Button();
 		MoveMenuCamera();
 		QD3D_DrawScene(gGameViewInfoPtr,DrawObjects);		
 		QD3D_CalcFramesPerSecond();
+		DoSDLMaintenance();
 		UpdateInput();									// keys get us out
 	}
 
