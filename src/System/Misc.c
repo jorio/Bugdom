@@ -15,13 +15,12 @@ extern	short		gMainAppRezFile;
 extern	Boolean		gGameOverFlag,gAbortedFlag,gQD3DInitialized;
 extern	QD3DSetupOutputType		*gGameViewInfoPtr;
 extern	FSSpec		gDataSpec;
+extern	SDL_Window*	gSDLWindow;
 
 
 /****************************/
 /*    CONSTANTS             */
 /****************************/
-
-#define		ERROR_ALERT_ID		401
 
 
 
@@ -48,13 +47,7 @@ unsigned long seed0 = 0, seed1 = 0, seed2 = 0;
 void ShowSystemErr(long err)
 {
 Str255		numStr;
-
-#if 0
-	if (gDisplayContext)
-		GammaOn();
-	FlushEvents ( everyEvent, REMOVE_ALL_EVENTS);
-	UseResFile(gMainAppRezFile);
-#endif
+	printf("BUGDOM FATAL ERROR #%ld\n", err);
 	NumToStringC(err, numStr);
 	DoAlert (numStr);
 	CleanQuit();
@@ -67,13 +60,7 @@ Str255		numStr;
 void ShowSystemErr_NonFatal(long err)
 {
 Str255		numStr;
-
-#if 0
-	if (gDisplayContext)
-		GammaOn();
-#endif
-	FlushEvents ( everyEvent, REMOVE_ALL_EVENTS);
-//	UseResFile(gMainAppRezFile);
+	printf("BUGDOM NON-FATAL ERROR #%ld\n", err);
 	NumToStringC(err, numStr);
 	DoAlert (numStr);
 }
@@ -82,63 +69,17 @@ Str255		numStr;
 
 void DoAlert(const char* s)
 {
-
-#if 1
 	printf("BUGDOM ALERT: %s\n", s);
-	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", s, NULL);
-#else
-	if (gDisplayContext)
-		GammaOn();
-	FlushEvents ( everyEvent, REMOVE_ALL_EVENTS);
-	InitCursor();
-	FlushEvents (everyEvent, REMOVE_ALL_EVENTS);	
-	ParamText(s,NIL_STRING,NIL_STRING,NIL_STRING);
-	NoteAlert(ERROR_ALERT_ID,nil);
-	
-#endif
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", s, gSDLWindow);
 }
 
 
-/*********************** DO ALERT NUM *******************/
-
-void DoAlertNum(int n)
-{
-
-#if 1
-	static char alertbuf[1024];
-	snprintf(alertbuf, 1024, "Alert #%d", n);
-	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", alertbuf, NULL);
-#else
-	if (gDisplayContext)
-		GammaOn();
-	FlushEvents ( everyEvent, REMOVE_ALL_EVENTS);
-	InitCursor();
-	NoteAlert(n,nil);
-	
-#endif
-}
-
-
-		
 /*********************** DO FATAL ALERT *******************/
 
 void DoFatalAlert(const char* s)
 {
-#if 1
 	printf("BUGDOM FATAL ALERT: %s\n", s);
-	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", s, NULL);
-#else
-OSErr	iErr;
-	
-	if (gDisplayContext)
-		GammaOn();
-	FlushEvents ( everyEvent, REMOVE_ALL_EVENTS);
-	UseResFile(gMainAppRezFile);
-
-	InitCursor();
-	ParamText(s,NIL_STRING,NIL_STRING,NIL_STRING);
-	iErr = NoteAlert(ERROR_ALERT_ID,nil);
-#endif
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", s, gSDLWindow);
 	CleanQuit();
 }
 
@@ -146,21 +87,10 @@ OSErr	iErr;
 
 void DoFatalAlert2(const char* s1, const char* s2)
 {
-#if 1
 	printf("BUGDOM FATAL ALERT: %s - %s\n", s1, s2);
 	static char alertbuf[1024];
 	snprintf(alertbuf, 1024, "%s\n%s", s1, s2);
-	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", alertbuf, NULL);
-#else
-	if (gDisplayContext)
-		GammaOn();
-	FlushEvents ( everyEvent, REMOVE_ALL_EVENTS);
-	UseResFile(gMainAppRezFile);
-	InitCursor();
-	ParamText(s1,s2,NIL_STRING,NIL_STRING);
-	Alert(402,nil);
-//	ShowMenuBar();
-#endif
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", alertbuf, gSDLWindow);
 	ExitToShell();
 }
 

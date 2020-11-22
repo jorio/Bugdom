@@ -26,4 +26,3 @@ extern	void RegulateSpeed(short fps);
 extern	void CopyPStr(ConstStr255Param	inSourceStr, StringPtr	outDestStr);
 extern	void ShowSystemErr_NonFatal(long err);
 extern	void ApplyFrictionToDeltas(float f,TQ3Vector3D *d);
-void DoAlertNum(int n);
