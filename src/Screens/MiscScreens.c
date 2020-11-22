@@ -252,86 +252,90 @@ Rect			itemRect;
 }
 
 
+/*************** SLIDESHOW (source port refactor) **********************/
+
+enum SlideshowEntryOpcode
+{
+	SLIDESHOW_STOP,
+	SLIDESHOW_FILE
+};
+
+struct SlideshowEntry
+{
+	int opcode;
+	const char* imagePath;
+	void (*postDrawCallback)(void);
+};
+
+static void Slideshow(const struct SlideshowEntry* slides, bool doFade)
+{
+	FSSpec spec;
+
+	ExclusiveOpenGLMode_Begin();
+
+	for (int i = 0; slides[i].opcode != SLIDESHOW_STOP; i++)
+	{
+		const struct SlideshowEntry* slide = &slides[i];
+
+		if (slide->opcode == SLIDESHOW_FILE)
+		{
+			OSErr result;
+			result = FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, slide->imagePath, &spec);
+			if (result != noErr)
+				continue;
+			DrawPictureToScreen(&spec, 0, 0);
+		}
+		else
+		{
+			DoAlert("unsupported slideshow opcode");
+			continue;
+		}
+
+		if (slide->postDrawCallback)
+		{
+			slide->postDrawCallback();
+		}
+
+		if (i == 0)
+		{
+			RenderBackdropQuad(BACKDROP_FIT);
+			GammaFadeIn();
+		}
+		UpdateInput();
+
+		do
+		{
+			UpdateInput();
+			DoSoundMaintenance();
+			RenderBackdropQuad(BACKDROP_FIT);
+			QD3D_CalcFramesPerSecond(); // required for DoSDLMaintenance to properly cap the framerate
+			DoSDLMaintenance();
+		} while (!FlushMouseButtonPress() && !GetNewKeyState(kVK_Return) && !GetNewKeyState(kVK_Escape) && !GetNewKeyState(kVK_Space));
+	}
+
+	ExclusiveOpenGLMode_End();
+
+	if (doFade)
+	{
+		GammaFadeOut();
+		GameScreenToBlack();
+	}
+}
+
+
 /********************* DO ABOUT SCREENS ************************/
 
 void DoAboutScreens(void)
 {
-GWorldPtr	gworld;
-Rect		r;
-FSSpec	spec;
-
-			/*************/
-			/* DO PAGE 1 */
-			/*************/
-
-	SetRect(&r,0,0,GAME_VIEW_WIDTH,GAME_VIEW_HEIGHT);
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":images:credits", &spec);
-	DrawPictureIntoGWorld(&spec, &gworld);
-	DumpGWorld2(gworld, gCoverWindow, &r);
-	DisposeGWorld(gworld);	
-	GammaFadeIn();
-
-	UpdateInput();
-
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":images:help2", &spec);	// load next page
-	DrawPictureIntoGWorld(&spec, &gworld);
-
-	do
+	const struct SlideshowEntry slides[] =
 	{
-		UpdateInput();
-		DoSoundMaintenance();
-		if (Button())
-			break;
-	}while(!AreAnyNewKeysPressed());
-	while(Button());
-
-			/*************/
-			/* DO PAGE 2 */
-			/*************/
-
-	DumpGWorld2(gworld, gCoverWindow, &r);
-	DisposeGWorld(gworld);	
-	GammaFadeIn();
-
-	UpdateInput();
-	
-#if !DEMO	
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":images:help", &spec);	// load next page
-	DrawPictureIntoGWorld(&spec, &gworld);
-#endif
-		
-	do
-	{
-		UpdateInput();
-		DoSoundMaintenance();
-		if (Button())
-			break;
-	}while(!AreAnyNewKeysPressed());
-	while(Button());
-
-#if !DEMO
-			/*************/
-			/* DO PAGE 3 */
-			/*************/
-		
-	DumpGWorld2(gworld, gCoverWindow, &r);
-	DisposeGWorld(gworld);
-	UpdateInput();
-	
-	
-	do
-	{
-		UpdateInput();
-		DoSoundMaintenance();
-		if (Button())
-			break;
-	}while(!AreAnyNewKeysPressed());
-#endif
-
-	GammaFadeOut();
-	GameScreenToBlack();
+		{ SLIDESHOW_FILE, ":Images:credits", NULL },
+		{ SLIDESHOW_FILE, ":Images:help2", NULL },
+		{ SLIDESHOW_FILE, ":Images:help", NULL },
+		{ SLIDESHOW_STOP, NULL, NULL },
+	};
+	Slideshow(slides, true);
 }
-
 
 
 
@@ -509,33 +513,10 @@ static void MoveLogoBG(ObjNode *theNode)
 
 void ShowIntroScreens(void)
 {
-FSSpec	spec;
-OSErr		err;
-
-			/* DO PAGE 1 */
-
-	err = FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":images:Info1", &spec);
-	DrawPictureToScreen(&spec, 0, 0);
-
-	UpdateInput();
-
-	ExclusiveOpenGLMode_Begin();
-
-	do
+	const struct SlideshowEntry slides[] =
 	{
-		UpdateInput();
-		RenderBackdropQuad(BACKDROP_FIT);
-		DoSoundMaintenance();
-		DoSDLMaintenance();
-		
-		if (FlushMouseButtonPress())
-			break;
-		
-	}while(!AreAnyNewKeysPressed());
-
-	ExclusiveOpenGLMode_End();
-
-//	GammaFadeOut();
-//	GameScreenToBlack();
+		{ SLIDESHOW_FILE, ":images:Info1", NULL },
+		{ SLIDESHOW_STOP, NULL, NULL },
+	};
+	Slideshow(slides, false);
 }
-
