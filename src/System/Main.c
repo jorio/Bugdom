@@ -436,7 +436,7 @@ float fps;
 				
 		if (gDemoMode != DEMO_MODE_RECORD)
 		{
-			if (GetNewKeyState(KEY_ESC))				// see if pause/abort
+			if (GetNewKeyState(kKey_Pause))				// see if pause/abort
 				DoPaused();
 		}
 		
@@ -720,7 +720,11 @@ static void DoDeathReset(void)
 
 static void CheckForCheats(void)
 {
+#if __APPLE__
 	if (GetKeyState(KEY_APPLE))				// must hold down the help key
+#else
+	if (GetKeyState(kVK_Control))			// must hold down the help key
+#endif
 	{
 		if (GetNewKeyState(KEY_F1))			// win the level!
 			gAreaCompleted = true;

@@ -599,7 +599,7 @@ static void MoveMyBuddy(ObjNode *theNode)
 	{
 		case	BUDDY_MODE_LIKESME:
 				BuddyFollowsMe(theNode);
-				if (GetNewKeyState(KEY_TAB) && gPlayerCanMove)
+				if (GetNewKeyState(kKey_BuddyAttack) && gPlayerCanMove)
 				{
 					gMyBuddy = nil;							// buddy isnt attached to me anymore
 					theNode->Mode = BUDDY_MODE_ATTACK;					

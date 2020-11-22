@@ -349,7 +349,7 @@ float	dx, dy;
 		
 	if (gNitroTimer <= 0.0f)
 	{
-		if (GetNewKeyState(KEY_OPTION))
+		if (GetNewKeyState(kKey_KickBoost))
 		{
 			theNode->Speed = gPlayerMaxSpeed;		// boost to full speed	
 			gDelta.z *= 100.0f;						// boost this up really high (will get tweaked later)
