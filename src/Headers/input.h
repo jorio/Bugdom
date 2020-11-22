@@ -157,14 +157,6 @@ enum
 
 
 
-
-
-
-			/* EXTERNS */
-			
-extern  Boolean		gMouseButtonState[], gNewMouseButtonState[];
-extern  long		gMouseDeltaX,gMouseDeltaY;
-
 //============================================================================================
 
 
