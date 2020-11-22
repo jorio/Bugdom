@@ -18,6 +18,7 @@ extern	Boolean		gEnteringName;
 /*    PROTOTYPES            */
 /****************************/
 
+static void SongCompletionProc(SndChannelPtr chan);
 static short FindSilentChannel(void);
 static void Calc3DEffectVolume(short effectNum, TQ3Point3D *where, float volAdjust, u_long *leftVolOut, u_long *rightVolOut);
 #if 0
@@ -558,7 +559,7 @@ OSErr	iErr;
 
 stream_again:					
 	iErr = SndStartFilePlay(gMusicChannel, gMusicFileRefNum, 0, STREAM_BUFFER_SIZE, gMusicBuffer,
-							nil, nil, true);
+							nil, SongCompletionProc, true);
 
 	if (iErr)
 	{
@@ -576,6 +577,13 @@ stream_again:
 //		SndPauseFilePlay(gMusicChannel);						// pause it	
 }
 
+/***************** SONG COMPLETION PROC *********************/
+
+static void SongCompletionProc(SndChannelPtr chan)
+{
+	if (gSongPlayingFlag)
+		gResetSong = true;
+}
 
 
 /*********************** KILL SONG *********************/
