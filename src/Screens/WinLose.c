@@ -531,6 +531,7 @@ float	fps;
 		QD3D_MoveParticles();
 		QD3D_DrawScene(gGameViewInfoPtr,WinLoseDrawStuff);
 		QD3D_CalcFramesPerSecond();	
+		DoSDLMaintenance();
 		fps = gFramesPerSecondFrac;			
 		duration -= fps;
 		

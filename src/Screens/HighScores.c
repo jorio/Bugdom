@@ -114,6 +114,7 @@ TQ3Vector3D	camDelta = {0,0,0};
 		UpdateObjectTransforms(gScoreCyc);
 		
 		QD3D_DrawScene(gGameViewInfoPtr,DrawObjects);	
+		DoSDLMaintenance();
 
 		UpdateInput();
 		if (Button())
@@ -430,6 +431,7 @@ EventRecord	theEvent;
 				/* DRAW SCENE */
 				
 		QD3D_DrawScene(gGameViewInfoPtr,DrawObjects);	
+		DoSDLMaintenance();
 	}while(!GetNewKeyState(KEY_RETURN));
 
 			/* CLEANUP */
