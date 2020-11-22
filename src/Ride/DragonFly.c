@@ -314,7 +314,7 @@ TQ3Matrix4x4	m;
 				/* CALC SPEED */
 				
 	oldSpeed = bug->Speed;
-	FastVectorLength3D(bug->Speed, gDelta.x, gDelta.y, gDelta.z);				// calc 2D speed value
+	bug->Speed = FastVectorLength3D(gDelta.x, gDelta.y, gDelta.z);	// calc 3D speed value
 
 	if (bug->Speed > DRAGONFLY_MAX_SPEED)							// check max/min speeds
 	{

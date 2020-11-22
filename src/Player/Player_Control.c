@@ -170,7 +170,7 @@ Boolean				killed = false;
 	
 					/* CALC SPEED */
 					
-		FastVectorLength2D(gPlayerObj->Speed, gDelta.x, gDelta.z);			// calc 2D speed value
+		gPlayerObj->Speed = FastVectorLength2D(gDelta.x, gDelta.z);			// calc 2D speed value
 		if ((gPlayerObj->Speed >= 0.0f) && (gPlayerObj->Speed < 10000000.0f))	// check for weird NaN bug
 		{
 		}
@@ -297,8 +297,8 @@ Boolean				killed = false;
 			/**********************************************/
 
 
-//		FastVectorLength3D(realSpeed, gDelta.x, gDelta.y, gDelta.z);		// calc real 3D speed for terrain collision
-		FastVectorLength2D(realSpeed, gDelta.x, gDelta.z);					// NOTE: CALC 2D SINCE DELTA-Y WAS CAUSING PLAYER TO WALK UNCONTROLLABLY UP-HILL
+//		realSpeed = FastVectorLength3D(gDelta.x, gDelta.y, gDelta.z);		// calc real 3D speed for terrain collision
+		realSpeed = FastVectorLength2D(gDelta.x, gDelta.z);					// NOTE: CALC 2D SINCE DELTA-Y WAS CAUSING PLAYER TO WALK UNCONTROLLABLY UP-HILL
 
 
 		if (HandleFloorAndCeilingCollision(&gCoord, &oldCoord, &gDelta, &oldDelta,

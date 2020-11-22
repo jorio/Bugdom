@@ -217,7 +217,7 @@ float	realSpeed;
 			/* DO FLOOR & CEILING COLLISION */
 			/********************************/	
 			
-	FastVectorLength3D(realSpeed, gDelta.x, gDelta.y, gDelta.z);// calc real 3D speed for terrain collision
+	realSpeed = FastVectorLength3D(gDelta.x, gDelta.y, gDelta.z);// calc real 3D speed for terrain collision
 	if (HandleFloorAndCeilingCollision(&gCoord, &theEnemy->OldCoord, &gDelta, &gDelta,
 										-theEnemy->BottomOff, theEnemy->TopOff,
 										realSpeed))

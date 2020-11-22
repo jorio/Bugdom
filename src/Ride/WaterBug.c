@@ -343,7 +343,7 @@ short	anim;
 				/* CALC SPEED */
 				
 	oldSpeed = bug->Speed;
-	FastVectorLength2D(bug->Speed, gDelta.x, gDelta.z);				// calc 2D speed value
+	bug->Speed = FastVectorLength2D(gDelta.x, gDelta.z);			// calc 2D speed value
 
 	if (bug->Speed > WATERBUG_MAX_SPEED)							// check max/min speeds
 	{
