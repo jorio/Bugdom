@@ -117,10 +117,6 @@ typedef struct
 
 float	g3DTileSize, g3DMinY, g3DMaxY;
 
-char		gDataFolderPath[1500];
-
-//static	FSSpec	gApplicationFSSpec;								// spec of this application
-
 /******************* LOAD SKELETON *******************/
 //
 // Loads a skeleton file & creates storage for it.
@@ -729,6 +725,9 @@ do_std:
 
 OSErr LoadSavedGame(void)
 {
+	DoAlert("LoadSavedGame: Implement me!");
+	return -1;
+
 #if 0
 SaveGameType	**dataHandle,*saveData;
 short			fRefNum;

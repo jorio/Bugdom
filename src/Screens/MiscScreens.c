@@ -189,7 +189,7 @@ Boolean			dialogDone = false;
 void DoSettingsDialog(void)
 {
 #if 1
-	SOURCE_PORT_PLACEHOLDER();
+	DoAlert("DoSettingsDialog: Implement me!");
 #else
 DialogPtr 		myDialog;
 Boolean			dialogDone;
