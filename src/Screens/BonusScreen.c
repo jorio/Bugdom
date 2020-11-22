@@ -795,6 +795,7 @@ TQ3StyleObject	pick;
 		MoveObjects();
 		QD3D_DrawScene(gGameViewInfoPtr,DrawObjects);
 		QD3D_CalcFramesPerSecond();				
+		DoSDLMaintenance();
 		
 		if (Button())
 		{
@@ -829,6 +830,7 @@ static void DrawBonusStuff(float duration)
 		MoveObjects();
 		QD3D_DrawScene(gGameViewInfoPtr,DrawObjects);
 		QD3D_CalcFramesPerSecond();				
+		DoSDLMaintenance();
 	}while((duration -= gFramesPerSecondFrac) > 0.0f);
 }
 
