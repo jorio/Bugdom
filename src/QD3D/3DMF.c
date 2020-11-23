@@ -99,30 +99,19 @@ TQ3StorageObject	myStorageObj;
 		/* CREATE NEW STORAGE OBJECT WHICH IS THE 3DMF FILE */
 			
 	myStorageObj = (TQ3StorageObject)Q3FSSpecStorage_New(myFSSpec);
-	if (myStorageObj == nil)
-	{
-		DoFatalAlert("Error calling Q3FSSpecStorage_New");
-		return(nil);
-	}
-	
+	GAME_ASSERT(myStorageObj);
+
 	
 			/* CREATE NEW FILE OBJECT */
 			
 	myFileObj = (TQ3FileObject)Q3File_New();
-	if (myFileObj == nil)
-	{
-		DoFatalAlert("Error calling Q3File_New");
-		Q3Object_Dispose(myStorageObj);
-		return(nil);
-	}
-	
+	GAME_ASSERT(myFileObj);
+
 			/* SET THE STORAGE FOR THE FILE OBJECT */
 			
-	if (Q3File_SetStorage(myFileObj, myStorageObj) != kQ3Success)
-	{
-		DoAlert("Error Q3File_SetStorage");
-		return(nil);
-	}
+	TQ3Status status = Q3File_SetStorage(myFileObj, myStorageObj);
+	GAME_ASSERT(status);
+
 	Q3Object_Dispose(myStorageObj);
 			
 	return(myFileObj);
@@ -169,7 +158,7 @@ TQ3Object		myObject;
 			if (myGroup)
 				Q3Object_Dispose(myGroup);
 
-			printf("!!! MyRead3DMFModel: Q3File_ReadObject Failed!\n");
+			printf("!!! MyRead3DMFModel: Q3File_ReadObject returned nil object!\n");
 			QD3D_ShowRecentError();
 			break;
 		}
@@ -189,8 +178,7 @@ TQ3Object		myObject;
 			else														// this isn't the first & only object, so add to group
 			{
 				myGroup = (void *)Q3DisplayGroup_New();							// make new group
-				if (myGroup == nil)
-					DoFatalAlert("MyRead3DMFModel: Q3DisplayGroup_New failed!");
+				GAME_ASSERT(myGroup);
 				
 				Q3Group_AddObject(myGroup,*model);						// add existing model to group
 				Q3Group_AddObject(myGroup,myObject);					// add object to group
@@ -239,33 +227,25 @@ TQ3Status 		status;
 short			i;
 TQ3GroupPosition	position;
 
-	if (groupNum >= MAX_3DMF_GROUPS)
-		DoFatalAlert("LoadGrouped3DMF: groupNum >= MAX_3DMF_GROUPS");
+	GAME_ASSERT(groupNum < MAX_3DMF_GROUPS);
 
 			/* DISPOSE OF ANY OLD OBJECTS */
 
 	Free3DMFGroup(groupNum);
 
-
 			/* LOAD NEW GEOMETRY */
 			
 	the3DMFFile = Load3DMFModel(spec);
-	if (the3DMFFile == nil)
-		DoFatalAlert("LoadGrouped3DMF: Load3DMFModel failed!");
-
+	GAME_ASSERT(the3DMFFile);
 
 			/* BUILD OBJECT LIST */
 		
 	status = Q3Group_CountObjects(the3DMFFile, &nObjects);			// get # objects in group.  Assume each object is a separate linked item
-	if (status == kQ3Failure)
-		DoFatalAlert("LoadGrouped3DMF: Q3Group_CountObjects failed!");
+	GAME_ASSERT(status);
+	GAME_ASSERT(nObjects <= MAX_OBJECTS_IN_GROUP);					// see if overflow
 
-	if (nObjects > MAX_OBJECTS_IN_GROUP)							// see if overflow
-		DoFatalAlert("LoadGrouped3DMF: gNumObjectsInGroupList > MAX_OBJECTS_IN_GROUP");
-	
 	status = Q3Group_GetFirstPosition(the3DMFFile, &position);		// get 1st object in list
-	if (status == kQ3Failure)
-		DoFatalAlert("Q3Group_GetFirstPosition failed!");
+	GAME_ASSERT(status);
 
 			/*********************/
 			/* SCAN THRU OBJECTS */
@@ -274,9 +254,8 @@ TQ3GroupPosition	position;
 	for (i = 0; i < nObjects; i++)
 	{
 		status = Q3Group_GetPositionObject(the3DMFFile, position, &gObjectGroupList[groupNum][i]);	// get ref to object
-		if (status == kQ3Failure)
-			DoFatalAlert("LoadGrouped3DMF: Q3Group_GetPositionObject failed!");
-		
+		GAME_ASSERT(status);
+
 		QD3D_CalcObjectBoundingSphere(gGameViewInfoPtr, gObjectGroupList[groupNum][i], &gObjectGroupRadiusList[groupNum][i]); 	
 		QD3D_CalcObjectBoundingBox(gGameViewInfoPtr,gObjectGroupList[groupNum][i],&gObjectGroupBBoxList[groupNum][i]); // save bbox
 		

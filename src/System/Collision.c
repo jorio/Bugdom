@@ -312,8 +312,7 @@ next:
 		AddBGCollisions(baseNode,realDX,realDZ, CType);
 #endif
 
-	if (gNumCollisions > MAX_COLLISIONS)											// see if overflowed (memory corruption ensued)
-		DoFatalAlert("CollisionDetect: gNumCollisions > MAX_COLLISIONS");
+	GAME_ASSERT(gNumCollisions <= MAX_COLLISIONS);									// see if overflowed (memory corruption ensued)
 }
 
 

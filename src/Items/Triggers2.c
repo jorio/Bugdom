@@ -662,9 +662,8 @@ float	y;
 		gNewObjectDefinition.rot 		= -PI/2 + (PI/2 * i);
 		gNewObjectDefinition.scale 		= LADYBUG_CAGE_SCALE;
 		post[i] = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-		if (post[i] == nil)
-			DoFatalAlert("AddLadyBugBonus: MakeNewDisplayGroupObject failed!");
-	
+		GAME_ASSERT(post[i]);
+
 		if (i == 0)
 			post[0]->TerrainItemPtr = itemPtr;			// keep ptr to item list
 		else
@@ -711,9 +710,8 @@ float	y;
 	gNewObjectDefinition.slot++;
 	gNewObjectDefinition.scale 		= LADYBUG_SCALE;
 	bug = MakeNewSkeletonObject(&gNewObjectDefinition);
-	if (bug == nil)
-		DoFatalAlert("AddLadyBugBonus: MakeNewSkeletonObject failed!");
-	
+	GAME_ASSERT(bug);
+
 	cage->ChainNode = bug;
 	
 	

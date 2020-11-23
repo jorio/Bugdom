@@ -228,8 +228,7 @@ long					f,i,j,numNubs;
 FenceDefType			*fence;
 FencePointType			*nubs;
 
-	if (gNumFences > MAX_FENCES)
-		DoFatalAlert("PrimeFences: gNumFences > MAX_FENCES");
+	GAME_ASSERT(gNumFences <= MAX_FENCES);
 
 
 			/* DISPOSE OLD SHADER ATTRIBS */
@@ -249,12 +248,10 @@ FencePointType			*nubs;
 		nubs = (*fence->nubList);							// point to nub list
 		numNubs = fence->numNubs;							// get # nubs in fence
 		
-		if (numNubs == 1)
-			DoFatalAlert("PrimeFences: numNubs == 1");
-		
-		if (numNubs > MAX_NUBS_IN_FENCE)
-			DoFatalAlert("PrimeFences: numNubs > MAX_NUBS_IN_FENCE");
-		
+		GAME_ASSERT(numNubs != 1);
+
+		GAME_ASSERT(numNubs <= MAX_NUBS_IN_FENCE);
+
 		for (i = 0; i < numNubs; i++)						// adjust nubs
 		{
 			nubs[i].x *= MAP2UNIT_VALUE;
@@ -270,9 +267,8 @@ FencePointType			*nubs;
 		/* CALCULATE VECTOR FOR EACH SECTION */
 		
 		fence->sectionVectors = (TQ3Vector2D *)AllocPtr(sizeof(TQ3Vector2D) * (numNubs-1));
-		if (fence->sectionVectors == nil)
-			DoFatalAlert("PrimeFences: AllocPtr failed!");
-		
+		GAME_ASSERT(fence->sectionVectors);
+
 		for (i = 0; i < (numNubs-1); i++)
 		{
 			float	dx,dz;
@@ -296,12 +292,11 @@ FencePointType			*nubs;
 		if (gFenceOnThisLevel[gLevelType][i])										// see if this fence exists on this level
 		{
 			shader = QD3D_GetTextureMap(2000+i, nil, true);							// create shader object
-			if (shader==nil)
-				DoFatalAlert("PrimeFences: QD3D_GetTextureMap failed!");
-				
+			GAME_ASSERT(shader);
+
 			gFenceShaderAttribs[i] = Q3AttributeSet_New();							// create new attribute set
-			if (gFenceShaderAttribs[i] == nil)
-				DoFatalAlert("PrimeFences: Q3AttributeSet_New failed!");
+			GAME_ASSERT(gFenceShaderAttribs[i]);
+
 			Q3AttributeSet_Add(gFenceShaderAttribs[i], kQ3AttributeTypeSurfaceShader, &shader);	// put shader into attrib
 	
 			Q3Object_Dispose(shader);												// nuke extra ref
@@ -669,8 +664,7 @@ FencePointType			*nubs;
 		/* SET TRIMESH SHADER ATTRIBUTE */
 		
 	type = fence->type;									// get fence type
-	if (type > NUM_FENCE_SHADERS)
-		DoFatalAlert("SubmitFence: illegal fence type");
+	GAME_ASSERT_MESSAGE(type < NUM_FENCE_SHADERS, "illegal fence type");
 	gFenceTriMeshData.triMeshAttributeSet = gFenceShaderAttribs[type];
 	
 

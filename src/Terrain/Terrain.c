@@ -182,8 +182,7 @@ void InitTerrainManager(void)
 	if (gTempTextureBuffer == nil)
 	{
 		gTempTextureBuffer = (u_short *)AllocPtr(TEMP_TEXTURE_BUFF_SIZE * TEMP_TEXTURE_BUFF_SIZE * sizeof(u_short *));
-		if (gTempTextureBuffer == nil)
-			DoFatalAlert("QD3D_DuplicateTriMeshData: AllocPtr failed!");
+		GAME_ASSERT(gTempTextureBuffer);
 	}
 }
 
@@ -435,13 +434,11 @@ static const int				textureSize[NUM_LOD] = {SUPERTILE_TEXMAP_SIZE, SUPERTILE_TEX
 						/* MAKE BLANK TEXTURE */
 	
 				blankTexHand = AllocHandle(size * size * sizeof(short));	// alloc memory for texture
-				if (blankTexHand == nil)
-					DoFatalAlert("CreateSuperTileMemoryList: AllocHandle failed!");
+				GAME_ASSERT(blankTexHand);
 				HLockHi(blankTexHand);
 		
 				blankTexObject = QD3D_Data16ToTexture_NoMip(*blankTexHand, size, size);	// create texture from buffer
-				if (blankTexObject == nil)
-					DoFatalAlert("CreateSuperTileMemoryList: QD3D_Data16ToTexture_NoMip failed!");
+				GAME_ASSERT(blankTexObject);
 				
 				gTerrainTextureBuffers[i][j][lod] = blankTexHand;				// keep this pointer since we need to manually dispose of this later
 				
@@ -449,12 +446,10 @@ static const int				textureSize[NUM_LOD] = {SUPERTILE_TEXMAP_SIZE, SUPERTILE_TEX
 						/* ADD TO ATTRIBUTE SET */
 							
 				geometryAttribSet = Q3AttributeSet_New();						// make attrib set
-				if (geometryAttribSet == nil)
-					DoFatalAlert("CreateSuperTileMemoryList: Q3AttributeSet_New failed!");
-				
+				GAME_ASSERT(geometryAttribSet);
+
 				status = Q3AttributeSet_Add(geometryAttribSet, kQ3AttributeTypeSurfaceShader, &blankTexObject);	
-				if (status == kQ3Failure)
-					DoFatalAlert("CreateSuperTileMemoryList: Q3AttributeSet_Add failed!");
+				GAME_ASSERT(status);
 				Q3Object_Dispose(blankTexObject);								// free extra ref to shader
 	
 				gSuperTileMemoryList[i].texture[lod][j] = geometryAttribSet;	// save this reference to the attrib set
@@ -501,20 +496,12 @@ static const int				textureSize[NUM_LOD] = {SUPERTILE_TEXMAP_SIZE, SUPERTILE_TEX
 					
 		for (j = 0; j < numLayers; j++)											// do it for floor & ceiling trimeshes
 		{
-
 			tempTriMesh = Q3TriMesh_New(&triMeshData);					// make the temp trimesh
-			if (tempTriMesh == nil)
-			{
-				DoAlert("CreateSuperTileMemoryList: Q3TriMesh_New failed!");
-				QD3D_ShowRecentError();
-			}				
-			
-			if (Q3TriMesh_GetData(tempTriMesh, &gSuperTileMemoryList[i].triMeshData[j]) == kQ3Failure)	// get the data
-			{
-				DoAlert("CreateSuperTileMemoryList: Q3TriMesh_GetData failed!");
-				QD3D_ShowRecentError();
-			}
-			
+			GAME_ASSERT(tempTriMesh);
+
+			status = Q3TriMesh_GetData(tempTriMesh, &gSuperTileMemoryList[i].triMeshData[j]);	// get the data
+			GAME_ASSERT(status);
+
 			Q3Object_Dispose(tempTriMesh);								// dispose of the temp trimesh object
 		}
 	}	// i
@@ -619,6 +606,7 @@ short	i;
 
 static short	BuildTerrainSuperTile(long	startCol, long startRow)
 {
+TQ3Status			status;
 long	 			row,col,row2,col2,i;
 Byte				j;
 short				superTileNum;
@@ -950,18 +938,17 @@ static  TQ3Vector3D	tempVertexNormalList[NUM_VERTICES_IN_SUPERTILE];
 				//
 		{
 			mipmapStorage = QD3D_GetMipmapStorageObjectFromAttrib(gSuperTileMemoryList[superTileNum].texture[0][j]);// get storage object of LOD #0
-			if (mipmapStorage == nil)
-				DoFatalAlert("mipmapStorage == nil");
-			
-			if (Q3MemoryStorage_GetBuffer(mipmapStorage, &buffer, &validSize, &bufferSize) == kQ3Failure)	// get ptr to the buffer
-				DoFatalAlert("Q3MemoryStorage_GetBuffer failed!");
+			GAME_ASSERT(mipmapStorage);
+
+			status = Q3MemoryStorage_GetBuffer(mipmapStorage, &buffer, &validSize, &bufferSize);			// get ptr to the buffer
+			GAME_ASSERT(status);
 			
 			ShrinkSuperTileTextureMap(gTempTextureBuffer,(u_short *)buffer);								// shrink to 128x128
 			superTilePtr->hasLOD[0] = true;
 		}
 			
-		if (Q3MemoryStorage_SetBuffer(mipmapStorage, buffer, validSize, bufferSize) == kQ3Failure)
-			DoFatalAlert("BuildTerrainSuperTile: Q3MemoryStorage_SetBuffer failed!");
+		status = Q3MemoryStorage_SetBuffer(mipmapStorage, buffer, validSize, bufferSize);
+		GAME_ASSERT(status);
 		Q3Object_Dispose(mipmapStorage);												// nuke the mipmap storage object
 
 				/***********************/

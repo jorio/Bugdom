@@ -147,8 +147,7 @@ TerrainItemEntryType *lastPtr,*itemPtr;
 	}
 		
 	gTerrainItemLookupTableX = (TerrainItemEntryType **)AllocPtr(sizeof(TerrainItemEntryType *)*gNumSuperTilesWide);
-	if (gTerrainItemLookupTableX == nil)
-		DoFatalAlert("BuildTerrainItemList: AllocPtr failed!");
+	GAME_ASSERT(gTerrainItemLookupTableX);
 
 	if (gNumTerrainItems == 0)
 		return;

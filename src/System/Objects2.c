@@ -63,15 +63,13 @@ Ptr	mem;
 				/* SET # */
 				
 	theNode->NumCollisionBoxes = numBoxes;
-	if (numBoxes == 0)
-		DoFatalAlert("AllocateCollisionBoxMemory with 0 boxes?");
+	GAME_ASSERT(numBoxes > 0);
 
 
 				/* CURRENT LIST */
 				
 	mem = AllocPtr(sizeof(CollisionBoxType)*numBoxes);
-	if (mem == nil)
-		DoFatalAlert("Couldnt alloc collision box memory");
+	GAME_ASSERT(mem);
 	theNode->CollisionBoxes = (CollisionBoxType *)mem;
 }
 
@@ -110,8 +108,7 @@ void CalcObjectBoxFromNode(ObjNode *theNode)
 {
 CollisionBoxType *boxPtr;
 
-	if (theNode->CollisionBoxes == nil)
-		DoFatalAlert("CalcObjectBox on objnode with no CollisionBoxType");
+	GAME_ASSERT_MESSAGE(theNode->CollisionBoxes, "CalcObjectBox on objnode with no CollisionBoxType");
 		
 	boxPtr = theNode->CollisionBoxes;					// get ptr to 1st box (presumed only box)
 

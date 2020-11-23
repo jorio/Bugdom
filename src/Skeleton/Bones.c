@@ -55,8 +55,7 @@ void LoadBonesReferenceModel(FSSpec	*inSpec, SkeletonDefType *skeleton)
 TQ3Object		newModel;
 
 	newModel = Load3DMFModel(inSpec);
-	if (newModel == nil)
-		DoFatalAlert("LoadBonesReferenceModel: cant load 3dmf file!");
+	GAME_ASSERT(newModel);
 
 	gCurrentSkeleton = skeleton;
 	DecomposeReferenceModel(newModel);
@@ -134,15 +133,13 @@ TQ3TriMeshData		*triMeshData;
 DecomposedPointType	*decomposedPoint;
 
 	n = gCurrentSkeleton->numDecomposedTriMeshes;												// get index into list of trimeshes
-	if (n >= MAX_DECOMPOSED_TRIMESHES)
-		DoFatalAlert("DecomposeATriMesh: gNumDecomposedTriMeshes > MAX_DECOMPOSED_TRIMESHES");
+	GAME_ASSERT(n < MAX_DECOMPOSED_TRIMESHES);
 
 			/* GET TRIMESH DATA */
 			
 	status = Q3TriMesh_GetData(theTriMesh, &gCurrentSkeleton->decomposedTriMeshes[n]);			// get trimesh data
-	if (status != kQ3Success) 
-		DoFatalAlert("PreTransformTriMesh: Q3TriMesh_GetData failed!");
-		
+	GAME_ASSERT(status);
+
 	triMeshData = &gCurrentSkeleton->decomposedTriMeshes[n];
 		
 	numVertecies = triMeshData->numPoints;														// get # verts in trimesh
@@ -166,9 +163,8 @@ DecomposedPointType	*decomposedPoint;
 					/* ADD ANOTHER REFERENCE */
 					
 				refNum = decomposedPoint->numRefs;												// get # refs for this point
-				if (refNum >= MAX_POINT_REFS)
-					DoFatalAlert("DecomposeATriMesh: MAX_POINT_REFS exceeded!");
-					
+				GAME_ASSERT(refNum < MAX_POINT_REFS);
+
 				decomposedPoint->whichTriMesh[refNum] = n;										// set triMesh #
 				decomposedPoint->whichPoint[refNum] = vertNum;									// set point #
 				decomposedPoint->numRefs++;														// inc counter
@@ -178,8 +174,7 @@ DecomposedPointType	*decomposedPoint;
 				/* IT'S A NEW POINT SO ADD TO LIST */
 				
 		pointNum = gCurrentSkeleton->numDecomposedPoints;
-		if (pointNum >= MAX_DECOMPOSED_POINTS)
-			DoFatalAlert("DecomposeATriMesh: MAX_DECOMPOSED_POINTS exceeded!");
+		GAME_ASSERT(pointNum < MAX_DECOMPOSED_POINTS);
 		
 		refNum = 0;																			// it's the 1st entry (need refNum for below).
 		
@@ -210,9 +205,8 @@ added_vert:
 				/* ADD NEW NORMAL TO LIST */
 				
 		i = gCurrentSkeleton->numDecomposedNormals;										// get # decomposed normals already in list
-		if (i >= MAX_DECOMPOSED_NORMALS)
-			DoFatalAlert("DecomposeATriMesh: MAX_DECOMPOSED_NORMALS exceeded!");
-		
+		GAME_ASSERT(i < MAX_DECOMPOSED_NORMALS);
+
 		gCurrentSkeleton->decomposedNormalsList[i] = normalPtr[vertNum];				// add new normal to list			
 		gCurrentSkeleton->numDecomposedNormals++;										// inc # decomposed normals
 		
@@ -255,8 +249,7 @@ SkeletonObjDataType	*currentSkelObjData;
 		return;
 	
 	gCurrentSkeleton = currentSkelObjData->skeletonDefinition;
-	if (gCurrentSkeleton == nil)
-		DoFatalAlert("UpdateSkinnedGeometry: gCurrentSkeleton is invalid!");
+	GAME_ASSERT(gCurrentSkeleton);
 
 	if (currentSkelObjData->JointsAreGlobal)
 		Q3Matrix4x4_SetIdentity(&gMatrix);
@@ -499,8 +492,7 @@ void PrimeBoneData(SkeletonDefType *skeleton)
 {
 long	i,b,j;
 
-	if (skeleton->NumBones == 0)
-		DoFatalAlert("PrimeBoneData: # = 0??");
+	GAME_ASSERT(skeleton->NumBones != 0);
 
 			
 			/* SET THE FORWARD LINKS */
@@ -514,9 +506,8 @@ long	i,b,j;
 			if (skeleton->Bones[i].parentBone == b)					// is this "i" a child of "b"?
 			{
 				j = skeleton->numChildren[b];						// get # children
-				if (j >= MAX_CHILDREN)
-					DoFatalAlert("CreateSkeletonFromBones: MAX_CHILDREN exceeded!");
-				
+				GAME_ASSERT(j < MAX_CHILDREN);
+
 				skeleton->childIndecies[b][j] = i;					// set index to child
 	
 				skeleton->numChildren[b]++;							// inc # children

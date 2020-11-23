@@ -183,10 +183,7 @@ Boolean				killed = false;
 		if (!gPlayerObj->Skeleton)
 		{
 			// If we're in ball mode, it's OK to have no skeleton
-			if (gPlayerMode != PLAYER_MODE_BALL)
-			{
-				DoFatalAlert("Player lost their skeleton! Shouldn't happen outside ball mode!");
-			}
+			GAME_ASSERT_MESSAGE(gPlayerMode == PLAYER_MODE_BALL, "Player lost their skeleton! Shouldn't happen outside ball mode!");
 		}
 		else if (gPlayerObj->Skeleton->AnimNum != PLAYER_ANIM_FALLONBUTT)	// dont limit speed during fall-on-butt
 		{

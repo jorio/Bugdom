@@ -157,13 +157,11 @@ short	i;
 			TQ3ShaderObject	shader;
 		
 			shader	= QD3D_GetTextureMap(130+i, nil, true);				// make PICT into shader
-			if (shader == nil)
-				DoFatalAlert("InitParticleSystem: QD3D_GetTextureMap failed!");
+			GAME_ASSERT(shader);
 			
 			gParticleShader[i] = Q3AttributeSet_New();					// new attrib set
-			if (gParticleShader[i] == nil)
-				DoFatalAlert("InitParticleSystem: Q3AttributeSet_New failed!");
-				
+			GAME_ASSERT(gParticleShader[i]);
+
 			Q3AttributeSet_Add(gParticleShader[i], kQ3AttributeTypeSurfaceShader, &shader);	// put shader in attrib set
 			Q3Object_Dispose(shader);														// nuke extra ref
 		}
@@ -277,15 +275,13 @@ TQ3Param2D				*uv;
 			tm->vertexAttributeTypes[0].attributeType 		= kQ3AttributeTypeSurfaceUV;
 			tm->vertexAttributeTypes[0].attributeUseArray 	= nil;
 			tm->vertexAttributeTypes[0].data 				= (TQ3Param2D *)AllocPtr(sizeof(TQ3Param2D) * MAX_PARTICLES * 4);
-			if (tm->vertexAttributeTypes[0].data == nil)
-				DoFatalAlert("NewParticleGroup: AllocPtr failed!");
+			GAME_ASSERT(tm->vertexAttributeTypes[0].data);
 
 			tm->triangleAttributeTypes						= (TQ3TriMeshAttributeData *)AllocPtr(sizeof(TQ3TriMeshAttributeData) * tm->numTriangleAttributeTypes);
 			tm->triangleAttributeTypes[0].attributeType 	= kQ3AttributeTypeTransparencyColor;
 			tm->triangleAttributeTypes[0].attributeUseArray = nil;
 			tm->triangleAttributeTypes[0].data 				= (TQ3ColorRGB *)AllocPtr(sizeof(TQ3ColorRGB) * MAX_PARTICLES * 2);
-			if (tm->triangleAttributeTypes[0].data == nil)
-				DoFatalAlert("NewParticleGroup: AllocPtr failed!");
+			GAME_ASSERT(tm->triangleAttributeTypes[0].data);
 
 			tm->bBox.isEmpty 			= kQ3False;
 
@@ -339,8 +335,7 @@ Boolean AddParticleToGroup(short groupNum, TQ3Point3D *where, TQ3Vector3D *delta
 {
 short	p;
 
-	if ((groupNum < 0) || (groupNum >= MAX_PARTICLE_GROUPS))
-		DoFatalAlert("AddParticleToGroup: illegal group #");
+	GAME_ASSERT((groupNum >= 0) && (groupNum < MAX_PARTICLE_GROUPS));
 
 	if (gParticleGroups[groupNum] == nil)
 	{

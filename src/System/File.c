@@ -242,23 +242,16 @@ SkeletonDefType	*skeleton;
 			/* OPEN THE FILE'S REZ FORK */
 
 	fRefNum = FSpOpenResFile(&fsSpec,fsRdPerm);
-	if (fRefNum == -1)
-	{
-		iErr = ResError();
-		DoAlert("Error opening Skel Rez file");
-		ShowSystemErr(iErr);
-	}
-	
+	GAME_ASSERT(fRefNum != -1);
+
 	UseResFile(fRefNum);
-	if (ResError())
-		DoFatalAlert("Error using Rez file!");
+	GAME_ASSERT(noErr == ResError());
 
 			
 			/* ALLOC MEMORY FOR SKELETON INFO STRUCTURE */
 			
 	skeleton = (SkeletonDefType *)AllocPtr(sizeof(SkeletonDefType));
-	if (skeleton == nil)
-		DoFatalAlert("Cannot alloc SkeletonInfoType");
+	GAME_ASSERT(skeleton);
 
 
 			/* READ SKELETON RESOURCES */
@@ -304,20 +297,17 @@ SkeletonFile_AnimHeader_Type	*animHeaderPtr;
 			/************************/
 
 	hand = GetResource('Hedr',1000);
-	if (hand == nil)
-		DoFatalAlert("ReadDataFromSkeletonFile: Error reading header resource!");
+	GAME_ASSERT(hand);
 	headerPtr = (SkeletonFile_Header_Type *)*hand;
 	BYTESWAP_STRUCTS(SkeletonFile_Header_Type, 1, headerPtr);
 	version = headerPtr->version;
-	if (version != SKELETON_FILE_VERS_NUM)
-		DoFatalAlert("Skeleton file has wrong version #");
+	GAME_ASSERT_MESSAGE(version == SKELETON_FILE_VERS_NUM, "Skeleton file has wrong version #");
 	
 	numAnims = skeleton->NumAnims = headerPtr->numAnims;			// get # anims in skeleton
 	numJoints = skeleton->NumBones = headerPtr->numJoints;			// get # joints in skeleton
 	ReleaseResource(hand);
 
-	if (numJoints > MAX_JOINTS)										// check for overload
-		DoFatalAlert("ReadDataFromSkeletonFile: numJoints > MAX_JOINTS");
+	GAME_ASSERT(numJoints <= MAX_JOINTS);							// check for overload
 
 
 				/*************************************/
@@ -336,10 +326,8 @@ SkeletonFile_AnimHeader_Type	*animHeaderPtr;
 	if (alias != nil)
 	{
 		iErr = ResolveAlias(fsSpec, alias, &target, &wasChanged);	// try to resolve alias
-		if (!iErr)
-			LoadBonesReferenceModel(&target,skeleton);
-		else
-			DoFatalAlert("ReadDataFromSkeletonFile: Cannot find Skeleton's 3DMF file!");
+		GAME_ASSERT_MESSAGE(noErr == iErr, "Cannot find Skeleton's 3DMF file!");
+		LoadBonesReferenceModel(&target,skeleton);
 		ReleaseResource((Handle)alias);
 	}
 
@@ -356,8 +344,7 @@ SkeletonFile_AnimHeader_Type	*animHeaderPtr;
 			/* READ BONE DATA */
 			
 		hand = GetResource('Bone',1000+i);
-		if (hand == nil)
-			DoFatalAlert("Error reading Bone resource!");
+		GAME_ASSERT(hand);
 		HLock(hand);
 		bonePtr = (File_BoneDefinitionType *)*hand;
 		BYTESWAP_STRUCTS(File_BoneDefinitionType, 1, bonePtr);
@@ -373,18 +360,15 @@ SkeletonFile_AnimHeader_Type	*animHeaderPtr;
 			/* ALLOC THE POINT & NORMALS SUB-ARRAYS */
 				
 		skeleton->Bones[i].pointList = (u_short *)AllocPtr(sizeof(u_short) * (int)skeleton->Bones[i].numPointsAttachedToBone);
-		if (skeleton->Bones[i].pointList == nil)
-			DoFatalAlert("ReadDataFromSkeletonFile: AllocPtr/pointList failed!");
+		GAME_ASSERT(skeleton->Bones[i].pointList);
 
 		skeleton->Bones[i].normalList = (u_short *)AllocPtr(sizeof(u_short) * (int)skeleton->Bones[i].numNormalsAttachedToBone);
-		if (skeleton->Bones[i].normalList == nil)
-			DoFatalAlert("ReadDataFromSkeletonFile: AllocPtr/normalList failed!");
+		GAME_ASSERT(skeleton->Bones[i].normalList);
 
 			/* READ POINT INDEX ARRAY */
 			
 		hand = GetResource('BonP',1000+i);
-		if (hand == nil)
-			DoFatalAlert("Error reading BonP resource!");
+		GAME_ASSERT(hand);
 		HLock(hand);
 		indexPtr = (u_short *)(*hand);
 		ByteswapInts(sizeof(u_short), skeleton->Bones[i].numPointsAttachedToBone, indexPtr);
@@ -399,8 +383,7 @@ SkeletonFile_AnimHeader_Type	*animHeaderPtr;
 			/* READ NORMAL INDEX ARRAY */
 			
 		hand = GetResource('BonN',1000+i);
-		if (hand == nil)
-			DoFatalAlert("Error reading BonN resource!");
+		GAME_ASSERT(hand);
 		HLock(hand);
 		indexPtr = (u_short *)(*hand);
 		ByteswapInts(sizeof(u_short), skeleton->Bones[i].numNormalsAttachedToBone, indexPtr);
@@ -423,8 +406,7 @@ SkeletonFile_AnimHeader_Type	*animHeaderPtr;
 		// We need to restore these manually.
 	
 	hand = GetResource('RelP', 1000);
-	if (hand == nil)
-		DoFatalAlert("Error reading RelP resource!");
+	GAME_ASSERT(hand);
 	HLock(hand);
 	pointPtr = (TQ3Point3D *)*hand;
 	
@@ -449,8 +431,7 @@ SkeletonFile_AnimHeader_Type	*animHeaderPtr;
 				/* READ ANIM HEADER */
 
 		hand = GetResource('AnHd',1000+i);
-		if (hand == nil)
-			DoFatalAlert("Error getting anim header resource");
+		GAME_ASSERT(hand);
 		HLock(hand);
 		animHeaderPtr = (SkeletonFile_AnimHeader_Type *)*hand;
 		BYTESWAP_STRUCTS(SkeletonFile_AnimHeader_Type, 1, animHeaderPtr);
@@ -461,8 +442,7 @@ SkeletonFile_AnimHeader_Type	*animHeaderPtr;
 			/* READ ANIM-EVENT DATA */
 			
 		hand = GetResource('Evnt',1000+i);
-		if (hand == nil)
-			DoFatalAlert("Error reading anim-event data resource!");
+		GAME_ASSERT(hand);
 		animEventPtr = (AnimEventType *)*hand;
 		BYTESWAP_STRUCTS(AnimEventType, skeleton->NumAnimEvents[i], animEventPtr);
 		for (j=0;  j < skeleton->NumAnimEvents[i]; j++)
@@ -473,9 +453,8 @@ SkeletonFile_AnimHeader_Type	*animHeaderPtr;
 			/* READ # KEYFRAMES PER JOINT IN EACH ANIM */
 					
 		hand = GetResource('NumK',1000+i);									// read array of #'s for this anim
+		GAME_ASSERT(hand);
 		// (no need to byteswap, it's an array of chars)
-		if (hand == nil)
-			DoFatalAlert("Error reading # keyframes/joint resource!");
 		for (j=0; j < numJoints; j++)
 			skeleton->JointKeyframes[j].numKeyFrames[i] = (*hand)[j];
 		ReleaseResource(hand);
@@ -488,22 +467,19 @@ SkeletonFile_AnimHeader_Type	*animHeaderPtr;
 				
 		Alloc_2d_array(JointKeyframeType,skeleton->JointKeyframes[j].keyFrames,	numAnims,MAX_KEYFRAMES);
 		
-		if ((skeleton->JointKeyframes[j].keyFrames == nil) || (skeleton->JointKeyframes[j].keyFrames[0] == nil))
-			DoFatalAlert("ReadDataFromSkeletonFile: Error allocating Keyframe Array.");
+		GAME_ASSERT((skeleton->JointKeyframes[j].keyFrames) && (skeleton->JointKeyframes[j].keyFrames[0]));
 
 					/* READ THIS JOINT'S KF'S FOR EACH ANIM */
 					
 		for (i=0; i < numAnims; i++)								
 		{
 			numKeyframes = skeleton->JointKeyframes[j].numKeyFrames[i];					// get actual # of keyframes for this joint
-			if (numKeyframes > MAX_KEYFRAMES)
-				DoFatalAlert("Error: numKeyframes > MAX_KEYFRAMES");
-		
+			GAME_ASSERT(numKeyframes <= MAX_KEYFRAMES);
+
 					/* READ A JOINT KEYFRAME */
 					
 			hand = GetResource('KeyF',1000+(i*100)+j);
-			if (hand == nil)
-				DoFatalAlert("Error reading joint keyframes resource!");
+			GAME_ASSERT(hand);
 			keyFramePtr = (JointKeyframeType *)*hand;
 			BYTESWAP_STRUCTS(JointKeyframeType, numKeyframes, keyFramePtr);
 			for (k = 0; k < numKeyframes; k++)												// copy this joint's keyframes for this anim
@@ -843,8 +819,7 @@ short	fRefNum;
 				/* OPEN THE REZ-FORK */
 			
 	fRefNum = FSpOpenResFile(specPtr,fsRdPerm);
-	if (fRefNum == -1)
-		DoFatalAlert("LoadPlayfield: FSpOpenResFile failed");
+	GAME_ASSERT(fRefNum != -1);
 	UseResFile(fRefNum);
 	
 	
@@ -909,11 +884,7 @@ short					**xlateTableHand,*xlateTbl;
 			/************************/
 
 	hand = GetResource('Hedr',1000);
-	if (hand == nil)
-	{
-		DoAlert("ReadDataFromPlayfieldFile: Error reading header resource!");
-		return;
-	}
+	GAME_ASSERT(hand);
 
 	BYTESWAP_STRUCT_ARRAY_HANDLE_2(PlayfieldHeaderType, 1, hand);
 	header = (PlayfieldHeaderType **)hand;
@@ -928,11 +899,7 @@ short					**xlateTableHand,*xlateTbl;
 	gNumFences				= (**header).numFences;
 	ReleaseResource(hand);
 
-				/* CALC SOME GLOBALS HERE */
-				
-	if (gNumTerrainTextureTiles > MAX_TERRAIN_TILES)
-		DoFatalAlert("ReadDataFromPlayfieldFile: gNumTerrainTextureTiles > MAX_TERRAIN_TILES");
-				
+	GAME_ASSERT(gNumTerrainTextureTiles <= MAX_TERRAIN_TILES);
 
 			/**************************/
 			/* TILE RELATED RESOURCES */
@@ -942,9 +909,7 @@ short					**xlateTableHand,*xlateTbl;
 			/* READ TILE IMAGE DATA */
 
 	hand = GetResource('Timg',1000);
-	if (hand == nil)
-		DoFatalAlert("ReadDataFromPlayfieldFile: Error reading tile image data resource!");
-	else
+	GAME_ASSERT(hand);
 	{
 		DetachResource(hand);							// lets keep this data around
 		BYTESWAP_SCALAR_ARRAY_HANDLE(u_short, hand);
@@ -956,9 +921,7 @@ short					**xlateTableHand,*xlateTbl;
 			/* READ TILE ATTRIBUTES */
 
 	hand = GetResource('Atrb',1000);
-	if (hand == nil)
-		DoFatalAlert("ReadDataFromPlayfieldFile: Error reading tile attrib resource!");
-	else
+	GAME_ASSERT(hand);
 	{
 		DetachResource(hand);							// lets keep this data around
 		gTileAttributes = (TileAttribType **)hand;
@@ -968,17 +931,14 @@ short					**xlateTableHand,*xlateTbl;
 			/* READ TILE->IMAGE XLATE TABLE */
 
 	hand = GetResource('Xlat',1000);
-	if (hand == nil)
-		DoFatalAlert("ReadDataFromPlayfieldFile: Error reading tile image xlate resource!");
-	else
 	{
+		GAME_ASSERT(hand);
 		DetachResource(hand);
 		HLockHi(hand);									// hold on to this rez until we're done reading maps below
 		BYTESWAP_SCALAR_ARRAY_HANDLE(short, hand);
 		xlateTableHand = (short **)hand;
 		xlateTbl = *xlateTableHand;
 	}
-
 
 
 			/*******************************/
@@ -991,9 +951,8 @@ short					**xlateTableHand,*xlateTbl;
 	
 	
 	hand = GetResource('Layr',1000);												// load map from rez
-	if (hand == nil)
-		DoFatalAlert("ReadDataFromPlayfieldFile: Error reading floor resource!");
-	else																			// copy rez into 2D array
+	GAME_ASSERT(hand);
+																					// copy rez into 2D array
 	{
 		BYTESWAP_SCALAR_ARRAY_HANDLE_2(u_short, gTerrainTileDepth*gTerrainTileWidth, hand);
 		u_short	*src = *hand;
@@ -1017,9 +976,8 @@ short					**xlateTableHand,*xlateTbl;
 		Alloc_2d_array(u_short, gCeilingMap, gTerrainTileDepth, gTerrainTileWidth);		// alloc 2D array for map
 		
 		hand = GetResource('Layr',1001);												// load map from rez
-		if (hand == nil)
-			DoFatalAlert("ReadDataFromPlayfieldFile: Error reading ceiling resource!");
-		else																			// copy rez into 2D array
+		GAME_ASSERT(hand);
+																						// copy rez into 2D array
 		{
 			BYTESWAP_SCALAR_ARRAY_HANDLE_2(u_short, gTerrainTileDepth*gTerrainTileWidth, hand);
 			u_short	*src = *hand;
@@ -1027,7 +985,7 @@ short					**xlateTableHand,*xlateTbl;
 				for (col = 0; col < gTerrainTileWidth; col++)
 				{
 					u_short	tile, imageNum;
-					
+
 					tile = *src++;														// get original tile with all bits
 					imageNum = xlateTbl[tile & TILENUM_MASK];							// get image # from xlate table
 					gCeilingMap[row][col] = (tile&(~TILENUM_MASK)) | imageNum;			// insert image # into bitfield
@@ -1045,9 +1003,8 @@ short					**xlateTableHand,*xlateTbl;
 	Alloc_2d_array(u_char, gPathMap, gTerrainTileDepth, gTerrainTileWidth);			// alloc 2D array for map
 	
 	hand = GetResource('Layr',1002);												// load map from rez
-	if (hand == nil)
-		DoFatalAlert("ReadDataFromPlayfieldFile: Error reading ceiling resource!");
-	else																			// copy rez into 2D array
+	GAME_ASSERT(hand);
+																					// copy rez into 2D array
 	{
 		BYTESWAP_SCALAR_ARRAY_HANDLE_2(u_short, gTerrainTileDepth*gTerrainTileWidth, hand);
 		u_short	*src = (u_short *)*hand;
@@ -1073,9 +1030,7 @@ short					**xlateTableHand,*xlateTbl;
 	for (i = 0; i < numLayers; i++)
 	{		
 		hand = GetResource('YCrd',1000+i);
-		if (hand == nil)
-			DoAlert("ReadDataFromPlayfieldFile: Error reading height data resource!");
-		else
+		GAME_ASSERT(hand);
 		{
 			BYTESWAP_SCALAR_ARRAY_HANDLE_2(float, (gTerrainTileDepth+1)*(gTerrainTileWidth+1), hand);
 			float* src = *hand;
@@ -1093,13 +1048,10 @@ short					**xlateTableHand,*xlateTbl;
 	for (i = 0; i < numLayers; i++)
 	{		
 		Alloc_2d_array(u_short, gVertexColors[i], gTerrainTileDepth+1, gTerrainTileWidth+1);	// alloc 2D array for map
-		if (gVertexColors[i] == nil)
-			DoFatalAlert("ReadDataFromPlayfieldFile: Alloc_2d_array failed!");
-	
+		GAME_ASSERT(gVertexColors[i]);
+
 		hand = GetResource('Vcol',1000+i);
-		if (hand == nil)
-			DoFatalAlert("ReadDataFromPlayfieldFile: Error reading color data resource!");
-		else
+		GAME_ASSERT(hand);
 		{
 			BYTESWAP_SCALAR_ARRAY_HANDLE_2(u_short, (gTerrainTileDepth+1)*(gTerrainTileWidth+1), hand);
 			u_short* src = *hand;
@@ -1117,10 +1069,8 @@ short					**xlateTableHand,*xlateTbl;
 	for (i = 0; i < numLayers; i++)												// floor & ceiling
 	{		
 		hand = GetResource('Splt',1000+i);
-		if (hand == nil)
-			DoFatalAlert("ReadDataFromPlayfieldFile: Error reading splitmode data resource!");
-		else
-		{	
+		GAME_ASSERT(hand);
+		{
 			Byte* src = (Byte*)*hand;  // no need to byteswap - it's just bytes
 			for (row = 0; row < gTerrainTileDepth; row++)						
 				for (col = 0; col < gTerrainTileWidth; col++)
@@ -1137,9 +1087,7 @@ short					**xlateTableHand,*xlateTbl;
 				/* READ ITEM LIST */
 				
 	hand = GetResource('Itms',1000);
-	if (hand == nil)
-		DoAlert("ReadDataFromPlayfieldFile: Error reading itemlist resource!");
-	else
+	GAME_ASSERT(hand);
 	{
 		DetachResource(hand);							// lets keep this data around		
 		HLockHi(hand);									// LOCK this one because we have the lookup table into this
@@ -1188,16 +1136,14 @@ short					**xlateTableHand,*xlateTbl;
 	for (i = 0; i < gNumSplines; i++)
 	{
 		hand = GetResource('SpPt',1000+i);
-		if (hand)
-		{	
+		GAME_ASSERT(hand);
+		{
 			DetachResource(hand);
 			HLockHi(hand);
 			BYTESWAP_STRUCT_ARRAY_HANDLE_2(SplinePointType, (*gSplineList)[i].numPoints, hand);
 			(*gSplineList)[i].pointList = (SplinePointType **)hand;
 		}
-		else
-			DoFatalAlert("ReadDataFromPlayfieldFile: cant get spline points rez");
-	}	
+	}
 
 
 			/* READ SPLINE ITEM LIST */
@@ -1205,16 +1151,14 @@ short					**xlateTableHand,*xlateTbl;
 	for (i = 0; i < gNumSplines; i++)
 	{
 		hand = GetResource('SpIt',1000+i);
-		if (hand)
-		{	
+		GAME_ASSERT(hand);
+		{
 			DetachResource(hand);
 			HLockHi(hand);
 			BYTESWAP_STRUCT_ARRAY_HANDLE_2(SplineItemType, (*gSplineList)[i].numItems, hand);
 			(*gSplineList)[i].itemList = (SplineItemType **)hand;
 		}
-		else
-			DoFatalAlert("ReadDataFromPlayfieldFile: cant get spline items rez");
-	}	
+	}
 	
 	
 			/****************************/
@@ -1229,8 +1173,7 @@ short					**xlateTableHand,*xlateTbl;
 		File_FenceDefType *inData;
 
 		gFenceList = (FenceDefType *)AllocPtr(sizeof(FenceDefType) * gNumFences);	// alloc new ptr for fence data
-		if (gFenceList == nil)
-			DoFatalAlert("ReadDataFromPlayfieldFile: AllocPtr failed");
+		GAME_ASSERT(gFenceList);
 
 		BYTESWAP_STRUCT_ARRAY_HANDLE_2(File_FenceDefType, gNumFences, hand);
 		inData = (File_FenceDefType *)*hand;							// get ptr to input fence list
@@ -1256,15 +1199,13 @@ short					**xlateTableHand,*xlateTbl;
 	for (i = 0; i < gNumFences; i++)
 	{
 		hand = GetResource('FnNb',1000+i);
-		if (hand)
-		{	
+		GAME_ASSERT(hand);
+		{
 			DetachResource(hand);
 			HLockHi(hand);
 			BYTESWAP_STRUCT_ARRAY_HANDLE_2(FencePointType, gFenceList[i].numNubs, hand);
 			gFenceList[i].nubList = (FencePointType **)hand;
 		}
-		else
-			DoFatalAlert("ReadDataFromPlayfieldFile: cant get fence nub rez");
 	}
 }
 

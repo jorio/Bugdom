@@ -441,11 +441,9 @@ static const float	yTable2[] = {-540,-540,-540,-540,-370,-540,-540,-540};
 	if (depth == 0)
 		depth = 4;
 		
-	if (width > MAX_WATER_SIZE)
-		DoFatalAlert("AddWaterPatch: width > MAX_WATER_SIZE");
-	if (depth > MAX_WATER_SIZE)
-		DoFatalAlert("AddWaterPatch: depth > MAX_WATER_SIZE");
-		
+	GAME_ASSERT(width <= MAX_WATER_SIZE);
+	GAME_ASSERT(depth <= MAX_WATER_SIZE);
+
 
 			/* CALC BSPHERE */
 
@@ -959,11 +957,9 @@ static const float	yTable[] = {-620,-580,-550,-600,0,0};
 	if (depth == 0)
 		depth = 4;
 		
-	if (width > MAX_HONEY_SIZE)
-		DoFatalAlert("AddHoneyPatch: width > MAX_HONEY_SIZE");
-	if (depth > MAX_HONEY_SIZE)
-		DoFatalAlert("AddHoneyPatch: depth > MAX_HONEY_SIZE");
-		
+	GAME_ASSERT(width <= MAX_HONEY_SIZE);
+	GAME_ASSERT(depth <= MAX_HONEY_SIZE);
+
 
 			/* CALC BSPHERE */
 
@@ -1293,11 +1289,9 @@ static const float	yTable[] = {0,-200,0,0,0,0};
 	if (depth == 0)
 		depth = 4;
 		
-	if (width > MAX_SLIME_SIZE)
-		DoFatalAlert("AddSlimePatch: width > MAX_SLIME_SIZE");
-	if (depth > MAX_SLIME_SIZE)
-		DoFatalAlert("AddSlimePatch: depth > MAX_SLIME_SIZE");
-		
+	GAME_ASSERT(width <= MAX_SLIME_SIZE);
+	GAME_ASSERT(depth <= MAX_SLIME_SIZE);
+
 
 			/* CALC BSPHERE */
 
@@ -1624,11 +1618,9 @@ static const float	yTable[] = {-230,-230,-230,0,0,0};
 	if (depth == 0)
 		depth = 4;
 		
-	if (width > MAX_LAVA_SIZE)
-		DoFatalAlert("AddLavaPatch: width > MAX_LAVA_SIZE");
-	if (depth > MAX_LAVA_SIZE)
-		DoFatalAlert("AddLavaPatch: depth > MAX_LAVA_SIZE");
-		
+	GAME_ASSERT(width <= MAX_LAVA_SIZE);
+	GAME_ASSERT(depth <= MAX_LAVA_SIZE);
+
 
 			/* CALC BSPHERE */
 

@@ -60,12 +60,9 @@ static short	gShaderNum;
 
 void QD3D_CalcObjectBoundingBox(QD3DSetupOutputType *setupInfo, TQ3Object theObject, TQ3BoundingBox	*boundingBox)
 {
-	if (setupInfo == nil)
-		DoFatalAlert("QD3D_CalcObjectBoundingBox: setupInfo = nil");
-	if (theObject == nil)
-		DoFatalAlert("QD3D_CalcObjectBoundingBox: theObject = nil");
-	if (boundingBox == nil)
-		DoFatalAlert("QD3D_CalcObjectBoundingBox: boundingBox = nil");
+	GAME_ASSERT(setupInfo);
+	GAME_ASSERT(theObject);
+	GAME_ASSERT(boundingBox);
 
 	Q3View_StartBoundingBox(setupInfo->viewObject, kQ3ComputeBoundsExact);
 	do
@@ -79,12 +76,9 @@ void QD3D_CalcObjectBoundingBox(QD3DSetupOutputType *setupInfo, TQ3Object theObj
 
 void QD3D_CalcObjectBoundingSphere(QD3DSetupOutputType *setupInfo, TQ3Object theObject, TQ3BoundingSphere *sphere)
 {
-	if (setupInfo == nil)
-		DoFatalAlert("QD3D_CalcObjectBoundingSphere: setupInfo = nil");
-	if (theObject == nil)
-		DoFatalAlert("QD3D_CalcObjectBoundingSphere: theObject = nil");
-	if (sphere == nil)
-		DoFatalAlert("QD3D_CalcObjectBoundingSphere: sphere = nil");
+	GAME_ASSERT(setupInfo);
+	GAME_ASSERT(theObject);
+	GAME_ASSERT(sphere);
 
 	Q3View_StartBoundingSphere(setupInfo->viewObject, kQ3ComputeBoundsExact);
 	do
@@ -442,9 +436,8 @@ long				i;
 		
 				/* DO VERTEX NORMALS */
 				
-		if (triMeshData.vertexAttributeTypes[0].attributeType != kQ3AttributeTypeNormal)
-			DoFatalAlert("Bleep2!");
-				
+		GAME_ASSERT(triMeshData.vertexAttributeTypes[0].attributeType == kQ3AttributeTypeNormal);
+
 		normalPtr = triMeshData.vertexAttributeTypes[0].data;			// assume vert attrib #0 == vertex normals
 		vertNormals[0] = normalPtr[ind[0]];								// get vertex normals
 		vertNormals[1] = normalPtr[ind[1]];
@@ -462,9 +455,8 @@ long				i;
 					
 		if (triMeshData.numVertexAttributeTypes > 1)					// see if also has UV (assumed to be attrib #1)
 		{
-			if (triMeshData.vertexAttributeTypes[1].attributeType != kQ3AttributeTypeShadingUV)
-				DoFatalAlert("Bleep3!");
-		
+			GAME_ASSERT(triMeshData.vertexAttributeTypes[1].attributeType == kQ3AttributeTypeShadingUV);
+
 			uvPtr = triMeshData.vertexAttributeTypes[1].data;	
 			gParticles[i].uvs[0] = uvPtr[ind[0]];									// get vertex u/v's
 			gParticles[i].uvs[1] = uvPtr[ind[1]];								
@@ -871,17 +863,15 @@ int		i;
 							/* ALLOC POINT ARRAY */
 								
 	outData->points = (TQ3Point3D *)AllocPtr(sizeof(TQ3Point3D) * numPoints);								// alloc new point array
-	if (outData->points == nil)
-		DoFatalAlert("QD3D_DuplicateTriMeshData: no mem for points");
+	GAME_ASSERT(outData->points);
 
 					
 				/* ALLOC NEW ATTIRBUTE DATA BASE STRUCTURE */
 				
 	outData->vertexAttributeTypes = (TQ3TriMeshAttributeData *)AllocPtr(sizeof(TQ3TriMeshAttributeData) *
 									 numVertexAttributeTypes);												// alloc enough for attrib(s)
-	if (outData->vertexAttributeTypes == nil)
-		DoFatalAlert("QD3D_DuplicateTriMeshData: AllocPtr failed!");
-									 
+	GAME_ASSERT(outData->vertexAttributeTypes);
+
 	for (i=0; i < numVertexAttributeTypes; i++)
 		outData->vertexAttributeTypes[i] = inData->vertexAttributeTypes[i];									// quick-copy contents	
 	
@@ -889,8 +879,7 @@ int		i;
 				/* DO VERTEX NORMAL ATTRIB ARRAY */
 		
 	outData->vertexAttributeTypes[0].data = (void *)AllocPtr(sizeof(TQ3Vector3D) * numPoints);				// set new data array
-	if (outData->vertexAttributeTypes[0].data == nil)
-		DoFatalAlert("QD3D_DuplicateTriMeshData: no mem for vert normal attribs");
+	GAME_ASSERT(outData->vertexAttributeTypes[0].data);
 
 
 	if (numVertexAttributeTypes > 1)
@@ -898,8 +887,7 @@ int		i;
 					/* DO VERTEX UV ATTRIB ARRAY */
 		
 		outData->vertexAttributeTypes[1].data = (void *)AllocPtr(sizeof(TQ3Param2D) * numPoints);			// set new data array
-		if (outData->vertexAttributeTypes[1].data == nil)
-			DoFatalAlert("QD3D_DuplicateTriMeshData: no mem for vert UV attribs");
+		GAME_ASSERT(outData->vertexAttributeTypes[1].data);
 
 		BlockMove(inData->vertexAttributeTypes[1].data, outData->vertexAttributeTypes[1].data,
 				 sizeof(TQ3Param2D) * numPoints);															// copy uv values into new array
@@ -969,9 +957,8 @@ int		i, numPoints;
 	outData->numTriangles = inData->numTriangles;
 	outData->triangles = (TQ3TriMeshTriangleData *)AllocPtr(sizeof(TQ3TriMeshTriangleData) *
 						inData->numTriangles);		
-	if (outData->triangles == nil)
-		DoFatalAlert("QD3D_CopyTriMeshData: out of memory copying triangles");
-								 
+	GAME_ASSERT(outData->triangles);
+
 	for (i=0; i < inData->numTriangles; i++)
 		outData->triangles[i] = inData->triangles[i];
 		
@@ -982,8 +969,7 @@ int		i, numPoints;
 	numPoints = outData->numPoints = inData->numPoints;
 								
 	outData->points = (TQ3Point3D *)AllocPtr(sizeof(TQ3Point3D) * inData->numPoints);								// alloc new point array
-	if (outData->points == nil)
-		DoFatalAlert("QD3D_CopyTriMeshData: out of memory copying points");
+	GAME_ASSERT(outData->points);
 
 	for (i=0; i < numPoints; i++)
 		outData->points[i] = inData->points[i];
@@ -996,9 +982,8 @@ int		i, numPoints;
 	{
 		outData->vertexAttributeTypes = (TQ3TriMeshAttributeData *)AllocPtr(sizeof(TQ3TriMeshAttributeData) *
 										 inData->numVertexAttributeTypes);												// alloc enough for attrib(s)
-		if (outData->vertexAttributeTypes == nil)
-			DoFatalAlert("QD3D_CopyTriMeshData: out of memory copying vertex attrib types");
-									 
+		GAME_ASSERT(outData->vertexAttributeTypes);
+
 		for (i=0; i < inData->numVertexAttributeTypes; i++)
 			outData->vertexAttributeTypes[i] = inData->vertexAttributeTypes[i];									// quick-copy contents	
 	}
@@ -1006,8 +991,7 @@ int		i, numPoints;
 		/* DO VERTEX NORMAL ATTRIB ARRAY */
 		
 	outData->vertexAttributeTypes[0].data = (void *)AllocPtr(sizeof(TQ3Vector3D) * numPoints);				// set new data array
-	if (outData->vertexAttributeTypes[0].data == nil)
-		DoFatalAlert("QD3D_CopyTriMeshData: no mem for vert normal attribs");
+	GAME_ASSERT(outData->vertexAttributeTypes[0].data);
 
 	BlockMove(inData->vertexAttributeTypes[0].data, outData->vertexAttributeTypes[0].data,
 			 sizeof(TQ3Vector3D) * numPoints);															// copy uv values into new array
@@ -1017,8 +1001,7 @@ int		i, numPoints;
 					/* DO VERTEX UV ATTRIB ARRAY */
 		
 		outData->vertexAttributeTypes[1].data = (void *)AllocPtr(sizeof(TQ3Param2D) * numPoints);			// set new data array
-		if (outData->vertexAttributeTypes[1].data == nil)
-			DoFatalAlert("QD3D_CopyTriMeshData: no mem for vert UV attribs");
+		GAME_ASSERT(outData->vertexAttributeTypes[1].data);
 
 		BlockMove(inData->vertexAttributeTypes[1].data, outData->vertexAttributeTypes[1].data,
 				 sizeof(TQ3Param2D) * numPoints);															// copy uv values into new array

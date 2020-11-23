@@ -80,16 +80,11 @@ void InitObjectManager(void)
 	gFirstNodePtr = nil;									// no node yet
 
 			/* MAKE BACKFACE STYLE OBJECT */
-			
-	if (gKeepBackfaceStyleObject == nil)
-	{
-		gKeepBackfaceStyleObject = Q3BackfacingStyle_New(kQ3BackfacingStyleBoth);
-		if (gKeepBackfaceStyleObject == nil)
-			DoFatalAlert("InitObjectManager: Q3BackfacingStyle_New failed!");
-	}
-	else
-		DoFatalAlert("InitObjectManager: gKeepBackfaceStyleObject != nil");
 
+	GAME_ASSERT(gKeepBackfaceStyleObject == nil);
+
+	gKeepBackfaceStyleObject = Q3BackfacingStyle_New(kQ3BackfacingStyleBoth);
+	GAME_ASSERT(gKeepBackfaceStyleObject);
 }
 
 
@@ -109,8 +104,7 @@ unsigned long flags = newObjDef->flags;
 				/* INITIALIZE NEW NODE */
 	
 	newNodePtr = (ObjNode *)AllocPtr(sizeof(ObjNode));
-	if (newNodePtr == nil)
-		DoFatalAlert("MakeNewObject: Alloc Ptr failed!");
+	GAME_ASSERT(newNodePtr);
 
 	slot = newObjDef->slot;
 
@@ -256,18 +250,8 @@ Byte	group,type;
 	group = newObjDef->group;											// get group #
 	type = newObjDef->type;												// get type #
 	
-	if (type >= gNumObjectsInGroupList[group])							// see if illegal
-	{
-		Str255	s;
-		
-		DoAlert("MakeNewDisplayGroupObject: type > gNumObjectsInGroupList[]!");
-		
-		NumToStringC(group, s);
-		DoAlert(s);
-		NumToStringC(type,s);
-		DoFatalAlert(s);
-	}
-	
+	GAME_ASSERT(type < gNumObjectsInGroupList[group]);					// see if illegal
+
 	AttachGeometryToDisplayGroupObject(newObj,gObjectGroupList[group][type]);
 
 			/* CALC RADIUS */
@@ -312,11 +296,9 @@ void ResetDisplayGroupObject(ObjNode *theNode)
 	DisposeObjectBaseGroup(theNode);									// dispose of old group
 	CreateBaseGroup(theNode);											// create new group object
 
-	if (theNode->Type >= gNumObjectsInGroupList[theNode->Group])							// see if illegal
-		DoFatalAlert("ResetDisplayGroupObject: type > gNumObjectsInGroupList[]!");
-	
-	AttachGeometryToDisplayGroupObject(theNode,gObjectGroupList[theNode->Group][theNode->Type]);	// attach geometry to group
+	GAME_ASSERT(theNode->Type < gNumObjectsInGroupList[theNode->Group]);	// see if illegal
 
+	AttachGeometryToDisplayGroupObject(theNode,gObjectGroupList[theNode->Group][theNode->Type]);	// attach geometry to group
 }
 
 
@@ -332,8 +314,7 @@ void AttachGeometryToDisplayGroupObject(ObjNode *theNode, TQ3Object geometry)
 TQ3GroupPosition	groupPosition;
 
 	groupPosition = (TQ3GroupPosition)Q3Group_AddObject(theNode->BaseGroup,geometry);
-	if (groupPosition == nil)
-		DoFatalAlert("Error: AttachGeometryToDisplayGroupObject");
+	GAME_ASSERT(groupPosition);
 }
 
 
@@ -355,11 +336,7 @@ TQ3TransformObject		transObject;
 				/* CREATE THE GROUP OBJECT */
 				
 	theNode->BaseGroup = (TQ3Object)Q3OrderedDisplayGroup_New();
-	if (theNode->BaseGroup == nil)
-	{
-		DoAlert("CreateBaseGroup: Q3DisplayGroup_New failed!");
-		QD3D_ShowRecentError();
-	}
+	GAME_ASSERT(theNode->BaseGroup);
 
 					/* SETUP BASE MATRIX */
 			
@@ -388,13 +365,11 @@ TQ3TransformObject		transObject;
 					/* CREATE A MATRIX XFORM */
 
 	transObject = (TQ3TransformObject)Q3MatrixTransform_New(&theNode->BaseTransformMatrix);			// make matrix xform object
-	if (transObject == nil)
-		DoFatalAlert("CreateBaseGroup: Q3MatrixTransform_New Failed!");
+	GAME_ASSERT(transObject);
 
 	myGroupPosition = (TQ3GroupPosition)Q3Group_AddObject(theNode->BaseGroup, transObject);		// add to base group
-	if (myGroupPosition == nil)
-		DoFatalAlert("Q3Group_AddObject Failed!");
-		
+	GAME_ASSERT(myGroupPosition);
+
 	theNode->BaseTransformObject = transObject;									// keep extra LEGAL ref (remember to dispose later)
 }
 
@@ -674,8 +649,7 @@ short			skelType;
 					if (theNode->BaseGroup)
 					{
 						myStatus = Q3Object_Submit(theNode->BaseGroup, view);
-						if ( myStatus == kQ3Failure )
-							DoFatalAlert("DrawObjects: Q3Object_Submit failed!");
+						GAME_ASSERT(myStatus);
 					}
 					break;
 					
@@ -762,17 +736,9 @@ void DeleteObject(ObjNode	*theNode)
 	if (theNode == nil)								// see if passed a bogus node
 		return;
 
-	if (theNode->CType == INVALID_NODE_FLAG)		// see if already deleted
-	{
-		Str255	errString;		//-----------
-		DoAlert("Attempted to Double Delete an Object.  Object was already deleted!");
-		NumToStringC(theNode->Genre,errString);		//------------
-		DoAlert(errString);					//---------
-		NumToStringC(theNode->Group,errString);		//------------
-		DoAlert(errString);					//---------
-		NumToStringC(theNode->Type,errString);		//------------
-		DoFatalAlert(errString);					//---------
-	}
+	GAME_ASSERT_MESSAGE(							// see if already deleted
+			theNode->CType != INVALID_NODE_FLAG,
+			"Attempted to Double Delete an Object.  Object was already deleted!");
 
 			/* RECURSIVE DELETE OF CHAIN NODE & SHADOW NODE */
 			//
@@ -976,8 +942,7 @@ TQ3Status	status;
 	if (theNode->BaseGroup != nil)
 	{
 		status = Q3Object_Dispose(theNode->BaseGroup);
-		if (status != kQ3Success)
-			DoFatalAlert("DisposeObjectBaseGroup: Q3Object_Dispose Failed!");
+		GAME_ASSERT(status);
 
 		theNode->BaseGroup = nil;
 	}
@@ -1100,8 +1065,7 @@ TQ3Status 				error;
 	if (theNode->BaseTransformObject)				// see if this has a trans obj
 	{
 		error = Q3MatrixTransform_Set(theNode->BaseTransformObject,&theNode->BaseTransformMatrix);
-		if (error != kQ3Success)
-			DoFatalAlert("Q3MatrixTransform_Set Failed!");
+		GAME_ASSERT(error);
 	}
 }
 
@@ -1114,15 +1078,14 @@ void MakeObjectKeepBackfaces(ObjNode *theNode)
 {
 //TQ3Status			status;
 
-	if (theNode->BaseGroup == nil)
-		DoFatalAlert("MakeObjectKeepBackfaces: BaseGroup == nil");
+	GAME_ASSERT(theNode->BaseGroup);
 
 //	status = Q3Group_GetFirstPosition(theNode->BaseGroup, &position);
 //	if ((status == kQ3Failure) || (position == nil))
 //		DoFatalAlert("MakeObjectKeepBackfaces: Q3Group_GetFirstPosition failed!");
 	
-	if (Q3Group_AddObject(theNode->BaseGroup, gKeepBackfaceStyleObject) == nil)
-		DoFatalAlert("MakeObjectKeepBackfaces: Q3Group_AddObject failed!");
+	TQ3GroupPosition pos = Q3Group_AddObject(theNode->BaseGroup, gKeepBackfaceStyleObject);
+	GAME_ASSERT(pos);
 }
 
 
@@ -1143,8 +1106,7 @@ TQ3Object			attrib;
 TQ3ColorRGB			transColor;
 TQ3AttributeType	attribType;
 
-	if (theNode->BaseGroup == nil)
-		DoFatalAlert("MakeObjectTransparent: BaseGroup == nil");
+	GAME_ASSERT(theNode->BaseGroup);
 
 //	oType = Q3Group_GetType(theNode->BaseGroup);
 //	if (oType == kQ3ObjectTypeInvalid)
@@ -1157,8 +1119,7 @@ TQ3AttributeType	attribType;
 	if (position != nil)																		// YES
 	{
 		status = Q3Group_GetPositionObject(theNode->BaseGroup, position, &attrib);				// get the attribute object
-		if (status == kQ3Failure)
-			DoFatalAlert("MakeObjectTransparent: Q3Group_GetPositionObject failed");
+		GAME_ASSERT(status);
 
 		if (transPercent >= 1.0f)															// if totally opaque then remove this attrib
 		{
@@ -1185,22 +1146,20 @@ TQ3AttributeType	attribType;
 			return;
 
 		attrib = Q3AttributeSet_New();														// make new attrib set
-		if (attrib == nil)
-			DoFatalAlert("MakeObjectTransparent: Q3AttributeSet_New failed");
+		GAME_ASSERT(attrib);
 			
 				/* ADD NEW ATTRIB SET TO GROUP */
 					
-		if (Q3Group_AddObject(theNode->BaseGroup, attrib) == nil)
-			DoFatalAlert("MakeObjectTransparent: Q3Group_AddObject failed!");
+		position = Q3Group_AddObject(theNode->BaseGroup, attrib);
+		GAME_ASSERT(position);
 	}
 				
 					/* ADD TRANSPARENCY */
 					
 	transColor.r = transColor.g = transColor.b = transPercent;
 	status = Q3AttributeSet_Add(attrib, kQ3AttributeTypeTransparencyColor, &transColor);
-	if (status == kQ3Failure)
-		DoFatalAlert("Q3AttributeSet_Add: Q3Group_GetPositionObject failed");
-	
+	GAME_ASSERT(status);
+
 bye:
 	Q3Object_Dispose(attrib);								// dispose of extra ref
 }

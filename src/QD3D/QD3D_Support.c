@@ -102,18 +102,15 @@ static TQ3Vector3D		gNormal;
 
 void QD3D_Boot(void)
 {
-TQ3Status	myStatus;
+TQ3Status	status;
 
 
 				/* LET 'ER RIP! */
 				
-	myStatus = Q3Initialize();
-	if ( myStatus == kQ3Failure )
-		DoFatalAlert("Q3Initialize returned failure.");
+	status = Q3Initialize();
+	GAME_ASSERT(status);
 
 	gQD3DInitialized = true;
-
-
 }
 
 
@@ -195,9 +192,8 @@ QD3DSetupOutputType	*outputPtr;
 			/* ALLOC MEMORY FOR OUTPUT DATA */
 
 	*outputHandle = (QD3DSetupOutputType *)AllocPtr(sizeof(QD3DSetupOutputType));
-	if (*outputHandle == nil)
-		DoFatalAlert("QD3D_SetupWindow: AllocPtr failed");
 	outputPtr = *outputHandle;
+	GAME_ASSERT(outputPtr);
 
 				/* SETUP */
 
@@ -206,16 +202,12 @@ QD3DSetupOutputType	*outputPtr;
 	CreateCamera(setupDefPtr);										// create new CAMERA object
 	CreateLights(&setupDefPtr->lights);
 	SetStyles(&setupDefPtr->styles);	
-	
 
 				/* DISPOSE OF EXTRA REFERENCES */
 				
 	status = Q3Object_Dispose(gQD3D_RendererObject);				// (is contained w/in gQD3D_ViewObject)
-	if (status == kQ3Failure)
-		DoFatalAlert("QD3D_SetupWindow: Q3Object_Dispose failed!");
-	
+	GAME_ASSERT(status);
 
-	
 				/* PASS BACK INFO */
 				
 	outputPtr->viewObject 			= gQD3D_ViewObject;
@@ -271,8 +263,7 @@ QD3DSetupOutputType	*data;
 	gRaveDrawContext = nil;											// this is no longer valid
 
 	data = *dataHandle;
-	if (data == nil)												// see if this setup exists
-		DoFatalAlert("QD3D_DisposeWindowSetup: data == nil");
+	GAME_ASSERT(data);												// see if this setup exists
 
 	DisposeBackdropTexture(); // Source port addition - release backdrop GL texture
 
@@ -305,31 +296,19 @@ TQ3Uns32	hints;
 				/* CREATE NEW VIEW OBJECT */
 				
 	gQD3D_ViewObject = Q3View_New();
-	if (gQD3D_ViewObject == nil)
-		DoFatalAlert("Q3View_New failed!");
-
+	GAME_ASSERT(gQD3D_ViewObject);
 
 			/* CREATE & SET DRAW CONTEXT */
 	
 	CreateDrawContext(&setupDefPtr->view); 											// init draw context
 	
 	status = Q3View_SetDrawContext(gQD3D_ViewObject, gQD3D_DrawContext);			// assign context to view
-	if (status == kQ3Failure)
-		DoFatalAlert("Q3View_SetDrawContext Failed!");
-
-
+	GAME_ASSERT(status);
 
 			/* CREATE & SET RENDERER */
 
-
 	gQD3D_RendererObject = Q3Renderer_NewFromType(setupDefPtr->view.rendererType);	// create new RENDERER object
-	if (gQD3D_RendererObject == nil)
-	{
-//		DoFatalAlert("Q3Renderer_NewFromType Failed!");
-		DoAlert("QuickDraw 3D does not appear to be installed correctly.");
-		CleanQuit();
-	}
-
+	GAME_ASSERT(gQD3D_RendererObject);
 
 				/* ASK FOR ATI HARDWARE */
 				
@@ -372,10 +351,7 @@ extern SDL_Window*		gSDLWindow;
 
 			/* SEE IF DOING PIXMAP CONTEXT */
 			
-	if (!viewDefPtr->useWindow)
-	{
-		DoFatalAlert("Pixmap context not supported!");
-	}
+	GAME_ASSERT_MESSAGE(viewDefPtr->useWindow, "Pixmap context not supported!");
 
 			/* FILL IN DRAW CONTEXT DATA */
 
@@ -405,8 +381,7 @@ extern SDL_Window*		gSDLWindow;
 			/* CREATE DRAW CONTEXT */
 
 	gQD3D_DrawContext = Q3SDLDrawContext_New(&myMacDrawContextData);
-	if (gQD3D_DrawContext == nil)
-		DoFatalAlert("Q3MacDrawContext_New Failed!");
+	GAME_ASSERT(gQD3D_DrawContext);
 
 
 	gQD3D_FreshDrawContext = true;
@@ -425,15 +400,12 @@ static void SetStyles(QD3DStyleDefType *styleDefPtr)
 				/* SET INTERPOLATION (FOR SHADING) */
 					
 	gQD3D_InterpolationStyle = Q3InterpolationStyle_New(styleDefPtr->interpolation);
-	if (gQD3D_InterpolationStyle == nil)
-		DoFatalAlert("Q3InterpolationStyle_New Failed!");
+	GAME_ASSERT(gQD3D_InterpolationStyle);
 
 					/* SET BACKFACING */
 
 	gQD3D_BackfacingStyle = Q3BackfacingStyle_New(styleDefPtr->backfacing);
-	if (gQD3D_BackfacingStyle == nil )
-		DoFatalAlert("Q3BackfacingStyle_New Failed!");
-
+	GAME_ASSERT(gQD3D_BackfacingStyle);
 
 				/* SET POLYGON FILL STYLE */
 						
@@ -442,8 +414,7 @@ static void SetStyles(QD3DStyleDefType *styleDefPtr)
 #else
 	gQD3D_FillStyle = Q3FillStyle_New(styleDefPtr->fill);
 #endif
-	if ( gQD3D_FillStyle == nil )
-		DoFatalAlert(" Q3FillStyle_New Failed!");
+	GAME_ASSERT(gQD3D_FillStyle);
 
 
 					/* SET THE SHADER TO USE */
@@ -451,14 +422,12 @@ static void SetStyles(QD3DStyleDefType *styleDefPtr)
 	if (styleDefPtr->usePhong)
 	{
 		gQD3D_ShaderObject = Q3PhongIllumination_New();
-		if ( gQD3D_ShaderObject == nil )
-			DoFatalAlert(" Q3PhongIllumination_New Failed!");
+		GAME_ASSERT(gQD3D_ShaderObject);
 	}
 	else
 	{
 		gQD3D_ShaderObject = Q3LambertIllumination_New();
-		if ( gQD3D_ShaderObject == nil )
-			DoFatalAlert(" Q3LambertIllumination_New Failed!");
+		GAME_ASSERT(gQD3D_ShaderObject);
 	}
 
 
@@ -478,7 +447,6 @@ TQ3CameraData					myCameraData;
 TQ3ViewAngleAspectCameraData	myViewAngleCameraData;
 TQ3Area							pane;
 TQ3Status						status;
-TQ3Status	myErr;
 QD3DCameraDefType 				*cameraDefPtr;
 
 	cameraDefPtr = &setupDefPtr->camera;
@@ -491,8 +459,7 @@ QD3DCameraDefType 				*cameraDefPtr;
 	if (setupDefPtr->view.useWindow)
 	{
 		status = Q3DrawContext_GetPane(gQD3D_DrawContext,&pane);				// get window pane info
-		if (status == kQ3Failure)
-			DoFatalAlert("Q3DrawContext_GetPane Failed!");
+		GAME_ASSERT(status);
 	}
 	else
 	{
@@ -524,12 +491,10 @@ QD3DCameraDefType 				*cameraDefPtr;
 				(pane.max.x-pane.min.x)/(pane.max.y-pane.min.y);
 
 	gQD3D_CameraObject = Q3ViewAngleAspectCamera_New(&myViewAngleCameraData);	 // create new camera
-	if (gQD3D_CameraObject == nil)
-		DoFatalAlert("Q3ViewAngleAspectCamera_New failed!");
-		
-	myErr = Q3View_SetCamera(gQD3D_ViewObject, gQD3D_CameraObject);		// assign camera to view
-	if (myErr == kQ3Failure)
-		DoFatalAlert("Q3View_SetCamera Failed!");
+	GAME_ASSERT(gQD3D_CameraObject);
+
+	status = Q3View_SetCamera(gQD3D_ViewObject, gQD3D_CameraObject);		// assign camera to view
+	GAME_ASSERT(status);
 }
 
 
@@ -548,8 +513,7 @@ TQ3Status	myErr;
 			/* CREATE NEW LIGHT GROUP */
 			
 	gQD3D_LightGroup = (TQ3GroupObject) Q3LightGroup_New();						// make new light group
-	if ( gQD3D_LightGroup == nil )
-		DoFatalAlert(" Q3LightGroup_New Failed!");
+	GAME_ASSERT(gQD3D_LightGroup);
 
 
 	myLightData.isOn = kQ3True;									// light is ON
@@ -563,12 +527,10 @@ TQ3Status	myErr;
 		myLightData.color = lightDefPtr->ambientColor;				// set color of light
 		myLightData.brightness = lightDefPtr->ambientBrightness;	// set brightness value
 		myLight = Q3AmbientLight_New(&myLightData);					// make it
-		if ( myLight == nil )
-			DoFatalAlert("Q3AmbientLight_New Failed!");
+		GAME_ASSERT(myLight);
 
 		myGroupPosition = (TQ3GroupPosition)Q3Group_AddObject(gQD3D_LightGroup, myLight);	// add to group
-		if ( myGroupPosition == 0 )
-			DoFatalAlert(" Q3Group_AddObject Failed!");
+		GAME_ASSERT(myGroupPosition);
 
 		Q3Object_Dispose(myLight);									// dispose of light
 
@@ -587,12 +549,10 @@ TQ3Status	myErr;
 		myDirectionalLightData.castsShadows = kQ3True;						// shadows
 		myDirectionalLightData.direction =  lightDefPtr->fillDirection[i];	// set fill vector
 		myLight = Q3DirectionalLight_New(&myDirectionalLightData);			// make it
-		if ( myLight == nil )
-			DoFatalAlert(" Q3DirectionalLight_New Failed!");
+		GAME_ASSERT(myLight);
 
 		myGroupPosition = (TQ3GroupPosition)Q3Group_AddObject(gQD3D_LightGroup, myLight);		// add to group
-		if ( myGroupPosition == 0 )
-			DoFatalAlert(" Q3Group_AddObject Failed!");
+		GAME_ASSERT(myGroupPosition);
 
 		Q3Object_Dispose(myLight);											// dispose of light
 	}
@@ -600,9 +560,7 @@ TQ3Status	myErr;
 			/* ASSIGN LIGHT GROUP TO VIEW */
 			
 	myErr = Q3View_SetLightGroup(gQD3D_ViewObject, gQD3D_LightGroup);		// assign light group to view
-	if (myErr == kQ3Failure)
-		DoFatalAlert("Q3View_SetLightGroup Failed!");
-
+	GAME_ASSERT(myErr);
 }
 
 
@@ -631,20 +589,16 @@ TQ3Status		status;
 	pane.max.y = r.bottom-setupInfo->paneClip.bottom;
 
 	status = Q3DrawContext_SetPane(setupInfo->drawContext,&pane);							// update pane in draw context
-	if (status == kQ3Failure)
-		DoFatalAlert("Q3DrawContext_SetPane Failed!");
+	GAME_ASSERT(status);
 
 				/* CHANGE CAMERA ASPECT RATIO */
 				
 	status = Q3ViewAngleAspectCamera_GetData(setupInfo->cameraObject,&cameraData);			// get camera data
-	if (status == kQ3Failure)
-		DoFatalAlert("Q3ViewAngleAspectCamera_GetData Failed!");
+	GAME_ASSERT(status);
 
-	
 	cameraData.aspectRatioXToY = (pane.max.x-pane.min.x)/(pane.max.y-pane.min.y);			// set new aspect ratio
 	status = Q3ViewAngleAspectCamera_SetData(setupInfo->cameraObject,&cameraData);			// set new camera data
-	if (status == kQ3Failure)
-		DoFatalAlert("Q3ViewAngleAspectCamera_SetData Failed!");
+	GAME_ASSERT(status);
 }
 
 
@@ -655,11 +609,9 @@ void QD3D_DrawScene(QD3DSetupOutputType *setupInfo, void (*drawRoutine)(const QD
 TQ3Status				myStatus;
 TQ3ViewStatus			myViewStatus;
 
-	if (setupInfo == nil)
-		DoFatalAlert("QD3D_DrawScene setupInfo == nil");
+	GAME_ASSERT(setupInfo);
 
-	if (!setupInfo->isActive)									// make sure it's legit
-		DoFatalAlert("QD3D_DrawScene isActive == false");
+	GAME_ASSERT(setupInfo->isActive);									// make sure it's legit
 
 
 			/* START RENDERING */
@@ -699,20 +651,16 @@ TQ3ViewStatus			myViewStatus;
 		QD3D_ReEnableFog(setupInfo);
 				
 		myStatus = Q3Style_Submit(setupInfo->interpolationStyle,setupInfo->viewObject);
-		if ( myStatus == kQ3Failure )
-			DoFatalAlert(" Q3Style_Submit Failed!");
-			
+		GAME_ASSERT(myStatus);
+
 		myStatus = Q3Style_Submit(setupInfo->backfacingStyle,setupInfo->viewObject);
-		if ( myStatus == kQ3Failure )
-			DoFatalAlert(" Q3Style_Submit Failed!");
+		GAME_ASSERT(myStatus);
 			
 		myStatus = Q3Style_Submit(setupInfo->fillStyle, setupInfo->viewObject);
-		if ( myStatus == kQ3Failure )
-			DoFatalAlert(" Q3Style_Submit Failed!");
+		GAME_ASSERT(myStatus);
 
 		myStatus = Q3Shader_Submit(setupInfo->shaderObject, setupInfo->viewObject);
-		if ( myStatus == kQ3Failure )
-			DoFatalAlert(" Q3Shader_Submit Failed!");
+		GAME_ASSERT(myStatus);
 
 			/* DRAW NORMAL */
 			
@@ -725,9 +673,8 @@ TQ3ViewStatus			myViewStatus;
 			drawRoutine(setupInfo);
 
 		myViewStatus = Q3View_EndRendering(setupInfo->viewObject);
-		if ( myViewStatus == kQ3ViewStatusError)
-			DoFatalAlert("QD3D_DrawScene: Q3View_EndRendering failed!");
-		
+		GAME_ASSERT(myViewStatus != kQ3ViewStatusError);
+
 	} while ( myViewStatus == kQ3ViewStatusRetraverse );	
 }
 
@@ -751,8 +698,7 @@ TQ3CameraObject		camera;
 	camera = setupInfo->cameraObject;
 			
 	status = Q3Camera_GetPlacement(camera, &placement);
-	if (status == kQ3Failure)
-		DoFatalAlert("Q3Camera_GetPlacement failed!");
+	GAME_ASSERT(status);
 
 
 			/* SET CAMERA LOOK AT */
@@ -770,8 +716,7 @@ TQ3CameraObject		camera;
 			/* UPDATE CAMERA INFO */
 			
 	status = Q3Camera_SetPlacement(camera, &placement);
-	if (status == kQ3Failure)
-		DoFatalAlert("Q3Camera_SetPlacement failed!");
+	GAME_ASSERT(status);
 		
 	UpdateListenerLocation();
 }
@@ -787,8 +732,7 @@ TQ3CameraPlacement	placement;
 			/* GET CURRENT CAMERA INFO */
 			
 	status = Q3Camera_GetPlacement(setupInfo->cameraObject, &placement);
-	if (status == kQ3Failure)
-		DoFatalAlert("Q3Camera_GetPlacement failed!");
+	GAME_ASSERT(status);
 
 
 			/* SET CAMERA COORDS */
@@ -800,8 +744,7 @@ TQ3CameraPlacement	placement;
 			/* UPDATE CAMERA INFO */
 			
 	status = Q3Camera_SetPlacement(setupInfo->cameraObject, &placement);
-	if (status == kQ3Failure)
-		DoFatalAlert("Q3Camera_SetPlacement failed!");
+	GAME_ASSERT(status);
 
 	UpdateListenerLocation();
 }
@@ -817,8 +760,7 @@ TQ3CameraPlacement	placement;
 			/* GET CURRENT CAMERA INFO */
 			
 	status = Q3Camera_GetPlacement(setupInfo->cameraObject, &placement);
-	if (status == kQ3Failure)
-		DoFatalAlert("Q3Camera_GetPlacement failed!");
+	GAME_ASSERT(status);
 
 
 			/* SET CAMERA COORDS */
@@ -838,8 +780,7 @@ TQ3CameraPlacement	placement;
 			/* UPDATE CAMERA INFO */
 			
 	status = Q3Camera_SetPlacement(setupInfo->cameraObject, &placement);
-	if (status == kQ3Failure)
-		DoFatalAlert("Q3Camera_SetPlacement failed!");
+	GAME_ASSERT(status);
 
 	UpdateListenerLocation();
 }
@@ -872,12 +813,10 @@ TQ3LightObject			myLight;
 	
 	myPointLightData.attenuation = kQ3AttenuationTypeNone;				// set attenuation
 	myLight = Q3PointLight_New(&myPointLightData);						// make it
-	if ( myLight == nil )
-		DoFatalAlert(" Q3DirectionalLight_New Failed!");
+	GAME_ASSERT(myLight);
 
 	myGroupPosition = (TQ3GroupPosition)Q3Group_AddObject(setupInfo->lightGroup, myLight);// add to light group
-	if ( myGroupPosition == 0 )
-		DoFatalAlert(" Q3Group_AddObject Failed!");
+	GAME_ASSERT(myGroupPosition);
 
 	Q3Object_Dispose(myLight);											// dispose of light
 	return(myGroupPosition);
@@ -893,19 +832,15 @@ TQ3LightObject		light;
 TQ3Status			status;
 
 	status = Q3Group_GetPositionObject(setupInfo->lightGroup, lightPosition, &light);	// get point light object from light group
-	if (status == kQ3Failure)
-		DoFatalAlert("Q3Group_GetPositionObject Failed!");
-
+	GAME_ASSERT(status);
 
 	status =  Q3PointLight_GetData(light, &pointLightData);				// get light data
-	if (status == kQ3Failure)
-		DoFatalAlert("Q3PointLight_GetData Failed!");
+	GAME_ASSERT(status);
 
 	pointLightData.location = *point;									// set coords
 
 	status = Q3PointLight_SetData(light, &pointLightData);				// update light data
-	if (status == kQ3Failure)
-		DoFatalAlert("Q3PointLight_SetData Failed!");
+	GAME_ASSERT(status);
 		
 	Q3Object_Dispose(light);
 }
@@ -919,12 +854,10 @@ TQ3LightObject		light;
 TQ3Status			status;
 
 	status = Q3Group_GetPositionObject(setupInfo->lightGroup, lightPosition, &light);	// get point light object from light group
-	if (status == kQ3Failure)
-		DoFatalAlert("Q3Group_GetPositionObject Failed!");
+	GAME_ASSERT(status);
 
 	status = Q3Light_SetBrightness(light, bright);
-	if (status == kQ3Failure)
-		DoFatalAlert("Q3Light_SetBrightness Failed!");
+	GAME_ASSERT(status);
 
 	Q3Object_Dispose(light);
 }
@@ -950,12 +883,10 @@ TQ3DirectionalLightData	myDirectionalLightData;
 	myDirectionalLightData.direction = *fillVector;				// set vector
 	
 	myLight = Q3DirectionalLight_New(&myDirectionalLightData);	// make it
-	if ( myLight == nil )
-		DoFatalAlert(" Q3DirectionalLight_New Failed!");
-	
+	GAME_ASSERT(myLight);
+
 	myGroupPosition = (TQ3GroupPosition)Q3Group_AddObject(setupInfo->lightGroup, myLight);	// add to light group
-	if ( myGroupPosition == 0 )
-		DoFatalAlert(" Q3Group_AddObject Failed!");
+	GAME_ASSERT(myGroupPosition != 0);
 
 	Q3Object_Dispose(myLight);												// dispose of light
 	return(myGroupPosition);
@@ -976,12 +907,10 @@ TQ3LightObject			myLight;
 	myLightData.brightness = brightness;						// set brightness
 	
 	myLight = Q3AmbientLight_New(&myLightData);					// make it
-	if ( myLight == nil )
-		DoFatalAlert("Q3AmbientLight_New Failed!");
+	GAME_ASSERT(myLight);
 
 	myGroupPosition = (TQ3GroupPosition)Q3Group_AddObject(setupInfo->lightGroup, myLight);		// add to light group
-	if ( myGroupPosition == 0 )
-		DoFatalAlert(" Q3Group_AddObject Failed!");
+	GAME_ASSERT(myGroupPosition != 0);
 
 	Q3Object_Dispose(myLight);									// dispose of light
 	
@@ -998,8 +927,7 @@ void QD3D_DeleteLight(QD3DSetupOutputType *setupInfo, TQ3GroupPosition lightPosi
 TQ3LightObject		light;
 
 	light = (TQ3LightObject)Q3Group_RemovePosition(setupInfo->lightGroup, lightPosition);
-	if (light == nil)
-		DoFatalAlert("Q3Group_RemovePosition Failed!");
+	GAME_ASSERT(light);
 
 	Q3Object_Dispose(light);
 }
@@ -1015,9 +943,7 @@ void QD3D_DeleteAllLights(QD3DSetupOutputType *setupInfo)
 TQ3Status				status;
 
 	status = Q3Group_EmptyObjects(setupInfo->lightGroup);
-	if (status == kQ3Failure)
-		DoFatalAlert("QD3D_DeleteAllLights: Q3Group_EmptyObjects Failed!");
-
+	GAME_ASSERT(status);
 }
 
 
@@ -1142,12 +1068,10 @@ long					width,height;
 			/* MAKE NEW PIXMAP TEXTURE */
 			
 	texture = Q3MipmapTexture_New(&mipmap);							// make new mipmap	
-	if (texture == nil)
-		DoFatalAlert("QD3D_PICTToTexture: Q3MipmapTexture_New failed!");
-		
+	GAME_ASSERT(texture);
+
 	shader = Q3TextureShader_New (texture);
-	if (shader == nil)
-		DoFatalAlert("Error calling Q3TextureShader_New!");
+	GAME_ASSERT(shader);
 
 	Q3Object_Dispose (texture);
 	Q3Object_Dispose (mipmap.image);			// disposes of extra reference to storage obj
@@ -1177,12 +1101,10 @@ TQ3SurfaceShaderObject		shader;
 			/* MAKE NEW MIPMAP TEXTURE */
 			
 	texture = Q3MipmapTexture_New(&mipmap);							// make new mipmap	
-	if (texture == nil)
-		DoFatalAlert("QD3D_GWorldToTexture: Q3MipmapTexture_New failed!");
+	GAME_ASSERT(texture);
 			
 	shader = Q3TextureShader_New(texture);
-	if (shader == nil)
-		DoFatalAlert("Error calling Q3TextureShader_New!");
+	GAME_ASSERT(shader);
 
 	Q3Object_Dispose (texture);
 	Q3Object_Dispose (mipmap.image);					// dispose of extra ref to storage object
@@ -1199,8 +1121,8 @@ TQ3SurfaceShaderObject		shader;
 static void DrawPICTIntoMipmap(PicHandle pict,long width, long height, TQ3Mipmap *mipmap, Boolean blackIsAlpha)
 {
 #if 1
-	if (width  != (**pict).picFrame.right  - (**pict).picFrame.left) DoFatalAlert("DrawPICTIntoMipmap: unexpected width");
-	if (height != (**pict).picFrame.bottom - (**pict).picFrame.top)  DoFatalAlert("DrawPICTIntoMipmap: unexpected height");
+	GAME_ASSERT(width  == (**pict).picFrame.right  - (**pict).picFrame.left);
+	GAME_ASSERT(height == (**pict).picFrame.bottom - (**pict).picFrame.top);
 	
 	Ptr pictMapAddr = (**pict).__pomme_pixelsARGB32;
 	long pictRowBytes = width * (32 / 8);
@@ -1222,9 +1144,7 @@ static void DrawPICTIntoMipmap(PicHandle pict,long width, long height, TQ3Mipmap
 	}
 	
 	mipmap->image = Q3MemoryStorage_New((unsigned char*)pictMapAddr, pictRowBytes * height);
-
-	if (mipmap->image == nil)
-		DoFatalAlert("Q3MemoryStorage_New Failed!");
+	GAME_ASSERT(mipmap->image);
 
 	mipmap->useMipmapping = kQ3False;							// not actually using mipmaps (just 1 srcmap)
 	mipmap->pixelType = kQ3PixelTypeARGB32;						// if 32bit, assume alpha
@@ -1448,12 +1368,10 @@ TQ3SurfaceShaderObject		shader;
 			/* MAKE NEW MIPMAP TEXTURE */
 			
 	texture = Q3MipmapTexture_New(&mipmap);							// make new mipmap	
-	if (texture == nil)
-		DoFatalAlert("QD3D_Data16ToTexture_NoMip: Q3MipmapTexture_New failed!");
+	GAME_ASSERT(texture);
 			
 	shader = Q3TextureShader_New(texture);
-	if (shader == nil)
-		DoFatalAlert("QD3D_Data16ToTexture_NoMip: Q3TextureShader_New failed");
+	GAME_ASSERT(shader);
 
 	Q3Object_Dispose (texture);
 	Q3Object_Dispose (mipmap.image);					// dispose of extra ref to storage object
@@ -1519,20 +1437,17 @@ TQ3SurfaceShaderObject	surfaceShader;
 			/* GET SHADER FROM ATTRIB */
 			
 	status = Q3AttributeSet_Get(attribSet, kQ3AttributeTypeSurfaceShader, &surfaceShader);
-	if (status == kQ3Failure)
-		DoFatalAlert("QD3D_GetMipmapStorageObjectFromAttrib: Q3AttributeSet_Get failed!");
+	GAME_ASSERT(status);
 
 			/* GET TEXTURE */
 			
 	status = Q3TextureShader_GetTexture(surfaceShader, &texture);
-	if (status == kQ3Failure)
-		DoFatalAlert("QD3D_GetMipmapStorageObjectFromAttrib: Q3TextureShader_GetTexture failed!");
+	GAME_ASSERT(status);
 
 			/* GET MIPMAP */
 			
 	status = Q3MipmapTexture_GetMipmap(texture,&mipmap);
-	if (status == kQ3Failure)
-		DoFatalAlert("QD3D_GetMipmapStorageObjectFromAttrib: Q3MipmapTexture_GetMipmap failed!");
+	GAME_ASSERT(status);
 
 		/* GET A LEGAL REF TO STORAGE OBJ */
 			
@@ -1569,12 +1484,10 @@ TQ3SurfaceShaderObject		shader;
 			/* MAKE NEW PIXMAP TEXTURE */
 			
 	texture = Q3PixmapTexture_New(&pixmap);				
-	if (texture == nil)
-		DoFatalAlert("QD3D_Data16ToTexture_Pixmap: Q3MipmapTexture_New failed!");
+	GAME_ASSERT(texture);
 			
 	shader = Q3TextureShader_New(texture);
-	if (shader == nil)
-		DoFatalAlert("QD3D_Data16ToTexture_Pixmap: Q3TextureShader_New failed");
+	GAME_ASSERT(shader);
 
 	Q3Object_Dispose (texture);
 	Q3Object_Dispose (pixmap.image);					// dispose of extra ref to storage object
@@ -1599,8 +1512,7 @@ long	size = width * height * 2;
 			/* MAKE 16bit MIPMAP */
 
 	pixmap->image = (void *)Q3MemoryStorage_NewBuffer ((unsigned char *) data, size, size);
-	if (pixmap->image == nil)
-		DoFatalAlert("Data16ToPixmap: Q3MemoryStorage_New Failed!");
+	GAME_ASSERT(pixmap->image);
 
 	pixmap->width 		= width;
 	pixmap->height 		= height;
@@ -1634,20 +1546,17 @@ TQ3SurfaceShaderObject	surfaceShader;
 			/* GET SHADER FROM ATTRIB */
 			
 	status = Q3AttributeSet_Get(attribSet, kQ3AttributeTypeSurfaceShader, &surfaceShader);
-	if (status == kQ3Failure)
-		DoFatalAlert("QD3D_GetPixmapStorageObjectFromAttrib: Q3AttributeSet_Get failed!");
+	GAME_ASSERT(status);
 
 			/* GET TEXTURE */
 			
 	status = Q3TextureShader_GetTexture(surfaceShader, &texture);
-	if (status == kQ3Failure)
-		DoFatalAlert("QD3D_GetPixmapStorageObjectFromAttrib: Q3TextureShader_GetTexture failed!");
+	GAME_ASSERT(status);
 
 			/* GET PIXMAP */
 			
 	status = Q3PixmapTexture_GetPixmap(texture,&pixmap);
-	if (status == kQ3Failure)
-		DoFatalAlert("QD3D_GetPixmapStorageObjectFromAttrib: Q3PixmapTexture_GetPixmap failed!");
+	GAME_ASSERT(status);
 
 		/* GET A LEGAL REF TO STORAGE OBJ */
 			
@@ -1675,15 +1584,13 @@ TQ3Status status;
 TQ3BackfacingStyle	backfacingStyle;
 
 	status = Q3BackfacingStyle_Get(setupInfo->backfacingStyle, &backfacingStyle);
-	if (status == kQ3Failure)
-		DoFatalAlert("Q3BackfacingStyle_Get Failed!");
+	GAME_ASSERT(status);
 
 	if (style == backfacingStyle)							// see if already set to that
 		return;
 		
 	status = Q3BackfacingStyle_Set(setupInfo->backfacingStyle, style);
-	if (status == kQ3Failure)
-		DoFatalAlert("Q3BackfacingStyle_Set Failed!");
+	GAME_ASSERT(status);
 
 }
 
@@ -1696,15 +1603,13 @@ TQ3Status 		status;
 TQ3FillStyle	fillStyle;
 
 	status = Q3FillStyle_Get(setupInfo->fillStyle, &fillStyle);
-	if (status == kQ3Failure)
-		DoFatalAlert("Q3FillStyle_Get Failed!");
+	GAME_ASSERT(status);
 
 	if (style == fillStyle)							// see if already set to that
 		return;
 		
 	status = Q3FillStyle_Set(setupInfo->fillStyle, style);
-	if (status == kQ3Failure)
-		DoFatalAlert("Q3FillStyle_Set Failed!");
+	GAME_ASSERT(status);
 
 }
 
@@ -1789,7 +1694,7 @@ Str255		s;
 	
 	q3Err = Q3Error_Get(nil);
 	if (q3Err == kQ3ErrorOutOfMemory)
-		QD3D_DoMemoryError();
+		DoFatalAlert("QuickDraw 3D has run out of memory!");
 	else
 	if (q3Err == kQ3ErrorMacintoshError)
 		DoFatalAlert("kQ3ErrorMacintoshError");
@@ -1808,16 +1713,6 @@ Str255		s;
 		snprintf(s, sizeof(s), "QD3D Error %d\nLook up error code in QuesaErrors.h", q3Err);
 		DoFatalAlert(s);
 	}
-}
-
-/***************** QD3D: DO MEMORY ERROR **********************/
-
-void QD3D_DoMemoryError(void)
-{
-	FlushEvents (everyEvent, REMOVE_ALL_EVENTS);	
-	InitCursor();
-	DoAlert("ERROR:  QuickDraw 3D has run out of available System Memory!");
-	CleanQuit();
 }
 
 

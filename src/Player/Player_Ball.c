@@ -84,8 +84,7 @@ ObjNode	*newObj;
 long	numTriMeshes,i;
 float	rotY;
 
-	if (gPlayerMode != PLAYER_MODE_BUG)
-		DoFatalAlert("InitPlayer_Ball: to become ball, player must be bug");
+	GAME_ASSERT_MESSAGE(gPlayerMode == PLAYER_MODE_BUG, "To become ball, player must be bug");
 					
 	gPlayerKnockOnButt = false;
 					
@@ -163,8 +162,7 @@ float	rotY;
 					/* MAKE OBJ & PUT INTO GROUP */
 					
 		triMeshObj = Q3TriMesh_New(data);										// convert data into trimesh
-		if (triMeshObj == nil)
-			DoFatalAlert("InitPlayer_Ball: Q3TriMesh_New failed!");
+		GAME_ASSERT(triMeshObj);
 		AttachGeometryToDisplayGroupObject(newObj, triMeshObj);					// add to display group
 		Q3Object_Dispose(triMeshObj);											// nuke extra ref
 	}			

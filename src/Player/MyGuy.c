@@ -574,8 +574,7 @@ ObjNode *newObj;
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= .3;
 	newObj = MakeNewSkeletonObject(&gNewObjectDefinition);
-	if (newObj == nil)
-		DoFatalAlert("CreateMyBuddy: MakeNewSkeletonObject failed!");
+	GAME_ASSERT(newObj);
 
 	newObj->Mode = BUDDY_MODE_LIKESME;
 

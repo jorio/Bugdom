@@ -414,8 +414,7 @@ ObjNode	*newObj;
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= BAT_SCALE;
 	newObj = MakeNewSkeletonObject(&gNewObjectDefinition);
-	if (newObj == nil)
-		DoFatalAlert("MakeBat: MakeNewSkeletonObject failed!");
+	GAME_ASSERT(newObj);
 				
 
 	newObj->CType		= CTYPE_BLOCKCAMERA;					// no collision

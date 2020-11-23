@@ -369,16 +369,14 @@ int			fRefNum;
 OSErr		iErr;
 
 	fRefNum = FSpOpenResFile(spec,fsRdPerm);
-	if (fRefNum == -1)
-		DoFatalAlert("LoadInfobarArt: Error opening Infobar Rez file");
+	GAME_ASSERT(fRefNum != -1);
 	UseResFile(fRefNum);
 			
 			/* READ 'EM IN */
 				
 	n = Count1Resources('PICT');						// get # PICTs in here
-	if (gNumSprites+n > MAX_SPRITES)
-		DoFatalAlert("LoadInfobarArt: numPicts > MAX_SPRITES");
-	
+	GAME_ASSERT(gNumSprites+n <= MAX_SPRITES);
+
 	for (i = 0; i < n; i++)
 	{
 		PicHandle	pict;
@@ -393,11 +391,8 @@ OSErr		iErr;
 				/* MAKE GWORLD */
 				
 		iErr = NewGWorld(&gSprites[gNumSprites], 16, &r, nil, nil, 0);	// try app mem
-		if (iErr)
-		{
-			DoFatalAlert("LoadInfobarArt: NewGWorld failed");
-		}
-					
+		GAME_ASSERT(noErr == iErr);
+
 		GetGWorld(&oldGW, &oldGD);										// save current port
 		SetGWorld(gSprites[gNumSprites], nil);	
 		DoLockPixels(gSprites[gNumSprites]);
@@ -420,8 +415,7 @@ static void DrawSprite(long spriteNum, long x, long y)
 {
 Rect	r, pr;
 
-	if (spriteNum >= gNumSprites)
-		DoFatalAlert("DrawSprite: illegal sprite #");
+	GAME_ASSERT_MESSAGE(spriteNum < gNumSprites, "illegal sprite #");
 
 	GetPortBounds(gSprites[spriteNum], &pr);
 
@@ -443,8 +437,7 @@ Rect	r, pr;
 	if (gInfoBarTop == nil)
 		return;
 
-	if (spriteNum >= gNumSprites)
-		DoFatalAlert("DrawSprite: illegal sprite #");
+	GAME_ASSERT_MESSAGE(spriteNum < gNumSprites, "illegal sprite #");
 
 	GetPortBounds(gSprites[spriteNum], &pr);
 
@@ -463,8 +456,7 @@ static short GetSpriteWidth(long spriteNum)
 {
 Rect	r;
 
-	if (spriteNum >= gNumSprites)
-		DoFatalAlert("GetSpriteWidth: illegal sprite #");
+	GAME_ASSERT_MESSAGE(spriteNum < gNumSprites, "illegal sprite #");
 
 	GetPortBounds(gSprites[spriteNum], &r);
 
@@ -637,9 +629,8 @@ void LoseBallTime(float amount)
 
 void GetKey(long keyID)
 {
-	if (keyID >= MAX_KEY_TYPES)			// make sure its legal
-		DoFatalAlert("GetKey: illegal key ID#");
-		
+	GAME_ASSERT_MESSAGE(keyID < MAX_KEY_TYPES, "illegal key ID#");	// make sure it's legal
+
 	gGotKey[keyID] = true;
 	
 	

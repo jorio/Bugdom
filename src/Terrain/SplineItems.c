@@ -150,9 +150,8 @@ SplinePointType	*points;
 		{
 			itemPtr = &(*spline->itemList)[i];					// point to this item
 			type = itemPtr->type;								// get item type
-			if (type > MAX_SPLINE_ITEM_NUM)
-				DoFatalAlert("PrimeSplines: type > MAX_SPLINE_ITEM_NUM");
-	
+			GAME_ASSERT(type <= MAX_SPLINE_ITEM_NUM);
+
 			flag = gSplineItemPrimeRoutines[type](s,itemPtr); 	// call item's Prime routine
 			if (flag)
 				itemPtr->flags |= ITEM_FLAGS_INUSE;				// set in-use flag	
@@ -245,8 +244,7 @@ long	row,col;
 
 void AddToSplineObjectList(ObjNode *theNode)
 {
-	if (gNumSplineObjects >= MAX_SPLINE_OBJECTS)
-		DoFatalAlert("AddToSplineObjectList: too many spline objects");
+	GAME_ASSERT_MESSAGE(gNumSplineObjects < MAX_SPLINE_OBJECTS, "Too many spline objects");
 
 	theNode->SplineObjectIndex = gNumSplineObjects;					// remember where in list this is
 

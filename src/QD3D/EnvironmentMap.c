@@ -74,8 +74,7 @@ TQ3Status	status;
 			status = Q3TriMesh_Submit(gReflectionMapQueue2[i], viewInfo->viewObject);			
 		else
 			status = Q3TriMesh_Submit(&gReflectionMapQueue[i], viewInfo->viewObject);	
-		if (status != kQ3Success)
-			DoFatalAlert("SubmitReflectionMapQueue: Q3TriMesh_Submit failed!");
+		GAME_ASSERT(status);
 	}
 		
 }
@@ -215,9 +214,8 @@ register 	float	x,y,z;
 
 			/* GET POINTER TO TRIMESH DATA STRUCTURE */
 			
-	if (gReflectionMapQueueSize >= MAX_REFLECTIONMAP_QUEUESIZE)
-		DoFatalAlert("EnvironmentMapTriMesh: gReflectionMapQueueSize >= MAX_REFLECTIONMAP_QUEUESIZE");
-		
+	GAME_ASSERT(gReflectionMapQueueSize < MAX_REFLECTIONMAP_QUEUESIZE);
+
 				/* GET TRIMESH INFO */
 				
 	if (inData)
@@ -231,8 +229,7 @@ register 	float	x,y,z;
 		gReflectionMapQueue2[gReflectionMapQueueSize] = nil;
 		
 		status = Q3TriMesh_GetData(theTriMesh, triMeshDataPtr);						// get trimesh data
-		if (status != kQ3Success) 
-			DoFatalAlert("EnvironmentMapTriMesh: Q3TriMesh_GetData failed!");
+		GAME_ASSERT(status);
 	}		
 	
 	numFaces 		= triMeshDataPtr->numTriangles;

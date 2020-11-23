@@ -58,11 +58,8 @@ void SetSkeletonAnim(SkeletonObjDataType *skeleton, long animNum)
 	if (skeleton == nil)
 		return;
 		
-	if (animNum >= skeleton->skeletonDefinition->NumAnims)
-	{
-		DoFatalAlert("SetSkeletonAnim: illegal animNum");
-	}
-		
+	GAME_ASSERT_MESSAGE(animNum < skeleton->skeletonDefinition->NumAnims, "illegal animNum");
+
 	skeleton->LoopBackTime = 0;								// assume no SetMarker & it loops or zigzags to time 0:00
 	skeleton->AnimNum = animNum;
 	skeleton->AnimDirection = ANIM_DIRECTION_FORWARD;
@@ -242,15 +239,13 @@ float	fps;
 					break;
 					
 			case	ANIMEVENT_TYPE_SETFLAG:
-					if (eventValue >= MAX_FLAGS_IN_OBJNODE)
-						DoFatalAlert("Error: ANIMEVENT_TYPE_SETFLAG > MAX_FLAGS_IN_OBJNODE!");
+					GAME_ASSERT(eventValue < MAX_FLAGS_IN_OBJNODE);
 					theNode->Flag[eventValue] = true;
 					animEventIndex++;
 					break;
 
 			case	ANIMEVENT_TYPE_CLEARFLAG:
-					if (eventValue >= MAX_FLAGS_IN_OBJNODE)
-						DoFatalAlert("Error: ANIMEVENT_TYPE_SETFLAG > MAX_FLAGS_IN_OBJNODE!");
+					GAME_ASSERT(eventValue < MAX_FLAGS_IN_OBJNODE);
 					theNode->Flag[eventValue] = false;
 					animEventIndex++;
 					break;
@@ -599,18 +594,12 @@ static inline float	AccelerationPercent(float percent)
 long	i;
 
 	i = (long)((CURVE_SIZE-1)*percent);
-	if (gAccelerationCurve[i] > 1.0f)
-		DoFatalAlert(" gAccelerationCurve > 1.0");
-	else
-	if (gAccelerationCurve[i] < 0.0f)
-		DoFatalAlert(" gAccelerationCurve < 0");
 
-	if (percent > 1.0f)
-		DoFatalAlert(" AccelerationPercent > 1.0");
-	else
-	if (percent < 0.0f)
-		DoFatalAlert(" AccelerationPercent < 0");
-	
+	GAME_ASSERT(gAccelerationCurve[i] >= 0.0f);
+	GAME_ASSERT(gAccelerationCurve[i] <= 1.0f);
+	GAME_ASSERT(percent >= 0.0f);
+	GAME_ASSERT(percent <= 1.0f);
+
 	return(gAccelerationCurve[i]);
 }
 

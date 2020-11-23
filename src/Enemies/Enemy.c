@@ -334,10 +334,8 @@ ObjNode	*newObj;
 	gNewObjectDefinition.scale 		= scale;
 
 	newObj = MakeNewSkeletonObject(&gNewObjectDefinition);
-	if (newObj == nil)
-		DoFatalAlert("MakeEnemySkeleton: MakeNewSkeletonObject failed!");
-	
-	
+	GAME_ASSERT(newObj);
+
 				/* SET DEFAULT COLLISION INFO */
 				
 	newObj->CType = CTYPE_ENEMY|CTYPE_BLOCKCAMERA;

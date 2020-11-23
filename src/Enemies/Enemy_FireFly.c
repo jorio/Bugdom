@@ -116,8 +116,7 @@ ObjNode	*newObj,*glow;
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= FIREFLY_SCALE;
 	newObj = MakeNewSkeletonObject(&gNewObjectDefinition);
-	if (newObj == nil)
-		DoFatalAlert("AddFireFly: MakeNewSkeletonObject failed!");
+	GAME_ASSERT(newObj);
 
 	newObj->TerrainItemPtr = itemPtr;								// keep ptr to item list
 	

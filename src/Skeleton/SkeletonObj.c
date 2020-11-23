@@ -65,9 +65,8 @@ void LoadASkeleton(Byte num)
 {
 short	i,numDecomp;
 
-	if (num >= MAX_SKELETON_TYPES)
-		DoFatalAlert("LoadASkeleton: MAX_SKELETON_TYPES exceeded!");
-		
+	GAME_ASSERT(num < MAX_SKELETON_TYPES);
+
 	if (gLoadedSkeletonsList[num] == nil)					// check if already loaded
 		gLoadedSkeletonsList[num] = LoadSkeletonFile(num);
 			
@@ -91,21 +90,20 @@ short	i,numDecomp;
 static void CalcSkeletonBoundingSphere(long n)
 {
 long	i;
+TQ3Status status;
 
-	if (gGameViewInfoPtr == nil)
-		DoFatalAlert("CalcSkeletonBoundingSphere: setupInfo = nil");
+	GAME_ASSERT(gGameViewInfoPtr);
 
-	if (Q3View_StartBoundingSphere(gGameViewInfoPtr->viewObject, kQ3ComputeBoundsExact) != kQ3Success)
-		DoFatalAlert("CalcSkeletonBoundingSphere: Q3View_StartBoundingSphere failed");
+	status = Q3View_StartBoundingSphere(gGameViewInfoPtr->viewObject, kQ3ComputeBoundsExact);
+	GAME_ASSERT(status);
+
 	do
 	{
 		for (i = 0; i < gLoadedSkeletonsList[n]->numDecomposedTriMeshes; i++)
 		{
-			if (Q3TriMesh_Submit(&gLoadedSkeletonsList[n]->decomposedTriMeshes[i],
-							gGameViewInfoPtr->viewObject) != kQ3Success)
-				DoFatalAlert("CalcSkeletonBoundingSphere: Q3TriMesh_Submit failed");
-										
-		}	
+			status = Q3TriMesh_Submit(&gLoadedSkeletonsList[n]->decomposedTriMeshes[i], gGameViewInfoPtr->viewObject);
+			GAME_ASSERT(status);
+		}
 	}while(Q3View_EndBoundingSphere(gGameViewInfoPtr->viewObject, &gSkeletonBoundingSpheres[n]) == kQ3ViewStatusRetraverse);
 }
 
@@ -177,8 +175,7 @@ float	scale;
 			/* LOAD SKELETON FILE INTO OBJECT */
 			
 	newNode->Skeleton = MakeNewSkeletonBaseData(type); 			// alloc & set skeleton data
-	if (newNode->Skeleton == nil)
-		DoFatalAlert("MakeNewSkeletonObject: MakeNewSkeletonBaseData == nil");
+	GAME_ASSERT(newNode->Skeleton);
 
 	UpdateObjectTransforms(newNode);
 
@@ -226,8 +223,7 @@ long	numAnims,numJoints;
 				/***************************/
 
 	skeleton->NumAnimEvents = (Byte *)AllocPtr(sizeof(Byte)*numAnims);		// array which holds # events for each anim
-	if (skeleton->NumAnimEvents == nil)
-		DoFatalAlert("Not enough memory to alloc NumAnimEvents");
+	GAME_ASSERT(skeleton->NumAnimEvents);
 
 	Alloc_2d_array(AnimEventType, skeleton->AnimEventsList, numAnims, MAX_ANIM_EVENTS);
 
@@ -244,25 +240,19 @@ long	numAnims,numJoints;
 			/* ALLOC BONE INFO */
 			
 	skeleton->Bones = (BoneDefinitionType *)AllocPtr(sizeof(BoneDefinitionType)*numJoints);	
-	if (skeleton->Bones == nil)
-		DoFatalAlert("Not enough memory to alloc Bones");
+	GAME_ASSERT(skeleton->Bones);
 
 
 		/* ALLOC DECOMPOSED DATA */
 			
 	skeleton->decomposedTriMeshes = (TQ3TriMeshData *)AllocPtr(sizeof(TQ3TriMeshData)*MAX_DECOMPOSED_TRIMESHES);		
-	if (skeleton->decomposedTriMeshes == nil)
-		DoFatalAlert("Not enough memory to alloc decomposedTriMeshes");
+	GAME_ASSERT(skeleton->decomposedTriMeshes);
 
 	skeleton->decomposedPointList = (DecomposedPointType *)AllocPtr(sizeof(DecomposedPointType)*MAX_DECOMPOSED_POINTS);		
-	if (skeleton->decomposedPointList == nil)
-		DoFatalAlert("Not enough memory to alloc decomposedPointList");
+	GAME_ASSERT(skeleton->decomposedPointList);
 
 	skeleton->decomposedNormalsList = (TQ3Vector3D *)AllocPtr(sizeof(TQ3Vector3D)*MAX_DECOMPOSED_NORMALS);		
-	if (skeleton->decomposedNormalsList == nil)
-		DoFatalAlert("Not enough memory to alloc decomposedNormalsList");
-			
-	
+	GAME_ASSERT(skeleton->decomposedNormalsList);
 }
 
 
@@ -354,18 +344,13 @@ SkeletonDefType		*skeletonDefPtr;
 SkeletonObjDataType	*skeletonData;
 
 	skeletonDefPtr = gLoadedSkeletonsList[sourceSkeletonNum];				// get ptr to source skeleton definition info
-	if (skeletonDefPtr == nil)
-	{
-		DoAlert("MakeNewSkeletonBaseData: Skeleton data isnt loaded!");
-		ShowSystemErr(sourceSkeletonNum);
-	}
-		
+	GAME_ASSERT_MESSAGE(skeletonDefPtr, "Skeleton data isn't loaded!");
+
 
 			/* ALLOC MEMORY FOR NEW SKELETON OBJECT DATA STRUCTURE */
 			
 	skeletonData = (SkeletonObjDataType *)AllocPtr(sizeof(SkeletonObjDataType));
-	if (skeletonData == nil)
-		DoFatalAlert("MakeNewSkeletonBaseData: Cannot alloc new SkeletonObjDataType");
+	GAME_ASSERT(skeletonData);
 
 
 			/* INIT NEW SKELETON */

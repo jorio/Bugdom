@@ -124,8 +124,7 @@ static const TQ3Param2D uvs[4] = {0,1, 1,1, 1,0, 0,0};
 		if (gLevelType == LEVEL_TYPE_NIGHT)
 		{
 			gMoonFlareShader = QD3D_GetTextureMap(1004, nil, false);
-			if (gMoonFlareShader==nil)
-				DoFatalAlert("InitCamera: QD3D_GetTextureMap failed!");
+			GAME_ASSERT(gMoonFlareShader);
 		}
 		else
 		if (gMoonFlareShader)							// nuke any old moon shader
@@ -142,8 +141,7 @@ static const TQ3Param2D uvs[4] = {0,1, 1,1, 1,0, 0,0};
 			for (i = 0; i < NUM_FLARE_TYPES; i++)
 			{
 				gLensFlareShader[i] = QD3D_GetTextureMap(1000+i, nil, false);
-				if (gLensFlareShader[i]==nil)
-					DoFatalAlert("InitCamera: QD3D_GetTextureMap failed!");
+				GAME_ASSERT(gLensFlareShader[i]);
 			}
 				
 					/* INIT LENSE FLARE GEOMETRY */

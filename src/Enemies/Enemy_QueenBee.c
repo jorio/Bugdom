@@ -711,9 +711,7 @@ TerrainItemEntryType	*itemPtr;
 		}
 	}
 	
-	if (gNumQueenBases == 0)
-		DoFatalAlert("FindQueenBases: none found!");
-	
+	GAME_ASSERT_MESSAGE(gNumQueenBases > 0, "No bases found");
 }
 
 #pragma mark -

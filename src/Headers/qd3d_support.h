@@ -123,7 +123,6 @@ extern	void SetFillStyle(QD3DSetupOutputType *setupInfo, TQ3FillStyle style);
 extern	void QD3D_DeleteAllLights(QD3DSetupOutputType *setupInfo);
 extern	TQ3GroupPosition QD3D_AddFillLight(QD3DSetupOutputType *setupInfo,TQ3Vector3D *fillVector, TQ3ColorRGB *color, float brightness);
 extern	TQ3GroupPosition QD3D_AddAmbientLight(QD3DSetupOutputType *setupInfo, TQ3ColorRGB *color, float brightness);
-extern	void QD3D_DoMemoryError(void);
 extern	void QD3D_ShowRecentError(void);
 extern	void QD3D_NewViewDef(QD3DSetupInputType *viewDef, WindowPtr theWindow);
 extern	void QD3D_ColorToQDColor(TQ3ColorRGB *in, RGBColor *out);
