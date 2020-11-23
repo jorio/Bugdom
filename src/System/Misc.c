@@ -94,6 +94,16 @@ void DoFatalAlert2(const char* s1, const char* s2)
 	ExitToShell();
 }
 
+/*********************** DO ASSERT *******************/
+
+void DoAssert(const char* msg, const char* file, int line)
+{
+	printf("BUGDOM ASSERTION FAILED: %s - %s:%d\n", msg, file, line);
+	static char alertbuf[1024];
+	snprintf(alertbuf, 1024, "%s\n%s:%d", msg, file, line);
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom: Assertion Failed!", alertbuf, gSDLWindow);
+	ExitToShell();
+}
 
 /************ CLEAN QUIT ***************/
 

@@ -6,6 +6,7 @@ extern	void ShowSystemErr(long err);
 extern void	DoAlert(const char*);
 extern void	DoFatalAlert(const char*);
 extern	void DoFatalAlert2(const char* s1, const char* s2);
+void DoAssert(const char* msg, const char* file, int line);
 void Wait(u_long ticks);
 extern unsigned char	*NumToHex(unsigned short);
 extern unsigned char	*NumToHex2(unsigned long, short);
