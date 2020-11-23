@@ -74,6 +74,9 @@ Point		mouse,oldMouse;
 float		timer;
 Boolean		loop = false;
 
+	mouse.h = 0;
+	mouse.v = 0;
+	
 start_again:
 
 	timer = 0;
