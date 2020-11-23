@@ -289,24 +289,31 @@ int	i;
 		gVertexColors[1] = nil;
 	}
 			/* NUKE SPLINE DATA */
-			
-	for (i = 0; i < gNumSplines; i++)
-	{
-		DisposeHandle((Handle)(*gSplineList)[i].pointList);		// nuke point list
-		DisposeHandle((Handle)(*gSplineList)[i].itemList);		// nuke item list	
-	}
-	DisposeHandle((Handle)gSplineList);
 
+	if (gSplineList)
+	{
+		for (i = 0; i < gNumSplines; i++)
+		{
+			DisposeHandle((Handle)(*gSplineList)[i].pointList);	// nuke point list
+			DisposeHandle((Handle)(*gSplineList)[i].itemList);	// nuke item list
+		}
+		DisposeHandle((Handle) gSplineList);
+		gSplineList = nil;										// make sure to clear handle to prevent double-free next time
+	}
 
 			/* NUKE FENCE DATA */
-			
-	for (i = 0; i < gNumFences; i++)
+
+	if (gFenceList)
 	{
-		DisposePtr((Ptr)gFenceList[i].sectionVectors);			// nuke section vectors
-		DisposeHandle((Handle)(gFenceList[i].nubList));			// nuke nub list
+		for (i = 0; i < gNumFences; i++)
+		{
+			DisposePtr((Ptr)gFenceList[i].sectionVectors);		// nuke section vectors
+			DisposeHandle((Handle)(gFenceList[i].nubList));		// nuke nub list
+		}
+		DisposePtr((Ptr) gFenceList);
+		gFenceList = nil;										// make sure to clear pointer to prevent double-free next time
 	}
-	DisposePtr((Ptr)gFenceList);
-	
+
 	
 	ReleaseAllSuperTiles();
 }
