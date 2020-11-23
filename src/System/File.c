@@ -1135,6 +1135,14 @@ short					**xlateTableHand,*xlateTbl;
 			
 	for (i = 0; i < gNumSplines; i++)
 	{
+		// Level 2's spline #16 has 0 points. Skip the byteswapping, but do alloc an empty handle, which the game expects.
+		if ((*gSplineList)[i].numPoints == 0)
+		{
+			printf("WARNING: Spline #%ld has 0 points\n", i);
+			(*gSplineList)[i].pointList = (SplinePointType**) AllocHandle(0);
+			continue;
+		}
+
 		hand = GetResource('SpPt',1000+i);
 		GAME_ASSERT(hand);
 		{
@@ -1150,6 +1158,14 @@ short					**xlateTableHand,*xlateTbl;
 			
 	for (i = 0; i < gNumSplines; i++)
 	{
+		// Level 2's spline #16 has 0 items. Skip the byteswapping, but do alloc an empty handle, which the game expects.
+		if ((*gSplineList)[i].numItems == 0)
+		{
+			printf("WARNING: Spline #%ld has 0 items\n", i);
+			(*gSplineList)[i].itemList = (SplineItemType**) AllocHandle(0);
+			continue;
+		}
+
 		hand = GetResource('SpIt',1000+i);
 		GAME_ASSERT(hand);
 		{

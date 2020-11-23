@@ -179,6 +179,8 @@ void GetCoordOnSpline(SplineDefType *splinePtr, float placement, float *x, float
 float			numPointsInSpline;
 SplinePointType	*points;
 
+	GAME_ASSERT(splinePtr->numPoints > 0);
+
 	numPointsInSpline = splinePtr->numPoints;					// get # points in the spline
 	points = *splinePtr->pointList;								// point to point list
 	*x = points[(int)(numPointsInSpline * placement)].x;		// get coord
