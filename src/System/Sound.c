@@ -876,7 +876,7 @@ SoundHeaderPtr   sndPtr;
 
 	mySndCmd.cmd = bufferCmd;										// make it play
 	mySndCmd.param1 = 0;
-	mySndCmd.param2 = ((long)*gSndHandles[bankNum][soundNum])+gSndOffsets[bankNum][soundNum];	// pointer to SoundHeader
+	mySndCmd.ptr = ((Ptr)*gSndHandles[bankNum][soundNum])+gSndOffsets[bankNum][soundNum];	// pointer to SoundHeader
 	SndDoImmediate(chanPtr, &mySndCmd);
 	if (myErr)
 		return(-1);
@@ -894,14 +894,14 @@ SoundHeaderPtr   sndPtr;
 	SOURCE_PORT_MINOR_PLACEHOLDER();
 #else
 	
-    sndPtr = (SoundHeaderPtr)(((long)*gSndHandles[bankNum][soundNum])+gSndOffsets[bankNum][soundNum]);
+    sndPtr = (SoundHeaderPtr)(((Ptr)*gSndHandles[bankNum][soundNum])+gSndOffsets[bankNum][soundNum]);
     loopStart = sndPtr->loopStart;
     loopEnd = sndPtr->loopEnd;
     if ((loopStart + 1) < loopEnd)
     {
     	mySndCmd.cmd = callBackCmd;										// let us know when the buffer is done playing
     	mySndCmd.param1 = 0;
-    	mySndCmd.param2 = ((long)*gSndHandles[bankNum][soundNum])+gSndOffsets[bankNum][soundNum];	// pointer to SoundHeader
+    	mySndCmd.ptr = ((Ptr)*gSndHandles[bankNum][soundNum])+gSndOffsets[bankNum][soundNum];	// pointer to SoundHeader
     	SndDoCommand(chanPtr, &mySndCmd, true);
     	
     	gChannelInfo[theChan].isLooping = true;
