@@ -49,7 +49,7 @@ static void StartNitroTrail(void);
 
 #define	PLAYER_BALL_ACCEL			66.0f
 #define	PLAYER_BALL_FRICTION_ACCEL	400.0f
-#define	PLAYER_MAX_SPEED_BALL		2800.0f;
+#define	PLAYER_MAX_SPEED_BALL		2800.0f
 
 #define	PLAYER_BALL_JUMPFORCE		1400.0f
 
