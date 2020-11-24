@@ -1128,7 +1128,10 @@ short					**xlateTableHand,*xlateTbl;
 		DisposeHandle(hand);
 	}
 	else
-		gNumSplines = 0;	
+	{
+		gNumSplines = 0;
+		gSplineList = nil;
+	}
 
 	
 			/* READ SPLINE POINT LIST */
@@ -1207,7 +1210,10 @@ short					**xlateTableHand,*xlateTbl;
 		ReleaseResource(hand);
 	}
 	else
-		gNumFences = 0;	
+	{
+		gNumFences = 0;
+		gFenceList = nil;
+	}
 
 	
 			/* READ FENCE NUB LIST */
