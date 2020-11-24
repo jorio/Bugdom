@@ -234,7 +234,6 @@ target_compile_definitions(Quesa_SDL PUBLIC
 
 target_compile_definitions(${GAME_TARGET} PRIVATE
 	QUESA_OS_SDL
-	DEBUG_WIREFRAME
 )
 
 if(WIN32)
