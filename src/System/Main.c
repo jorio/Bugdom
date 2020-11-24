@@ -590,7 +590,7 @@ QD3DSetupInputType	viewDef;
 	viewDef.lights.fogEnd	 	= gLevelFogEnd[gLevelType];
 	viewDef.lights.fogDensity 	= 1.0;	
 	
-	viewDef.lights.fogMode = kQ3FogModeLinear;
+	viewDef.lights.fogMode = kQ3FogModePlaneBasedLinear;  // Source port note: plane-based linear fog accurately reproduces fog rendering on real Macs
 	
 //	if (gUseCyclorama && (gLevelType != LEVEL_TYPE_FOREST) && (gLevelType != LEVEL_TYPE_NIGHT))
 //		viewDef.view.dontClear		= true;

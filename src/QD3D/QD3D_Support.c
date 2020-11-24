@@ -1776,13 +1776,7 @@ void QD3D_ReEnableFog(const QD3DSetupOutputType *setupInfo)
 {
 		TQ3FogStyleData	fogData;
 		
-#if 1
-		// SOURCE PORT TODO: incorrect fog hither/yon
-		static unsigned long long warning = 0; if (!(warning++ % 1000)) SOURCE_PORT_MINOR_PLACEHOLDER();
-		fogData.state		= kQ3Off;
-#else
 		fogData.state		= kQ3On;
-#endif
 		fogData.mode		= gFogMode;
 		fogData.fogStart	= setupInfo->yon * gFogStart;
 		fogData.fogEnd		= setupInfo->yon * gFogEnd;
