@@ -628,7 +628,7 @@ TQ3ColorRGB		transColor;
 	QD3D_SetBlendingMode(kQABlend_OpenGL,GL_SRC_ALPHA,GL_ONE);					
 	QD3D_SetZWrite(false);
 	Q3Shader_Submit(setupInfo->nullShaderObject, view);							// use null shader
-	Q3BackfacingStyle_Submit(kQ3BackfacingStyleBoth, view);
+	Q3BackfacingStyle_Submit(kQ3BackfacingStyleRemove, view);
 
 
 			/***************/
