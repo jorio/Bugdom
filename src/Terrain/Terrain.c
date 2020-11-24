@@ -629,7 +629,7 @@ TQ3Point3D			*pointList;
 TQ3TriMeshTriangleData	*triangleList;
 TQ3StorageObject	mipmapStorage;
 unsigned char		*buffer;
-u_long				validSize,bufferSize;
+TQ3Uns32			validSize,bufferSize;
 SuperTileMemoryType	*superTilePtr;
 TQ3ColorRGB			*vertexColorList;
 float				b;
