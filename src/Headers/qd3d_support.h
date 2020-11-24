@@ -5,15 +5,6 @@
 #ifndef QD3D_SUP
 #define QD3D_SUP
 
-
-enum
-{
-	ATI_CHIPTYPE_RAGE2,
-	ATI_CHIPTYPE_RAGEPRO,
-	ATI_CHIPTYPE_RAGE128
-};
-
-
 #define	DEFAULT_FPS			4
 
 #define	MAX_FILL_LIGHTS		4
@@ -139,7 +130,6 @@ void QD3D_SetTriangleCacheMode(Boolean isOn);
 void QD3D_SetTextureWrapMode(int mode);
 void QD3D_SetBlendingMode(int mode, int glSrc, int glDest);
 void QD3D_SetZWrite(Boolean isOn);
-Byte QD3D_GetATIChipType(void);
 
 TQ3SurfaceShaderObject	QD3D_Data16ToTexture_Pixmap(Ptr data, short width, short height);
 TQ3StorageObject QD3D_GetPixmapStorageObjectFromAttrib(TQ3AttributeSet attribSet);
@@ -158,10 +148,6 @@ void ShowNormal(TQ3Point3D *where, TQ3Vector3D *normal);
 #define	kQABlend_OpenGL		0
 #define	kQABlend_Interpolate	0
 #define	kQAGL_Repeat		0
-#define	kQAFogMode_Linear	0
-#define	kQAContext_NoZBuffer	0
-#define	kQAContext_DeepZ	0
-#define	kQAContext_NoDither	0
 #define	kQATag_TextureFilter	0
 #define	kQATag_ZSortedHint	0
 #define	kQATag_ZBufferMask	0

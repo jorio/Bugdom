@@ -29,7 +29,6 @@ static void CreateLights(QD3DLightDefType *lightDefPtr);
 static void CreateView(QD3DSetupInputType *setupDefPtr);
 static void DrawPICTIntoMipmap(PicHandle pict,long width, long height, TQ3Mipmap *mipmap, Boolean blackIsAlpha);
 static void Data16ToMipmap(Ptr data, short width, short height, TQ3Mipmap *mipmap);
-static void GetRAVEDrawContext(QD3DSetupOutputType *setupInfo);
 static void Data16ToPixmap(Ptr data, short width, short height, TQ3StoragePixmap *pixmap);
 static void DrawNormal(TQ3ViewObject view);
 static void QASetInt(TQADrawContext	*, int, int);
@@ -39,7 +38,6 @@ static void QASetInt(TQADrawContext	*, int, int);
 /*    CONSTANTS             */
 /****************************/
 
-#define	MAX_CONTEXTS			4					// assume no sane person will have more than 4 monitors on their system
 
 
 /*********************/
@@ -61,7 +59,6 @@ float	gFramesPerSecondFrac = 1/DEFAULT_FPS;
 
 float	gAdditionalClipping = 0;
 
-TQADrawContext	*gRaveDrawContext = nil;
 static TQ3FogMode			gFogMode;
 static float		gFogStart,gFogEnd,gFogDensity;
 static TQ3ColorARGB	gFogColor;
@@ -83,11 +80,8 @@ static Boolean gQD3D_FreshDrawContext = false;
 
 
 
-		/* RAVE INFO */
+		/* DEBUG STUFF */
 		
-static TQ3Uns32	gNumContexts = 0;
-static TQADrawContext 	*gContexts[MAX_CONTEXTS];						// pointer to array of (TQADrawContext *)
-
 static TQ3Point3D		gNormalWhere;
 static TQ3Vector3D		gNormal;
 
@@ -232,10 +226,6 @@ QD3DSetupOutputType	*outputPtr;
 	QD3D_MoveCameraFromTo(outputPtr,&v,&v);					// call this to set outputPtr->currentCameraCoords & camera matrix
 	
 	
-			/* GET RAVE DRAW CONTEXT */
-			
-	GetRAVEDrawContext(outputPtr);
-
 			/* FOG */
 			
 	if (setupDefPtr->lights.useFog)
@@ -260,7 +250,7 @@ void QD3D_DisposeWindowSetup(QD3DSetupOutputType **dataHandle)
 {
 QD3DSetupOutputType	*data;
 
-	gRaveDrawContext = nil;											// this is no longer valid
+	gQD3D_DrawContext = nil;										// this is no longer valid
 
 	data = *dataHandle;
 	GAME_ASSERT(data);												// see if this setup exists
@@ -310,27 +300,24 @@ TQ3Uns32	hints;
 	gQD3D_RendererObject = Q3Renderer_NewFromType(setupDefPtr->view.rendererType);	// create new RENDERER object
 	GAME_ASSERT(gQD3D_RendererObject);
 
-				/* ASK FOR ATI HARDWARE */
-				
-	status = Q3InteractiveRenderer_SetPreferences(gQD3D_RendererObject, kQAVendor_ATI, 0);
-	if (status == kQ3Failure)
-	{
-		Q3InteractiveRenderer_SetPreferences(gQD3D_RendererObject, kQAVendor_BestChoice, kQAEngine_AppleHW);
-	}
-	
 	status = Q3View_SetRenderer(gQD3D_ViewObject, gQD3D_RendererObject);				// assign renderer to view
+	GAME_ASSERT(status);
 				
 		
 		/* SET RENDERER FEATURES */
 		
+#if 0
 	Q3InteractiveRenderer_GetRAVEContextHints(gQD3D_RendererObject, &hints);
 	hints &= ~kQAContext_NoZBuffer; 				// Z buffer is on 
 	hints &= ~kQAContext_DeepZ; 					// shallow z
 	hints &= ~kQAContext_NoDither; 					// yes-dither
 	Q3InteractiveRenderer_SetRAVEContextHints(gQD3D_RendererObject, hints);	
+#endif
 	
 	Q3InteractiveRenderer_SetRAVETextureFilter(gQD3D_RendererObject,kQATextureFilter_Fast);	// texturing
+#if 0
 	Q3InteractiveRenderer_SetDoubleBufferBypass(gQD3D_RendererObject,kQ3True);
+#endif
 
 	// Source port addition: turn off Quesa's angle affect on alpha to preserve the original look of shadows, water, shields etc.
 	Q3Object_SetProperty(gQD3D_RendererObject, kQ3RendererPropertyAngleAffectsAlpha,
@@ -1753,83 +1740,12 @@ void QD3D_QDColorToColor(RGBColor *in, TQ3ColorRGB *out)
 #pragma mark -
 
 
-/********************* GET RAVE DRAW CONTEXT **********************/
-
-static void GetRAVEDrawContext(QD3DSetupOutputType *setupInfo)
-{
-TQ3ViewObject		theView;
-TQ3RendererObject	theRenderer;
-TQ3Status			status, viewStatus;
-TQAEngine	 		*engines[MAX_CONTEXTS];
-
-			/* GET RENDERER FROM VIEW */
-
-	theView = setupInfo->viewObject;
-	status = Q3View_GetRenderer(theView,&theRenderer);
-	if (status == kQ3Failure)
-		DoFatalAlert("GetRAVEDrawContext: Q3View_GetRenderer failed!");
-		
-	
-			/*************************/
-			/* GET THE RAVE CONTEXTS */
-			/*************************/
-			//
-			// 1. 	Call _StartRendering to make sure RAVE contexts have been created.
-			// 2.	Call _GetRAVEDrawContexts to retrieve the RAVE contexts & setup a callback.
-			// 3.	Call _Cancel & _EndRendering to finish it.
-			//			
-
-	viewStatus = Q3View_StartRendering(theView);								// enter render loop
-	
-	status = Q3InteractiveRenderer_GetRAVEDrawContexts(theRenderer,				// pass in renderer
-													 gContexts,					// fill this array with pointers to Draw Contexts
-													 engines,					// fill this array with pointers to Draw Engines
-													 &gNumContexts,				// recieves # draw contexts gotten
-													 nil);						// callback function to use when Contexts change
-	if (status == kQ3Failure)
-		DoFatalAlert("GetRAVEDrawContext: Q3InteractiveRenderer_GetRAVEDrawContexts failed!");
-	
-	if (viewStatus == kQ3Success)												// if we're in a render loop, we need to cancel it
-	{
-		status = Q3View_Cancel(theView);										// exit render loop
-		if (status == kQ3Failure)
-			DoFatalAlert("GetRAVEDrawContext: Q3View_Cancel failed!");
-		Q3View_EndRendering(theView);											// *must* call EndRendering after a Cancel
-	}
-
-			/* VERIFY IF WE GOT ANYTHING */
-			//
-			// NOTE: if the user window shades a window, then we might
-			//		get zero here.  An app should handle this gracefully,
-			//		but we are not really doing so here.  Here we just bail out
-			//		but we never attempt to get the draw contexts again.
-			//
-			
-//	if (gNumContexts == 0)
-//		DoFatalAlert("pGetRAVEDrawContext: No RAVE Contexts exist!");
-		
-		
-				/* CLEAN UP */
-				
-	Q3Object_Dispose(theRenderer);						
-
-//	gRaveDrawContext = gContexts[0];					// assume 1st context in array is the only one we want
-
-
-	
-			/* SET TEXTURE FILTER & BLEND MODE */
-					
-	QD3D_SetTextureFilter(kQATextureFilter_Best);	
-	QD3D_SetBlendingMode(kQABlend_Interpolate,0,0);
-}
-
 
 /********************** SET RAVE FOG ******************************/
 
 void QD3D_SetRaveFog(float fogStart, float fogEnd, float fogDensity, TQ3ColorARGB *fogColor, short fogMode)
 {
-	if (gRaveDrawContext == nil)
-		return;
+	GAME_ASSERT(gQD3D_DrawContext);
 		
 		/* SET FOG PARAMETERS */
 		
@@ -1882,11 +1798,9 @@ void QD3D_ReEnableFog(const QD3DSetupOutputType *setupInfo)
 
 void QD3D_SetTextureFilter(unsigned long textureMode)
 {
+	GAME_ASSERT(gQD3D_DrawContext);
 
-	if (!gRaveDrawContext)
-		return;
-
-	QASetInt(gRaveDrawContext, kQATag_TextureFilter, textureMode);
+	QASetInt(gQD3D_DrawContext, kQATag_TextureFilter, textureMode);
 }
 
 
@@ -1898,10 +1812,9 @@ void QD3D_SetTextureFilter(unsigned long textureMode)
 
 void QD3D_SetTriangleCacheMode(Boolean isOn)
 {
-	if (!gRaveDrawContext)
-		return;
+	GAME_ASSERT(gQD3D_DrawContext);
 
-		QASetInt(gRaveDrawContext, kQATag_ZSortedHint, isOn);
+		QASetInt(gQD3D_DrawContext, kQATag_ZSortedHint, isOn);
 }	
 				
 /************************ SET Z WRITE *****************************/
@@ -1911,10 +1824,10 @@ void QD3D_SetTriangleCacheMode(Boolean isOn)
 
 void QD3D_SetZWrite(Boolean isOn)
 {
-	if (!gRaveDrawContext)
+	if (!gQD3D_DrawContext)
 		return;
 
-	QASetInt(gRaveDrawContext, kQATag_ZBufferMask, isOn);
+	QASetInt(gQD3D_DrawContext, kQATag_ZBufferMask, isOn);
 }	
 
 
@@ -1926,11 +1839,10 @@ void QD3D_SetZWrite(Boolean isOn)
 
 void QD3D_SetTextureWrapMode(int mode)
 {
-	if (!gRaveDrawContext)
-		return;
+	GAME_ASSERT(gQD3D_DrawContext);
 
-	QASetInt(gRaveDrawContext, kQATagGL_TextureWrapU, mode);
-	QASetInt(gRaveDrawContext, kQATagGL_TextureWrapV, mode);
+	QASetInt(gQD3D_DrawContext, kQATagGL_TextureWrapU, mode);
+	QASetInt(gQD3D_DrawContext, kQATagGL_TextureWrapV, mode);
 }
 
 
@@ -1938,16 +1850,15 @@ void QD3D_SetTextureWrapMode(int mode)
 
 void QD3D_SetBlendingMode(int mode, int glSrc, int glDest)
 {
-	if (!gRaveDrawContext)
-		return;
+	GAME_ASSERT(gQD3D_DrawContext);
 
 		
-	QASetInt(gRaveDrawContext,kQATag_Blend, mode);
+	QASetInt(gQD3D_DrawContext,kQATag_Blend, mode);
 	
 	if (mode == kQABlend_OpenGL)
 	{
-		QASetInt(gRaveDrawContext,kQATagGL_BlendSrc, glSrc);
-		QASetInt(gRaveDrawContext,kQATagGL_BlendDst, glDest);
+		QASetInt(gQD3D_DrawContext,kQATagGL_BlendSrc, glSrc);
+		QASetInt(gQD3D_DrawContext,kQATagGL_BlendDst, glDest);
 	}
 }
 
