@@ -125,7 +125,6 @@ void QD3D_GWorldToMipMap(GWorldPtr pGWorld, TQ3Mipmap *mipmap, Boolean pointToGW
 void QD3D_SetRaveFog(float fogStart, float fogEnd, float fogDensity, TQ3ColorARGB *fogColor, short fogMode);
 void QD3D_DisableFog(const QD3DSetupOutputType *setupInfo);
 void QD3D_ReEnableFog(const QD3DSetupOutputType *setupInfo);
-void QD3D_SetTextureFilter(unsigned long textureMode);
 void QD3D_SetTriangleCacheMode(Boolean isOn);
 void QD3D_SetTextureWrapMode(int mode);
 void QD3D_SetBlendingMode(int mode, int glSrc, int glDest);
@@ -148,7 +147,6 @@ void ShowNormal(TQ3Point3D *where, TQ3Vector3D *normal);
 #define	kQABlend_OpenGL		0
 #define	kQABlend_Interpolate	0
 #define	kQAGL_Repeat		0
-#define	kQATag_TextureFilter	0
 #define	kQATag_ZSortedHint	0
 #define	kQATag_ZBufferMask	0
 #define	kQATagGL_TextureWrapU	0

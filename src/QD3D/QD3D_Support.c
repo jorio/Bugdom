@@ -233,11 +233,6 @@ QD3DSetupOutputType	*outputPtr;
 		QD3D_SetRaveFog(setupDefPtr->lights.fogStart,setupDefPtr->lights.fogEnd,setupDefPtr->lights.fogDensity,
 						&setupDefPtr->view.clearColor,setupDefPtr->lights.fogMode);
 	}
-	
-	/* SETUP OTHER DEFAULT RAVE STATES */
-			
-	QD3D_SetTextureFilter(kQATextureFilter_Best);		
-	
 }
 
 
@@ -313,8 +308,12 @@ TQ3Uns32	hints;
 	hints &= ~kQAContext_NoDither; 					// yes-dither
 	Q3InteractiveRenderer_SetRAVEContextHints(gQD3D_RendererObject, hints);	
 #endif
-	
-	Q3InteractiveRenderer_SetRAVETextureFilter(gQD3D_RendererObject,kQATextureFilter_Fast);	// texturing
+
+	// Source port addition: set bilinear texturing according to user preference
+	Q3InteractiveRenderer_SetRAVETextureFilter(
+		gQD3D_RendererObject,
+		gGamePrefs.textureFiltering ? kQATextureFilter_Best : kQATextureFilter_Fast);
+
 #if 0
 	Q3InteractiveRenderer_SetDoubleBufferBypass(gQD3D_RendererObject,kQ3True);
 #endif
@@ -1791,16 +1790,6 @@ void QD3D_ReEnableFog(const QD3DSetupOutputType *setupInfo)
 		fogData.color		= gFogColor;
 		
 		Q3FogStyle_Submit(&fogData, setupInfo->viewObject);
-}
-
-
-/************************ SET TEXTURE FILTER **************************/
-
-void QD3D_SetTextureFilter(unsigned long textureMode)
-{
-	GAME_ASSERT(gQD3D_DrawContext);
-
-	QASetInt(gQD3D_DrawContext, kQATag_TextureFilter, textureMode);
 }
 
 
