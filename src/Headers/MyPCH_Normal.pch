@@ -65,6 +65,7 @@ extern "C"
 #endif
 
 #include "globals.h"
+#include "structs.h"
 #include "mobjtypes.h"
 #include "objects.h"
 #include "window.h"

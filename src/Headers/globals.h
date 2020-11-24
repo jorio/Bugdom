@@ -8,29 +8,14 @@
 #define MYGLOBALS_H
 
 
-#include <math.h>
-
-
 			/* SOME FLOATING POINT HELPERS */
 			
-#define INFINITE	1e20
 #define EPS 1e-5					// a very small number which is useful for FP compares close to 0
-#define	IS_ZERO(_x)  (fabs(_x) < EPS)
 
 
-#define	MOVE_TO_FRONT		(WindowPtr)-1L
-#define	NIL_STRING			""
 #define	PICT_HEADER_SIZE	512
 #define REMOVE_ALL_EVENTS	 0
 
-
-
-		/* CLOSE ENOUGH TO ZERO */
-		//
-		// If float value is close enough to 0, then make it 0
-		//
-
-#define	CLOSE_ENOUGH_TO_ZERO(theFloat)	if (fabs(theFloat) < EPS) theFloat = 0;
 
 
 		/*******************/
@@ -59,19 +44,6 @@ int _i;																	\
 		array = nil;					\
 }
 
-/* UNIVERSAL PTR TYPE WHICH CAN READ/WRITE ANYTHING */
-
-typedef union {
-	long 	*L;
-	short 	*S;
-	Ptr 	B;
-} UniversalPtr;
-
-typedef union {
-	long 	**L;
-	short 	**S;
-	Handle 	B;
-} UniversalHandle;
 
 typedef	unsigned char u_char;
 typedef	unsigned long u_long;
@@ -80,26 +52,6 @@ typedef	unsigned short u_short;
 
 #define	PI					kQ3Pi	//3.141592654
 #define PI2					(2.0f*PI)
-
-
-#define	CHAR_RETURN			0x0d	/* ASCII code for Return key */
-#define CHAR_UP				0x1e
-#define CHAR_DOWN			0x1f
-#define	CHAR_LEFT			0x1c
-#define	CHAR_RIGHT			0x1d
-#define	CHAR_DELETE			0x08
-
-
-
-				
-#define	CHAR_RETURN			0x0d				// ASCII codes 
-#define CHAR_UP				0x1e
-#define CHAR_DOWN			0x1f
-#define	CHAR_LEFT			0x1c
-#define	CHAR_RIGHT			0x1d
-#define	CHAR_DELETE			0x08
-#define	CHAR_APOSTROPHE		0x27
-
 
 															
 							// COLLISION SIDE INFO
@@ -196,8 +148,6 @@ enum
 	STATUS_BIT_REVERSESPLINE =	(1<<22)		// if going reverse direction on spline
 };
 
-
-#include "structs.h"
 
 #endif
 

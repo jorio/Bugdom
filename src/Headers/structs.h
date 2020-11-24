@@ -6,8 +6,6 @@
 #define STRUCTS_H
 
 
-#include "globals.h"
-
 #define	MAX_ANIMS			25
 #define	MAX_KEYFRAMES		15
 #define	MAX_JOINTS			20
