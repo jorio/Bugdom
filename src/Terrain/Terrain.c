@@ -449,6 +449,10 @@ static const int				textureSize[NUM_LOD] = {SUPERTILE_TEXMAP_SIZE, SUPERTILE_TEX
 				
 				gTerrainTextureBuffers[i][j][lod] = blankTexHand;				// keep this pointer since we need to manually dispose of this later
 				
+						/* CLAMP TEXTURE FOR NICER SEAMS (SOURCE PORT FIX) */
+
+				Q3Shader_SetUBoundary(blankTexObject, kQ3ShaderUVBoundaryClamp);
+				Q3Shader_SetVBoundary(blankTexObject, kQ3ShaderUVBoundaryClamp);
 		
 						/* ADD TO ATTRIBUTE SET */
 							
