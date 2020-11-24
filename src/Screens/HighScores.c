@@ -684,7 +684,10 @@ const static float yCoords[NUM_SCORES][2] =
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= 1.0;
 	newObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-	MakeObjectKeepBackfaces(newObj);
+	// Source port removal: is there any reason why the game used to keep backfaces on this model?
+	// With Quesa this yields massive z-fighting on the sunflower leaves.
+	// TODO: Check how this model used to look on a real mac.
+	//MakeObjectKeepBackfaces(newObj);
 
 			/*************************/
 			/* CREATE THE BACKGROUND */
