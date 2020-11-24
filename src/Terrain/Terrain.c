@@ -2093,8 +2093,8 @@ TQ3ViewObject	view = setupInfo->viewObject;
 	
 			
 				/* DRAW STUFF */
-				
-	QD3D_SetTextureWrapMode(kQAGL_Clamp);								// clamp textures for nicer seams
+
+	//QD3D_SetTextureWrapMode(kQAGL_Clamp);								// clamp textures for nicer seams -- Source port removal: now set on the supertiles' TQ3SurfaceShaderObject
 	QD3D_SetTriangleCacheMode(false);
 	Q3Shader_Submit(setupInfo->nullShaderObject, view);					// use NULL shader to draw terrain
 	
@@ -2172,7 +2172,7 @@ use_1:
 			}
 		}		
 	}
-	QD3D_SetTextureWrapMode(kQAGL_Repeat);								// let textures wrap/repeat
+	//QD3D_SetTextureWrapMode(kQAGL_Repeat);							// let textures wrap/repeat -- Source port removal: now set on the supertiles' TQ3SurfaceShaderObject
 	Q3Shader_Submit(setupInfo->shaderObject, view);						// set the normal shader
 	QD3D_SetTriangleCacheMode(true);
 

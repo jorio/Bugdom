@@ -1820,21 +1820,6 @@ void QD3D_SetZWrite(Boolean isOn)
 }	
 
 
-
-/************************ SET TEXTURE WRAP MODE ************************/
-//
-// INPUT: mode = kQAGL_Clamp or kQAGL_Repeat
-//
-
-void QD3D_SetTextureWrapMode(int mode)
-{
-	GAME_ASSERT(gQD3D_DrawContext);
-
-	QASetInt(gQD3D_DrawContext, kQATagGL_TextureWrapU, mode);
-	QASetInt(gQD3D_DrawContext, kQATagGL_TextureWrapV, mode);
-}
-
-
 /************************ SET BLENDING MODE ************************/
 
 void QD3D_SetBlendingMode(int mode, int glSrc, int glDest)
