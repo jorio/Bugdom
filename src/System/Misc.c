@@ -154,81 +154,6 @@ u_long	start;
 }
 
 
-/***************** NUM TO HEX *****************/
-//
-// NumToHex - fixed length, returns a C string
-//
-
-unsigned char *NumToHex(unsigned short n)
-{
-static unsigned char format[] = "0xXXXX";				// Declare format static so we can return a pointer to it.
-char *conv = "0123456789ABCDEF";
-short i;
-
-	for (i = 0; i < 4; n >>= 4, ++i)
-			format[5 - i] = conv[n & 0xf];
-	return format;
-}
-
-
-/***************** NUM TO HEX 2 **************/
-//
-// NumToHex2 -- allows variable length, returns a ++PASCAL++ string.
-//
-
-unsigned char *NumToHex2(unsigned long n, short digits)
-{
-static unsigned char format[] = "$XXXXXXXX";				// Declare format static so we can return a pointer to it
-char *conv = "0123456789ABCDEF";
-short i;
-
-	if (digits > 8 || digits < 0)
-			digits = 8;
-	format[0] = digits + 1;							// adjust length byte of output string
-
-	for (i = 0; i < digits; n >>= 4, ++i)
-			format[(digits + 1) - i] = conv[n & 0xf];
-	return format;
-}
-
-
-/*************** NUM TO DECIMAL *****************/
-//
-// NumToDecimal --  returns a ++PASCAL++ string.
-//
-
-unsigned char *NumToDec(unsigned long n)
-{
-static unsigned char format[] = "XXXXXXXX";				// Declare format static so we can return a pointer to it
-char *conv = "0123456789";
-short		 i,digits;
-unsigned long temp;
-
-	if (n < 10)										// fix digits
-		digits = 1;
-	else if (n < 100)
-		digits = 2;
-	else if (n < 1000)
-		digits = 3;
-	else if (n < 10000)
-		digits = 4;
-	else if (n < 100000)
-		digits = 5;
-	else
-		digits = 6;
-
-	format[0] = digits;								// adjust length byte of output string
-
-	for (i = 0; i < digits; ++i)
-	{
-		temp = n/10;
-		format[digits-i] = conv[n-(temp*10)];
-		n = n/10;
-	}
-	return format;
-}
-
-
 #pragma mark -
 
 
@@ -308,52 +233,6 @@ void InitMyRandomSeed(void)
 }
 
 
-#if 0
-#pragma mark -
-
-
-/******************* FLOAT TO STRING *******************/
-
-void FloatToString(float num, Str255 string)
-{
-Str255	sf;
-long	i,f;
-
-	i = num;						// get integer part
-	
-	
-	f = (fabs(num)-fabs((float)i)) * 10000;		// reduce num to fraction only & move decimal --> 5 places	
-
-	if ((i==0) && (num < 0))		// special case if (-), but integer is 0
-	{
-		string[0] = 2;
-		string[1] = '-';
-		string[2] = '0';
-	}
-	else
-		NumToString(i,string);		// make integer into string
-		
-	NumToString(f,sf);				// make fraction into string
-	
-	string[++string[0]] = '.';		// add "." into string
-	
-	if (f >= 1)
-	{
-		if (f < 1000)
-			string[++string[0]] = '0';	// add 1000's zero
-		if (f < 100)
-			string[++string[0]] = '0';	// add 100's zero
-		if (f < 10)
-			string[++string[0]] = '0';	// add 10's zero
-	}
-	
-	for (i = 0; i < sf[0]; i++)
-	{
-		string[++string[0]] = sf[i+1];	// copy fraction into string
-	}
-}
-#endif
-
 #pragma mark -
 
 /****************** ALLOC HANDLE ********************/
@@ -385,30 +264,6 @@ Ptr	pr;
 
 
 #pragma mark -
-
-
-/***************** P STRING TO C ************************/
-
-void PStringToC(char *pString, char *cString)
-{
-Byte	pLength,i;
-
-	pLength = pString[0];
-	
-	for (i=0; i < pLength; i++)					// copy string
-		cString[i] = pString[i+1];
-		
-	cString[pLength] = 0x00;					// add null character to end of c string
-}
-
-
-/***************** DRAW C STRING ********************/
-
-void DrawCString(char *string)
-{
-	while(*string != 0x00)
-		DrawChar(*string++);
-}
 
 
 /******************* VERIFY SYSTEM ******************/
@@ -454,17 +309,6 @@ static UInt32 oldTick = 0;
 	n = 60 / fps;
 	while ((TickCount() - oldTick) < n);			// wait for n ticks
 	oldTick = TickCount();							// remember current time
-}
-
-
-/************* COPY PSTR **********************/
-
-void CopyPStr(ConstStr255Param	inSourceStr, StringPtr	outDestStr)
-{
-short	dataLen = inSourceStr[0] + 1;
-	
-	BlockMoveData(inSourceStr, outDestStr, dataLen);
-	outDestStr[0] = dataLen - 1;
 }
 
 
