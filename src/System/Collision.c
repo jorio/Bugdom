@@ -1992,7 +1992,9 @@ both:
 						
 		floorY 		= GetTerrainHeightAtCoord(newCoord->x, newCoord->z, FLOOR);
 		ceilingY 	= GetTerrainHeightAtCoord(newCoord->x, newCoord->z, CEILING);
-				
+
+
+		isOnGround = true;
 	}
 	else
 	{
@@ -2019,6 +2021,7 @@ both:
 				newDelta->y *= -.3f;
 				
 			distToCeiling = 0;
+			isOnGround = false;
 			
 			if (whatHappened == 0)
 			{
