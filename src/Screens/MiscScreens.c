@@ -48,6 +48,8 @@ static void MoveLogoBG(ObjNode *theNode);
 
 void DoPaused(void)
 {
+	Pomme_PauseAllChannels(true);
+
 	const SDL_MessageBoxButtonData buttons[] =
 	{
 		{ SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT|SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, 0, "Resume" },
@@ -83,6 +85,8 @@ void DoPaused(void)
 		default: // resume
 			break;
 	}
+
+	Pomme_PauseAllChannels(false);
 
 #if 0
 PicHandle	pict;
