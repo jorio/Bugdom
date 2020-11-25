@@ -357,13 +357,21 @@ typedef struct
 
 
 		/* PREFERENCES */
-		
+
+enum
+{
+	TERRAIN_TEXTURE_PREF_3_LOD_128 = 0,
+	TERRAIN_TEXTURE_PREF_1_LOD_128 = 1,
+	TERRAIN_TEXTURE_PREF_1_LOD_160 = 2,
+};
+
 typedef struct
 {
 	Boolean	easyMode;
 	Boolean	playerRelativeKeys;
 	Boolean	vsync;
 	Boolean textureFiltering;
+	Byte	terrainTextureDetail;
 	Byte	reserved[8];
 }PrefsType;
 

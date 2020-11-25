@@ -278,6 +278,7 @@ int			i;
 	gGamePrefs.playerRelativeKeys	= false;	
 	gGamePrefs.vsync				= true;
 	gGamePrefs.textureFiltering		= true;
+	gGamePrefs.terrainTextureDetail = TERRAIN_TEXTURE_PREF_1_LOD_160;
 				
 	LoadPrefs(&gGamePrefs);							// attempt to read from prefs file		
 	

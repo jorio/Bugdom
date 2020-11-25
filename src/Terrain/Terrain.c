@@ -25,6 +25,7 @@ extern	FenceDefType	*gFenceList;
 extern	long			gNumFences;
 extern	long		gMyStartX,gMyStartZ;
 extern	TQ3Point3D	gMostRecentCheckPointCoord;
+extern	PrefsType	gGamePrefs;
 
 /****************************/
 /*  PROTOTYPES             */
@@ -63,6 +64,8 @@ int				gSuperTileActiveRange;
 
 Boolean			gDoCeiling;
 Boolean			gDisableHiccupTimer = false;
+
+static int		gNumLODs = 0;
 
 static u_char	gHiccupEliminator = 0;
 
@@ -105,7 +108,7 @@ float		gUnitToPixel = 1.0f/(TERRAIN_POLYGON_SIZE/TERRAIN_HMTILE_SIZE);
 
 const float gOneOver_TERRAIN_POLYGON_SIZE = (1.0f / TERRAIN_POLYGON_SIZE);
 
-static Handle	gTerrainTextureBuffers[MAX_SUPERTILES][2][NUM_LOD];
+static Handle	gTerrainTextureBuffers[MAX_SUPERTILES][2][MAX_LODS];
 
 			/* TILE SPLITTING TABLES */
 			
@@ -335,7 +338,8 @@ static	TQ3Vector3D				faceNormals[NUM_TRIS_IN_SUPERTILE];
 static  TQ3ColorRGB				vertexColors[NUM_VERTICES_IN_SUPERTILE];
 static	TQ3Param2D				uvs[NUM_VERTICES_IN_SUPERTILE];
 TQ3Object						tempTriMesh;
-static const int				textureSize[NUM_LOD] = {SUPERTILE_TEXMAP_SIZE, SUPERTILE_TEXMAP_SIZE/2, SUPERTILE_TEXMAP_SIZE/4};
+int								textureSize[MAX_LODS] = { 0, 0, 0 };
+
 
 
 	maxSuperTilesNeeded = gSuperTileActiveRange*gSuperTileActiveRange*4;		// calc # supertiles we will need
@@ -344,6 +348,41 @@ static const int				textureSize[NUM_LOD] = {SUPERTILE_TEXMAP_SIZE, SUPERTILE_TEX
 	else
 		numLayers = 1;
 
+
+			/* PREPARE TEXTURE DETAIL CONSTANTS ACCORDING TO USER PREFS */
+
+	// Fill out gNumLODs and textureSize[] according to user pref for texture detail (source port addition)
+retryParseLODPref:
+	switch (gGamePrefs.terrainTextureDetail)
+	{
+	case TERRAIN_TEXTURE_PREF_3_LOD_128:
+		gNumLODs = 3;
+		textureSize[0] = SUPERTILE_TEXMAP_SIZE;
+		textureSize[1] = SUPERTILE_TEXMAP_SIZE / 2;
+		textureSize[2] = SUPERTILE_TEXMAP_SIZE / 4;
+		break;
+
+	case TERRAIN_TEXTURE_PREF_1_LOD_128:
+		gNumLODs = 1;
+		textureSize[0] = SUPERTILE_TEXMAP_SIZE;
+		break;
+
+	case TERRAIN_TEXTURE_PREF_1_LOD_160:
+		gNumLODs = 1;
+		textureSize[0] = TEMP_TEXTURE_BUFF_SIZE;
+		break;
+		
+	default:
+		DoAlert("Unknown terrain texture detail pref!");
+		ShowSystemErr_NonFatal(gGamePrefs.terrainTextureDetail);
+
+		// Set a sane fallback value and try again
+		gGamePrefs.terrainTextureDetail = TERRAIN_TEXTURE_PREF_3_LOD_128;
+		goto retryParseLODPref;
+	}
+
+
+	
 			/* INIT UV LIST */
 			
 	i = 0;	
@@ -420,7 +459,6 @@ static const int				textureSize[NUM_LOD] = {SUPERTILE_TEXMAP_SIZE, SUPERTILE_TEX
 			Handle					blankTexHand;
 			TQ3SurfaceShaderObject	blankTexObject;
 			TQ3AttributeSet			geometryAttribSet;
-			Byte					lod;
 			
 			
 				/*****************************/
@@ -430,11 +468,8 @@ static const int				textureSize[NUM_LOD] = {SUPERTILE_TEXMAP_SIZE, SUPERTILE_TEX
 				// Normally there are 3 LOD's, but if we are low on memory, then we'll skip LOD #0 which
 				// is the big one, and only do the other 2 smaller ones.
 				//
-				
-			lod = 0;
-
-				
-			for (; lod < NUM_LOD; lod++)
+			
+			for (int lod = 0; lod < gNumLODs; lod++)
 			{
 				size = textureSize[lod];										// get size of texture @ this lod
 				
@@ -550,10 +585,14 @@ int		numSuperTiles,i,j,lod,numLayers;
 		{
 				/* NUKE TEXTURES */
 				
-			for (lod = 0; lod < NUM_LOD; lod++)
+			for (lod = 0; lod < gNumLODs; lod++)
 			{
 				Q3Object_Dispose(gSuperTileMemoryList[i].texture[lod][j]);
-				DisposeHandle(gTerrainTextureBuffers[i][j][lod]);	
+				DisposeHandle(gTerrainTextureBuffers[i][j][lod]);
+
+				gSuperTileMemoryList[i].hasLOD[lod] = false;
+				gSuperTileMemoryList[i].texture[lod][j] = nil;
+				gTerrainTextureBuffers[i][j][lod] = nil;
 			}
 										
 						
@@ -655,7 +694,7 @@ static  TQ3Vector3D	tempVertexNormalList[NUM_VERTICES_IN_SUPERTILE];
 	else
 		superTilePtr->hiccupTimer = (gHiccupEliminator++ & 0x3) + 1;	// set hiccup timer to aleiviate hiccup caused by massive texture uploading
 	
-	for (j=0; j < NUM_LOD; j++)
+	for (j=0; j < MAX_LODS; j++)
 		superTilePtr->hasLOD[j] = false;						// LOD isnt built yet
 
 	superTilePtr->x = (startCol * TERRAIN_POLYGON_SIZE) + (TERRAIN_SUPERTILE_UNIT_SIZE/2);		// also remember world coords
@@ -953,8 +992,16 @@ static  TQ3Vector3D	tempVertexNormalList[NUM_VERTICES_IN_SUPERTILE];
 
 			status = Q3MemoryStorage_GetBuffer(mipmapStorage, &buffer, &validSize, &bufferSize);			// get ptr to the buffer
 			GAME_ASSERT(status);
-			
-			ShrinkSuperTileTextureMap(gTempTextureBuffer,(u_short *)buffer);								// shrink to 128x128
+
+			if (gGamePrefs.terrainTextureDetail == TERRAIN_TEXTURE_PREF_1_LOD_160)
+			{
+				BlockMove(gTempTextureBuffer, buffer, bufferSize);
+			}
+			else
+			{
+				ShrinkSuperTileTextureMap(gTempTextureBuffer,(u_short *)buffer);							// shrink to 128x128
+			}
+
 			superTilePtr->hasLOD[0] = true;
 		}
 			
@@ -1014,7 +1061,7 @@ int					size,numLayers;
 	if (superTilePtr->hasLOD[lod])									// see if already has LOD
 		return;
 		
-	if (lod >= NUM_LOD)
+	if (lod >= gNumLODs)
 		DoFatalAlert("BuildSuperTileLOD: lod overflow");
 		
 	superTilePtr->hasLOD[lod] = true;								// has LOD now
@@ -2127,6 +2174,10 @@ TQ3ViewObject	view = setupInfo->viewObject;
 				/* DRAW THE TRIMESH IN THIS SUPERTILE */
 				/**************************************/
 
+			if (gGamePrefs.terrainTextureDetail != TERRAIN_TEXTURE_PREF_3_LOD_128)
+			{
+				goto use_0;
+			}
 				
 					/* SEE WHICH LOD TO USE */
 
@@ -2137,6 +2188,7 @@ TQ3ViewObject	view = setupInfo->viewObject;
 						
 			if (dist < 1300.0f)
 			{
+use_0:
 				gSuperTileMemoryList[i].triMeshData[j].triMeshAttributeSet = gSuperTileMemoryList[i].texture[0][j];
 			}
 				
