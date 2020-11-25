@@ -654,7 +654,8 @@ static void MakeStaffFlame(ObjNode *theNode)
 int	i;
 float	fps = gFramesPerSecondFrac;
 
-	if ((theNode->ChainHead->WetTimer > 0.0f) || (theNode->Skeleton->AnimNum == KINGANT_ANIM_DEATH)) // dont update flame if wet
+	if ((theNode->ChainHead->WetTimer > 0.0f) ||	// dont update flame if wet
+		(theNode->Skeleton && theNode->Skeleton->AnimNum == KINGANT_ANIM_DEATH))
 	{
 		theNode->ParticleGroup = -1;				// invalidate particle group during absence
 	}
