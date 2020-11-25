@@ -960,7 +960,7 @@ u_long			lv2,rv2;
 void ToggleMusic(void)
 {
 	gMuteMusicFlag = !gMuteMusicFlag;
-//	SndPauseFilePlay(gMusicChannel);			// pause it
+	SndPauseFilePlay(gMusicChannel);			// pause it
 }
 
 
