@@ -976,13 +976,13 @@ void DoSoundMaintenance(void)
 	{	
 					/* SEE IF TOGGLE MUSIC */
 
-		if (GetNewKeyState(KEY_M))
+		if (GetNewKeyState(kKey_ToggleMusic))
 			ToggleMusic();			
 			
 		
 				/* SEE IF CHANGE VOLUME */
 
-		if (GetNewKeyState(KEY_PERIOD))
+		if (GetNewKeyState(kKey_RaiseVolume))
 		{
 			if (gCurrentSystemVolume < 0x100)
 			{
@@ -996,7 +996,7 @@ void DoSoundMaintenance(void)
 			SetDefaultOutputVolume((gCurrentSystemVolume<<16)|gCurrentSystemVolume); // set system volume
 		}
 		else
-		if (GetNewKeyState(KEY_COMMA))
+		if (GetNewKeyState(kKey_LowerVolume))
 		{
 			if (gCurrentSystemVolume > 0x000)
 			{
