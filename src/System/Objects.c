@@ -608,7 +608,7 @@ short			skelType;
 		{
 			if (!glow)
 			{
-				QD3D_SetBlendingMode(kQABlend_OpenGL,GL_SRC_ALPHA,GL_ONE);					
+				QD3D_SetAdditiveBlending(true);
 				glow = true;
 			}
 		}
@@ -616,7 +616,7 @@ short			skelType;
 		if (glow)
 		{
 			glow = false;
-			QD3D_SetBlendingMode(kQABlend_Interpolate,0,0);									
+			QD3D_SetAdditiveBlending(false);
 		}
 	
 		
@@ -688,7 +688,7 @@ next:
 		QD3D_ReEnableFog(setupInfo);
 
 	if (glow)
-		QD3D_SetBlendingMode(kQABlend_Interpolate,0,0);									
+		QD3D_SetAdditiveBlending(false);
 
 	SubmitReflectionMapQueue(setupInfo);						// draw anything in the reflection map queue
 }

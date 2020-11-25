@@ -9,6 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include <SDL_opengl.h>
+
 #include "3dmath.h"
 
 extern	WindowPtr			gCoverWindow;
@@ -1816,18 +1818,14 @@ void QD3D_SetZWrite(Boolean isOn)
 
 /************************ SET BLENDING MODE ************************/
 
-void QD3D_SetBlendingMode(int mode, int glSrc, int glDest)
+void QD3D_SetAdditiveBlending(Boolean enable)
 {
-	GAME_ASSERT(gQD3D_DrawContext);
-
-		
-	QASetInt(gQD3D_DrawContext,kQATag_Blend, mode);
+	static const TQ3BlendingStyleData normalStyle = { GL_ONE, GL_ONE_MINUS_SRC_ALPHA };
+	static const TQ3BlendingStyleData additiveStyle = { GL_ONE, GL_ONE };
 	
-	if (mode == kQABlend_OpenGL)
-	{
-		QASetInt(gQD3D_DrawContext,kQATagGL_BlendSrc, glSrc);
-		QASetInt(gQD3D_DrawContext,kQATagGL_BlendDst, glDest);
-	}
+	GAME_ASSERT(gQD3D_ViewObject);
+
+	Q3BlendingStyle_Submit(enable ? &additiveStyle : &normalStyle, gQD3D_ViewObject);
 }
 
 

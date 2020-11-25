@@ -56,9 +56,6 @@
 #include <QuesaLight.h>
 #include <QuesaTransform.h>
 
-#define GL_SRC_ALPHA			0x0302
-#define GL_ONE					1
-
 #ifdef __cplusplus
 extern "C"
 {

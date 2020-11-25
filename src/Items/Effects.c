@@ -611,7 +611,7 @@ TQ3ViewObject	view = setupInfo->viewObject;
 	Q3BackfacingStyle_Submit(kQ3BackfacingStyleBoth, view);
 	Q3Shader_Submit(setupInfo->nullShaderObject, view);							// use null shader
 	QD3D_SetZWrite(false);
-	QD3D_SetBlendingMode(kQABlend_OpenGL,GL_SRC_ALPHA,GL_ONE);					
+	QD3D_SetAdditiveBlending(true);
 	QD3D_SetTriangleCacheMode(false);
 
 
@@ -720,7 +720,7 @@ TQ3ViewObject	view = setupInfo->viewObject;
 	Q3Shader_Submit(setupInfo->shaderObject, view);								// restore shader
 	QD3D_SetZWrite(true);
 	QD3D_SetTriangleCacheMode(true);
-	QD3D_SetBlendingMode(kQABlend_Interpolate,0,0);									
+	QD3D_SetAdditiveBlending(false);
 	QD3D_ReEnableFog(setupInfo);
 	Q3BackfacingStyle_Submit(kQ3BackfacingStyleRemove, view);
 }

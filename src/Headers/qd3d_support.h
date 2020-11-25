@@ -126,7 +126,7 @@ void QD3D_SetRaveFog(float fogStart, float fogEnd, float fogDensity, TQ3ColorARG
 void QD3D_DisableFog(const QD3DSetupOutputType *setupInfo);
 void QD3D_ReEnableFog(const QD3DSetupOutputType *setupInfo);
 void QD3D_SetTriangleCacheMode(Boolean isOn);
-void QD3D_SetBlendingMode(int mode, int glSrc, int glDest);
+void QD3D_SetAdditiveBlending(Boolean isOn);
 void QD3D_SetZWrite(Boolean isOn);
 
 TQ3SurfaceShaderObject	QD3D_Data16ToTexture_Pixmap(Ptr data, short width, short height);
@@ -140,15 +140,10 @@ void ShowNormal(TQ3Point3D *where, TQ3Vector3D *normal);
 
 //======= temp
 
-#define	kQATagGL_BlendSrc	0
-#define	kQATagGL_BlendDst	0
-#define	kQABlend_OpenGL		0
-#define	kQABlend_Interpolate	0
 #define	kQATag_ZSortedHint	0
 #define	kQATag_ZBufferMask	0
 #define	kQATagGL_TextureWrapU	0
 #define	kQATagGL_TextureWrapV	0
-#define	kQATag_Blend	0
 
 
 
