@@ -185,6 +185,7 @@ void GLBackdrop::Render(
 
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
+	glDisable(GL_BLEND);
 
 	glViewport(0, 0, windowWidth, windowHeight);
 
