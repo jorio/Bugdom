@@ -427,6 +427,7 @@ float		fps = gFramesPerSecondFrac;
 		distZ = -TERRAIN_SUPERTILE_UNIT_SIZE;	
 	
 	from.x = gGameViewInfoPtr->currentCameraCoords.x+distX;
+	from.y = gGameViewInfoPtr->currentCameraCoords.y;  // from.y mustn't be NaN for matrix transform in cam swivel below -- actual Y computed later
 	from.z = gGameViewInfoPtr->currentCameraCoords.z+distZ;
 
 			
