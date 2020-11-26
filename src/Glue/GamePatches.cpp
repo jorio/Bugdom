@@ -15,6 +15,8 @@ extern "C"
 	extern PrefsType gGamePrefs;
 	extern short gPrefsFolderVRefNum;
 	extern long gPrefsFolderDirID;
+	extern long					gMouseDeltaX;
+	extern long					gMouseDeltaY;
 	Boolean gMouseButtonPressed = false;
 	char gTypedAsciiKey = '\0';
 }
@@ -175,6 +177,7 @@ void DoSDLMaintenance()
 	// Reset these on every new frame
 	gTypedAsciiKey = '\0';
 	gMouseButtonPressed = false;
+	//SDL_SetRelativeMouseMode(SDL_TRUE);
 
 	SDL_Event event;
 	while (SDL_PollEvent(&event))
@@ -208,6 +211,11 @@ void DoSDLMaintenance()
 
 			case SDL_MOUSEBUTTONDOWN:
 				gMouseButtonPressed = true;
+				break;
+
+			case SDL_MOUSEMOTION:
+				gMouseDeltaX = event.motion.xrel;
+				gMouseDeltaY = event.motion.yrel;
 				break;
 		}
 	}
