@@ -278,6 +278,7 @@ int			i;
 	gGamePrefs.playerRelativeKeys	= false;	
 	gGamePrefs.vsync				= true;
 	gGamePrefs.textureFiltering		= true;
+	gGamePrefs.mouseSensitivity		= 0.05f;
 	gGamePrefs.terrainTextureDetail = TERRAIN_TEXTURE_PREF_1_LOD_160;
 				
 	LoadPrefs(&gGamePrefs);							// attempt to read from prefs file		
@@ -373,6 +374,8 @@ static void PlayArea(void)
 {
 float killDelay = KILL_DELAY;						// time to wait after I'm dead before fading out
 float fps;
+
+	InstallMouseEventHandler();
 	
 	UpdateInput();
 	QD3D_CalcFramesPerSecond();						// prime this

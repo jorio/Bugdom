@@ -178,12 +178,14 @@ void DoSDLMaintenance()
 	// Reset these on every new frame
 	gTypedAsciiKey = '\0';
 	gMouseButtonPressed = false;
-	//SDL_SetRelativeMouseMode(SDL_TRUE);
+	gMouseDeltaX = 0;
+	gMouseDeltaY = 0;
 
 	Uint32 mouseButtons = SDL_GetMouseState(nullptr, nullptr);
 	gMouseButtonState[0] = mouseButtons & SDL_BUTTON(SDL_BUTTON_LEFT);
 	gMouseButtonState[1] = mouseButtons & SDL_BUTTON(SDL_BUTTON_RIGHT);
 	gMouseButtonState[2] = mouseButtons & SDL_BUTTON(SDL_BUTTON_MIDDLE);
+
 	SDL_Event event;
 	while (SDL_PollEvent(&event))
 	{
@@ -219,8 +221,8 @@ void DoSDLMaintenance()
 				break;
 
 			case SDL_MOUSEMOTION:
-				gMouseDeltaX = event.motion.xrel;
-				gMouseDeltaY = event.motion.yrel;
+				gMouseDeltaX += event.motion.xrel;
+				gMouseDeltaY += event.motion.yrel;
 				break;
 		}
 	}

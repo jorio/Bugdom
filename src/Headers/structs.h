@@ -371,6 +371,7 @@ typedef struct
 	Boolean	playerRelativeKeys;
 	Boolean	vsync;
 	Boolean textureFiltering;
+	float	mouseSensitivity;
 	Byte	terrainTextureDetail;
 	Byte	reserved[8];
 }PrefsType;

@@ -13,6 +13,7 @@
 /***************/
 
 extern	float	gFramesPerSecondFrac;
+extern	PrefsType	gGamePrefs;
 
 /**********************/
 /*     PROTOTYPES     */
@@ -56,7 +57,7 @@ static Boolean		gOldMouseButtonState[3] = {0,0,0};
 static KeyMapByteArray gKeyMap,gNewKeys,gOldKeys;
 
 
-Boolean	gPlayerUsingKeyControl 	= true;
+Boolean	gPlayerUsingKeyControl 	= false;
 
 Boolean	gKeyStates[255];
 
@@ -66,7 +67,7 @@ Boolean	gKeyStates[255];
 void InstallMouseEventHandler(void)
 {
 #if 1
-	SOURCE_PORT_MINOR_PLACEHOLDER();
+	SDL_SetRelativeMouseMode(SDL_TRUE);
 #else
 EventTypeSpec			mouseEvents[5] ={{kEventClassMouse, kEventMouseMoved},
 										{kEventClassMouse, kEventMouseDragged},
@@ -297,7 +298,7 @@ void RemoveMouseEventHandler(void)
 {
 
 #if 1
-	SOURCE_PORT_MINOR_PLACEHOLDER();
+	SDL_SetRelativeMouseMode(SDL_FALSE);
 #else
 	//	if the handler has been installed, remove it
 
@@ -515,8 +516,8 @@ void GetMouseDelta(float *dx, float *dy)
 		return;
 	}
 
-	*dx = gMouseDeltaX;
-	*dy = gMouseDeltaY;
+	*dx = 1600.0f * gFramesPerSecondFrac * gMouseDeltaX * gGamePrefs.mouseSensitivity;
+	*dy = 1600.0f * gFramesPerSecondFrac * gMouseDeltaY * gGamePrefs.mouseSensitivity;
 }
 
 
