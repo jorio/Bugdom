@@ -451,6 +451,10 @@ Boolean GetKeyState(unsigned short key)
 
 Boolean GetNewKeyState(unsigned short key)
 {
+	if (key == kKey_KickBoost   && gNewMouseButtonState[0]) return true;
+	if (key == kKey_Jump        && gNewMouseButtonState[1]) return true;
+	if (key == kKey_MorphPlayer && gNewMouseButtonState[2]) return true;
+
 	return ( ( gNewKeys[key>>3] >> (key & 7) ) & 1);
 }
 

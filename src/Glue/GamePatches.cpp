@@ -18,6 +18,7 @@ extern "C"
 	extern long					gMouseDeltaX;
 	extern long					gMouseDeltaY;
 	Boolean gMouseButtonPressed = false;
+	extern Boolean	gMouseButtonState[3];
 	char gTypedAsciiKey = '\0';
 }
 
@@ -179,6 +180,10 @@ void DoSDLMaintenance()
 	gMouseButtonPressed = false;
 	//SDL_SetRelativeMouseMode(SDL_TRUE);
 
+	Uint32 mouseButtons = SDL_GetMouseState(nullptr, nullptr);
+	gMouseButtonState[0] = mouseButtons & SDL_BUTTON(SDL_BUTTON_LEFT);
+	gMouseButtonState[1] = mouseButtons & SDL_BUTTON(SDL_BUTTON_RIGHT);
+	gMouseButtonState[2] = mouseButtons & SDL_BUTTON(SDL_BUTTON_MIDDLE);
 	SDL_Event event;
 	while (SDL_PollEvent(&event))
 	{
