@@ -434,7 +434,7 @@ float		fps = gFramesPerSecondFrac;
 	/* SEE IF USER ROTATE CAMERA */
 	/*****************************/
 
-	if (GetKeyState(KEY_COMMA))
+	if (GetKeyState(kKey_SwivelCameraLeft))
 	{
 		TQ3Matrix4x4	m;
 		float			r;
@@ -444,7 +444,7 @@ float		fps = gFramesPerSecondFrac;
 		Q3Point3D_Transform(&from, &m, &from);	
 	}	
 	else
-	if (GetKeyState(KEY_PERIOD))
+	if (GetKeyState(kKey_SwivelCameraRight))
 	{
 		TQ3Matrix4x4	m;
 		float			r;
