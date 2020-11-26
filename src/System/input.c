@@ -62,6 +62,17 @@ Boolean	gPlayerUsingKeyControl 	= false;
 Boolean	gKeyStates[255];
 
 
+
+
+void CaptureMouse(Boolean doCapture)
+{
+	SDL_SetRelativeMouseMode(doCapture ? SDL_TRUE : SDL_FALSE);
+	SDL_ShowCursor(doCapture ? 0 : 1);
+}
+
+
+
+
 /******************* INSTALL MOUSE EVENT HANDLER ***********************/
 
 void InstallMouseEventHandler(void)

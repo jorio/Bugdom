@@ -375,7 +375,7 @@ static void PlayArea(void)
 float killDelay = KILL_DELAY;						// time to wait after I'm dead before fading out
 float fps;
 
-	InstallMouseEventHandler();
+	CaptureMouse(true);
 	
 	UpdateInput();
 	QD3D_CalcFramesPerSecond();						// prime this
@@ -441,7 +441,11 @@ float fps;
 		if (gDemoMode != DEMO_MODE_RECORD)
 		{
 			if (GetNewKeyState(kKey_Pause))				// see if pause/abort
+			{
+				CaptureMouse(false);
 				DoPaused();
+				CaptureMouse(true);
+			}
 		}
 		
 			/* SEE IF GAME ENDED */				
@@ -476,6 +480,7 @@ float fps;
 		}	
 	}
 	
+	CaptureMouse(false);
 }
 
 

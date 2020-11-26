@@ -174,6 +174,8 @@ void InstallKeyboardEventHandler(void);
 
 void GetMouseDelta(float *dx, float *dy);
 
+void CaptureMouse(Boolean doCapture);
+
 
 
 #endif

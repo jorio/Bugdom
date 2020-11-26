@@ -692,8 +692,8 @@ do_std:
 		NavCompleteSave(&navReply, kNavTranslateInPlace);
 		NavDisposeReply(&navReply);
 	}
-#endif	
 	HideCursor();
+#endif
 }
 
 
