@@ -366,6 +366,19 @@ float	dx, dy;
 			gBallTimer -= .05f;						// lose a bit more ball time
 		}
 	}
+
+
+			/* PREVENT GDELTA FROM GOING OVERBOARD (SOURCE PORT FIX) */
+
+	float vl = FastVectorLength2D(gDelta.x, gDelta.z);
+	if (vl > PLAYER_MAX_SPEED_BALL)
+	{
+		printf("Regulate overkill gDelta x=%.0f z=%.0f\n", gDelta.x, gDelta.z);
+		TQ3Vector2D gd2;
+		FastNormalizeVector2D(gDelta.x, gDelta.z, &gd2);
+		gDelta.x = gd2.x * PLAYER_MAX_SPEED_BALL;
+		gDelta.z = gd2.y * PLAYER_MAX_SPEED_BALL;
+	}
 }
 
 
