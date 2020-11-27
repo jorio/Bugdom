@@ -6,8 +6,10 @@
 enum
 {
 	COLLISION_TYPE_OBJ,						// box
+#if 0	// Source port removal: Bugdom only ever uses OBJ collisions
 	COLLISION_TYPE_TRIANGLE,				// poly
 	COLLISION_TYPE_TILE
+#endif
 };
 							
 

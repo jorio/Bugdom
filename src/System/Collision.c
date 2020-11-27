@@ -382,11 +382,19 @@ again:
 		targetObj = gCollisionList[i].objectPtr;			// get ptr to target objnode
 		
 		baseBoxPtr = boxList + base;						// calc ptrs to base & target collision boxes
-		if (targetObj)
+
+		GAME_ASSERT(gCollisionList[i].type == COLLISION_TYPE_OBJ);	// In Bugdom there are only ever object collisions
+		GAME_ASSERT(targetObj);
+		
+		if (targetObj->CType == INVALID_NODE_FLAG)
 		{
-			targetBoxPtr = targetObj->CollisionBoxes;	
-			targetBoxPtr += target;
+			printf("Collided with dead object!\n");
+			continue;
 		}
+		
+		targetBoxPtr = targetObj->CollisionBoxes;	
+		targetBoxPtr += target;
+		
 		
 				/*********************************************/
 				/* HANDLE ANY SPECIAL OBJECT COLLISION TYPES */
@@ -408,6 +416,11 @@ again:
 					
 				maxOffsetX = gCoord.x - originalX;								// see if trigger caused a move
 				maxOffsetZ = gCoord.z - originalZ;				
+				if (targetObj && targetObj->CType == INVALID_NODE_FLAG)
+				{
+					printf("Target object died after trigger!\n");
+					continue;
+				}
 			}		
 		}
 
