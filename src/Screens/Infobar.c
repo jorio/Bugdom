@@ -466,6 +466,28 @@ Rect	r;
 
 #pragma mark -
 
+static void PreLoadNitroGauge(void)
+{
+	
+}
+
+static void DrawNitroGauge(int arcSpan)
+{
+	FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, ":Bugdom:Prefs2", &file);
+	iErr = FSpOpenDF(&file, fsRdPerm, &refNum);
+	if (iErr)
+		return(iErr);
+
+	count = sizeof(PrefsType);
+	iErr = FSRead(refNum, &count, (Ptr)prefBlock);		// read data from file
+	if (iErr)
+	{
+		FSClose(refNum);
+		return(iErr);
+	}
+}
+
+
 /****************** SHOW BALL TIMER AND INVENTORY ************************/
 //
 // Shows the ball timer composited with the inventory hands
@@ -530,7 +552,10 @@ Boolean	eraseBugStuff;
 				/**************/
 				/* DRAW METER */
 				/**************/
-				
+
+#if 1
+	DrawNitroGauge((int)(180.0f * gBallTimer));
+#else
 	r.left = TIMER_X - TIMER_WIDTH/2;
 	r.right = r.left + TIMER_WIDTH;
 	r.top = TIMER_Y;
@@ -557,6 +582,7 @@ Boolean	eraseBugStuff;
 		RGBForeColor(&fc);	
 		FrameArc(&r, -90 + n, 2);
 	}
+#endif
 
 	
 	
