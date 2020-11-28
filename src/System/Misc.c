@@ -126,6 +126,7 @@ Boolean beenHere = false;
     	if (gQD3DInitialized)
     		Q3Exit();
 
+		FreeInfobarArt();
     }
 
 

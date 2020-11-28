@@ -339,12 +339,6 @@ FSSpec	spec;
 		/*****************************************************/
 
 	gNumSprites = 0;
-
-
-			/* READ NUMBER SPRITES */
-			
-//	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Sprites:Numbers", &spec);
-//	LoadSpriteResources(&spec);
 		
 		
 			/* READ MISC SPRITES */
@@ -357,6 +351,17 @@ FSSpec	spec;
 	UseResFile(gTextureRezfile);
 
 	gInfobarArtLoaded = true;
+}
+
+
+void FreeInfobarArt(void)
+{
+	for (int i = 0; i < gNumSprites; i++)
+	{
+		DisposeGWorld(gSprites[i]);
+		gSprites[i] = nil;
+	}
+	gNumSprites = 0;
 }
 
 

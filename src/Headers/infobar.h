@@ -19,6 +19,7 @@ enum
 extern	void InitInfobar(void);
 extern	void InitInventoryForGame(void);
 void LoadInfobarArt(void);
+void FreeInfobarArt(void);
 void UpdateInfobar(void);
 void LoseHealth(float amount);
 void ProcessBallTimer(void);
