@@ -101,6 +101,8 @@ extern "C"
 #include "triggers.h"
 #include "pick.h"
 
+#include "tga.h"
+
 #ifdef __cplusplus
 };
 #endif

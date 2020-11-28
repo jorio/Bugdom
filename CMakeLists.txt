@@ -159,6 +159,7 @@ set(GAME_HEADERS
 	${GAME_SRCDIR}/Headers/triggers.h
 	${GAME_SRCDIR}/Headers/window.h
 	${GAME_SRCDIR}/Headers/worldmap.h
+	${GAME_SRCDIR}/Headers/tga.h
 )
 
 set(GAME_GLUE_SOURCES
@@ -168,6 +169,7 @@ set(GAME_GLUE_SOURCES
 	${GAME_SRCDIR}/Glue/GLBackdrop.cpp
 	${GAME_SRCDIR}/Glue/GLFunctions.cpp
 	${GAME_SRCDIR}/Glue/Q3FSSpecStorage.cpp
+	${GAME_SRCDIR}/Glue/TGA.c
 )
 
 set(GAME_ALL_SOURCES
