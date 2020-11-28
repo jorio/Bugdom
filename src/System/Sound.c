@@ -548,9 +548,9 @@ OSErr	iErr;
 	mySndCmd.param2 = (volume<<16) | volume;
 	SndDoImmediate(gMusicChannel, &mySndCmd);
 					
-	mySndCmd.cmd 		= rateMultiplierCmd;						// modify the rate to change the frequency 
+	mySndCmd.cmd 		= freqCmd;									// modify the rate to change the frequency 
 	mySndCmd.param1 	= 0;
-	mySndCmd.param2 	= NORMAL_CHANNEL_RATE;	
+	mySndCmd.param2 	= kMiddleC;
 	SndDoImmediate(gMusicChannel, &mySndCmd);
 					
 			
@@ -661,7 +661,7 @@ u_long					leftVol, rightVol;
 		return(-1);
 
 
-	theChan = PlayEffect_Parms(effectNum, leftVol, rightVol, NORMAL_CHANNEL_RATE);
+	theChan = PlayEffect_Parms(effectNum, leftVol, rightVol, kMiddleC);
 
 	if (theChan != -1)
 		gChannelInfo[theChan].volumeAdjust = 1.0;			// full volume adjust
@@ -798,7 +798,7 @@ TQ3Vector3D	v;
 
 short PlayEffect(short effectNum)
 {
-	return(PlayEffect_Parms(effectNum,FULL_CHANNEL_VOLUME,FULL_CHANNEL_VOLUME,NORMAL_CHANNEL_RATE));
+	return(PlayEffect_Parms(effectNum,FULL_CHANNEL_VOLUME,FULL_CHANNEL_VOLUME,kMiddleC));
 
 }
 
@@ -879,8 +879,8 @@ SoundHeaderPtr   sndPtr;
 	mySndCmd.param1 = 0;
 	mySndCmd.param2 = (rv2<<16) | lv2;
 	SndDoImmediate(chanPtr, &mySndCmd);
-
-	mySndCmd.cmd 		= rateMultiplierCmd;						// modify the rate to change the frequency 
+	
+	mySndCmd.cmd 		= freqCmd;									// set frequency 
 	mySndCmd.param1 	= 0;
 	mySndCmd.param2 	= rateMultiplier;	
 	SndDoImmediate(chanPtr, &mySndCmd);

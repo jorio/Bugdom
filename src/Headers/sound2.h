@@ -16,7 +16,6 @@ typedef struct
 #define		BASE_EFFECT_RESOURCE	10000
 
 #define		FULL_CHANNEL_VOLUME		kFullVolume
-#define		NORMAL_CHANNEL_RATE		0x10000
 
 
 enum
