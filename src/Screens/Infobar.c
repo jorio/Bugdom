@@ -57,8 +57,10 @@ static void ShowBossHealth(void);
 
 #define	TIMER_X				320
 #define	TIMER_Y				6
+#if 0	// Source port removal: nitro gauge (timer) dimensions now read in from template image
 #define	TIMER_WIDTH			90
 #define	TIMER_HEIGHT		83
+#endif
 
 #define	HEALTH_X			TIMER_X
 #define	HEALTH_Y			50
@@ -172,6 +174,9 @@ static Byte		gLeftArmType, gRightArmType;
 static Byte		gOldLeftArmType, gOldRightArmType;
 
 static Boolean	gBallIconIsDisplayed;
+
+static Rect		gNitroGaugeRect;
+static Handle	gNitroGaugeData		= nil;
 
 /**************** INIT INVENTORY FOR GAME *********************/
 
@@ -349,6 +354,21 @@ FSSpec	spec;
 	
 	UseResFile(gMainAppRezFile);
 	UseResFile(gTextureRezfile);
+	
+	
+			/* READ NITRO GAUGE TEMPLATE (SOURCE PORT ADDITION) */
+
+	GAME_ASSERT_MESSAGE(gNitroGaugeData == nil, "nitro gauge template already loaded");
+
+	TGAHeader tga;
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Sprites:NitroGauge.tga", &spec);
+	OSErr err = ReadTGA(&spec, &gNitroGaugeData, &tga);
+	GAME_ASSERT(err == noErr);
+	GAME_ASSERT(tga.imageType == TGA_IMAGETYPE_RAW_GRAYSCALE);
+	gNitroGaugeRect.left		= TIMER_X - tga.width/2;
+	gNitroGaugeRect.right		= gNitroGaugeRect.left + tga.width;
+	gNitroGaugeRect.top			= TIMER_Y;
+	gNitroGaugeRect.bottom		= gNitroGaugeRect.top + tga.height;
 
 	gInfobarArtLoaded = true;
 }
@@ -356,6 +376,12 @@ FSSpec	spec;
 
 void FreeInfobarArt(void)
 {
+	if (gNitroGaugeData != nil)
+	{
+		DisposeHandle(gNitroGaugeData);
+		gNitroGaugeData = nil;
+	}
+	
 	for (int i = 0; i < gNumSprites; i++)
 	{
 		DisposeGWorld(gSprites[i]);
@@ -471,25 +497,57 @@ Rect	r;
 
 #pragma mark -
 
-static void PreLoadNitroGauge(void)
-{
-	
-}
+/****************** DRAW NITRO GAUGE ************************/
+// Source port rewrite.
+// Original code used FrameArc(). We use a reference image instead.
+// arcSpan is in degrees. 0: gauge empty; 180: gauge full.
 
 static void DrawNitroGauge(int arcSpan)
 {
-	FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, ":Bugdom:Prefs2", &file);
-	iErr = FSpOpenDF(&file, fsRdPerm, &refNum);
-	if (iErr)
-		return(iErr);
+	Boolean wantMargin = (arcSpan < 178) && (arcSpan > 2);
 
-	count = sizeof(PrefsType);
-	iErr = FSRead(refNum, &count, (Ptr)prefBlock);		// read data from file
-	if (iErr)
+	uint8_t* templateRow = *gNitroGaugeData;
+	int nitroGaugeWidth = gNitroGaugeRect.right - gNitroGaugeRect.left;
+	int nitroGaugeHeight = gNitroGaugeRect.bottom - gNitroGaugeRect.top;
+	
+	PixMapHandle pm = GetGWorldPixMap(gCoverWindow);
+	int pmWidth		= (**pm).bounds.right - (**pm).bounds.left;
+
+	uint32_t* outRow = (uint32_t*) GetPixBaseAddr(pm);
+	outRow += gNitroGaugeRect.left;
+	outRow += gNitroGaugeRect.top * pmWidth;
+
+	for (int y = 0; y < nitroGaugeHeight; y++)
 	{
-		FSClose(refNum);
-		return(iErr);
+		for (int x = 0; x < nitroGaugeWidth; x++)
+		{
+			uint8_t t = templateRow[x];
+			if (t == 0)
+			{
+				continue;
+			}
+
+			t--;	// move value from [1;181] to [0;180] (zero is reserved for mask)
+			
+			if (t <= arcSpan)						// green (original: 0x0000,0xBDEF,0x294A)
+			{
+				outRow[x] = 0x00bd29FF; 			// (BGRA)
+			}
+			else if (wantMargin && t <= arcSpan+3)	// margin line (original: 0xffff,0xF7BD,0x0000)
+			{
+				outRow[x] = 0x00f7ffFF;				// (BGRA)
+			}
+			else									// black
+			{
+				outRow[x] = 0x000000FF;
+			}
+		}
+
+		templateRow += nitroGaugeWidth;
+		outRow += pmWidth;
 	}
+
+	DamagePortRegion(&gNitroGaugeRect);
 }
 
 
@@ -502,10 +560,6 @@ static void DrawNitroGauge(int arcSpan)
 
 static void ShowBallTimerAndInventory(Boolean ballTimerOnly)
 {
-Rect	r;
-RGBColor mc = {0x0000,48623,10570};
-RGBColor ec = {0x0000,0x0000,0x0000};
-RGBColor fc = {0xffff,63421,0x0000};
 int		n;
 Boolean	eraseBugStuff;
 
@@ -558,39 +612,9 @@ Boolean	eraseBugStuff;
 				/* DRAW METER */
 				/**************/
 
-#if 1
-	DrawNitroGauge((int)(180.0f * gBallTimer));
-#else
-	r.left = TIMER_X - TIMER_WIDTH/2;
-	r.right = r.left + TIMER_WIDTH;
-	r.top = TIMER_Y;
-	r.bottom = r.top+TIMER_HEIGHT;
-	
-	PenSize(6,6);
-	
-			/* FILLER */
-			
-	n = 180.0f * gBallTimer;
-	RGBForeColor(&mc);
-	FrameArc(&r, -90, n);
-	
-			/* CLEAR END */
-
-	RGBForeColor(&ec);
-	FrameArc(&r, -90 + n, 180 - n);
+	DrawNitroGauge(n);
 
 
-			/* MARGIN LINE */
-
-	if ((n < 178) && (n > 2))
-	{
-		RGBForeColor(&fc);	
-		FrameArc(&r, -90 + n, 2);
-	}
-#endif
-
-	
-	
 		/***********************/
 		/* DRAW HAND INVENTORY */
 		/***********************/
@@ -607,9 +631,7 @@ Boolean	eraseBugStuff;
 		DrawSprite(SPRITE_BALL, BALL_X, BALL_Y);
 		gBallIconIsDisplayed = true;
 	}
-	
-	PenNormal();
-	
+
 	gOldLeftArmType = gLeftArmType;
 	gOldRightArmType = gRightArmType;
 }
