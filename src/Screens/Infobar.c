@@ -175,8 +175,10 @@ static Byte		gOldLeftArmType, gOldRightArmType;
 
 static Boolean	gBallIconIsDisplayed;
 
+static const int		gNitroGaugeMaxSkipsPerRow = 8;
 static Rect		gNitroGaugeRect;
 static Handle	gNitroGaugeData		= nil;
+static Handle 	gNitroGaugeAlphaSkips	= nil;
 
 /**************** INIT INVENTORY FOR GAME *********************/
 
@@ -331,6 +333,55 @@ unsigned long	bits;
 
 /****************** LOAD INFOBAR ART ********************/
 
+static void LoadNitroGaugeTemplate(void)
+{
+	GAME_ASSERT_MESSAGE(gNitroGaugeData == nil, "nitro gauge template already loaded");
+
+	FSSpec spec;
+	TGAHeader tga;
+	OSErr err;
+	
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Sprites:NitroGauge.tga", &spec);
+	err = ReadTGA(&spec, &gNitroGaugeData, &tga);
+	GAME_ASSERT(err == noErr);
+	GAME_ASSERT(tga.imageType == TGA_IMAGETYPE_RAW_GRAYSCALE);
+	
+	gNitroGaugeRect.left		= TIMER_X - tga.width/2;
+	gNitroGaugeRect.right		= gNitroGaugeRect.left + tga.width;
+	gNitroGaugeRect.top			= TIMER_Y;
+	gNitroGaugeRect.bottom		= gNitroGaugeRect.top + tga.height;
+
+	// Prepare alpha skip table. The nitro gauge is mostly made up of transparent pixels,
+	// so this will speed up rendering a little.
+
+	gNitroGaugeAlphaSkips = NewHandleClear(tga.height * gNitroGaugeMaxSkipsPerRow * sizeof(int));
+	uint8_t*	grayscale	= (uint8_t*) *gNitroGaugeData;
+	int*		skipTable	= (int *) *gNitroGaugeAlphaSkips;
+	for (int y = 0; y < tga.height; y++)
+	{
+		int skipsThisRow = 0;
+		int* currentSkip = nil;
+		for (int x = 0; x < tga.width; x++)
+		{
+			if ((*grayscale++) != 0)
+			{
+				currentSkip = nil;
+			}
+			else if (!currentSkip)
+			{
+				GAME_ASSERT(skipsThisRow < gNitroGaugeMaxSkipsPerRow);
+				currentSkip = &skipTable[skipsThisRow++];
+				*currentSkip = 1;
+			}
+			else
+			{
+				(*currentSkip)++;
+			}
+		}
+		skipTable += gNitroGaugeMaxSkipsPerRow;
+	}
+}
+
 void LoadInfobarArt(void)
 {				
 FSSpec	spec;
@@ -358,17 +409,9 @@ FSSpec	spec;
 	
 			/* READ NITRO GAUGE TEMPLATE (SOURCE PORT ADDITION) */
 
-	GAME_ASSERT_MESSAGE(gNitroGaugeData == nil, "nitro gauge template already loaded");
+	LoadNitroGaugeTemplate();
 
-	TGAHeader tga;
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Sprites:NitroGauge.tga", &spec);
-	OSErr err = ReadTGA(&spec, &gNitroGaugeData, &tga);
-	GAME_ASSERT(err == noErr);
-	GAME_ASSERT(tga.imageType == TGA_IMAGETYPE_RAW_GRAYSCALE);
-	gNitroGaugeRect.left		= TIMER_X - tga.width/2;
-	gNitroGaugeRect.right		= gNitroGaugeRect.left + tga.width;
-	gNitroGaugeRect.top			= TIMER_Y;
-	gNitroGaugeRect.bottom		= gNitroGaugeRect.top + tga.height;
+
 
 	gInfobarArtLoaded = true;
 }
@@ -380,6 +423,12 @@ void FreeInfobarArt(void)
 	{
 		DisposeHandle(gNitroGaugeData);
 		gNitroGaugeData = nil;
+	}
+	
+	if (gNitroGaugeAlphaSkips != nil)
+	{
+		DisposeHandle(gNitroGaugeAlphaSkips);
+		gNitroGaugeAlphaSkips = nil;
 	}
 	
 	for (int i = 0; i < gNumSprites; i++)
@@ -517,13 +566,18 @@ static void DrawNitroGauge(int arcSpan)
 	outRow += gNitroGaugeRect.left;
 	outRow += gNitroGaugeRect.top * pmWidth;
 
+	int* skipTable = (int *) *gNitroGaugeAlphaSkips;
+
 	for (int y = 0; y < nitroGaugeHeight; y++)
 	{
-		for (int x = 0; x < nitroGaugeWidth; x++)
+		int* skipData = &skipTable[y * gNitroGaugeMaxSkipsPerRow];
+		int x = 0;
+		while (x < nitroGaugeWidth)
 		{
 			uint8_t t = templateRow[x];
 			if (t == 0)
 			{
+				x += (*skipData++);
 				continue;
 			}
 
@@ -541,6 +595,8 @@ static void DrawNitroGauge(int arcSpan)
 			{
 				outRow[x] = 0x000000FF;
 			}
+
+			x++;
 		}
 
 		templateRow += nitroGaugeWidth;
