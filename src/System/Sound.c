@@ -868,18 +868,17 @@ SoundHeaderPtr   sndPtr;
 	if (myErr)
 		return(-1);
 
-	mySndCmd.cmd = volumeCmd;										// set sound playback volume
-	mySndCmd.param1 = 0;
-	mySndCmd.param2 = (rv2<<16) | lv2;
-	myErr = SndDoImmediate(chanPtr, &mySndCmd);
-
-
 	mySndCmd.cmd = bufferCmd;										// make it play
 	mySndCmd.param1 = 0;
 	mySndCmd.ptr = ((Ptr)*gSndHandles[bankNum][soundNum])+gSndOffsets[bankNum][soundNum];	// pointer to SoundHeader
 	SndDoImmediate(chanPtr, &mySndCmd);
 	if (myErr)
 		return(-1);
+	
+	mySndCmd.cmd = volumeCmd;										// set sound playback volume
+	mySndCmd.param1 = 0;
+	mySndCmd.param2 = (rv2<<16) | lv2;
+	SndDoImmediate(chanPtr, &mySndCmd);
 
 	mySndCmd.cmd 		= rateMultiplierCmd;						// modify the rate to change the frequency 
 	mySndCmd.param1 	= 0;
