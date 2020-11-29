@@ -670,7 +670,7 @@ unsigned char		*buffer;
 TQ3Uns32			validSize,bufferSize;
 SuperTileMemoryType	*superTilePtr;
 TQ3ColorRGB			*vertexColorList;
-float				b;
+float				brightness;
 float				ambientR,ambientG,ambientB;
 float				fillR0,fillG0,fillB0;
 float				fillR1,fillG1,fillB1;
@@ -704,26 +704,33 @@ static  TQ3Vector3D	tempVertexNormalList[NUM_VERTICES_IN_SUPERTILE];
 
 			
 		/* GET LIGHT DATA */
-		
-	b = gGameViewInfoPtr->lightList.ambientBrightness;				// get ambient brightness
-	ambientR = gGameViewInfoPtr->lightList.ambientColor.r * b;		// calc ambient color
-	ambientG = gGameViewInfoPtr->lightList.ambientColor.g * b;		
-	ambientB = gGameViewInfoPtr->lightList.ambientColor.b * b;		
-		
-	b = gGameViewInfoPtr->lightList.fillBrightness[0];				// get fill brightness 0
-	fillR0 = gGameViewInfoPtr->lightList.fillColor[0].r * b;		// calc ambient color
-	fillG0 = gGameViewInfoPtr->lightList.fillColor[0].g * b;		
-	fillB0 = gGameViewInfoPtr->lightList.fillColor[0].b * b;		
+
+	brightness = gGameViewInfoPtr->lightList.ambientBrightness;				// get ambient brightness
+	ambientR = gGameViewInfoPtr->lightList.ambientColor.r * brightness;		// calc ambient color
+	ambientG = gGameViewInfoPtr->lightList.ambientColor.g * brightness;		
+	ambientB = gGameViewInfoPtr->lightList.ambientColor.b * brightness;
+
+	brightness = gGameViewInfoPtr->lightList.fillBrightness[0];				// get fill brightness 0
+	fillR0 = gGameViewInfoPtr->lightList.fillColor[0].r * brightness;		// calc ambient color
+	fillG0 = gGameViewInfoPtr->lightList.fillColor[0].g * brightness;		
+	fillB0 = gGameViewInfoPtr->lightList.fillColor[0].b * brightness;		
 	fillDir0 = &gGameViewInfoPtr->lightList.fillDirection[0];		// get fill direction
 
 	numFillLights = gGameViewInfoPtr->lightList.numFillLights;
 	if (numFillLights > 1)
 	{
-		b = gGameViewInfoPtr->lightList.fillBrightness[1];			// get fill brightness 1
-		fillR1 = gGameViewInfoPtr->lightList.fillColor[1].r * b;	// calc ambient color
-		fillG1 = gGameViewInfoPtr->lightList.fillColor[1].g * b;		
-		fillB1 = gGameViewInfoPtr->lightList.fillColor[1].b * b;		
+		brightness = gGameViewInfoPtr->lightList.fillBrightness[1];			// get fill brightness 1
+		fillR1 = gGameViewInfoPtr->lightList.fillColor[1].r * brightness;	// calc ambient color
+		fillG1 = gGameViewInfoPtr->lightList.fillColor[1].g * brightness;		
+		fillB1 = gGameViewInfoPtr->lightList.fillColor[1].b * brightness;		
 		fillDir1 = &gGameViewInfoPtr->lightList.fillDirection[1];
+	}
+	else
+	{
+		fillR1 = 0;
+		fillG1 = 0;
+		fillB1 = 0;
+		fillDir1 = nil;
 	}
 
 		/***********************************************************/
