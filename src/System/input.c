@@ -280,10 +280,15 @@ short   i;
 		for (i = 0; i < 16; i++)
 			gKeyMap[i] = 0;
 	}
-	
 
-	
 
+	// Assume player using key control if any arrow keys are pressed,
+	// otherwise assume mouse movement 
+	gPlayerUsingKeyControl =
+			   GetKeyState(kKey_Forward)
+			|| GetKeyState(kKey_Backward)
+			|| GetKeyState(kKey_Left)
+			|| GetKeyState(kKey_Right);
 }
 
 
