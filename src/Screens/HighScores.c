@@ -442,7 +442,7 @@ EventRecord	theEvent;
 				
 		QD3D_DrawScene(gGameViewInfoPtr,DrawObjects);	
 		DoSDLMaintenance();
-	}while(!GetNewKeyState(KEY_RETURN));
+	} while (!GetNewKeyState(kVK_Return));
 
 			/* CLEANUP */
 
@@ -590,7 +590,7 @@ char	c;
 				case	'?':
 						gNewObjectDefinition.type = SCORES_ObjType_Question;
 						break;
-				case	CHAR_APOSTROPHE:
+				case	'\'':
 						gNewObjectDefinition.type = SCORES_ObjType_Apostrophe;
 						break;
 				case	'.':

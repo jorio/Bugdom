@@ -284,7 +284,7 @@ static void PlayGame(void)
 
 	UpdateInput();
 	
-	if (GetKeyState(KEY_F10))						// see if do level cheat
+	if (GetKeyState(kVK_F10))						// see if do level cheat
 		DoLevelCheatDialog();
 	else
 	if (!gRestoringSavedGame)							// otherwise start @ 0 if not restoring
@@ -709,30 +709,30 @@ static void DoDeathReset(void)
 static void CheckForCheats(void)
 {
 #if __APPLE__
-	if (GetKeyState(KEY_APPLE))				// must hold down the help key
+	if (GetKeyState(kVK_Command))			// must hold down the help key
 #else
 	if (GetKeyState(kVK_Control))			// must hold down the help key
 #endif
 	{
-		if (GetNewKeyState(KEY_F1))			// win the level!
+		if (GetNewKeyState(kVK_F1))			// win the level!
 			gAreaCompleted = true;
 			
-		if (GetNewKeyState(KEY_F2))			// win the game!
+		if (GetNewKeyState(kVK_F2))			// win the game!
 		{
 			gGameOverFlag = true;
 			gWonGameFlag = true;
 		}
 		
-		if (GetNewKeyState(KEY_F3))			// get full health
+		if (GetNewKeyState(kVK_F3))			// get full health
 			GetHealth(1.0);							
 			
-		if (GetNewKeyState(KEY_F4))			// get full ball-time
+		if (GetNewKeyState(kVK_F4))			// get full ball-time
 		{
 			gBallTimer = 1.0f;
 			gInfobarUpdateBits |= UPDATE_TIMER;	
 		}	
 		
-		if (GetNewKeyState(KEY_F5))			// get full inventory
+		if (GetNewKeyState(kVK_F5))			// get full inventory
 		{
 			GetMoney();
 			GetKey(0);
@@ -740,15 +740,14 @@ static void CheckForCheats(void)
 			GetKey(2);
 			GetKey(3);
 			GetKey(4);
-		}	
-		
-		if (GetNewKeyState(KEY_F9))
+		}
+
+		if (GetNewKeyState(kVK_F6))			// see if liquid invincible
+			gLiquidCheat = !gLiquidCheat;
+
+		if (GetNewKeyState(kVK_F9))
 			gShowDebug = !gShowDebug;
 
-
-		if (GetNewKeyState(KEY_F6))			// see if liquid invincible
-			gLiquidCheat = !gLiquidCheat;
-		
 	}
 }
 
