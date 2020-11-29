@@ -586,7 +586,7 @@ long				count;
 				/* WRITE DATA */
 
 	count = sizeof(PrefsType);
-	FSWrite(refNum, &count, prefs);	
+	FSWrite(refNum, &count, (Ptr) prefs);
 	FSClose(refNum);
 }
 
@@ -955,7 +955,7 @@ short					**xlateTableHand,*xlateTbl;
 																					// copy rez into 2D array
 	{
 		BYTESWAP_SCALAR_ARRAY_HANDLE_2(u_short, gTerrainTileDepth*gTerrainTileWidth, hand);
-		u_short	*src = *hand;
+		u_short	*src = (u_short*) *hand;
 		for (row = 0; row < gTerrainTileDepth; row++)
 			for (col = 0; col < gTerrainTileWidth; col++)
 			{
@@ -980,7 +980,7 @@ short					**xlateTableHand,*xlateTbl;
 																						// copy rez into 2D array
 		{
 			BYTESWAP_SCALAR_ARRAY_HANDLE_2(u_short, gTerrainTileDepth*gTerrainTileWidth, hand);
-			u_short	*src = *hand;
+			u_short	*src = (u_short*) *hand;
 			for (row = 0; row < gTerrainTileDepth; row++)
 				for (col = 0; col < gTerrainTileWidth; col++)
 				{
@@ -1033,7 +1033,7 @@ short					**xlateTableHand,*xlateTbl;
 		GAME_ASSERT(hand);
 		{
 			BYTESWAP_SCALAR_ARRAY_HANDLE_2(float, (gTerrainTileDepth+1)*(gTerrainTileWidth+1), hand);
-			float* src = *hand;
+			float* src = (float*) *hand;
 			for (row = 0; row <= gTerrainTileDepth; row++)
 				for (col = 0; col <= gTerrainTileWidth; col++)
 					gMapYCoords[row][col].layerY[i] = *src++ * yScale;
@@ -1054,7 +1054,7 @@ short					**xlateTableHand,*xlateTbl;
 		GAME_ASSERT(hand);
 		{
 			BYTESWAP_SCALAR_ARRAY_HANDLE_2(u_short, (gTerrainTileDepth+1)*(gTerrainTileWidth+1), hand);
-			u_short* src = *hand;
+			u_short* src = (u_short*) *hand;
 			for (row = 0; row <= gTerrainTileDepth; row++)
 				for (col = 0; col <= gTerrainTileWidth; col++)
 					gVertexColors[i][row][col] = *src++;
