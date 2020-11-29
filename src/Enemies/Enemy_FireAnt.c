@@ -887,7 +887,6 @@ new_pgroup:
 		for (i = 0; i < 4; i++)
 		{
 			TQ3Vector3D	dir2,delta;
-			TQ3Matrix4x4 m;
 			float		temp;
 
 			temp = 400.0f + RandomFloat()*200.0f;

@@ -293,7 +293,6 @@ SkeletonObjDataType		*currentSkelObjData = gCurrentSkelObjData;
 const SkeletonDefType	*currentSkeleton = gCurrentSkeleton;
 const float				*jointMat;
 float					*matPtr;
-float					x,y,z;
 DecomposedPointType		*decomposedPointList = currentSkeleton->decomposedPointList;
 TQ3TriMeshData			*localTriMeshes = &gLocalTriMeshesOfSkelType[skelType][0];
 
@@ -339,6 +338,8 @@ TQ3TriMeshData			*localTriMeshes = &gLocalTriMeshesOfSkelType[skelType][0];
 				
 	for (p=0; p < numNormals; p++)
 	{
+		float	x,y,z;
+
 		i = bonePtr->normalList[p];												// get index to normal in gDecomposedNormalsList
 		
 		x = currentSkeleton->decomposedNormalsList[i].x;						// get xyz of normal
