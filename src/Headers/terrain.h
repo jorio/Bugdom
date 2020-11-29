@@ -117,9 +117,6 @@ enum
 #define	MAX_SUPERTILES_WIDE		(MAX_TERRAIN_WIDTH/SUPERTILE_SIZE)
 #define	MAX_SUPERTILES_DEEP		(MAX_TERRAIN_DEPTH/SUPERTILE_SIZE)
 
-
-#define	MAX_HEIGHTMAP_TILES		300												// 15x20 tiles per page
-
 #define MAX_LODS				3
 
 //=====================================================================

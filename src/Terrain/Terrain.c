@@ -82,7 +82,6 @@ long	gTerrainTileWidth,gTerrainTileDepth;			// width & depth of terrain in tiles
 long	gTerrainUnitWidth,gTerrainUnitDepth;			// width & depth of terrain in world units (see TERRAIN_POLYGON_SIZE)
 
 long	gNumTerrainTextureTiles = 0;
-Ptr		gTerrainHeightMapPtrs[MAX_HEIGHTMAP_TILES];
 
 long	gNumSuperTilesDeep,gNumSuperTilesWide;	  		// dimensions of terrain in terms of supertiles
 long	gCurrentSuperTileRow,gCurrentSuperTileCol;
