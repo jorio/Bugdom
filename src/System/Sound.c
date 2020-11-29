@@ -84,8 +84,6 @@ Boolean						gMuteMusicFlag = false;
 static Ptr					gMusicBuffer = nil;					// buffers to use for streaming play
 static short				gCurrentSong = -1;
 
-int							gNumLoopingEffects;
-
 
 		/*****************/
 		/* EFFECTS TABLE */
@@ -188,32 +186,6 @@ short		i;
 		iErr = SndNewChannel(&gSndChannel[gMaxChannels],sampledSynth,initMono+initNoInterp,/*NewSndCallBackUPP(CallBackFn)*/nil);
 		if (iErr)												// if err, stop allocating channels
 			break;
-
-		gChannelInfo[gMaxChannels].isLooping = false;
-					
-#if 0  // Source port removal
-			/* FOR POST- SM 3.6.5 DO THIS! */
-	
-		mySndCmd.cmd = soundCmd;	
-		mySndCmd.param1 = 0;
-		mySndCmd.param2 = (long)&sndHdr;
-		if ((iErr = SndDoImmediate(gSndChannel[gMaxChannels], &mySndCmd)) != noErr)
-		{
-			DoAlert("InitSoundTools: SndDoImmediate failed!");
-			ShowSystemErr_NonFatal(iErr);
-		}
-		
-		
-		mySndCmd.cmd = reInitCmd;	
-		mySndCmd.param1 = 0;
-		mySndCmd.param2 = initNoInterp|initStereo;
-		if ((iErr = SndDoImmediate(gSndChannel[gMaxChannels], &mySndCmd)) != noErr)
-		{
-			DoAlert("InitSoundTools: SndDoImmediate failed 2!");
-			ShowSystemErr_NonFatal(iErr);
-		}
-#endif
-			
 	}
 	
 
@@ -386,12 +358,6 @@ short		c = *channelNum;
 	}
 	
 	*channelNum = -1;
-	
-	if (gChannelInfo[c].isLooping)
-	{
-		gNumLoopingEffects--;
-		gChannelInfo[c].isLooping = false;
-	}
 	
 	gChannelInfo[c].effectNum = -1;	
 	
@@ -741,7 +707,9 @@ short			c;
 
 			/* SEE IF SOUND HAS COMPLETED */
 			
+#if 0	// Source port removal
 	if (!gChannelInfo[c].isLooping)										// loopers wont complete, duh.
+#endif
 	{
 		SndChannelStatus(gSndChannel[c],sizeof(SCStatus),&theStatus);	// get channel info
 		if (!theStatus.scChannelBusy)									// see if channel not busy
@@ -818,13 +786,6 @@ short			theChan;
 Byte			bankNum,soundNum;
 OSErr			myErr;
 u_long			lv2,rv2;
-static UInt32          loopStart, loopEnd;
-#if 1
-SOURCE_PORT_MINOR_PLACEHOLDER();
-#else
-SoundHeaderPtr   sndPtr;
-#endif
-
 
 	
 			/* GET BANK & SOUND #'S FROM TABLE */
@@ -885,31 +846,6 @@ SoundHeaderPtr   sndPtr;
 	mySndCmd.param2 	= rateMultiplier;	
 	SndDoImmediate(chanPtr, &mySndCmd);
 
-    
-    
-    		/* SEE IF THIS IS A LOOPING EFFECT */    		
-    
-#if 1
-	SOURCE_PORT_MINOR_PLACEHOLDER();
-#else
-	
-    sndPtr = (SoundHeaderPtr)(((Ptr)*gSndHandles[bankNum][soundNum])+gSndOffsets[bankNum][soundNum]);
-    loopStart = sndPtr->loopStart;
-    loopEnd = sndPtr->loopEnd;
-    if ((loopStart + 1) < loopEnd)
-    {
-    	mySndCmd.cmd = callBackCmd;										// let us know when the buffer is done playing
-    	mySndCmd.param1 = 0;
-    	mySndCmd.ptr = ((Ptr)*gSndHandles[bankNum][soundNum])+gSndOffsets[bankNum][soundNum];	// pointer to SoundHeader
-    	SndDoCommand(chanPtr, &mySndCmd, true);
-    	
-    	gChannelInfo[theChan].isLooping = true;
-    	gNumLoopingEffects++;
-	}
-	else
-#endif
-		gChannelInfo[theChan].isLooping = false;
-		
 
 			/* SET MY INFO */
 			

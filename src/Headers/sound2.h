@@ -7,11 +7,7 @@ typedef struct
 	short	effectNum;
 	float	volumeAdjust;
 	float	leftVolume, rightVolume;
-	Boolean	isLooping;
 }ChannelInfoType;
-
-#define		USE_SOUNDSPROCKET		0
-
 
 #define		BASE_EFFECT_RESOURCE	10000
 
