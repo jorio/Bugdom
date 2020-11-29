@@ -16,6 +16,7 @@ extern "C"
 	extern long gPrefsFolderDirID;
 	extern long					gMouseDeltaX;
 	extern long					gMouseDeltaY;
+	extern long					gEatMouse;
 	Boolean gMouseButtonPressed = false;
 	extern Boolean	gMouseButtonState[3];
 	char gTypedAsciiKey = '\0';
@@ -210,5 +211,16 @@ void DoSDLMaintenance()
 				gMouseDeltaY += event.motion.yrel;
 				break;
 		}
+	}
+	
+	if (gEatMouse)
+	{
+		gEatMouse--;
+		gMouseDeltaX = 0;
+		gMouseDeltaY = 0;
+		gMouseButtonPressed = false;
+		gMouseButtonState[0] = false;
+		gMouseButtonState[1] = false;
+		gMouseButtonState[2] = false;
 	}
 }

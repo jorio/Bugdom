@@ -32,6 +32,7 @@ static Boolean WeAreFrontProcess(void);
 
 long					gMouseDeltaX = 0;
 long					gMouseDeltaY = 0;
+long					gEatMouse = 0;
 
 
 Boolean		gMouseButtonState[3] = {0,0,0};
@@ -53,6 +54,7 @@ void CaptureMouse(Boolean doCapture)
 {
 	SDL_SetRelativeMouseMode(doCapture ? SDL_TRUE : SDL_FALSE);
 	SDL_ShowCursor(doCapture ? 0 : 1);
+	gEatMouse = 5; // eat mouse events for a couple frames
 }
 
 

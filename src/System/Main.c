@@ -757,6 +757,8 @@ static void CheckForCheats(void)
 		if (GetNewKeyState(kVK_F9))
 			gShowDebug = !gShowDebug;
 
+		if (GetNewKeyState(kVK_F10))
+			CaptureMouse(false);
 	}
 }
 
