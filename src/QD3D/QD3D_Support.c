@@ -1396,7 +1396,7 @@ long	size = width * height * 2;
 	// File.c byteswaps the entire Timg, so they're little-endian now.
 	mipmap->byteOrder 		= kQ3EndianLittle;
 
-	mipmap->reserved 		= nil;
+	mipmap->reserved 			= 0;
 	mipmap->mipmaps[0].width 	= width;
 	mipmap->mipmaps[0].height 	= height;
 	mipmap->mipmaps[0].rowBytes = width*2;

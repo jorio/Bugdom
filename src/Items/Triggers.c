@@ -277,7 +277,7 @@ Boolean			canBlow;
 	gNewObjectDefinition.scale 		= 1.7;
 	newObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
 	if (newObj == nil)
-		return(nil);
+		return false;
 
 	newObj->TerrainItemPtr = itemPtr;						// keep ptr to item list
 	
@@ -644,7 +644,7 @@ u_long			isPlunged;
 	gNewObjectDefinition.scale 		= DETONATOR_SCALE;
 	boxObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
 	if (boxObj == nil)
-		return(nil);
+		return false;
 	
 	boxObj->CType 			= CTYPE_MISC|CTYPE_BLOCKCAMERA;
 	boxObj->CBits			= CBITS_ALLSOLID;
@@ -669,7 +669,7 @@ u_long			isPlunged;
 	gNewObjectDefinition.moveCall 	= nil;
 	plungerObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
 	if (plungerObj == nil)
-		return(nil);
+		return false;
 
 	plungerObj->TerrainItemPtr = itemPtr;					// keep ptr to item list
 	
@@ -1353,7 +1353,7 @@ u_long			isOpen;
 	gNewObjectDefinition.scale 		= .25;
 	newObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
 	if (newObj == nil)
-		return(nil);
+		return false;
 
 	newObj->TerrainItemPtr = itemPtr;					// keep ptr to item list
 	
