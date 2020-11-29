@@ -33,7 +33,7 @@ static void DrawPICTIntoMipmap(PicHandle pict,long width, long height, TQ3Mipmap
 static void Data16ToMipmap(Ptr data, short width, short height, TQ3Mipmap *mipmap);
 static void Data16ToPixmap(Ptr data, short width, short height, TQ3StoragePixmap *pixmap);
 static void DrawNormal(TQ3ViewObject view);
-static void QASetInt(TQADrawContext	*, int, int);
+static void QASetInt(TQ3DrawContextObject, int, int);
 
 
 /****************************/
@@ -1862,7 +1862,7 @@ TQ3LineData	line;
 
 #pragma mark -
 
-static void QASetInt(TQADrawContext	*a, int b, int c)
+static void QASetInt(TQ3DrawContextObject	a, int b, int c)
 {
 #pragma unused (a,b,c)
 
