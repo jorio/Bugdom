@@ -294,6 +294,10 @@ FencePointType			*nubs;
 			shader = QD3D_GetTextureMap(2000+i, nil, true);							// create shader object
 			GAME_ASSERT(shader);
 
+			// Source port addition: clamp texture vertically to avoid ugly line at top
+			Q3Shader_SetUBoundary(shader, kQ3ShaderUVBoundaryWrap);
+			Q3Shader_SetVBoundary(shader, kQ3ShaderUVBoundaryClamp);
+
 			gFenceShaderAttribs[i] = Q3AttributeSet_New();							// create new attribute set
 			GAME_ASSERT(gFenceShaderAttribs[i]);
 
