@@ -836,7 +836,7 @@ static void UpdateFireAnt(ObjNode *theNode, Boolean updateFlame)
 void FireAntBreathFire(ObjNode *theNode)
 {
 TQ3Matrix4x4	m;
-static const TQ3Point3D off[2] = {0,-8,-25, 0,10,0};				// offset to mouth & center of head
+static const TQ3Point3D off[2] = { {0,-8,-25}, {0,10,0} };			// offset to mouth & center of head
 TQ3Point3D	p[2];
 float		dx,dy,dz;
 TQ3Vector3D	dir;

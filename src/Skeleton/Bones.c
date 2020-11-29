@@ -40,7 +40,7 @@ SkeletonObjDataType	*gCurrentSkelObjData;
 
 static	TQ3Matrix4x4		gMatrix;
 
-static	TQ3BoundingBox		gBBox = {0,0,0, 0,0,0, kQ3False};
+static	TQ3BoundingBox		gBBox = {{0,0,0}, {0,0,0}, kQ3False};
 
 static	TQ3Vector3D			gTransformedNormals[MAX_DECOMPOSED_NORMALS];	// temporary buffer for holding transformed normals before they're applied to their trimeshes
 

@@ -48,7 +48,7 @@ extern	Boolean					gCanDoMP;
 void UpdateJointTransforms(SkeletonObjDataType *skeleton,long jointNum)
 {
 TQ3Matrix4x4			matrix1;
-static TQ3Matrix4x4		matrix2 = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,1};
+static TQ3Matrix4x4		matrix2 = {{{0,0,0,0}, {0,0,0,0}, {0,0,0,0}, {0,0,0,1}}};
 TQ3Matrix4x4			*destMatPtr;
 const JointKeyframeType	*kfPtr;
 

@@ -61,18 +61,18 @@ typedef struct
 /****************************/
 
 static LevelType	gLevelTable[NUM_LEVELS] =
-					{
-						LEVEL_TYPE_LAWN, 	0,			// 0: training
-						LEVEL_TYPE_LAWN, 	1,			// 1: lawn
-						LEVEL_TYPE_POND, 	0,			// 2: pond
-						LEVEL_TYPE_FOREST, 	0,			// 3: beach
-						LEVEL_TYPE_FOREST, 	1,			// 4: dragonfly attack
-						LEVEL_TYPE_HIVE, 	0,			// 5: bee hive
-						LEVEL_TYPE_HIVE, 	1,			// 6: queen bee
-						LEVEL_TYPE_NIGHT, 	0,			// 7: night
-						LEVEL_TYPE_ANTHILL,	0,			// 8: ant hill
-						LEVEL_TYPE_ANTHILL,	1,			// 9: ant king
-					};
+{
+	{ LEVEL_TYPE_LAWN,		0 },			// 0: training
+	{ LEVEL_TYPE_LAWN,		1 },			// 1: lawn
+	{ LEVEL_TYPE_POND,		0 },			// 2: pond
+	{ LEVEL_TYPE_FOREST,	0 },			// 3: beach
+	{ LEVEL_TYPE_FOREST,	1 },			// 4: dragonfly attack
+	{ LEVEL_TYPE_HIVE,		0 },			// 5: bee hive
+	{ LEVEL_TYPE_HIVE,		1 },			// 6: queen bee
+	{ LEVEL_TYPE_NIGHT,		0 },			// 7: night
+	{ LEVEL_TYPE_ANTHILL,	0 },			// 8: ant hill
+	{ LEVEL_TYPE_ANTHILL,	1 },			// 9: ant king
+};
 
 u_short		gRealLevel = 0;
 u_short		gLevelType = 0;
@@ -181,52 +181,33 @@ static const Boolean	gLevelHasLenseFlare[NUM_LEVELS] =
 
 static const TQ3Vector3D	gLensFlareVector[NUM_LEVELS] =
 {
-	.4, -.35, 1,				// garden
-	.4, -.45, 1,				// boat
-	.4, -.15, 1,				// dragonfly
-	.4, -.35, 1,				// hive
-	.4, -.35, 1,				// night
-	.4, -.35, 1					// anthill
+	{ 0.4f, -0.35f, 1.0f },				// garden
+	{ 0.4f, -0.45f, 1.0f },				// boat
+	{ 0.4f, -0.15f, 1.0f },				// dragonfly
+	{ 0.4f, -0.35f, 1.0f },				// hive
+	{ 0.4f, -0.35f, 1.0f },				// night
+	{ 0.4f, -0.35f, 1.0f },				// anthill
 };
-
 
 static const TQ3ColorRGB	gLevelLightColors[NUM_LEVELS][3] =		// 0 = ambient, 1 = fill0, 2 = fill1
 {
-	1.0, 1.0, .9,				// garden
-	1.0, 1.0, .6,
-	1.0, 1.0, 1,
-
-	1.0, 1.0, .9,				// boat
-	1.0, 1.0, .6,
-	1.0, 1.0, 1,
-
-	1.0, .6, .3,				// dragonfly
-	1.0, .8, .3,
-	1.0, .9, .3,
-
-	1.0, 1.0, .8,				// hive
-	1.0, 1.0, .7,
-	1.0, 1.0, .9,
-
-	.5, .5, .5,					// night
-	.8, 1, .8,
-	.6, .8, .7,
-
-	.5, .5, .6,					// anthill
-	.7, .7, .8,
-	1.0, 1.0, 1.0
+	{ {1.0f, 1.0f, 0.9f}, {1.0f, 1.0f, 0.6f}, {1.0f, 1.0f, 1.0f} }, // garden
+	{ {1.0f, 1.0f, 0.9f}, {1.0f, 1.0f, 0.6f}, {1.0f, 1.0f, 1.0f} }, // boat
+	{ {1.0f, 0.6f, 0.3f}, {1.0f, 0.8f, 0.3f}, {1.0f, 0.9f, 0.3f} }, // dragonfly
+	{ {1.0f, 1.0f, 0.8f}, {1.0f, 1.0f, 0.7f}, {1.0f, 1.0f, 0.9f} }, // hive
+	{ {0.5f, 0.5f, 0.5f}, {0.8f, 1.0f, 0.8f}, {0.6f, 0.8f, 0.7f} }, // night
+	{ {0.5f, 0.5f, 0.6f}, {0.7f, 0.7f, 0.8f}, {1.0f, 1.0f, 1.0f} }, // anthill
 };
-
 
 static const TQ3ColorARGB	gLevelFogColor[NUM_LEVELS] =
 {
-	1, .05,.25,.05,				// garden
-	1, .9,.9,.85,				// boat
-	1, 1.0,.29,.063,			// dragonfly
-//	1, .9,.7,.1,				// hive
-	1, .7,.6,.4,				// hive
-	1, .02,.02,.08,				// night
-	1, .15,.07,.15				// anthill
+	{ 1.000f, 0.050f, 0.250f, 0.050f },				// garden
+	{ 1.000f, 0.900f, 0.900f, 0.850f },				// boat
+	{ 1.000f, 1.000f, 0.290f, 0.063f },				// dragonfly
+//	{ 1.000f, 0.900f, 0.700f, 0.100f },				// hive
+	{ 1.000f, 0.700f, 0.600f, 0.400f },				// hive
+	{ 1.000f, 0.020f, 0.020f, 0.080f },				// night
+	{ 1.000f, 0.150f, 0.070f, 0.150f },				// anthill
 };
 
 

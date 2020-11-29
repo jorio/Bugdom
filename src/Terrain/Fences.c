@@ -63,77 +63,14 @@ static TQ3AttributeSet	gFenceShaderAttribs[NUM_FENCE_SHADERS];
 
 static Boolean gFenceOnThisLevel[NUM_LEVELS][NUM_FENCE_SHADERS] =
 {
-	/* LAWN */
-	
-	true,						// thorn
-	false,						// hay weed
-	true,						// grass
-	false,						// ????
-	false,						// night
-	false,						// pond
-	false,						// ant hill moss
-	false,						// wood
-	false,						// hive
-	
-	/* POND */
-	
-	false,						// thorn
-	false,						// hay weed
-	true,						// grass
-	false,						// ????
-	false,						// night
-	true,						// pond
-	false,						// ant hill moss
-	false,						// wood
-	false,						// hive
-
-	/* FOREST */
-	
-	false,						// thorn
-	true,						// hay weed
-	false,						// grass
-	true,						// ????
-	false,						// night
-	false,						// pond
-	false,						// ant hill moss
-	true,						// wood
-	false,						// hive
-
-	/* HIVE */
-	
-	false,						// thorn
-	false,						// hay weed
-	false,						// grass
-	false,						// ????
-	false,						// night
-	false,						// pond
-	false,						// ant hill moss
-	false,						// wood
-	true,						// hive
-
-	/* NIGHT */
-	
-	false,						// thorn
-	false,						// hay weed
-	false,						// grass
-	false,						// ????
-	true,						// night
-	false,						// pond
-	false,						// ant hill moss
-	false,						// wood
-	false,						// hive
-
-	/* ANTHILL */
-	
-	false,						// thorn
-	false,						// hay weed
-	false,						// grass
-	false,						// ????
-	false,						// night
-	false,						// pond
-	true,						// ant hill moss
-	false,						// wood
-	false,						// hive
+	//			Hay										AntHill
+	//	Thorn	weed	Grass	????	Night	Pond	moss	Wood	Hive
+	{	1,		0,		1,		0,		0,		0,		0,		0,		0,		},	// LAWN
+	{	0,		0,		1,		0,		0,		1,		0,		0,		0,		},	// POND
+	{	0,		1,		0,		1,		0,		0,		0,		1,		0,		},	// FOREST
+	{	0,		0,		0,		0,		0,		0,		0,		0,		1,		},	// HIVE
+	{	0,		0,		0,		0,		1,		0,		0,		0,		0,		},	// NIGHT
+	{	0,		0,		0,		0,		0,		0,		1,		0,		0,		},	// ANTHILL
 };
 
 

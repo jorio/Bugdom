@@ -73,7 +73,7 @@ static TQ3SurfaceShaderObject	gLensFlareShader[NUM_FLARE_TYPES] = {nil,nil,nil,n
 static TQ3SurfaceShaderObject	gMoonFlareShader = nil;
 
 static TQ3PolygonData		gLensQuad;
-static TQ3Vertex3D			gLensVerts[4] = {0,0,0,nil, 0,0,0,nil, 0,0,0,nil, 0,0,0,nil};
+static TQ3Vertex3D			gLensVerts[4] = { {{0,0,0},nil}, {{0,0,0},nil}, {{0,0,0},nil}, {{0,0,0},nil} };
 
 static float	gFlareOffsetTable[]=
 {
@@ -113,7 +113,7 @@ static void InitLensFlares(void)
 {
 TQ3AttributeSet	attrib;
 long			i;
-static const TQ3Param2D uvs[4] = {0,1, 1,1, 1,0, 0,0};
+static const TQ3Param2D uvs[4] = { {0,1}, {1,1}, {1,0}, {0,0} };
 
 		/******************************/
 		/* CREATE LENS FLARE TEXTURES */

@@ -636,32 +636,18 @@ unsigned long score,digit;
 static TQ3Point3D	from = {0,1100+40,650};
 static TQ3Point3D	to = {0,1100,0};
 float		x,y;
-const static float xCoords[NUM_SCORES][2] =
+const static TQ3Point2D xyCoords[NUM_SCORES][2] =
 {
-	50,			-50,
-	-84,		84,
-	-84,		84,
-	-84,		84,
-	-84,		84,
-	-84,		84,
-	-84,		84,
-	-84,		84,
-	-84,		84,
-	-84,		84
-};
-
-const static float yCoords[NUM_SCORES][2] =
-{
-	1120,		1070,
-	792, 		778,
-	661,		649,
-	535,		521,
-	407,		392,
-	278,		264,
-	149,		135,
-	25,			40,
-	-102,		-113,
-	-229,		-242
+	{ {  50, 1120}, {-50, 1070 } },
+	{ { -84,  792}, { 84,  778 } },
+	{ { -84,  661}, { 84,  649 } },
+	{ { -84,  535}, { 84,  521 } },
+	{ { -84,  407}, { 84,  392 } },
+	{ { -84,  278}, { 84,  264 } },
+	{ { -84,  149}, { 84,  135 } },
+	{ { -84,   25}, { 84,   40 } },
+	{ { -84, -102}, { 84, -113 } },
+	{ { -84, -229}, { 84, -242 } },
 };
 
 			/* INIT CAMERA */
@@ -717,20 +703,22 @@ const static float yCoords[NUM_SCORES][2] =
 			z = 30;
 		else
 			z = 0;
-			
+
+		const TQ3Point2D* scorePos = &xyCoords[slot][0];
+		const TQ3Point2D* namePos  = &xyCoords[slot][1];
 		
 				/* CREATE NAME */
 
 		gNewName = gHighScores[slot];
-		UpdateNameAndCursor(false,xCoords[slot][1],yCoords[slot][1],z);
+		UpdateNameAndCursor(false, namePos->x, namePos->y, z);
 		
 				/* CREATE SCORE */
 			
 		score = gNewName.score;
 		place = 0;
 				
-		x = xCoords[slot][0];
-		y = yCoords[slot][0] + 15;
+		x = scorePos->x;
+		y = scorePos->y + 15;
 		while((score > 0) || (place < 1))
 		{
 			digit = score % 10;								// get digit @ end of #

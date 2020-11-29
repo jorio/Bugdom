@@ -1274,25 +1274,19 @@ static const Byte	letters[] = {LINTRO_MObjType_L, LINTRO_MObjType_E, LINTRO_MObj
 
 static const TQ3Point2D beeCoords[] =
 {
-	SEP, 0,
-	SEP*2,0,
-	
-	0,SEP,
-	SEP*3,SEP,
-	
-	0,SEP*2,
-	SEP*3,SEP*2,
-	
-	0,SEP*3,
-	SEP,SEP*3,
-	SEP*2,SEP*3,
-	
-	0, SEP*4,
-	
-	0, SEP*5,
-	
-	SEP,SEP*6,
-	SEP*2,SEP*6
+	{SEP,     0},
+	{SEP * 2, 0},
+	{0,       SEP},
+	{SEP * 3, SEP},
+	{0,       SEP * 2},
+	{SEP * 3, SEP * 2},
+	{0,       SEP * 3},
+	{SEP,     SEP * 3},
+	{SEP * 2, SEP * 3},
+	{0,       SEP * 4},
+	{0,       SEP * 5},
+	{SEP,     SEP * 6},
+	{SEP * 2, SEP * 6},
 };
 
 			/* SETUP CAMERA */

@@ -347,13 +347,15 @@ ObjNode					*newObj;
 									MENU_MObjType_PlayIcon,MENU_MObjType_QuitIcon,
 									MENU_MObjType_RestoreIcon,MENU_MObjType_SettingsIcon};
 									
-		TQ3Point3D	iconCoords[NUM_MENU_ICONS] = {
-									-90,-67,4,			// about
-									10,50,4,			// scores
-									-90,30,4,			// play
-									30,-110,4,			// quit
-									100,-40,4,			// restore
-									80,30,4};			// settings
+		TQ3Point3D	iconCoords[NUM_MENU_ICONS] =
+		{
+			{ -90, -67, 4 },			// about
+			{  10,  50, 4 },			// scores
+			{ -90,  30, 4 },			// play
+			{  30,-110, 4 },			// quit
+			{ 100, -40, 4 },			// restore
+			{  80,  30, 4 },			// settings
+		};
 	
 		gNewObjectDefinition.type 		= iconType[i];	
 		gNewObjectDefinition.coord		= iconCoords[i];
