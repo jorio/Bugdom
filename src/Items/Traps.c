@@ -948,7 +948,10 @@ float	s;
 	}
 	
 	GetObjectInfo(theNode);
-	s = theNode->Scale.x = theNode->Scale.y = theNode->Scale.z = theNode->Scale.x += gFramesPerSecondFrac * 600.0f;
+
+	s = theNode->Scale.x;
+	s += gFramesPerSecondFrac * 600.0f;
+	theNode->Scale.x = theNode->Scale.y = theNode->Scale.z = s;
 
 			/* UPDATE COLLISION BOX */
 			
