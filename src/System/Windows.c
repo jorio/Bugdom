@@ -161,7 +161,6 @@ OSStatus 		theError;
 
 void MakeFadeEvent(Boolean	fadeIn)
 {
-#if ALLOW_FADE			
 ObjNode	*newObj;
 ObjNode		*thisNodePtr;
 
@@ -195,7 +194,6 @@ ObjNode		*thisNodePtr;
 		return;
 
 	newObj->Flag[0] = fadeIn;
-#endif		
 }
 
 
