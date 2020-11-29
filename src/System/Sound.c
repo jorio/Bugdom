@@ -1102,6 +1102,13 @@ u_long	maxLeft,maxRight;
 	else		
 	{
 		float		volF = (float)volume;
+		
+		if (volF > 256.0f)
+		{
+			printf("Sfx %d volume %f clipped\n", effectNum, volF);
+			volF = 256.0f;
+		}
+		
 		TQ3Vector2D	earToSound,lookVec;
 		float		dot,cross;
 		
