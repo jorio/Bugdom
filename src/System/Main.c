@@ -53,6 +53,7 @@ typedef struct
 {
 	Byte	levelType;
 	Byte	areaNum;
+	Boolean	isBossLevel;
 }LevelType;
 
 
@@ -62,16 +63,16 @@ typedef struct
 
 static LevelType	gLevelTable[NUM_LEVELS] =
 {
-	{ LEVEL_TYPE_LAWN,		0 },			// 0: training
-	{ LEVEL_TYPE_LAWN,		1 },			// 1: lawn
-	{ LEVEL_TYPE_POND,		0 },			// 2: pond
-	{ LEVEL_TYPE_FOREST,	0 },			// 3: beach
-	{ LEVEL_TYPE_FOREST,	1 },			// 4: dragonfly attack
-	{ LEVEL_TYPE_HIVE,		0 },			// 5: bee hive
-	{ LEVEL_TYPE_HIVE,		1 },			// 6: queen bee
-	{ LEVEL_TYPE_NIGHT,		0 },			// 7: night
-	{ LEVEL_TYPE_ANTHILL,	0 },			// 8: ant hill
-	{ LEVEL_TYPE_ANTHILL,	1 },			// 9: ant king
+	{ LEVEL_TYPE_LAWN,		0,	false },			// 0: training
+	{ LEVEL_TYPE_LAWN,		1,	false },			// 1: lawn
+	{ LEVEL_TYPE_POND,		0,	false },			// 2: pond
+	{ LEVEL_TYPE_FOREST,	0,	false },			// 3: beach
+	{ LEVEL_TYPE_FOREST,	1,	true },				// 4: dragonfly attack
+	{ LEVEL_TYPE_HIVE,		0,	false },			// 5: bee hive
+	{ LEVEL_TYPE_HIVE,		1,	true },				// 6: queen bee
+	{ LEVEL_TYPE_NIGHT,		0,	false },			// 7: night
+	{ LEVEL_TYPE_ANTHILL,	0,	false },			// 8: ant hill
+	{ LEVEL_TYPE_ANTHILL,	1,	true },				// 9: ant king
 };
 
 u_short		gRealLevel = 0;
@@ -258,6 +259,7 @@ FSSpec		spec;
 	gGamePrefs.vsync				= true;
 	gGamePrefs.textureFiltering		= true;
 	gGamePrefs.mouseSensitivity		= 0.05f;
+	gGamePrefs.hideBottomBarInNonBossLevels = true;
 	gGamePrefs.terrainTextureDetail = TERRAIN_TEXTURE_PREF_1_LOD_160;
 				
 	LoadPrefs(&gGamePrefs);							// attempt to read from prefs file		
@@ -533,7 +535,11 @@ QD3DSetupInputType	viewDef;
 	viewDef.view.paneClip.bottom	=	60;
 	viewDef.view.paneClip.left		=	0;
 	viewDef.view.paneClip.right		=	0;
-		
+
+	// Source port addition: let user hide bottom bar when it's not needed (i.e. outside boss levels)
+	if (gGamePrefs.hideBottomBarInNonBossLevels && !gLevelTable[gRealLevel].isBossLevel)
+		viewDef.view.paneClip.bottom = 0;
+
 	viewDef.view.clearColor 	= gLevelFogColor[gLevelType];	// set clear & fog color	
 
 	

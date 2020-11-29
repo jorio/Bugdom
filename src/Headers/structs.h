@@ -373,6 +373,7 @@ typedef struct
 	Boolean textureFiltering;
 	float	mouseSensitivity;
 	Byte	terrainTextureDetail;
+	Boolean	hideBottomBarInNonBossLevels;
 	Byte	reserved[8];
 }PrefsType;
 
