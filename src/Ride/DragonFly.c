@@ -174,7 +174,7 @@ float	y;
 			theNode->CType |= CTYPE_AUTOTARGET|CTYPE_AUTOTARGETJUMP;	// now it auto bops again
 			MorphToSkeletonAnim(theNode->Skeleton, DRAGONFLY_ANIM_WAIT, 3);
 		}	
-		UpdateDragonFly(theNode, true);
+		UpdateDragonFly(theNode, false);
 		return;
 	}
 
