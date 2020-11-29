@@ -173,7 +173,7 @@ TQ3Matrix4x4		*jointMatrix;
 SplinePointType		*points;
 SplineDefType		*splinePtr;
 TQ3Matrix4x4		m,m2,m3;
-const static	TQ3Vector3D up = {0,1,0};
+static const	TQ3Vector3D up = {0,1,0};
 float				scale;
 CollisionBoxType *boxPtr;
 

@@ -113,7 +113,7 @@ static Handle	gTerrainTextureBuffers[MAX_SUPERTILES][2][MAX_LODS];
 			
 					
 					/* /  */
-const static	Byte			gTileTriangles1_A[SUPERTILE_SIZE][SUPERTILE_SIZE][3] =
+static const	Byte			gTileTriangles1_A[SUPERTILE_SIZE][SUPERTILE_SIZE][3] =
 {
 	{ { 6, 0, 1}, { 7, 1, 2}, { 8, 2, 3}, { 9, 3, 4}, {10, 4, 5} },
 	{ {12, 6, 7}, {13, 7, 8}, {14, 8, 9}, {15, 9,10}, {16,10,11} },
@@ -122,7 +122,7 @@ const static	Byte			gTileTriangles1_A[SUPERTILE_SIZE][SUPERTILE_SIZE][3] =
 	{ {30,24,25}, {31,25,26}, {32,26,27}, {33,27,28}, {34,28,29} },
 };
 
-const static	Byte			gTileTriangles2_A[SUPERTILE_SIZE][SUPERTILE_SIZE][3] =
+static const	Byte			gTileTriangles2_A[SUPERTILE_SIZE][SUPERTILE_SIZE][3] =
 {
 	{ { 6, 1, 7}, { 7, 2, 8}, { 8, 3, 9}, {	9, 4,10}, {10, 5,11} },
 	{ {12, 7,13}, {13, 8,14}, {14, 9,15}, {15,10,16}, {16,11,17} },
@@ -132,7 +132,7 @@ const static	Byte			gTileTriangles2_A[SUPERTILE_SIZE][SUPERTILE_SIZE][3] =
 };
 
 					/* \  */
-const static	Byte			gTileTriangles1_B[SUPERTILE_SIZE][SUPERTILE_SIZE][3] =
+static const	Byte			gTileTriangles1_B[SUPERTILE_SIZE][SUPERTILE_SIZE][3] =
 {
 	{ { 0, 7, 6}, { 1, 8, 7}, { 2, 9, 8}, { 3,10, 9}, { 4,11,10} },
 	{ { 6,13,12}, { 7,14,13}, { 8,15,14}, { 9,16,15}, {10,17,16} },
@@ -141,7 +141,7 @@ const static	Byte			gTileTriangles1_B[SUPERTILE_SIZE][SUPERTILE_SIZE][3] =
 	{ {24,31,30}, {25,32,31}, {26,33,32}, {27,34,33}, {28,35,34} },
 };
 
-const static Byte   gTileTriangles2_B[SUPERTILE_SIZE][SUPERTILE_SIZE][3] =
+static const Byte   gTileTriangles2_B[SUPERTILE_SIZE][SUPERTILE_SIZE][3] =
 {
 	{ { 0, 1, 7}, { 1, 2, 8}, { 2, 3, 9}, { 3, 4,10}, { 4, 5,11} },
 	{ { 6, 7,13}, { 7, 8,14}, { 8, 9,15}, { 9,10,16}, {10,11,17} },
@@ -150,7 +150,7 @@ const static Byte   gTileTriangles2_B[SUPERTILE_SIZE][SUPERTILE_SIZE][3] =
 	{ {24,25,31}, {25,26,32}, {26,27,33}, {27,28,34}, {28,29,35} },
 };
 
-const static	Byte			gTileTriangleWinding[2][3] =
+static const	Byte			gTileTriangleWinding[2][3] =
 {
 	{ 2, 1, 0 },  // floor
 	{ 0, 1, 2 },  // ceiling

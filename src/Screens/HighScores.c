@@ -636,7 +636,7 @@ unsigned long score,digit;
 static TQ3Point3D	from = {0,1100+40,650};
 static TQ3Point3D	to = {0,1100,0};
 float		x,y;
-const static TQ3Point2D xyCoords[NUM_SCORES][2] =
+static const TQ3Point2D xyCoords[NUM_SCORES][2] =
 {
 	{ {  50, 1120}, {-50, 1070 } },
 	{ { -84,  792}, { 84,  778 } },

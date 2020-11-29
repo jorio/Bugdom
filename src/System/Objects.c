@@ -448,7 +448,7 @@ Boolean			noZWrites = false;
 Boolean			noFog = false;
 Boolean			glow = false;
 float			cameraX, cameraZ;
-const static TQ3ColorRGB	white = {1,1,1};	
+static const TQ3ColorRGB	white = {1,1,1};	
 short			skelType;		
 
 	if (gFirstNodePtr == nil)									// see if there are any objects

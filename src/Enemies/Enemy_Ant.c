@@ -1004,7 +1004,7 @@ static const TQ3Point3D	zero = {0,0,0};
 static void AntThrowSpear(ObjNode *theEnemy)
 {
 ObjNode		 			*spearObj;
-const static TQ3Point3D zero = {0,0,0};
+static const TQ3Point3D zero = {0,0,0};
 float					rot,speed;
 
 	theEnemy->HasSpear = false;							// dont have it anymore
@@ -1302,7 +1302,7 @@ static const TQ3Point3D	zero = {0,0,0};
 static void AntThrowRock(ObjNode *theEnemy)
 {
 ObjNode		 			*rock;
-const static TQ3Point3D zero = {0,0,0};
+static const TQ3Point3D zero = {0,0,0};
 float					rot,speed;
 
 	rock = theEnemy->ChainNode;						// get spear obj
