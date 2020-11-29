@@ -9,7 +9,6 @@ extern "C"
 	extern TQ3Matrix4x4 gCameraViewToFrustumMatrix;
 	extern long gNodesDrawn;
 	extern SDL_Window* gSDLWindow;
-	extern	QD3DSetupOutputType		*gGameViewInfoPtr;
 	extern float gAdditionalClipping;
 	extern float gFramesPerSecond;
 	extern PrefsType gGamePrefs;
@@ -123,20 +122,6 @@ Boolean FlushMouseButtonPress()
 	return rc;
 }
 
-// Called when the game window gets resized.
-// Adjusts the clipping pane and camera aspect ratio.
-static void QD3D_OnWindowResized(int windowWidth, int windowHeight)
-{
-	if (!gGameViewInfoPtr)
-		return;
-
-	TQ3Area pane = GetAdjustedPane(windowWidth, windowHeight, gGameViewInfoPtr->paneClip);
-	Q3DrawContext_SetPane(gGameViewInfoPtr->drawContext, &pane);
-
-	float aspectRatioXToY = (pane.max.x-pane.min.x)/(pane.max.y-pane.min.y);
-
-	Q3ViewAngleAspectCamera_SetAspectRatio(gGameViewInfoPtr->cameraObject, aspectRatioXToY);
-}
 
 void DoSDLMaintenance()
 {
@@ -167,13 +152,13 @@ void DoSDLMaintenance()
 	}
 	debugText.frameAccumulator++;
 #endif
+#endif
 
 	if (GetNewKeyState(kKey_ToggleFullscreen))
 	{
 		gGamePrefs.fullscreen = gGamePrefs.fullscreen ? 0 : 1;
 		SetFullscreenMode();
 	}
-#endif
 
 	// Reset these on every new frame
 	gTypedAsciiKey = '\0';

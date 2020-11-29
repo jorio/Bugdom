@@ -256,6 +256,7 @@ FSSpec		spec;
 	memset(&gGamePrefs, 0, sizeof(PrefsType));
 	gGamePrefs.easyMode				= false;	
 	gGamePrefs.playerRelativeKeys	= false;	
+	gGamePrefs.fullscreen			= true;
 	gGamePrefs.vsync				= true;
 	gGamePrefs.textureFiltering		= true;
 	gGamePrefs.mouseSensitivity		= 0.05f;
@@ -263,6 +264,8 @@ FSSpec		spec;
 	gGamePrefs.terrainTextureDetail = TERRAIN_TEXTURE_PREF_1_LOD_160;
 				
 	LoadPrefs(&gGamePrefs);							// attempt to read from prefs file		
+	
+	SetFullscreenMode();
 	
 	FlushEvents ( everyEvent, REMOVE_ALL_EVENTS);
 

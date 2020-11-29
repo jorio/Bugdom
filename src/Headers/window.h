@@ -32,3 +32,7 @@ void DoLockPixels(GWorldPtr world);
 void DumpGWorldTransparent(GWorldPtr thisWorld, WindowPtr thisWindow,Rect *destRect);
 void DumpGWorld3(GWorldPtr thisWorld, WindowPtr thisWindow,Rect *srcRect, Rect *destRect);
 
+
+void QD3D_OnWindowResized(int windowWidth, int windowHeight);
+void SetFullscreenMode(void);
+

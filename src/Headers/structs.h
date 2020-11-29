@@ -369,6 +369,7 @@ typedef struct
 {
 	Boolean	easyMode;
 	Boolean	playerRelativeKeys;
+	Boolean fullscreen;
 	Boolean	vsync;
 	Boolean textureFiltering;
 	float	mouseSensitivity;

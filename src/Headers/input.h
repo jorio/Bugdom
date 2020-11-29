@@ -47,6 +47,8 @@ enum
 	kKey_Backward			= kVK_DownArrow,
 	kKey_Left				= kVK_LeftArrow,
 	kKey_Right				= kVK_RightArrow,
+	
+	kKey_ToggleFullscreen	= kVK_F11,
 };
 
 

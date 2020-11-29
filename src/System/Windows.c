@@ -16,6 +16,9 @@ extern	ObjNode	*gCurrentNode,*gFirstNodePtr;
 extern	float	gFramesPerSecondFrac,gAdditionalClipping;
 extern	short	gPrefsFolderVRefNum;
 extern	long	gPrefsFolderDirID;
+extern	SDL_Window*				gSDLWindow;
+extern	PrefsType				gGamePrefs;
+extern	QD3DSetupOutputType*	gGameViewInfoPtr;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -428,6 +431,35 @@ PixMapHandle pm;
 }
 
 
+// Called when the game window gets resized.
+// Adjusts the clipping pane and camera aspect ratio.
+void QD3D_OnWindowResized(int windowWidth, int windowHeight)
+{
+	if (!gGameViewInfoPtr)
+		return;
+
+	TQ3Area pane = GetAdjustedPane(windowWidth, windowHeight, gGameViewInfoPtr->paneClip);
+	Q3DrawContext_SetPane(gGameViewInfoPtr->drawContext, &pane);
+
+	float aspectRatioXToY = (pane.max.x-pane.min.x)/(pane.max.y-pane.min.y);
+
+	Q3ViewAngleAspectCamera_SetAspectRatio(gGameViewInfoPtr->cameraObject, aspectRatioXToY);
+}
 
 
+/******************* SET FULLSCREEN MODE FROM USER PREFS **************/
+
+void SetFullscreenMode(void)
+{
+	SDL_SetWindowFullscreen(
+			gSDLWindow,
+			gGamePrefs.fullscreen? SDL_WINDOW_FULLSCREEN_DESKTOP: 0);
+
+	// Ensure the clipping pane gets resized properly after switching in or out of fullscreen mode
+	int width, height;
+	SDL_GetWindowSize(gSDLWindow, &width, &height);
+	QD3D_OnWindowResized(width, height);
+
+//	SDL_ShowCursor(gGamePrefs.fullscreen? 0: 1);
+}
 
