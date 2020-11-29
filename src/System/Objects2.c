@@ -395,42 +395,12 @@ float	dist;
 
 void CheckAllObjectsInConeOfVision(void)
 {
-float				radius,w,w2;
-float				rx,ry,px,py,pz;
+float				radius;
 ObjNode				*theNode;
-register float		n00,n01,n02;
-register float		n10,n11,n12;
-register float		n20,n21,n22;
-register float		n30,n31,n32;
-float		m00,m01,m02,m03;
-float		m10,m11,m12,m13;
-float		m20,m21,m22,m23;
-float		m30,m31,m32,m33;
-float				worldX,worldY,worldZ;
-float				hither,yon;
 
 	theNode = gFirstNodePtr;														// get & verify 1st node
 	if (theNode == nil)
 		return;
-
-					/* PRELOAD WORLD -> VIEW MATRIX */
-
-	n00 = gCameraWorldToViewMatrix.value[0][0];		n01 = gCameraWorldToViewMatrix.value[0][1];	  n02 = gCameraWorldToViewMatrix.value[0][2];
-	n10 = gCameraWorldToViewMatrix.value[1][0];		n11 = gCameraWorldToViewMatrix.value[1][1];	  n12 = gCameraWorldToViewMatrix.value[1][2];	
-	n20 = gCameraWorldToViewMatrix.value[2][0];		n21 = gCameraWorldToViewMatrix.value[2][1];	  n22 = gCameraWorldToViewMatrix.value[2][2];	
-	n30 = gCameraWorldToViewMatrix.value[3][0];		n31 = gCameraWorldToViewMatrix.value[3][1];	  n32 = gCameraWorldToViewMatrix.value[3][2];	
-				
-
-					/* PRELOAD VIEW -> FRUSTUM MATRIX */
-					
-	m00 = gCameraViewToFrustumMatrix.value[0][0];	m01 = gCameraViewToFrustumMatrix.value[0][1]; m02 = gCameraViewToFrustumMatrix.value[0][2]; m03 = gCameraViewToFrustumMatrix.value[0][3];
-	m10 = gCameraViewToFrustumMatrix.value[1][0];	m11 = gCameraViewToFrustumMatrix.value[1][1]; m12 = gCameraViewToFrustumMatrix.value[1][2]; m13 = gCameraViewToFrustumMatrix.value[1][3];
-	m20 = gCameraViewToFrustumMatrix.value[2][0];	m21 = gCameraViewToFrustumMatrix.value[2][1]; m22 = gCameraViewToFrustumMatrix.value[2][2]; m23 = gCameraViewToFrustumMatrix.value[2][3];
-	m30 = gCameraViewToFrustumMatrix.value[3][0];	m31 = gCameraViewToFrustumMatrix.value[3][1]; m32 = gCameraViewToFrustumMatrix.value[3][2]; m33 = gCameraViewToFrustumMatrix.value[3][3];
-
-
-	hither = -gGameViewInfoPtr->hither;							// preload these constants into registers
-	yon = - gGameViewInfoPtr->yon;
 
 					/* PROCESS EACH OBJECT */
 					
@@ -451,73 +421,14 @@ float				hither,yon;
 
 try_cull:
 		radius = theNode->BoundingSphere.radius;				// get radius of object
-
-			/******************************/
-			/* CALC WORLD COORD OF OBJECT */
-			/******************************/
-
-					/* CALC WORLD Z */
-				
-		px = theNode->Coord.x + theNode->BoundingSphere.origin.x;	// get origin
-		py = theNode->Coord.y + theNode->BoundingSphere.origin.y;
-		pz = theNode->Coord.z + theNode->BoundingSphere.origin.z;		
-		worldZ = (n02*px) + (n12*py) + (n22*pz) + n32;						
-				
-					/* SEE IF BEHIND CAMERA */
-					
-		if (worldZ >= hither)									
+		TQ3Point3D worldCoord =
 		{
-			if ((worldZ - radius) > hither)							// is entire sphere behind camera?
-				goto draw_off;
-				
-					/* PARTIALLY BEHIND */
-					
-			worldZ -= radius;										// move edge over hither plane so cone calc will work
-		}
-		else
-		{
-				/* SEE IF BEYOND YON PLANE */
-			
-			if ((worldZ + radius) < yon)							// see if too far away
-				goto draw_off;
-		}
-		
-		
-#if 0 // Source port removal: X/Y culling is buggy
-
-				/* CALC WORLD X & Y */
-				
-		worldX = (n00*px) + (n10*py) + (n20*pz) + n30;						
-		worldY = (n01*px) + (n11*py) + (n21*pz) + n31;
-
-
-
-			/*****************************/
-			/* SEE IF WITHIN VISION CONE */
-			/*****************************/
-	
-					/* TRANSFORM WORLD COORD & RADIUS */
-			
-		w = (m03*worldX) + (m13*worldY) + (m23*worldZ) + m33;						// transf world X
-		px = ((m00*worldX) + (m10*worldY) + (m20*worldZ) + m30) * w;
-		w2 = (m03*radius) + (m13*radius) + (m23*worldZ) + m33;						// transf world radius X
-		rx = ((m00*radius) + (m10*radius) + (m20*worldZ) + m30) * w2;
-	
-		if ((px + rx) < -1.0f)														// see if sphere "would be" out of bounds
+			theNode->Coord.x + theNode->BoundingSphere.origin.x,
+			theNode->Coord.y + theNode->BoundingSphere.origin.y,
+			theNode->Coord.z + theNode->BoundingSphere.origin.z,
+		};
+		if (!IsSphereInFrustum(&worldCoord, radius))
 			goto draw_off;
-		if ((px - rx) > 1.0f)
-			goto draw_off;
-
-
-		py = ((m01*worldX) + (m11*worldY) + (m21*worldZ) + m31) * w;				// transf world Y
-		ry = ((m01*radius) + (m11*radius) + (m21*worldZ) + m31) * w2;				// transf world radius Y
-		
-		if ((py + ry) < -1.0f)														// see if sphere "would be" out of bounds	
-			goto draw_off;
-		if ((py - ry) > 1.0f)
-			goto draw_off;
-				
-#endif
 
 draw_on:
 		theNode->StatusBits &= ~STATUS_BIT_ISCULLED;							// clear cull bit

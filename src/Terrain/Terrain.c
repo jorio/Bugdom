@@ -3144,89 +3144,15 @@ u_short	tile;
 
 static Boolean IsSuperTileVisible(short superTileNum, Byte layer)
 {
-float				w1,w2,radius;
-float				rx,ry,rz,px,py;
-TQ3Point3D			points[2];					// [0] = point, [1] = radius
-TQ3RationalPoint4D	outPoint4D[2];
-	
-	rx = gSuperTileMemoryList[superTileNum].x; 
-	rz = gSuperTileMemoryList[superTileNum].z;
-	ry = gSuperTileMemoryList[superTileNum].y[layer];
-	
-	radius = gSuperTileMemoryList[superTileNum].radius[layer];							// get radius
-
-	points[0].x = 	(rx*gCameraWorldToViewMatrix.value[0][0]) + 
-					(ry*gCameraWorldToViewMatrix.value[1][0]) + 
-					(rz*gCameraWorldToViewMatrix.value[2][0]) + 
-					(gCameraWorldToViewMatrix.value[3][0]); 
-
-	points[0].y = 	(rx*gCameraWorldToViewMatrix.value[0][1]) + 
-					(ry*gCameraWorldToViewMatrix.value[1][1]) + 
-					(rz*gCameraWorldToViewMatrix.value[2][1]) + 
-					(gCameraWorldToViewMatrix.value[3][1]); 
-
-	points[0].z = 	(rx*gCameraWorldToViewMatrix.value[0][2]) + 
-					(ry*gCameraWorldToViewMatrix.value[1][2]) + 
-					(rz*gCameraWorldToViewMatrix.value[2][2]) + 
-					(gCameraWorldToViewMatrix.value[3][2]); 
-				
-				/* SEE IF BEHIND CAMERA */
-				
-	if (points[0].z >= -HITHER_DISTANCE)									
+	const SuperTileMemoryType* superTile = &gSuperTileMemoryList[superTileNum];
+	float radius = superTile->radius[layer];
+	TQ3Point3D center =
 	{
-		if ((points[0].z - radius) > -HITHER_DISTANCE)							// is entire sphere behind camera?
-			goto draw_off;
-			
-				/* PARTIALLY BEHIND */
-				
-		points[0].z -= radius;													// move edge over hither plane so cone calc will work
-	}
-	else
-	{
-			/* SEE IF BEYOND YON PLANE */
-		
-		if ((points[0].z + radius) < (-gYon))							// see if too far away
-			goto draw_off;
-	}
-
-#if 0 // Source port removal: X/Y culling is buggy
-
-			/*****************************/
-			/* SEE IF WITHIN VISION CONE */
-			/*****************************/
-
-	points[1].x = points[1].y = radius;
-	points[1].z = points[0].z;	
-	
-	Q3Point3D_To4DTransformArray(&points[0],&gCameraViewToFrustumMatrix,
-								&outPoint4D[0],	2,sizeof(TQ3Point3D),
-								sizeof(TQ3RationalPoint4D));
-	
-	
-	w1 = outPoint4D[0].w;
-	w2 = outPoint4D[1].w;
-	
-	px = w1*outPoint4D[0].x;
-	py = w1*outPoint4D[0].y;
-	rx = w2*outPoint4D[1].x;
-	ry = w2*outPoint4D[1].y;
-
-	if ((px + rx) < -1.0f)						// see if sphere "would be" out of bounds
-		goto draw_off;
-	if ((px - rx) > 1.0f)
-		goto draw_off;
-	
-	if ((py + ry) < -1.0f)						
-		goto draw_off;
-	if ((py - ry) > 1.0f)
-		goto draw_off;
-				
-#endif
-
-	return(true);
-
-draw_off:
-	return(false);
+		superTile->x,
+		superTile->y[layer],
+		superTile->z
+	};
+	return IsSphereInFrustum(&center, radius);
 }
 
 

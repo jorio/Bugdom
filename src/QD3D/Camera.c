@@ -56,6 +56,8 @@ TQ3Matrix4x4		gCameraWorldToFrustumMatrix,gCameraFrustumToWindowMatrix,
 					gCameraWorldToWindowMatrix,gCameraWindowToWorldMatrix;
 TQ3Matrix4x4		gCameraWorldToViewMatrix, gCameraViewToFrustumMatrix;
 
+static TQ3RationalPoint4D	gFrustumPlanes[6];
+
 static float		gCameraLookAtAccel,gCameraFromAccelY,gCameraFromAccel;
 static float		gCameraDistFromMe, gCameraHeightFactor,gCameraLookAtYOff;
 
@@ -327,8 +329,52 @@ void CalcCameraMatrixInfo(QD3DSetupOutputType *viewPtr)
 			//
 				
 	Q3Matrix4x4_Invert(&gCameraWorldToWindowMatrix,&gCameraWindowToWorldMatrix);
+
+
+			/* PREPARE FRUSTUM PLANES FOR SPHERE VISIBILITY CHECKS */
+			// (Source port addition)
+
+#define M(a,b)	gCameraWorldToFrustumMatrix.value[a][b]
+	// Planes 0,1: right, left
+	// Planes 2,3: top, bottom
+	// Planes 4,5: near, far
+	for (int plane = 0; plane < 6; plane++)
+	{
+		int axis = plane >> 1u;							// 0=X, 1=Y, 2=Z
+		float sign = plane%2 == 0 ? -1.0f : 1.0f;		// To pick either frustum plane on the axis.
+
+		float x = M(0,3) + sign * M(0,axis);
+		float y = M(1,3) + sign * M(1,axis);
+		float z = M(2,3) + sign * M(2,axis);
+		float w = M(3,3) + sign * M(3,axis);
+
+		float t = sqrtf(x*x + y*y + z*z);				// Normalize
+		gFrustumPlanes[plane].x = x/t;
+		gFrustumPlanes[plane].y = y/t;
+		gFrustumPlanes[plane].z = z/t;
+		gFrustumPlanes[plane].w = w/t;
+	}
+#undef M
 }
 
+/********************** SPHERE VISIBILITY CHECK ************************/
+
+Boolean IsSphereInFrustum(const TQ3Point3D* inWorldPt, float radius)
+{
+	for (int plane = 0; plane < 6; plane++)
+	{
+		float planeDot =
+				inWorldPt->x * gFrustumPlanes[plane].x +
+				inWorldPt->y * gFrustumPlanes[plane].y +
+				inWorldPt->z * gFrustumPlanes[plane].z +
+				gFrustumPlanes[plane].w;
+
+		if (planeDot <= -radius)
+			return false;
+	}
+
+	return true;
+}
 
 /**************** MOVE CAMERA: MANUAL ********************/
 
