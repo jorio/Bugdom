@@ -21,7 +21,6 @@ extern	long	gPrefsFolderDirID;
 /*    PROTOTYPES            */
 /****************************/
 
-static void PrepDrawSprockets(void);
 static void MoveFadeEvent(ObjNode *theNode);
 
 
@@ -31,11 +30,6 @@ static void MoveFadeEvent(ObjNode *theNode);
 
 #define	ALLOW_FADE		0
 
-#if 0
-#define MONITORS_TO_FADE	gDisplayContext
-#else
-#define MONITORS_TO_FADE	nil
-#endif
 
 /**********************/
 /*     VARIABLES      */
@@ -55,156 +49,13 @@ float		gGammaFadePercent;
 
 void InitWindowStuff(void)
 {
-OSErr			iErr;
-
-
-#if 1
-	SOURCE_PORT_MINOR_PLACEHOLDER();
-#else
-#if 0
-			/* INIT WITH DRAW SPROCKETS */
-			
-	PrepDrawSprockets();
-
-
-				/* CLEAR SCREEN & MAKE WINDOW */
-				
-	iErr = DSpContext_GetFrontBuffer(gDisplayContext,(CGrafPtr *)&gCoverWindow);
-	if (iErr)
-		DoFatalAlert("InitWindowStuff: DSpContext_GetFrontBuffer failed!");
-#else
-
-	{
-		Rect	r;
-		
-		SetRect(&r, 0,0, 1024, 768);
-		gCoverWindow = NewCWindow(0L, &r, "Bugdom", true, noGrowDocProc, (WindowPtr) - 1L, true, 0);
-
-	}
-
-
-#endif		
-		
-#endif  // SOURCE_PORT_PLACEHOLDER
-		
 	gScreenXOffset = 0;										// calc offsets to center it
 	gScreenYOffset = 0;	
 		
 	SetPort(GetWindowPort(gCoverWindow));
 	ForeColor(whiteColor);
 	BackColor(blackColor);
-		
-
-			
 }
-
-
-
-
-/****************** PREP DRAW SPROCKETS *********************/
-
-static void PrepDrawSprockets(void)
-{
-#if 1
-	SOURCE_PORT_PLACEHOLDER();
-#else
-DSpContextAttributes 	displayConfig,realConfig;
-OSStatus 				theError;
-Boolean					confirmIt = false;
-
-		/* startup DrawSprocket */
-
-	theError = DSpStartup();
-	if( theError )
-	{
-		DoFatalAlert("DSpStartup failed!");
-	}
-	gLoadedDrawSprocket = true;
-
-
-				/*************************/
-				/* SETUP A REQUEST BLOCK */
-				/*************************/
-		
-	displayConfig.frequency					= 0;
-	displayConfig.displayWidth				= GAME_VIEW_WIDTH;
-	displayConfig.displayHeight				= GAME_VIEW_HEIGHT;
-	displayConfig.reserved1					= 0;
-	displayConfig.reserved2					= 0;
-	displayConfig.colorNeeds				= kDSpColorNeeds_Request;
-	displayConfig.colorTable				= NULL;
-	displayConfig.contextOptions			= 0; //kDSpContextOption_QD3DAccel;
-	displayConfig.backBufferDepthMask		= kDSpDepthMask_1;
-	displayConfig.displayDepthMask			= kDSpDepthMask_16;
-	displayConfig.backBufferBestDepth		= 1;
-	displayConfig.displayBestDepth			= 16;
-	displayConfig.pageCount					= 1;
-	displayConfig.gameMustConfirmSwitch		= false;
-	displayConfig.reserved3[0]				= 0;
-	displayConfig.reserved3[1]				= 0;
-	displayConfig.reserved3[2]				= 0;
-	displayConfig.reserved3[3]				= 0;
-			
-				/* SEE IF LET USER SELECT DISPLAY */
-
-#if 0
-	DSpCanUserSelectContext(&displayConfig, &canSelect);							// see if can do it
-	if (canSelect)
-	{
-		FlushEvents (everyEvent, REMOVE_ALL_EVENTS);	
-		InitCursor();
-		theError = DSpUserSelectContext(&displayConfig,nil,nil,&gDisplayContext);	// let user select it
-		if (theError)									
-			CleanQuit();
-		HideCursor();
-		if (gDisplayContext == nil)													// see if something went horribly wrong
-			CleanQuit();
-	}
-				/* AUTOMATICALLY FIND BEST CONTEXT */
-	else
-#endif	
-	{
-		theError = DSpFindBestContext( &displayConfig, &gDisplayContext );
-		if (theError)
-		{
-			DoFatalAlert("PrepDrawSprockets: DSpFindBestContext failed");
-		}
-	}
-				/* RESERVE IT */
-
-	theError = DSpContext_Reserve( gDisplayContext, &displayConfig );
-	if( theError )
-		DoFatalAlert("PrepDrawSprockets: DSpContext_Reserve failed");
-		
-		
-			/* MAKE STATE ACTIVE */
-	
-	theError = DSpContext_SetState( gDisplayContext, kDSpContextState_Active );
-	if (theError == kDSpConfirmSwitchWarning)
-	{
-		confirmIt = true;
-	}
-	else
-	if (theError)
-	{
-		DSpContext_Release( gDisplayContext );
-		gDisplayContext = nil;
-		DoFatalAlert("PrepDrawSprockets: DSpContext_SetState failed");
-		return;
-	}
-
-			/* GET ATTRIBS OF THE CONTEXT */
-
-	DSpContext_GetAttributes(gDisplayContext, &realConfig);
-	confirmIt = displayConfig.gameMustConfirmSwitch;			//--- override setting from above cuz Carry has bug
-
-#if ALLOW_FADE	
-	DSpContext_FadeGamma(MONITORS_TO_FADE,100,nil);
-#endif	
-#endif
-}
-
-
 
 
 /**************** GAMMA FADE IN *************************/
