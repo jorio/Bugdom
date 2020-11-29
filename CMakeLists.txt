@@ -159,6 +159,9 @@ set(GAME_HEADERS
 	${GAME_SRCDIR}/Headers/triggers.h
 	${GAME_SRCDIR}/Headers/window.h
 	${GAME_SRCDIR}/Headers/worldmap.h
+	${GAME_SRCDIR}/Headers/GLBackdrop.h
+	${GAME_SRCDIR}/Headers/GLFunctions.h
+	${GAME_SRCDIR}/Headers/gamepatches.h
 	${GAME_SRCDIR}/Headers/tga.h
 )
 
