@@ -1060,7 +1060,7 @@ static const Byte	keyTypes[NUM_LEVELS] =
 				
 		default:
 				DoFatalAlert("MakePowerup: this type not supported yet");
-				break;
+				return;
 
 	}
 

@@ -815,6 +815,7 @@ int		j;
 				
 		default:
 				DoFatalAlert("MovePlayerBug_BeingEaten: how did we get here?");
+				return;
 	}
 
 
