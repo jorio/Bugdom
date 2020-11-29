@@ -1052,7 +1052,7 @@ static void BuildSuperTileLOD(SuperTileMemoryType *superTilePtr, short lod)
 short				j,x,y;
 TQ3AttributeSet		baseData,newData;
 u_short				*baseBuffer, *newBuffer, *nextLine, *newBufferPtr;
-u_long				validSize,bufferSize;
+TQ3Uns32			validSize,bufferSize;
 TQ3StorageObject 	baseTexture,newTexture;
 int					size,numLayers;
 

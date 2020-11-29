@@ -224,7 +224,7 @@ void LoadGrouped3DMF(FSSpec *spec, Byte groupNum)
 TQ3Object		the3DMFFile;
 TQ3Uns32		nObjects;
 TQ3Status 		status;
-short			i;
+TQ3Uns32		i;
 TQ3GroupPosition	position;
 
 	GAME_ASSERT(groupNum < MAX_3DMF_GROUPS);

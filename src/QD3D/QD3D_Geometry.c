@@ -839,8 +839,8 @@ TQ3TriMeshData		triMeshData;
 
 void QD3D_DuplicateTriMeshData(TQ3TriMeshData *inData, TQ3TriMeshData *outData)
 {
-u_long	numPoints,numVertexAttributeTypes;
-int		i;
+TQ3Uns32	numPoints,numVertexAttributeTypes;
+TQ3Uns32 	i;
 
 			/* COPY BASE STUFF */
 			
@@ -932,7 +932,7 @@ void QD3D_FreeDuplicateTriMeshData(TQ3TriMeshData *inData)
 
 void QD3D_CopyTriMeshData(const TQ3TriMeshData *inData, TQ3TriMeshData *outData)
 {
-int		i, numPoints;
+TQ3Uns32	i, numPoints;
 
 			/* CLEAR UNWANTED FIELDS */
 			
