@@ -42,11 +42,6 @@ extern	short			gNumGoldClovers;
 
 static void ReadDataFromSkeletonFile(SkeletonDefType *skeleton, FSSpec *fsSpec);
 static void ReadDataFromPlayfieldFile(FSSpec *specPtr);
-#if 0 // Source port removal
-pascal void myEventProc(NavEventCallbackMessage callBackSelector, NavCBRecPtr callBackParms,
-						NavCallBackUserData callBackUD);
-pascal Boolean myFilterProc(AEDesc*theItem,void*info, NavCallBackUserData callBackUD, NavFilterModes filterMode);
-#endif
 
 
 /****************************/
@@ -1534,57 +1529,3 @@ FSSpec	spec;
 			
 	DoItemShadowCasting();
 }
-
-
-#pragma mark -
-
-
-#if 0 // Source port removal
-/************************ NAV SERVICES:  EVENT PROC *****************************/
-
-pascal void myEventProc(NavEventCallbackMessage callBackSelector, NavCBRecPtr callBackParms,
-						NavCallBackUserData callBackUD)
-{
-//	WindowPtr window = (WindowPtr)(callBackParms->eventData.eventDataParms.event->message);
-
-#pragma unused (callBackUD)
-
-
-
-	switch (callBackSelector)
-	{
-		case	kNavCBEvent:
-				switch (((callBackParms->eventData).eventDataParms).event->what)
-				{
-					case 	updateEvt:
-//							MyHandleUpdateEvent(window, (EventRecord*)callBackParms->eventData.event);
-							break;
-				}
-				break;
-	}
-}
-
-
-/************************ NAV SERCIES: MY FILTER PROC **************************/
-
-pascal Boolean myFilterProc(AEDesc*theItem,void*info, NavCallBackUserData callBackUD, NavFilterModes filterMode)
-{
-Boolean display 			= true;
-NavFileOrFolderInfo	*theInfo = (NavFileOrFolderInfo*)info;
-
-#pragma unused (callBackUD,  filterMode)
-
-	if (theItem->descriptorType == typeFSS)
-		if (!theInfo->isFolder)
-			if (theInfo->fileAndFolder.fileInfo.finderInfo.fdType != 'BSav')			// only show us the saved games
-				display = false;
-				
-	return display;
-}
-#endif
-
-
-
-
-
-
