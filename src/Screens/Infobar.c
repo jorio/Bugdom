@@ -555,7 +555,7 @@ static void DrawNitroGauge(int arcSpan)
 {
 	Boolean wantMargin = (arcSpan < 178) && (arcSpan > 2);
 
-	uint8_t* templateRow = *gNitroGaugeData;
+	uint8_t* templateRow = *((uint8_t**)gNitroGaugeData);
 	int nitroGaugeWidth = gNitroGaugeRect.right - gNitroGaugeRect.left;
 	int nitroGaugeHeight = gNitroGaugeRect.bottom - gNitroGaugeRect.top;
 	
