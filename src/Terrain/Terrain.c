@@ -561,8 +561,8 @@ void DisposeSuperTileMemoryList(void)
 {
 int		numSuperTiles,i,j,lod,numLayers;
 
-    if (gSuperTileMemoryListExists == false)
-        return;
+	if (gSuperTileMemoryListExists == false)
+		return;
 
 	if (gDoCeiling)
 		numLayers = 2;

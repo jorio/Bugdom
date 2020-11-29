@@ -108,27 +108,26 @@ void DoAssert(const char* msg, const char* file, int line)
 /************ CLEAN QUIT ***************/
 
 void CleanQuit(void)
-{	
+{
 Boolean beenHere = false;
 
-    if (!beenHere)
-    {
-        beenHere = true;
+	if (!beenHere)
+	{
+		beenHere = true;
 
-        DeleteAll3DMFGroups();
-        FreeAllSkeletonFiles(-1);
-                
-        if (gGameViewInfoPtr != nil)                // see if nuke an existing draw context
-            QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
+		DeleteAll3DMFGroups();
+		FreeAllSkeletonFiles(-1);
 
-    	GameScreenToBlack();
+		if (gGameViewInfoPtr != nil)                // see if nuke an existing draw context
+			QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
 
-    	if (gQD3DInitialized)
-    		Q3Exit();
+		GameScreenToBlack();
+
+		if (gQD3DInitialized)
+			Q3Exit();
 
 		FreeInfobarArt();
-    }
-
+	}
 
 	StopAllEffectChannels();
 	KillSong();
