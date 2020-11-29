@@ -358,7 +358,7 @@ EventRecord	theEvent;
 	gNewObjectDefinition.slot 		= 10;
 	gNewObjectDefinition.moveCall 	= nil;
 	gNewObjectDefinition.rot 		= 0;
-	gNewObjectDefinition.scale 		= 2.0;
+	gNewObjectDefinition.scale 		= 2.5f;		// Source port change from 2.0 (works better in widescreen)
 	gScoreCyc = MakeNewDisplayGroupObject(&gNewObjectDefinition);
 			
 			/* MAKE NAME FRAME */

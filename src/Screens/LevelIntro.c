@@ -582,18 +582,15 @@ static Byte	letters[] = {LINTRO_MObjType_E, LINTRO_MObjType_E, LINTRO_MObjType_V
 			x += 160;	
 	}
 
-
-		/* WAIT A SEC */
-
-	if (WaitAndDraw(1))
-		return;
-		
+	// Source port note: The game used to wait 1 second here before creating the boxerfly at x=-1500, dx=200.
+	// But that made it pop suddenly into view in widescreen. Instead we're going to create the boxerfly a bit
+	// further to the left and make it fly faster.
 
 		/* MAKE THE BOXERFLY */
 		
 	gNewObjectDefinition.type 		= SKELETON_TYPE_BOXERFLY;
 	gNewObjectDefinition.animNum 	= 0;							
-	gNewObjectDefinition.coord.x 	= -1500;
+	gNewObjectDefinition.coord.x 	= -2200;		// Source port change: up from -1500 (see above)
 	gNewObjectDefinition.coord.y 	= 40;
 	gNewObjectDefinition.coord.z 	= 0;
 	gNewObjectDefinition.flags 		= 0;
@@ -603,7 +600,7 @@ static Byte	letters[] = {LINTRO_MObjType_E, LINTRO_MObjType_E, LINTRO_MObjType_V
 	gNewObjectDefinition.scale 		= 1.0;
 	fly = MakeNewSkeletonObject(&gNewObjectDefinition);			
 		
-	fly->Delta.x = 200;
+	fly->Delta.x = 325;								// Source port change: up from 200 (see above)
 	
 	fly->Mode = 0;
 		

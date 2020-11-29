@@ -58,7 +58,7 @@ enum
 /*********************/
 
 static double		gCamDX,gCamDY,gCamDZ;
-static TQ3Point3D	gCamCenter = { -40, 40, 250.0 };
+static TQ3Point3D	gCamCenter = { -10, 10, 250 };		// Source port change from {-40,40,250} (looks better in widescreen)
 ObjNode				*gMenuIcons[NUM_MENU_ICONS];
 static ObjNode		*gSpider;
 static u_long		gMenuSelection;
@@ -310,7 +310,7 @@ ObjNode					*newObj;
 	gNewObjectDefinition.flags 		= STATUS_BIT_NOTRICACHE; 
 	gNewObjectDefinition.moveCall 	= nil;
 	gNewObjectDefinition.rot 		= 0;
-	gNewObjectDefinition.scale 		= .3;
+	gNewObjectDefinition.scale 		= .35f;		// Source port change from .3 (looks better in widescreen)
 	gNewObjectDefinition.slot 		= 1000;
 	newObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
 	MakeObjectTransparent(newObj, .4);
@@ -318,6 +318,10 @@ ObjNode					*newObj;
 			/* CYC */
 			
 	gNewObjectDefinition.slot 		= 100;
+	gNewObjectDefinition.coord.x 	= 0;
+	gNewObjectDefinition.coord.y 	= -6;		// Source port change from -40 (looks better in widescreen)
+	gNewObjectDefinition.coord.z 	= 0;
+	gNewObjectDefinition.scale 		= .33f;		// Source port change from .3 (looks better in widescreen)
 	gNewObjectDefinition.type 		= MENU_MObjType_Cyc;	
 	gNewObjectDefinition.flags 		= STATUS_BIT_NOFOG|STATUS_BIT_NULLSHADER;
 	MakeNewDisplayGroupObject(&gNewObjectDefinition);
@@ -328,6 +332,7 @@ ObjNode					*newObj;
 	gNewObjectDefinition.coord.x 	= 0;
 	gNewObjectDefinition.coord.y 	= 100;
 	gNewObjectDefinition.coord.z 	= 0;
+	gNewObjectDefinition.scale 		= .3f;
 	gNewObjectDefinition.type 		= MENU_MObjType_MainMenu;	
 	gNewObjectDefinition.flags 		= 0; 
 	MakeNewDisplayGroupObject(&gNewObjectDefinition);
