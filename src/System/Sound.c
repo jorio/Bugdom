@@ -179,8 +179,6 @@ short		i;
 	{
 			/* NEW SOUND CHANNEL */
 			
-		SndCommand 		mySndCmd;
-			
 		iErr = SndNewChannel(&gSndChannel[gMaxChannels],sampledSynth,initMono+initNoInterp,/*NewSndCallBackUPP(CallBackFn)*/nil);
 		if (iErr)												// if err, stop allocating channels
 			break;

@@ -278,7 +278,6 @@ QD3DSetupOutputType	*data;
 static void CreateView(QD3DSetupInputType *setupDefPtr)
 {
 TQ3Status	status;
-TQ3Uns32	hints;
 
 				/* CREATE NEW VIEW OBJECT */
 				
@@ -304,6 +303,7 @@ TQ3Uns32	hints;
 		/* SET RENDERER FEATURES */
 		
 #if 0
+	TQ3Uns32	hints;
 	Q3InteractiveRenderer_GetRAVEContextHints(gQD3D_RendererObject, &hints);
 	hints &= ~kQAContext_NoZBuffer; 				// Z buffer is on 
 	hints &= ~kQAContext_DeepZ; 					// shallow z
@@ -1613,7 +1613,6 @@ void	QD3D_CalcFramesPerSecond(void)
 UnsignedWide	wide;
 unsigned long	now;
 static	unsigned long then = 0;
-Str255			s;
 
 			/* HANDLE SPECIAL DEMO MODE STUFF */
 			
@@ -1643,6 +1642,7 @@ Str255			s;
 		if (GetKeyState(KEY_F8))
 		{
 			RGBColor	color;
+			Str255		s;
 				
 			SetPort(GetWindowPort(gCoverWindow));
 			GetForeColor(&color);

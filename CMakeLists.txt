@@ -260,7 +260,6 @@ if(NOT MSVC)
 		-Wno-multichar
 		-Wno-unknown-pragmas
 		-Wno-unused-parameter
-		-Wno-unused-variable
 		-Wno-unused-but-set-variable
 	)
 else()

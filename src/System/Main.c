@@ -224,8 +224,6 @@ static const TQ3ColorARGB	gLevelFogColor[NUM_LEVELS] =
 void ToolBoxInit(void)
 {
 FSSpec		spec;
-u_long		seconds, seconds2;
-int			i;
 	
 	gMainAppRezFile = CurResFile();
 

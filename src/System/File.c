@@ -129,7 +129,6 @@ float	g3DTileSize, g3DMinY, g3DMaxY;
 
 SkeletonDefType *LoadSkeletonFile(short skeletonType)
 {
-QDErr		iErr;
 short		fRefNum;
 FSSpec		fsSpec;
 SkeletonDefType	*skeleton;					
