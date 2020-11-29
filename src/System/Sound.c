@@ -21,9 +21,6 @@ extern	Boolean		gEnteringName;
 static void SongCompletionProc(SndChannelPtr chan);
 static short FindSilentChannel(void);
 static void Calc3DEffectVolume(short effectNum, TQ3Point3D *where, float volAdjust, u_long *leftVolOut, u_long *rightVolOut);
-#if 0
-static pascal void CallBackFn (SndChannelPtr chan, SndCommand *cmd) ;
-#endif
 
 
 /****************************/
@@ -194,32 +191,6 @@ short		i;
 			DoFatalAlert("InitSoundTools: gMusicBuffer == nil");
 	}
 }
-
-
-/***************************** CALLBACKFN ***************************/
-//  
-// Called by the Sound Manager at interrupt time to let us know that
-// the sound is done playing.
-//
-
-#if 0
-static pascal void CallBackFn (SndChannelPtr chan, SndCommand *cmd) 
-{
-SndCommand      theCmd;
-
-    // Play the sound again (loop it)
-
-    theCmd.cmd = bufferCmd;
-    theCmd.param1 = 0;
-    theCmd.param2 = cmd->param2;
-	SndDoCommand (chan, &theCmd, true);
-
-    // Just reuse the callBackCmd that got us here in the first place
-    SndDoCommand (chan, cmd, true);
-}
-#endif
-
-
 
 
 /******************* LOAD SOUND BANK ************************/
