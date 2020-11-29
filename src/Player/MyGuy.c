@@ -618,7 +618,7 @@ static void MoveMyBuddy(ObjNode *theNode)
 		/**********/
 
 	if (theNode->EffectChannel == -1)
-		theNode->EffectChannel = PlayEffect_Parms3D(EFFECT_BUZZ, &gCoord, kMiddleC+5, .01);
+		theNode->EffectChannel = PlayEffect_Parms3D(EFFECT_BUZZ, &gCoord, kMiddleC+5, .1f);
 	else
 		Update3DSoundChannel(EFFECT_BUZZ, &theNode->EffectChannel, &gCoord);
 
