@@ -61,10 +61,6 @@ Boolean AreAnyNewKeysPressed(void);
 void UpdateKeyMap(void);
 
 void GetMouseCoord(Point *point);
-void RemoveMouseEventHandler(void);
-void RemoveKeyboardEventHandler(void);
-void InstallMouseEventHandler(void);
-void InstallKeyboardEventHandler(void);
 
 void GetMouseDelta(float *dx, float *dy);
 

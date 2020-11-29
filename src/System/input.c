@@ -4,9 +4,6 @@
 /* By Brian Greenstone      */
 /****************************/
 
-#if 0  // Source port removal
-#include <mach/mach_port.h>
-#endif
 
 /***************/
 /* EXTERNALS   */
@@ -19,10 +16,6 @@ extern	PrefsType	gGamePrefs;
 /*     PROTOTYPES     */
 /**********************/
 
-#if 0
-static pascal OSStatus MyKeyboardEventHandler(EventHandlerCallRef eventhandler, EventRef pEventRef, void *userdata);
-static pascal OSStatus MyMouseEventHandler(EventHandlerCallRef eventhandler, EventRef pEventRef, void *userdata);
-#endif
 static Boolean WeAreFrontProcess(void);
 
 
@@ -36,14 +29,6 @@ static Boolean WeAreFrontProcess(void);
 /**********************/
 /*     VARIABLES      */
 /**********************/
-
-#if 0
-static	EventHandlerUPP			gMouseEventHandlerUPP = nil;
-static	EventHandlerRef			gMouseEventHandlerRef = 0;
-
-static	EventHandlerUPP			gKeyboardEventHandlerUPP = nil;
-static	EventHandlerRef			gKeyboardEventHandlerRef = 0;
-#endif
 
 long					gMouseDeltaX = 0;
 long					gMouseDeltaY = 0;
@@ -68,68 +53,6 @@ void CaptureMouse(Boolean doCapture)
 {
 	SDL_SetRelativeMouseMode(doCapture ? SDL_TRUE : SDL_FALSE);
 	SDL_ShowCursor(doCapture ? 0 : 1);
-}
-
-
-
-
-/******************* INSTALL MOUSE EVENT HANDLER ***********************/
-
-void InstallMouseEventHandler(void)
-{
-#if 1
-	SDL_SetRelativeMouseMode(SDL_TRUE);
-#else
-EventTypeSpec			mouseEvents[5] ={{kEventClassMouse, kEventMouseMoved},
-										{kEventClassMouse, kEventMouseDragged},
-										{kEventClassMouse, kEventMouseUp},
-										{kEventClassMouse, kEventMouseDown},
-										{kEventClassMouse, kEventMouseWheelMoved},
-										};
-
-
-
-	// Set up the handler to capture mouse movements.
-
-	if (!gMouseEventHandlerUPP)
-		gMouseEventHandlerUPP = NewEventHandlerUPP(MyMouseEventHandler);
-
-	
-				/* INSTALL THE EVENT HANDLER */
-
-	InstallEventHandler(GetApplicationEventTarget(), gMouseEventHandlerUPP,	5,
-						mouseEvents, nil, &gMouseEventHandlerRef);
-#endif
-}
-
-
-/******************* INSTALL KEYBOARD EVENT HANDLER ***********************/
-
-void InstallKeyboardEventHandler(void)
-{
-#if 1
-	SOURCE_PORT_MINOR_PLACEHOLDER();
-#else
-EventTypeSpec			events[3] ={
-										{kEventClassKeyboard, kEventRawKeyDown},
-										{kEventClassKeyboard, kEventRawKeyRepeat},
-										{kEventClassKeyboard, kEventRawKeyUp},
-										
-										};
-
-
-
-	// Set up the handler to capture mouse movements.
-
-	if (!gKeyboardEventHandlerUPP)
-		gKeyboardEventHandlerUPP = NewEventHandlerUPP(MyKeyboardEventHandler);
-
-	
-				/* INSTALL THE EVENT HANDLER */
-
-	InstallEventHandler(GetApplicationEventTarget(), gKeyboardEventHandlerUPP,	3,
-						events, nil, &gKeyboardEventHandlerRef);
-#endif
 }
 
 
@@ -301,54 +224,6 @@ UInt32		modifiers;
 }
 
 #endif
-
-
-/******************* REMOVE MOUSE EVENT HANDLER *************************/
-
-void RemoveMouseEventHandler(void)
-{
-
-#if 1
-	SDL_SetRelativeMouseMode(SDL_FALSE);
-#else
-	//	if the handler has been installed, remove it
-
-	if (gMouseEventHandlerRef != 0)
-	{
-		RemoveEventHandler(gMouseEventHandlerRef);
-		gMouseEventHandlerRef = 0;
-		
-		DisposeEventHandlerUPP(gMouseEventHandlerUPP);
-		gMouseEventHandlerUPP = nil;
-	}
-	
-#endif
-}
-
-
-/******************* REMOVE KEYBOARD EVENT HANDLER *************************/
-
-void RemoveKeyboardEventHandler(void)
-{
-
-#if 1
-	SOURCE_PORT_MINOR_PLACEHOLDER();
-#else
-	//	if the handler has been installed, remove it
-
-	if (gKeyboardEventHandlerRef != 0)
-	{
-		RemoveEventHandler(gKeyboardEventHandlerRef);
-		gKeyboardEventHandlerRef = 0;
-		
-		DisposeEventHandlerUPP(gKeyboardEventHandlerUPP);
-		gKeyboardEventHandlerUPP = nil;
-	}
-	
-#endif
-}
-
-
 
 
 #pragma mark -
