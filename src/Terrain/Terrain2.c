@@ -259,7 +259,7 @@ long			realX,realZ;
 		return;
 
 	itemPtr = gTerrainItemLookupTableX[left];					// get pointer to 1st item at this X
-	if ((int)itemPtr > (int)gMaxItemAddress)					// see if out of bounds			
+	if ((Ptr)itemPtr > gMaxItemAddress)					// see if out of bounds			
 		return;
 
 	minX = left*(SUPERTILE_SIZE*OREOMAP_TILE_SIZE);
@@ -299,7 +299,7 @@ long			realX,realZ;
 		}
 skip:		
 		itemPtr++;												// point to next item in list
-		if ((int)itemPtr > (int)gMaxItemAddress)				
+		if ((Ptr)itemPtr > gMaxItemAddress)
 			break;
 	}
 	
