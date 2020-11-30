@@ -413,6 +413,11 @@ OSErr	iErr;
 				volume = FULL_CHANNEL_VOLUME;
 				break;
 
+		case	SONG_GARDEN_OLD:
+				OpenGameFile(":audio:LawnSongOld.aiff",&gMusicFileRefNum,errStr);
+				volume = FULL_CHANNEL_VOLUME;
+				break;
+
 		case	SONG_PANGEA:
 				OpenGameFile(":audio:song_pangea",&gMusicFileRefNum,errStr);
 				volume = FULL_CHANNEL_VOLUME;
