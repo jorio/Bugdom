@@ -156,7 +156,7 @@ short	i;
 		{
 			TQ3ShaderObject	shader;
 		
-			shader	= QD3D_GetTextureMap(130+i, nil, true);				// make PICT into shader
+			shader	= QD3D_GetTextureMap(130+i, nil, false);				// make PICT into shader
 			GAME_ASSERT(shader);
 			
 			gParticleShader[i] = Q3AttributeSet_New();					// new attrib set
