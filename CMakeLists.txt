@@ -239,6 +239,7 @@ target_link_libraries(${GAME_TARGET}
 target_compile_definitions(Quesa_SDL PUBLIC
 	QUESA_OS_SDL
 	QUESA_APPLY_FOG_COLOR_IN_ALL_PASSES
+	QUESA_DUMP_SHADERS
 )
 
 target_compile_definitions(${GAME_TARGET} PRIVATE
