@@ -810,11 +810,11 @@ unsigned long	someLong;
 	
 	GetDateTime ((unsigned long *)(&someLong));		// init random seed
 	SetMyRandomSeed(someLong);
-	HideCursor();
 
 
 			/* DO INTRO */
 			
+	DoModelDebug();
 	ShowIntroScreens();
 	DoPangeaLogo();
 

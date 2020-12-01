@@ -11,3 +11,4 @@ void ShowIntroScreens(void);
 void DoPangeaLogo(void);
 void DoWinScreen(void);
 void DoLoseScreen(void);
+void DoModelDebug(void);
