@@ -15,6 +15,7 @@ extern	TQ3Vector3D	gDelta;
 extern	float		gAutoFadeStartDist;
 extern	u_short		gLevelType;
 extern	ObjNode		*gCurrentDragonFly,*gPlayerObj;
+extern	const float	gTextureAlphaThreshold;
 
 
 /****************************/
@@ -239,7 +240,10 @@ FencePointType			*nubs;
 			GAME_ASSERT(gFenceShaderAttribs[i]);
 
 			Q3AttributeSet_Add(gFenceShaderAttribs[i], kQ3AttributeTypeSurfaceShader, &shader);	// put shader into attrib
-	
+
+			// Source port addition: discard transparent texels to prevent mesh from being knocked off fast rendering path
+			Q3Object_AddElement(shader, kQ3ElementTypeTextureShaderAlphaTest, &gTextureAlphaThreshold);
+
 			Q3Object_Dispose(shader);												// nuke extra ref
 		}
 		else

@@ -57,6 +57,10 @@ TQ3Object		newModel;
 	newModel = Load3DMFModel(inSpec);
 	GAME_ASSERT(newModel);
 
+
+	QD3D_SetTextureAlphaThreshold_Recurse(newModel);	// DISCARD TRANSPARENT TEXELS (Source port addition)
+
+
 	gCurrentSkeleton = skeleton;
 	DecomposeReferenceModel(newModel);
 	

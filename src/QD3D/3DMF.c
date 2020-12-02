@@ -80,6 +80,9 @@ TQ3Object			theModel;
 	
 	Q3File_Close(fileObj);
 	Q3Object_Dispose(fileObj);
+
+
+
 	return(theModel);
 }
 
@@ -268,6 +271,17 @@ TQ3GroupPosition	position;
 			/* NUKE ORIGINAL FILE */
 			
 	Q3Object_Dispose(the3DMFFile);
+
+
+
+			/*********************************************************************/
+			/* DISCARD TRANSPARENT TEXELS (Source port addition for performance) */
+			/*********************************************************************/
+
+	for (i = 0; i < nObjects; i++)
+	{
+		QD3D_SetTextureAlphaThreshold_Recurse(gObjectGroupList[groupNum][i]);
+	}
 }
 
 

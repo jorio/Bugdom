@@ -34,6 +34,8 @@ static void ScrollUVs_TriMesh(TQ3Object theTriMesh, short whichShader);
 /*    CONSTANTS             */
 /****************************/
 
+const TQ3Float32 gTextureAlphaThreshold = 0.5f;
+
 
 /*********************/
 /*    VARIABLES      */
@@ -1038,6 +1040,93 @@ void QD3D_FreeCopyTriMeshData(TQ3TriMeshData *data)
 }
 
 
+/**************************** QD3D: SET TEXTURE ALPHA THRESHOLD *******************************/
+// (SOURCE PORT ADDITION)
+//
+// Instructs Quesa to discard transparent texels so meshes don't get knocked off fast rendering path.
+//
+// The game has plenty of models with textures containing texels that are either fully-opaque
+// or fully-transparent (e.g.: the ladybug's eyelashes and wings).
+//
+// Normally, textures that are not fully-opaque would make Quesa consider the entire mesh
+// as having transparency. This would take the mesh out of the fast rendering path, because Quesa
+// needs to depth sort the triangles in transparent meshes.
+//
+// In the case of textures that are either fully-opaque or fully-transparent, though, we don't
+// need that extra depth sorting. The transparent texels can simply be discarded instead.
+
+void QD3D_SetTextureAlphaThreshold_TriMesh(TQ3Object triMesh)
+{
+	TQ3TriMeshData		triMeshData;
+	TQ3Status			status;
+
+	GAME_ASSERT_MESSAGE(Q3Object_IsType(triMesh, kQ3ShapeTypeGeometry) && Q3Geometry_GetType(triMesh) == kQ3GeometryTypeTriMesh,
+					"Not a TriMesh - try _Recurse instead");
+
+	status = Q3TriMesh_GetData(triMesh, &triMeshData);							// get trimesh data
+	GAME_ASSERT(status);
+
+	// SEE IF HAS A TEXTURE
+	if (Q3AttributeSet_Contains(triMeshData.triMeshAttributeSet, kQ3AttributeTypeSurfaceShader))
+	{
+		TQ3SurfaceShaderObject	shader;
+		status = Q3AttributeSet_Get(triMeshData.triMeshAttributeSet, kQ3AttributeTypeSurfaceShader, &shader);
+		GAME_ASSERT(status);
+		status = Q3Object_AddElement(shader, kQ3ElementTypeTextureShaderAlphaTest, &gTextureAlphaThreshold);
+		GAME_ASSERT(status);
+		Q3Object_Dispose(shader);
+	}
+
+	Q3TriMesh_EmptyData(&triMeshData);
+}
 
 
+void QD3D_SetTextureAlphaThreshold_Recurse(TQ3Object root)
+{
+	const int	frontierStackLength = 64;
+	TQ3Object	frontier[frontierStackLength];
+	int			top = 0;
 
+	frontier[top] = root;
+
+	while (top >= 0)
+	{
+		TQ3Object obj = frontier[top];
+		frontier[top] = nil;
+		top--;
+
+		if (Q3Object_IsType(obj,kQ3ShapeTypeGeometry) &&
+			Q3Geometry_GetType(obj) == kQ3GeometryTypeTriMesh)		// must be trimesh
+		{
+			QD3D_SetTextureAlphaThreshold_TriMesh(obj);
+		}
+		else if (Q3Object_IsType(obj, kQ3ShapeTypeShader) &&
+				 Q3Shader_GetType(obj) == kQ3ShaderTypeSurface)		// must be texture surface shader
+		{
+			DoAlert("Implement me?");
+		}
+		else if (Q3Object_IsType(obj, kQ3ShapeTypeGroup))			// SEE IF RECURSE SUB-GROUP
+		{
+			TQ3GroupPosition pos = nil;
+			Q3Group_GetFirstPosition(obj, &pos);
+
+			while (pos)												// scan all objects in group
+			{
+				TQ3Object child;
+				Q3Group_GetPositionObject(obj, pos, &child);		// get object from group
+				if (child)
+				{
+					top++;
+					GAME_ASSERT(top < frontierStackLength);
+					frontier[top] = child;
+				}
+				Q3Group_GetNextPosition(obj, &pos);
+			}
+		}
+
+		if (obj != root)
+		{
+			Q3Object_Dispose(obj);						// dispose local ref
+		}
+	}
+}
