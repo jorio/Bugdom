@@ -288,11 +288,6 @@ enum
 	GLOBAL2_MObjType_GreenClover,
 	GLOBAL2_MObjType_BlueClover,
 	GLOBAL2_MObjType_Tick,
-	
-	GLOBAL2_MObjType_Shield0,
-	GLOBAL2_MObjType_Shield1,
-	GLOBAL2_MObjType_Shield2,
-	GLOBAL2_MObjType_Shield3
 };
 
 
