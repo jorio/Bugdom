@@ -234,7 +234,11 @@ TQ3GroupPosition	position;
 
 			/* DISPOSE OF ANY OLD OBJECTS */
 
+#if 1
+	GAME_ASSERT_MESSAGE(gNumObjectsInGroupList[groupNum] == 0, "3DMF group was not freed before reuse");
+#else
 	Free3DMFGroup(groupNum);
+#endif
 
 			/* LOAD NEW GEOMETRY */
 			
@@ -280,7 +284,9 @@ TQ3GroupPosition	position;
 
 	for (i = 0; i < nObjects; i++)
 	{
-		QD3D_SetTextureAlphaThreshold_Recurse(gObjectGroupList[groupNum][i]);
+		// We want to discard transparent texels on ALL models EXCEPT the shadow quad
+		if (!(groupNum == MODEL_GROUP_GLOBAL1 && i == GLOBAL1_MObjType_Shadow))
+			QD3D_SetTextureAlphaThreshold_Recurse(gObjectGroupList[groupNum][i]);
 	}
 }
 
