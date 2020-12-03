@@ -1109,6 +1109,9 @@ int		w,x;
 		default:
 				return;
 	}
+
+	if (health < 0)				// Source port fix: hive health can go negative if you keep shooting at it
+		health = 0;
 	
 		/***********/	
 		/* DRAW IT */
@@ -1120,12 +1123,26 @@ int		w,x;
 	x = r.right = r.left + BOSS_WIDTH;
 			
 		/* FRAME */
-		
-	PenSize(2,2);
+
 	SetPort(GetWindowPort(gCoverWindow));
 	ForeColor(blackColor);
-	FrameRect(&r);
-	
+	{
+		const int thickness = 2;
+		Rect frameRect = r;
+		frameRect.left		-= thickness;
+		frameRect.top		-= thickness;
+		frameRect.right		+= thickness;
+		frameRect.bottom	+= thickness;
+		for (int i = 0; i < thickness; i++)
+		{
+			++frameRect.left;
+			++frameRect.top;
+			--frameRect.right;
+			--frameRect.bottom;
+			FrameRect(&frameRect);
+		}
+	}
+
 		/* METER */
 		
 	r.top += 2;
@@ -1148,14 +1165,4 @@ int		w,x;
 		ForeColor(blackColor);
 		PaintRect(&r);
 	}
-			
-	PenNormal();
 }
-
-
-
-
-
-
-
-
