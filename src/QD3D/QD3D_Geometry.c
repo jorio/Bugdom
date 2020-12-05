@@ -513,6 +513,9 @@ TQ3Matrix4x4	matrix,matrix2;
 
 	for (i=0; i < MAX_PARTICLES2; i++)
 	{
+		if (!gParticles[i].isUsed)										// source port fix
+			continue;
+
 				/* ROTATE IT */
 
 		gParticles[i].rot.x += gParticles[i].rotDelta.x * fps;
