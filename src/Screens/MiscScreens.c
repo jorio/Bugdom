@@ -384,7 +384,11 @@ static void Slideshow(const struct SlideshowEntry* slides, bool doFade)
 
 		if (i == 0)
 		{
-			Overlay_RenderQuad(OVERLAY_FIT);
+			Overlay_SubmitQuad(
+					0, 0, 640, 480,
+					0.0f, 0.0f, 1.0f, 1.0f);
+			Overlay_Flush();
+			SDL_GL_SwapWindow(gSDLWindow);
 			GammaFadeIn();
 		}
 		UpdateInput();
@@ -393,7 +397,11 @@ static void Slideshow(const struct SlideshowEntry* slides, bool doFade)
 		{
 			UpdateInput();
 			DoSoundMaintenance();
-			Overlay_RenderQuad(OVERLAY_FIT);
+			Overlay_SubmitQuad(
+					0, 0, 640, 480,
+					0.0f, 0.0f, 1.0f, 1.0f);
+			Overlay_Flush();
+			SDL_GL_SwapWindow(gSDLWindow);
 			QD3D_CalcFramesPerSecond(); // required for DoSDLMaintenance to properly cap the framerate
 			DoSDLMaintenance();
 		} while (!FlushMouseButtonPress() && !GetNewKeyState(kVK_Return) && !GetNewKeyState(kVK_Escape) && !GetNewKeyState(kVK_Space));

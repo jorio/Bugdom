@@ -1,7 +1,5 @@
 #pragma once
 
-#include "GLOverlay.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -31,7 +29,11 @@ void Overlay_Alloc(void);
 
 void Overlay_Clear(UInt32 argb);
 
-void Overlay_RenderQuad(int fit);
+void Overlay_SubmitQuad(
+		int srcX, int srcY, int srcW, int srcH,
+		float dstX, float dstY, float dstW, float dstH);
+
+void Overlay_Flush(void);
 
 void Overlay_Dispose(void);
 

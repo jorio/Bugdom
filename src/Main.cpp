@@ -83,7 +83,7 @@ int CommonMain(int argc, const char** argv)
 	// Clear window
 	Overlay_BeginExclusive();
 	Overlay_Clear(0xFFA5A5A5);
-	Overlay_RenderQuad(OVERLAY_FILL);
+	Overlay_Flush();
 	Overlay_EndExclusive();
 
 	FindGameData();

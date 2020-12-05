@@ -126,6 +126,8 @@ Boolean FlushMouseButtonPress()
 
 void DoSDLMaintenance()
 {
+	SDL_GL_SwapWindow(gSDLWindow);
+
 	static int holdFramerateCap = 0;
 
 	// Cap frame rate.

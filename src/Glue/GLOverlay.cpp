@@ -1,5 +1,4 @@
 #include "GLOverlay.h"
-#include <cmath>
 #include <cstring>
 #include <cstdio>
 #include <stdexcept>
@@ -51,7 +50,7 @@ GLOverlay::GLOverlay(
 	this->textureWidth = width;
 	this->textureHeight = height;
 	this->textureData = pixels;
-	this->needClear = false;
+	this->nQuads = 0;
 
 	GLint status;
 
@@ -102,67 +101,33 @@ GLOverlay::~GLOverlay()
 	gl.DeleteVertexArrays(1, &vao);
 }
 
-void GLOverlay::UpdateQuad(
-	const int windowWidth,
-	const int windowHeight,
-	int fit)
+void GLOverlay::SubmitQuad(
+		int srcX, int srcY, int srcW, int srcH,
+		float dstX, float dstY, float dstW, float dstH)
 {
-	float screenLeft   = 0.0f;
-	float screenRight  = (float)windowWidth;
-	float screenTop    = 0.0f;
-	float screenBottom = (float)windowHeight;
-	needClear = false;
-
-	// Adjust screen coordinates if we want to pillarbox/letterbox the image.
-	if (fit & (OVERLAY_LETTERBOX | OVERLAY_PILLARBOX))
-	{
-		const float targetAspectRatio = (float) windowWidth / windowHeight;
-		const float sourceAspectRatio = (float) textureWidth / textureHeight;
-
-		if (fabs(sourceAspectRatio - targetAspectRatio) < 0.1)
-		{
-			// source and window have nearly the same aspect ratio -- fit (no-op)
-		}
-		else if ((fit & OVERLAY_LETTERBOX) && sourceAspectRatio > targetAspectRatio)
-		{
-			// source is wider than window -- letterbox
-			needClear = true;
-			float letterboxedHeight = windowWidth / sourceAspectRatio;
-			screenTop = (windowHeight - letterboxedHeight) / 2;
-			screenBottom = screenTop + letterboxedHeight;
-		}
-		else if ((fit & OVERLAY_PILLARBOX) && sourceAspectRatio < targetAspectRatio)
-		{
-			// source is narrower than window -- pillarbox
-			needClear = true;
-			float pillarboxedWidth = sourceAspectRatio * windowWidth / targetAspectRatio;
-			screenLeft = (windowWidth / 2.0f) - (pillarboxedWidth / 2.0f);
-			screenRight = screenLeft + pillarboxedWidth;
-		}
-	}
-
 	// Compute normalized device coordinates for the quad vertices.
-	float ndcLeft   = 2.0f * screenLeft  / windowWidth - 1.0f;
-	float ndcRight  = 2.0f * screenRight / windowWidth - 1.0f;
-	float ndcTop    = 1.0f - 2.0f * screenTop    / windowHeight;
-	float ndcBottom = 1.0f - 2.0f * screenBottom / windowHeight;
+	float ndcLeft   = 2.0f * (dstX       ) - 1.0f;
+	float ndcRight  = 2.0f * (dstX + dstW) - 1.0f;
+	float ndcTop    = 1.0f - 2.0f * (dstY       );
+	float ndcBottom = 1.0f - 2.0f * (dstY + dstH);
 
 	// Compute texture coordinates.
-	float uLeft     = 0.0f;
-	float uRight    = 1.0f;
-	float vTop      = 0.0f;
-	float vBottom   = 1.0f;
+	float uLeft     = (float)(srcX       ) / textureWidth;
+	float uRight    = (float)(srcX + srcW) / textureWidth;
+	float vTop      = (float)(srcY       ) / textureHeight;
+	float vBottom   = (float)(srcY + srcH) / textureHeight;
 
-	vertexBufferData = {
-		// First triangle
-		ndcLeft,  ndcTop,         uLeft,  vTop,
-		ndcRight, ndcTop,         uRight, vTop,
-		ndcRight, ndcBottom,      uRight, vBottom,
-		// Second triangle
-		ndcLeft,  ndcTop,         uLeft,  vTop,
-		ndcRight, ndcBottom,      uRight, vBottom,
-		ndcLeft,  ndcBottom,      uLeft,  vBottom,
-	};
+	float* v = &vertexBufferData[nQuads * kFloatsPerQuad];
+
+//	X------------------ Y------------------ U------------------ U------------------
+	*(v++) = ndcLeft;	*(v++) = ndcTop;	*(v++) = uLeft; 	*(v++) = vTop;			// First triangle
+	*(v++) = ndcRight;	*(v++) = ndcTop;	*(v++) = uRight;	*(v++) = vTop;
+	*(v++) = ndcRight;	*(v++) = ndcBottom;	*(v++) = uRight;	*(v++) = vBottom;
+	*(v++) = ndcLeft;	*(v++) = ndcTop;	*(v++) = uLeft;		*(v++) = vTop;			// Second triangle
+	*(v++) = ndcRight;	*(v++) = ndcBottom;	*(v++) = uRight;	*(v++) = vBottom;
+	*(v++) = ndcLeft;	*(v++) = ndcBottom;	*(v++) = uLeft;		*(v++) = vBottom;
+
+	nQuads++;
 }
 
 void GLOverlay::UpdateTexture(int x, int y, int w, int h)
@@ -173,19 +138,14 @@ void GLOverlay::UpdateTexture(int x, int y, int w, int h)
 	glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, w, h, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, textureData + (y * textureWidth + x) * 4);
 }
 
-void GLOverlay::Render(
-	int windowWidth,
-	int windowHeight,
-	bool linearFiltering
-	)
+void GLOverlay::FlushQuads(bool linearFiltering)
 {
 	gl.UseProgram(program);
 
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
-	glDisable(GL_BLEND);
 
-	glViewport(0, 0, windowWidth, windowHeight);
+	glDisable(GL_BLEND);
 
 	glBindTexture(GL_TEXTURE_2D, texture);
 	GLint textureFilter = linearFiltering ? GL_LINEAR : GL_NEAREST;
@@ -196,10 +156,34 @@ void GLOverlay::Render(
 	gl.BindBuffer(GL_ARRAY_BUFFER, vbo);
 	gl.EnableVertexAttribArray(kAttribIdVertexPos);
 	gl.EnableVertexAttribArray(kAttribIdTexCoord);
-	gl.VertexAttribPointer(kAttribIdVertexPos, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, 0);
-	gl.VertexAttribPointer(kAttribIdTexCoord, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (void*) (sizeof(float) * 2));
 
-	gl.BufferData(GL_ARRAY_BUFFER, vertexBufferData.size() * sizeof(float), vertexBufferData.data(), GL_STATIC_DRAW);
+	gl.VertexAttribPointer(
+			kAttribIdVertexPos,							// index
+			2,											// size (number of components)
+			GL_FLOAT,									// type
+			GL_FALSE,									// normalized
+			kFloatsPerVertex * sizeof(float),			// stride
+			0											// pointer offset
+	);
+
+	gl.VertexAttribPointer(
+			kAttribIdTexCoord,							// index
+			2,											// size (number of components)
+			GL_FLOAT,									// type
+			GL_FALSE,									// normalized
+			kFloatsPerVertex * sizeof(float),			// stride
+			(void*) (sizeof(float) * 2)					// pointer offset
+	);
+
+	gl.BufferData(
+			GL_ARRAY_BUFFER,							// buffer
+			nQuads * kFloatsPerQuad * sizeof(float),	// size (bytes)
+			vertexBufferData.data(),					// data
+			GL_STATIC_DRAW								// usage
+	);
+
 	gl.BindVertexArray(vao);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glDrawArrays(GL_TRIANGLES, 0, 2 * nQuads * 3);
+
+	nQuads = 0;
 }

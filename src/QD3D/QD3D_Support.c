@@ -76,7 +76,11 @@ Boolean		gQD3DInitialized = false;
 // that renders translucent materials more accurately at an angle.
 // However, it looks "off" in the game -- shadow quads, shield spheres,
 // water patches all appear darker than they would on original hardware.
-static TQ3Boolean gQD3D_AngleAffectsAlpha = kQ3False;
+static const TQ3Boolean gQD3D_AngleAffectsAlpha = kQ3False;
+
+// Source port addition: don't let Quesa swap buffers automatically
+// because we render stuff outside Quesa (such as the HUD).
+static const TQ3Boolean gQD3D_SwapBufferInEndPass = kQ3False;
 
 static Boolean gQD3D_FreshDrawContext = false;
 
@@ -323,6 +327,9 @@ TQ3Status	status;
 	// Source port addition: turn off Quesa's angle affect on alpha to preserve the original look of shadows, water, shields etc.
 	Q3Object_SetProperty(gQD3D_RendererObject, kQ3RendererPropertyAngleAffectsAlpha,
 						 sizeof(gQD3D_AngleAffectsAlpha), &gQD3D_AngleAffectsAlpha);
+
+	Q3Object_SetProperty(gQD3D_DrawContext, kQ3DrawContextPropertySwapBufferInEndPass,
+						sizeof(gQD3D_SwapBufferInEndPass), &gQD3D_SwapBufferInEndPass);
 }
 
 

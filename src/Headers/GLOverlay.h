@@ -1,33 +1,15 @@
 #pragma once
 
-enum
-{
-	OVERLAY_FILL = 0,
-	OVERLAY_PILLARBOX = 1,
-	OVERLAY_LETTERBOX = 2,
-	OVERLAY_CLEAR_BLACK = 4,
-	OVERLAY_FIT = OVERLAY_PILLARBOX | OVERLAY_LETTERBOX,
-};
-
-#ifdef __cplusplus
-
 #include "GLFunctions.h"
 #include <array>
 
-class GLOverlayQuad
-{
-	int srcX;
-	int srcY;
-	int srcW;
-	int srcH;
-	float dstX;
-	float dstY;
-	float dstW;
-	float dstH;
-};
-
 class GLOverlay
 {
+	static const int kMaxQuads			= 4;
+	static const int kFloatsPerVertex	= 4;
+	static const int kFloatsPerTriangle	= 3 * kFloatsPerVertex;
+	static const int kFloatsPerQuad		= 2 * kFloatsPerTriangle;
+
 	GLFunctions gl;
 	GLuint vao;
 	GLuint vbo;
@@ -36,9 +18,8 @@ class GLOverlay
 	int textureWidth;
 	int textureHeight;
 	unsigned char* textureData;
-	bool needClear;
-	std::array<GLfloat, 4 * 6> vertexBufferData;
-	std::vector<GLOverlayQuad> quads;
+	int nQuads;
+	std::array<GLfloat, kMaxQuads * kFloatsPerQuad> vertexBufferData;
 
 public:
 	GLOverlay(int width, int height, unsigned char* pixels);
@@ -47,9 +28,16 @@ public:
 
 	void UpdateTexture(int damageX, int damageY, int damageWidth, int damageHeight);
 
-	void UpdateQuad(int windowWidth, int windowHeight, int fit);
+	void SubmitQuad(
+		int srcX,
+		int srcY,
+		int srcW,
+		int srcH,
+		float dstX,
+		float dstY,
+		float dstW,
+		float dstH
+	);
 
-	void Render(int windowWidth, int windowHeight, bool linearFiltering);
+	void FlushQuads(bool linearFiltering);
 };
-
-#endif

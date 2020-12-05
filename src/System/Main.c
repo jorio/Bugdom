@@ -405,10 +405,17 @@ float fps;
 			/* DRAW OBJECTS & TERRAIN */
 					
 		UpdateInfobar();
-		Overlay_RenderQuad(OVERLAY_FILL);
 
 		DoMyTerrainUpdate();
 		QD3D_DrawScene(gGameViewInfoPtr,DrawTerrain);
+
+		Overlay_SubmitQuad(0,	0,		640,	62,		0,	0,				1.0f,	62.0f/480.0f);
+		if (gLevelTable[gRealLevel].isBossLevel || !gGamePrefs.hideBottomBarInNonBossLevels)
+		{
+			Overlay_SubmitQuad(0,	420,	640,	60,		0,	420.0f/480.0f,	1.0f,	60.0f/480.0f);
+		}
+		Overlay_Flush();
+
 		QD3D_CalcFramesPerSecond();
 		DoSDLMaintenance();
 		gDisableHiccupTimer = false;
