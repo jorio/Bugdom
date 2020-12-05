@@ -294,7 +294,11 @@ static void  MovePondFish_JumpAttack(ObjNode *theNode)
 			TQ3Point3D	mouthPt,playerPt;
 			
 			FindCoordOnJoint(theNode, PONDFISH_JOINT_HEAD, &gPondFishMouthOff, &mouthPt);	// get coord of mouth
-			FindCoordOfJoint(gPlayerObj, BUG_LIMB_NUM_PELVIS, &playerPt);
+
+			if (gPlayerObj->Skeleton)
+				FindCoordOfJoint(gPlayerObj, BUG_LIMB_NUM_PELVIS, &playerPt);				// get coord of player pelvis
+			else
+				playerPt = gPlayerObj->Coord;												// Source port fix: fall back to node coord if player has no skeleton (ball mode)
 				
 			dx = playerPt.x - mouthPt.x;
 			dz = playerPt.z - mouthPt.z;

@@ -134,6 +134,8 @@ SkeletonDefType		*skeletonDefPtr;
 SkeletonObjDataType	*skeletonPtr;
 BoneDefinitionType	*bonePtr;
 
+	GAME_ASSERT_MESSAGE(theNode->Skeleton, "Node has no skeleton");
+
 			/* ACCUMULATE A MATRIX DOWN THE CHAIN */
 			
 	*outMatrix = theNode->Skeleton->jointTransformMatrix[jointNum];		// init matrix
