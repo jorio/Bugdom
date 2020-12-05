@@ -81,10 +81,10 @@ int CommonMain(int argc, const char** argv)
 	gCoverWindowPixPtr = (UInt32*) GetPixBaseAddr(GetGWorldPixMap(gCoverWindow));
 
 	// Clear window
-	ExclusiveOpenGLMode_Begin();
-	ClearBackdrop(0xFFA5A5A5);
-	RenderBackdropQuad(BACKDROP_FILL);
-	ExclusiveOpenGLMode_End();
+	Overlay_BeginExclusive();
+	Overlay_Clear(0xFFA5A5A5);
+	Overlay_RenderQuad(OVERLAY_FILL);
+	Overlay_EndExclusive();
 
 	FindGameData();
 #if !(__APPLE__)

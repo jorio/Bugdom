@@ -160,18 +160,18 @@ set(GAME_HEADERS
 	${GAME_SRCDIR}/Headers/triggers.h
 	${GAME_SRCDIR}/Headers/window.h
 	${GAME_SRCDIR}/Headers/worldmap.h
-	${GAME_SRCDIR}/Headers/GLBackdrop.h
 	${GAME_SRCDIR}/Headers/GLFunctions.h
+	${GAME_SRCDIR}/Headers/GLOverlay.h
 	${GAME_SRCDIR}/Headers/gamepatches.h
 	${GAME_SRCDIR}/Headers/tga.h
 )
 
 set(GAME_GLUE_SOURCES
 	${GAME_SRCDIR}/Main.cpp
-	${GAME_SRCDIR}/Glue/Backdrop.cpp
 	${GAME_SRCDIR}/Glue/GamePatches.cpp
-	${GAME_SRCDIR}/Glue/GLBackdrop.cpp
 	${GAME_SRCDIR}/Glue/GLFunctions.cpp
+	${GAME_SRCDIR}/Glue/GLOverlay.cpp
+	${GAME_SRCDIR}/Glue/Overlay.cpp
 	${GAME_SRCDIR}/Glue/Q3FSSpecStorage.cpp
 	${GAME_SRCDIR}/Glue/TGA.c
 )

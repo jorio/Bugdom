@@ -32,6 +32,6 @@ GLFunctions::GLFunctions()
 
 	if (!success)
 	{
-		throw std::runtime_error("Backdrop: SDL_GL_GetProcAddress failed.");
+		throw std::runtime_error("GLFunctions: SDL_GL_GetProcAddress failed.");
 	}
 }

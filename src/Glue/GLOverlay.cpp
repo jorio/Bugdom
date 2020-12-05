@@ -1,4 +1,4 @@
-#include "GLBackdrop.h"
+#include "GLOverlay.h"
 #include <cmath>
 #include <cstring>
 #include <cstdio>
@@ -15,9 +15,9 @@ static void CheckGLError(const char* file, const int line)
 	}
 }
 
-#define CHECK_GL_ERROR() CheckGLError("GLBackdrop", __LINE__)
+#define CHECK_GL_ERROR() CheckGLError("GLOverlay", __LINE__)
 
-static const char* kBackdropVertexShaderSource = R"(#version 150 core
+static const char* kVertexShaderSource = R"(#version 150 core
 out vec2 texCoord;
 in vec2 texCoordIn;
 in vec2 vertexPos;
@@ -27,7 +27,7 @@ void main() {
 }
 )";
 
-static const char* kBackdropFragmentShaderSource = R"(#version 150 core
+static const char* kFragmentShaderSource = R"(#version 150 core
 in vec2 texCoord;
 out vec4 color;
 uniform sampler2D image;
@@ -42,7 +42,7 @@ enum
 	kAttribIdTexCoord,
 };
 
-GLBackdrop::GLBackdrop(
+GLOverlay::GLOverlay(
 	int width,
 	int height,
 	unsigned char* pixels)
@@ -51,39 +51,37 @@ GLBackdrop::GLBackdrop(
 	this->textureWidth = width;
 	this->textureHeight = height;
 	this->textureData = pixels;
-	this->clipWidth = textureWidth;
-	this->clipHeight = textureHeight;
 	this->needClear = false;
 
 	GLint status;
 
-	GLuint backdropVS = gl.CreateShader(GL_VERTEX_SHADER);
-	GLuint backdropFS = gl.CreateShader(GL_FRAGMENT_SHADER);
+	GLuint vertexShader = gl.CreateShader(GL_VERTEX_SHADER);
+	GLuint fragmentShader = gl.CreateShader(GL_FRAGMENT_SHADER);
 
-	const GLint vsLength = (GLint) strlen(kBackdropVertexShaderSource);
-	gl.ShaderSource(backdropVS, 1, (const GLchar**) &kBackdropVertexShaderSource, &vsLength);
-	gl.CompileShader(backdropVS);
-	gl.GetShaderiv(backdropVS, GL_COMPILE_STATUS, &status);
+	const GLint vsLength = (GLint) strlen(kVertexShaderSource);
+	gl.ShaderSource(vertexShader, 1, (const GLchar**) &kVertexShaderSource, &vsLength);
+	gl.CompileShader(vertexShader);
+	gl.GetShaderiv(vertexShader, GL_COMPILE_STATUS, &status);
 	if (status == GL_FALSE) throw std::runtime_error("vertex shader compilation failed");
 
-	const GLint fsLength = (GLint) strlen(kBackdropFragmentShaderSource);
-	gl.ShaderSource(backdropFS, 1, (const GLchar**) &kBackdropFragmentShaderSource, &fsLength);
-	gl.CompileShader(backdropFS);
-	gl.GetShaderiv(backdropFS, GL_COMPILE_STATUS, &status);
+	const GLint fsLength = (GLint) strlen(kFragmentShaderSource);
+	gl.ShaderSource(fragmentShader, 1, (const GLchar**) &kFragmentShaderSource, &fsLength);
+	gl.CompileShader(fragmentShader);
+	gl.GetShaderiv(fragmentShader, GL_COMPILE_STATUS, &status);
 	if (status == GL_FALSE) throw std::runtime_error("fragment shader compilation failed");
 
 	program = gl.CreateProgram();
-	gl.AttachShader(program, backdropVS);
-	gl.AttachShader(program, backdropFS);
+	gl.AttachShader(program, vertexShader);
+	gl.AttachShader(program, fragmentShader);
 	gl.BindAttribLocation(program, kAttribIdVertexPos, "vertexPos");
 	gl.BindAttribLocation(program, kAttribIdTexCoord, "texCoord");
 	gl.LinkProgram(program);
 	CHECK_GL_ERROR();
 
-	gl.DetachShader(program, backdropVS);
-	gl.DetachShader(program, backdropFS);
-	gl.DeleteShader(backdropVS);
-	gl.DeleteShader(backdropFS);
+	gl.DetachShader(program, vertexShader);
+	gl.DetachShader(program, fragmentShader);
+	gl.DeleteShader(vertexShader);
+	gl.DeleteShader(fragmentShader);
 	CHECK_GL_ERROR();
 
 	gl.GenVertexArrays(1, &vao);
@@ -96,7 +94,7 @@ GLBackdrop::GLBackdrop(
 	CHECK_GL_ERROR();
 }
 
-GLBackdrop::~GLBackdrop()
+GLOverlay::~GLOverlay()
 {
 	glDeleteTextures(1, &texture);
 	gl.DeleteProgram(program);
@@ -104,7 +102,7 @@ GLBackdrop::~GLBackdrop()
 	gl.DeleteVertexArrays(1, &vao);
 }
 
-void GLBackdrop::UpdateQuad(
+void GLOverlay::UpdateQuad(
 	const int windowWidth,
 	const int windowHeight,
 	int fit)
@@ -116,16 +114,16 @@ void GLBackdrop::UpdateQuad(
 	needClear = false;
 
 	// Adjust screen coordinates if we want to pillarbox/letterbox the image.
-	if (fit & (BACKDROP_LETTERBOX | BACKDROP_PILLARBOX))
+	if (fit & (OVERLAY_LETTERBOX | OVERLAY_PILLARBOX))
 	{
 		const float targetAspectRatio = (float) windowWidth / windowHeight;
-		const float sourceAspectRatio = (float) clipWidth / clipHeight;
+		const float sourceAspectRatio = (float) textureWidth / textureHeight;
 
 		if (fabs(sourceAspectRatio - targetAspectRatio) < 0.1)
 		{
 			// source and window have nearly the same aspect ratio -- fit (no-op)
 		}
-		else if ((fit & BACKDROP_LETTERBOX) && sourceAspectRatio > targetAspectRatio)
+		else if ((fit & OVERLAY_LETTERBOX) && sourceAspectRatio > targetAspectRatio)
 		{
 			// source is wider than window -- letterbox
 			needClear = true;
@@ -133,7 +131,7 @@ void GLBackdrop::UpdateQuad(
 			screenTop = (windowHeight - letterboxedHeight) / 2;
 			screenBottom = screenTop + letterboxedHeight;
 		}
-		else if ((fit & BACKDROP_PILLARBOX) && sourceAspectRatio < targetAspectRatio)
+		else if ((fit & OVERLAY_PILLARBOX) && sourceAspectRatio < targetAspectRatio)
 		{
 			// source is narrower than window -- pillarbox
 			needClear = true;
@@ -151,9 +149,9 @@ void GLBackdrop::UpdateQuad(
 
 	// Compute texture coordinates.
 	float uLeft     = 0.0f;
-	float uRight    = (float)clipWidth / textureWidth;
+	float uRight    = 1.0f;
 	float vTop      = 0.0f;
-	float vBottom   = (float)clipHeight / textureHeight;
+	float vBottom   = 1.0f;
 
 	vertexBufferData = {
 		// First triangle
@@ -167,7 +165,7 @@ void GLBackdrop::UpdateQuad(
 	};
 }
 
-void GLBackdrop::UpdateTexture(int x, int y, int w, int h)
+void GLOverlay::UpdateTexture(int x, int y, int w, int h)
 {
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glPixelStorei(GL_UNPACK_ROW_LENGTH, textureWidth);
@@ -175,11 +173,11 @@ void GLBackdrop::UpdateTexture(int x, int y, int w, int h)
 	glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, w, h, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, textureData + (y * textureWidth + x) * 4);
 }
 
-void GLBackdrop::Render(
+void GLOverlay::Render(
 	int windowWidth,
 	int windowHeight,
-	bool linearFiltering,
-	bool autoClearColor)
+	bool linearFiltering
+	)
 {
 	gl.UseProgram(program);
 
@@ -188,23 +186,6 @@ void GLBackdrop::Render(
 	glDisable(GL_BLEND);
 
 	glViewport(0, 0, windowWidth, windowHeight);
-
-	if (needClear)
-	{
-		if (autoClearColor)
-		{
-			// Use top-left pixel in backdrop image to determine clear color
-			float clearR = textureData[1] / 255.0f;
-			float clearG = textureData[2] / 255.0f;
-			float clearB = textureData[3] / 255.0f;
-			glClearColor(clearR, clearG, clearB, 1.0f);
-		}
-		else
-		{
-			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		}
-		glClear(GL_COLOR_BUFFER_BIT);
-	}
 
 	glBindTexture(GL_TEXTURE_2D, texture);
 	GLint textureFilter = linearFiltering ? GL_LINEAR : GL_NEAREST;
@@ -221,22 +202,4 @@ void GLBackdrop::Render(
 	gl.BufferData(GL_ARRAY_BUFFER, vertexBufferData.size() * sizeof(float), vertexBufferData.data(), GL_STATIC_DRAW);
 	gl.BindVertexArray(vao);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
-}
-
-void GLBackdrop::SetClipRegion(
-	int newClipWidth,
-	int newClipHeight)
-{
-	if (newClipWidth < 0 || newClipHeight < 0)
-	{
-		throw std::invalid_argument("illegal backdrop clip region dimensions");
-	}
-
-	if (newClipWidth > textureWidth || newClipHeight > textureHeight)
-	{
-		throw std::invalid_argument("backdrop clip region dimensions may not exceed texture size");
-	}
-
-	this->clipWidth = newClipWidth;
-	this->clipHeight = newClipHeight;
 }

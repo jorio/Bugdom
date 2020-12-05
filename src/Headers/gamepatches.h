@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GLBackdrop.h"
+#include "GLOverlay.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,23 +21,19 @@ void FlushQuesaErrors(void);
 Boolean FlushMouseButtonPress(void);
 
 //-----------------------------------------------------------------------------
-// Backdrop
+// Overlay
 
-void SetWindowGamma(int percent);
+void Overlay_BeginExclusive(void);
 
-void ExclusiveOpenGLMode_Begin(void);
+void Overlay_EndExclusive(void);
 
-void ExclusiveOpenGLMode_End(void);
+void Overlay_Alloc(void);
 
-void AllocBackdropTexture(void);
+void Overlay_Clear(UInt32 argb);
 
-void SetBackdropClipRegion(int width, int height);
+void Overlay_RenderQuad(int fit);
 
-void ClearBackdrop(UInt32 argb);
-
-void RenderBackdropQuad(int fit);
-
-void DisposeBackdropTexture(void);
+void Overlay_Dispose(void);
 
 #ifdef __cplusplus
 }

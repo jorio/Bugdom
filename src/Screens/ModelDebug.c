@@ -306,7 +306,7 @@ void DoModelDebug(void)
 
 		CalcEnvironmentMappingCoords(&gGameViewInfoPtr->currentCameraCoords);
 
-//		RenderBackdropQuad(BACKDROP_FILL);
+//		Overlay_RenderQuad(OVERLAY_FILL);
 		
 		QD3D_DrawScene(gGameViewInfoPtr,DrawObjects);
 

@@ -2,11 +2,11 @@
 
 enum
 {
-	BACKDROP_FILL = 0,
-	BACKDROP_PILLARBOX = 1,
-	BACKDROP_LETTERBOX = 2,
-	BACKDROP_CLEAR_BLACK = 4,
-	BACKDROP_FIT = BACKDROP_PILLARBOX | BACKDROP_LETTERBOX,
+	OVERLAY_FILL = 0,
+	OVERLAY_PILLARBOX = 1,
+	OVERLAY_LETTERBOX = 2,
+	OVERLAY_CLEAR_BLACK = 4,
+	OVERLAY_FIT = OVERLAY_PILLARBOX | OVERLAY_LETTERBOX,
 };
 
 #ifdef __cplusplus
@@ -14,7 +14,19 @@ enum
 #include "GLFunctions.h"
 #include <array>
 
-class GLBackdrop
+class GLOverlayQuad
+{
+	int srcX;
+	int srcY;
+	int srcW;
+	int srcH;
+	float dstX;
+	float dstY;
+	float dstW;
+	float dstH;
+};
+
+class GLOverlay
 {
 	GLFunctions gl;
 	GLuint vao;
@@ -24,23 +36,20 @@ class GLBackdrop
 	int textureWidth;
 	int textureHeight;
 	unsigned char* textureData;
-	int clipWidth;
-	int clipHeight;
 	bool needClear;
 	std::array<GLfloat, 4 * 6> vertexBufferData;
+	std::vector<GLOverlayQuad> quads;
 
 public:
-	GLBackdrop(int width, int height, unsigned char* pixels);
+	GLOverlay(int width, int height, unsigned char* pixels);
 
-	~GLBackdrop();
+	~GLOverlay();
 
 	void UpdateTexture(int damageX, int damageY, int damageWidth, int damageHeight);
 
 	void UpdateQuad(int windowWidth, int windowHeight, int fit);
 
-	void Render(int windowWidth, int windowHeight, bool linearFiltering, bool autoClearColor);
-
-	void SetClipRegion(int clipWidth, int clipHeight);
+	void Render(int windowWidth, int windowHeight, bool linearFiltering);
 };
 
 #endif

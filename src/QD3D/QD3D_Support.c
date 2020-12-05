@@ -252,7 +252,7 @@ QD3DSetupOutputType	*data;
 	data = *dataHandle;
 	GAME_ASSERT(data);												// see if this setup exists
 
-	DisposeBackdropTexture(); // Source port addition - release backdrop GL texture
+	Overlay_Dispose();												// source port addition
 
 	Q3Object_Dispose(data->viewObject);
 	Q3Object_Dispose(data->interpolationStyle);
@@ -621,8 +621,7 @@ TQ3ViewStatus			myViewStatus;
 	{
 		SDL_GL_SetSwapInterval(gGamePrefs.vsync ? 1 : 0);
 
-		AllocBackdropTexture(); // Source port addition - alloc GL backdrop texture
-		// (must be after StartRendering so we have a valid GL context)
+		Overlay_Alloc();									// source port addition (must be after StartRendering so we have a valid GL context)
 
 		gQD3D_FreshDrawContext = false;
 	}

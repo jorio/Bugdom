@@ -357,7 +357,7 @@ static void Slideshow(const struct SlideshowEntry* slides, bool doFade)
 {
 	FSSpec spec;
 
-	ExclusiveOpenGLMode_Begin();
+	Overlay_BeginExclusive();
 
 	for (int i = 0; slides[i].opcode != SLIDESHOW_STOP; i++)
 	{
@@ -384,7 +384,7 @@ static void Slideshow(const struct SlideshowEntry* slides, bool doFade)
 
 		if (i == 0)
 		{
-			RenderBackdropQuad(BACKDROP_FIT);
+			Overlay_RenderQuad(OVERLAY_FIT);
 			GammaFadeIn();
 		}
 		UpdateInput();
@@ -393,13 +393,13 @@ static void Slideshow(const struct SlideshowEntry* slides, bool doFade)
 		{
 			UpdateInput();
 			DoSoundMaintenance();
-			RenderBackdropQuad(BACKDROP_FIT);
+			Overlay_RenderQuad(OVERLAY_FIT);
 			QD3D_CalcFramesPerSecond(); // required for DoSDLMaintenance to properly cap the framerate
 			DoSDLMaintenance();
 		} while (!FlushMouseButtonPress() && !GetNewKeyState(kVK_Return) && !GetNewKeyState(kVK_Escape) && !GetNewKeyState(kVK_Space));
 	}
 
-	ExclusiveOpenGLMode_End();
+	Overlay_EndExclusive();
 
 	if (doFade)
 	{

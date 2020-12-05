@@ -405,7 +405,7 @@ float fps;
 			/* DRAW OBJECTS & TERRAIN */
 					
 		UpdateInfobar();
-		RenderBackdropQuad(BACKDROP_FILL);
+		Overlay_RenderQuad(OVERLAY_FILL);
 
 		DoMyTerrainUpdate();
 		QD3D_DrawScene(gGameViewInfoPtr,DrawTerrain);

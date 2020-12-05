@@ -2,7 +2,7 @@
 #include "Pomme.h"
 #include "PommeGraphics.h"
 #include "MyPCH_Normal.pch"
-#include "GLBackdrop.h"
+#include "GLOverlay.h"
 
 #include <memory>
 
@@ -12,8 +12,9 @@ extern "C"
 	extern PrefsType gGamePrefs;
 }
 
-constexpr const bool ALLOW_BACKDROP_TEXTURE = true;
-std::unique_ptr<GLBackdrop> glBackdrop = nullptr;
+constexpr const bool ALLOW_OVERLAY = true;
+static std::unique_ptr<GLOverlay> glOverlay = nullptr;
+static GLint viewportBackup[4];
 
 static SDL_GLContext exclusiveGLContext = nullptr;
 static bool exclusiveGLContextValid = false;
@@ -35,50 +36,45 @@ public:
 	}
 };
 
-void SetWindowGamma(int percent)
-{
-	SDL_SetWindowBrightness(gSDLWindow, percent / 100.0f);
-}
-
-static UInt32* GetBackdropPixPtr()
+static UInt32* GetOverlayPixPtr()
 {
 	return (UInt32*) GetPixBaseAddr(GetGWorldPixMap(Pomme::Graphics::GetScreenPort()));
 }
 
-static bool IsBackdropAllocated()
+static bool IsOverlayAllocated()
 {
-	return glBackdrop != nullptr;
+	return glOverlay != nullptr;
 }
 
-void AllocBackdropTexture()
+void Overlay_Alloc()
 {
-	if (!ALLOW_BACKDROP_TEXTURE
-		|| IsBackdropAllocated())
+	if (!ALLOW_OVERLAY
+		|| IsOverlayAllocated())
 	{
 		return;
 	}
 
 	PortGuard portGuard;
 
-	glBackdrop = std::make_unique<GLBackdrop>(
+	glOverlay = std::make_unique<GLOverlay>(
 		GAME_VIEW_WIDTH,
 		GAME_VIEW_HEIGHT,
-		(unsigned char*) GetBackdropPixPtr());
+		(unsigned char*) GetOverlayPixPtr());
 
 	ClearPortDamage();
 }
 
-void ClearBackdrop(UInt32 argb)
+void Overlay_Clear(UInt32 argb)
 {
 	PortGuard portGuard;
 
 	UInt32 bgra = ByteswapScalar(argb);
 
-	auto backdropPixPtr = GetBackdropPixPtr();
+	auto pixel = GetOverlayPixPtr();
 
 	for (int i = 0; i < GAME_VIEW_WIDTH * GAME_VIEW_HEIGHT; i++)
 	{
-		*(backdropPixPtr++) = bgra;
+		*(pixel++) = bgra;
 	}
 
 	GrafPtr port;
@@ -86,43 +82,29 @@ void ClearBackdrop(UInt32 argb)
 	DamagePortRegion(&port->portRect);
 }
 
-void DisposeBackdropTexture()
+void Overlay_Dispose()
 {
-	if (!ALLOW_BACKDROP_TEXTURE
-		|| !IsBackdropAllocated())
+	if (!ALLOW_OVERLAY
+		|| !IsOverlayAllocated())
 	{
 		return;
 	}
 
-	glBackdrop.reset(nullptr);
+	glOverlay.reset(nullptr);
 }
 
-void SetBackdropClipRegion(int regionWidth, int regionHeight)
-{
-	if (!ALLOW_BACKDROP_TEXTURE
-		|| !IsBackdropAllocated())
-	{
-		return;
-	}
 
-	glBackdrop->SetClipRegion(regionWidth, regionHeight);
-}
-
-void RenderBackdropQuad(int fit)
+bool Overlay_Begin()
 {
-	if (!ALLOW_BACKDROP_TEXTURE
-		|| !IsBackdropAllocated())
+	if (!ALLOW_OVERLAY
+		|| !IsOverlayAllocated())
 	{
-		return;
+		return false;
 	}
 
 	PortGuard portGuard;
 
-	int windowWidth, windowHeight;
-	GLint vp[4];
-
-	SDL_GetWindowSize(gSDLWindow, &windowWidth, &windowHeight);
-	glGetIntegerv(GL_VIEWPORT, vp);
+	glGetIntegerv(GL_VIEWPORT, viewportBackup);
 
 	glDisable(GL_SCISSOR_TEST);
 
@@ -130,26 +112,43 @@ void RenderBackdropQuad(int fit)
 	{
 		Rect damageRect;
 		GetPortDamageRegion(&damageRect);
-		glBackdrop->UpdateTexture(damageRect.left, damageRect.top, damageRect.right - damageRect.left, damageRect.bottom - damageRect.top);
+		glOverlay->UpdateTexture(damageRect.left, damageRect.top, damageRect.right - damageRect.left, damageRect.bottom - damageRect.top);
 		ClearPortDamage();
 	}
 
-	glBackdrop->UpdateQuad(windowWidth, windowHeight, fit);
+	return true;
+}
 
-	glBackdrop->Render(windowWidth, windowHeight, gGamePrefs.textureFiltering, !(fit & BACKDROP_CLEAR_BLACK));
-
+void Overlay_End()
+{
 	if (exclusiveGLContextValid) // in exclusive GL mode, force swap buffer
 	{
 		SDL_GL_SwapWindow(gSDLWindow);
 	}
 
 	glEnable(GL_SCISSOR_TEST);
-	glViewport(vp[0], vp[1], (GLsizei) vp[2], (GLsizei) vp[3]);
+	glViewport(viewportBackup[0], viewportBackup[1], (GLsizei) viewportBackup[2], (GLsizei) viewportBackup[3]);
 }
 
-void ExclusiveOpenGLMode_Begin()
+void Overlay_RenderQuad(int fit)
 {
-	if (!ALLOW_BACKDROP_TEXTURE)
+	if (!Overlay_Begin())
+		return;
+
+	int windowWidth, windowHeight;
+
+	SDL_GetWindowSize(gSDLWindow, &windowWidth, &windowHeight);
+
+	glOverlay->UpdateQuad(windowWidth, windowHeight, fit);
+
+	glOverlay->Render(windowWidth, windowHeight, gGamePrefs.textureFiltering); //, !(fit & OVERLAY_CLEAR_BLACK));
+
+	Overlay_End();
+}
+
+void Overlay_BeginExclusive()
+{
+	if (!ALLOW_OVERLAY)
 		return;
 
 	if (exclusiveGLContextValid)
@@ -161,18 +160,18 @@ void ExclusiveOpenGLMode_Begin()
 
 	SDL_GL_SetSwapInterval(gGamePrefs.vsync ? 1 : 0);
 
-	AllocBackdropTexture();
+	Overlay_Alloc();
 }
 
-void ExclusiveOpenGLMode_End()
+void Overlay_EndExclusive()
 {
-	if (!ALLOW_BACKDROP_TEXTURE)
+	if (!ALLOW_OVERLAY)
 		return;
 
 	if (!exclusiveGLContextValid)
 		throw std::runtime_error("not in exclusive GL mode");
 
-	DisposeBackdropTexture();
+	Overlay_Dispose();
 
 	exclusiveGLContextValid = false;
 	SDL_GL_DeleteContext(exclusiveGLContext);
