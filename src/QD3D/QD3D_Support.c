@@ -1820,9 +1820,9 @@ void QD3D_SetZWrite(Boolean isOn)
 
 void QD3D_SetAdditiveBlending(Boolean enable)
 {
-	static const TQ3BlendingStyleData normalStyle = { GL_ONE, GL_ONE_MINUS_SRC_ALPHA };
-	static const TQ3BlendingStyleData additiveStyle = { GL_ONE, GL_ONE };
-	
+	static const TQ3BlendingStyleData normalStyle	= { kQ3Off, GL_ONE, GL_ONE_MINUS_SRC_ALPHA };
+	static const TQ3BlendingStyleData additiveStyle	= { kQ3On, GL_ONE, GL_ONE };
+
 	GAME_ASSERT(gQD3D_ViewObject);
 
 	Q3BlendingStyle_Submit(enable ? &additiveStyle : &normalStyle, gQD3D_ViewObject);
