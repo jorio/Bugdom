@@ -2,6 +2,7 @@
 #include <cstring>
 #include <cstdio>
 #include <stdexcept>
+#include <fstream>
 
 static void CheckGLError(const char* file, const int line)
 {
@@ -47,6 +48,16 @@ GLOverlay::GLOverlay(
 	unsigned char* pixels)
 	: gl()
 {
+	if (pixels == nullptr)
+	{
+		ownTextureData = true;
+		pixels = new unsigned char[width*height*4];
+	}
+	else
+	{
+		ownTextureData = false;
+	}
+
 	this->textureWidth = width;
 	this->textureHeight = height;
 	this->textureData = pixels;
@@ -93,12 +104,36 @@ GLOverlay::GLOverlay(
 	CHECK_GL_ERROR();
 }
 
+GLOverlay::GLOverlay(GLOverlay&& other) noexcept
+	: gl()	// TODO: not efficient
+	, vao(other.vao)
+	, vbo(other.vbo)
+	, program(other.program)
+	, texture(other.texture)
+	, textureWidth(other.textureWidth)
+	, textureHeight(other.textureHeight)
+	, textureData(other.textureData)
+	, ownTextureData(other.ownTextureData)
+	, nQuads(other.nQuads)
+	, vertexBufferData(other.vertexBufferData)
+{
+	other.ownTextureData = false;
+	other.textureData = nullptr;
+}
+
 GLOverlay::~GLOverlay()
 {
 	glDeleteTextures(1, &texture);
 	gl.DeleteProgram(program);
 	gl.DeleteBuffers(1, &vbo);
 	gl.DeleteVertexArrays(1, &vao);
+
+	if (ownTextureData)
+	{
+		delete[] textureData;
+		textureData = nullptr;
+		ownTextureData = false;
+	}
 }
 
 void GLOverlay::SubmitQuad(
@@ -189,4 +224,45 @@ void GLOverlay::FlushQuads(bool linearFiltering)
 	glDrawArrays(GL_TRIANGLES, 0, 2 * nQuads * 3);
 
 	nQuads = 0;
+}
+
+void GLOverlay::DumpTGA(const char* outFN, int x, int y, int w, int h)
+{
+	std::ofstream out(outFN, std::ios::out | std::ios::binary);
+	uint16_t TGAhead[] = {0, 2, 0, 0, 0, 0, (uint16_t) w, (uint16_t) h, 0x0820};
+	out.write(reinterpret_cast<char*>(&TGAhead), sizeof(TGAhead));
+
+	char* scanline = (char*)textureData + (y*textureWidth*4) + (x*4);
+	for (int i = 0; i < h; i++)
+	{
+		char* pixel = scanline;
+		for (int j = 0; j < w; j++)
+		{
+			out.write(pixel+3, 1);
+			out.write(pixel+2, 1);
+			out.write(pixel+1, 1);
+			out.write(pixel, 1);
+			pixel += 4;
+		}
+		scanline += 4*textureWidth;
+	}
+
+	printf("GLOverlay: wrote %s\n", outFN);
+}
+
+GLOverlay GLOverlay::CapturePixels(int width, int height)
+{
+	int width4rem = width % 4;
+	int width4ceil = width - width4rem + (width4rem == 0? 0: 4);
+
+	GLOverlay capture(width4ceil, height, nullptr);
+
+	glReadPixels(0, 0, width4ceil, height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, capture.textureData);
+	CHECK_GL_ERROR();
+
+	capture.UpdateTexture(0, 0, width, height);
+
+	//capture.DumpTGA("/tmp/Overlay_Capture.TGA", 0, 0, width, height);
+
+	return capture;
 }

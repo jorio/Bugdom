@@ -138,12 +138,12 @@ void DoBonusScreen(void)
 	
 			/* CLEANUP */
 
+	GammaFadeOut();
 	DeleteAllObjects();
 	FreeAllSkeletonFiles(-1);
 	DeleteAll3DMFGroups();
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);		
 	DisposeSoundBank(SOUND_BANK_BONUS);
-	GammaFadeOut();
 	GameScreenToBlack();
 }
 

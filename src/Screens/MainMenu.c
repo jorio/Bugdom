@@ -194,12 +194,12 @@ tryagain:
 			/***********/
 
 getout:
+	GammaFadeOut();
 	HideCursor();
 	DeleteAllObjects();
 	FreeAllSkeletonFiles(-1);
 	DeleteAll3DMFGroups();
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);		
-	GammaFadeOut();
 	GameScreenToBlack();
 	gDisableAnimSounds = false;
 
@@ -216,7 +216,7 @@ getout:
 				goto start_again;
 	}
 	
-	GammaFadeOut();
+//	GammaFadeOut();
 	GameScreenToBlack();
 	
 	return(loop);

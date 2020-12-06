@@ -322,9 +322,9 @@ static void PlayGame(void)
 
 
 			/* CLEANUP LEVEL */
-					
-		CleanupLevel();
+
 		GammaFadeOut();
+		CleanupLevel();
 		GameScreenToBlack();		
 		
 		if (gGameOverFlag)

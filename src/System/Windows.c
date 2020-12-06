@@ -66,6 +66,7 @@ void InitWindowStuff(void)
 void GammaFadeIn(void)
 {
 	gGammaFadePercent = 100;
+	SOURCE_PORT_MINOR_PLACEHOLDER();
 #if 0 //ALLOW_FADE
 	if (gDisplayContext)
 	{
@@ -87,23 +88,8 @@ void GammaFadeIn(void)
 
 void GammaFadeOut(void)
 {
+	Overlay_FadeOutFrozenFrame(.3f);
 	gGammaFadePercent = 0;
-	SOURCE_PORT_MINOR_PLACEHOLDER();
-#if 0 //ALLOW_FADE
-	if (gDisplayContext)
-	{
-		while(gGammaFadePercent > 0)
-		{
-			gGammaFadePercent -= 5;
-			if (gGammaFadePercent < 0)
-				gGammaFadePercent = 0;
-
-			DSpContext_FadeGamma(gDisplayContext,gGammaFadePercent,nil);
-		
-			Wait(1);
-		}
-	}
-#endif	
 }
 
 /********************** GAMMA ON *********************/

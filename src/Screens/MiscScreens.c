@@ -362,16 +362,7 @@ static void Slideshow(const struct SlideshowEntry* slides, bool doFade)
 			slide->postDrawCallback();
 		}
 
-		if (i == 0)
-		{
-			Overlay_SubmitQuad(
-					0, 0, 640, 480,
-					0.0f, 0.0f, 1.0f, 1.0f);
-			Overlay_Flush();
-			SDL_GL_SwapWindow(gSDLWindow);
-			GammaFadeIn();
-		}
-		UpdateInput();
+		GammaFadeIn();
 
 		do
 		{
@@ -385,13 +376,13 @@ static void Slideshow(const struct SlideshowEntry* slides, bool doFade)
 		} while (!FlushMouseButtonPress() && !GetNewKeyState(kVK_Return) && !GetNewKeyState(kVK_Escape) && !GetNewKeyState(kVK_Space));
 	}
 
-	Overlay_EndExclusive();
-
 	if (doFade)
 	{
 		GammaFadeOut();
 		GameScreenToBlack();
 	}
+
+	Overlay_EndExclusive();
 }
 
 
@@ -590,5 +581,5 @@ void ShowIntroScreens(void)
 		{ SLIDESHOW_FILE, ":images:Info1", NULL },
 		{ SLIDESHOW_STOP, NULL, NULL },
 	};
-	Slideshow(slides, false);
+	Slideshow(slides, true);
 }

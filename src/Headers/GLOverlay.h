@@ -18,11 +18,14 @@ class GLOverlay
 	int textureWidth;
 	int textureHeight;
 	unsigned char* textureData;
+	bool ownTextureData;
 	int nQuads;
 	std::array<GLfloat, kMaxQuads * kFloatsPerQuad> vertexBufferData;
 
 public:
 	GLOverlay(int width, int height, unsigned char* pixels);
+
+	GLOverlay(GLOverlay&&) noexcept;
 
 	~GLOverlay();
 
@@ -40,4 +43,8 @@ public:
 	);
 
 	void FlushQuads(bool linearFiltering);
+
+	void DumpTGA(const char* outFN, int x, int y, int w, int h);
+
+	static GLOverlay CapturePixels(int windowWidth, int windowHeight);
 };

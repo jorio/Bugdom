@@ -190,3 +190,37 @@ void Overlay_EndExclusive()
 	SDL_GL_DeleteContext(exclusiveGLContext);
 	exclusiveGLContext = nullptr;
 }
+
+void Overlay_FadeOutFrozenFrame(float duration)
+{
+	SDL_GLContext currentContext = SDL_GL_GetCurrentContext();
+	GAME_ASSERT_MESSAGE(currentContext, "GL context got nuked before starting fade out!");
+
+	int windowWidth, windowHeight;
+	SDL_GetWindowSize(gSDLWindow, &windowWidth, &windowHeight);
+
+	GLOverlay overlay = GLOverlay::CapturePixels(windowWidth, windowHeight);
+
+	const int durationTicks = duration * 1000.0f;
+	uint32_t nowTicks = SDL_GetTicks();
+	uint32_t startTicks = nowTicks;
+	uint32_t endTicks = startTicks + durationTicks;
+
+	glDisable(GL_SCISSOR_TEST);
+	glViewport(0,0,windowWidth,windowHeight);
+
+	while (nowTicks < endTicks)
+	{
+		float progress = (float) (nowTicks - startTicks) / (durationTicks);
+		overlay.SubmitQuad(0, 0, windowWidth, windowHeight, 0, 1, 1, -1);
+		overlay.FlushQuads(false);
+		glOverlayFade->DrawFade(0, 0, 0, progress);
+		SDL_GL_SwapWindow(gSDLWindow);
+		SDL_Delay(5);
+		nowTicks = SDL_GetTicks();
+	}
+
+	// Draw solid black frame before moving on
+	glOverlayFade->DrawFade(0, 0, 0, 1.0);
+	SDL_GL_SwapWindow(gSDLWindow);
+}

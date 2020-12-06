@@ -37,6 +37,8 @@ void Overlay_Flush(void);
 
 void Overlay_Dispose(void);
 
+void Overlay_FadeOutFrozenFrame(float duration);
+
 #ifdef __cplusplus
 }
 #endif
