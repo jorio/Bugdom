@@ -31,7 +31,7 @@ static void MoveFadeEvent(ObjNode *theNode);
 /*    CONSTANTS             */
 /****************************/
 
-#define	ALLOW_FADE		0
+#define	ALLOW_FADE		1
 
 
 /**********************/
@@ -65,7 +65,8 @@ void InitWindowStuff(void)
 
 void GammaFadeIn(void)
 {
-#if ALLOW_FADE	
+	gGammaFadePercent = 100;
+#if 0 //ALLOW_FADE
 	if (gDisplayContext)
 	{
 		while(gGammaFadePercent < 100)
@@ -86,7 +87,9 @@ void GammaFadeIn(void)
 
 void GammaFadeOut(void)
 {
-#if ALLOW_FADE	
+	gGammaFadePercent = 0;
+	SOURCE_PORT_MINOR_PLACEHOLDER();
+#if 0 //ALLOW_FADE
 	if (gDisplayContext)
 	{
 		while(gGammaFadePercent > 0)
@@ -107,7 +110,9 @@ void GammaFadeOut(void)
 
 void GammaOn(void)
 {
-#if ALLOW_FADE	
+	gGammaFadePercent = 100;
+	SOURCE_PORT_MINOR_PLACEHOLDER();
+#if 0 //ALLOW_FADE
 
 	if (gDisplayContext)
 	{
@@ -215,10 +220,6 @@ float	fps = gFramesPerSecondFrac;
 			gGammaFadePercent = 100;
 			DeleteObject(theNode);
 		}
-#if ALLOW_FADE			
-		if (gDisplayContext)
-			DSpContext_FadeGamma(gDisplayContext,gGammaFadePercent,nil);
-#endif		
 		gGammaFadePercent += 300.0f*fps;
 		if (gGammaFadePercent >= 100.0f)										// see if @ 100%
 			gGammaFadePercent = 100;
@@ -232,10 +233,6 @@ float	fps = gFramesPerSecondFrac;
 			gGammaFadePercent = 0;
 			DeleteObject(theNode);
 		}
-#if ALLOW_FADE		
-		if (gDisplayContext)
-			DSpContext_FadeGamma(gDisplayContext,gGammaFadePercent,nil);	
-#endif		
 		gGammaFadePercent -= 300.0f*fps;
 		if (gGammaFadePercent <= 0.0f)													// see if @ 0%
 			gGammaFadePercent = 0;

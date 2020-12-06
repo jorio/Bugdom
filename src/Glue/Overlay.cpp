@@ -11,6 +11,7 @@ extern "C"
 {
 	extern SDL_Window* gSDLWindow;
 	extern PrefsType gGamePrefs;
+	extern float gGammaFadePercent;
 }
 
 constexpr const bool ALLOW_OVERLAY = true;
@@ -18,7 +19,6 @@ static std::unique_ptr<GLOverlay> glOverlay = nullptr;
 static std::unique_ptr<GLOverlayFade> glOverlayFade = nullptr;
 static GLint viewportBackup[4];
 static SDL_GLContext exclusiveGLContext = nullptr;
-float gFadeIntensity = 0.0f;
 
 class PortGuard
 {
@@ -155,10 +155,8 @@ void Overlay_Flush()
 
 	glOverlay->FlushQuads(gGamePrefs.textureFiltering);
 
-	if (gFadeIntensity > 0.0f)
-	{
-		glOverlayFade->DrawFade(0, 0, 0, gFadeIntensity);
-	}
+	float fadeBlackness = (100.0f - gGammaFadePercent) / 100.0f;
+	glOverlayFade->DrawFade(0, 0, 0, fadeBlackness);
 
 	Overlay_End();
 }

@@ -140,6 +140,9 @@ void GLOverlay::UpdateTexture(int x, int y, int w, int h)
 
 void GLOverlay::FlushQuads(bool linearFiltering)
 {
+	if (nQuads == 0)
+		return;
+
 	gl.UseProgram(program);
 
 	glDisable(GL_DEPTH_TEST);

@@ -87,6 +87,9 @@ GLOverlayFade::~GLOverlayFade()
 
 void GLOverlayFade::DrawFade(float red, float green, float blue, float alpha)
 {
+	if (alpha < 0.001f)
+		return;
+
 	gl.UseProgram(program);
 
 	glDisable(GL_DEPTH_TEST);

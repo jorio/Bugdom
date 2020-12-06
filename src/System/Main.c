@@ -410,7 +410,6 @@ float fps;
 		DoMyTerrainUpdate();
 		QD3D_DrawScene(gGameViewInfoPtr,DrawTerrain);
 		SubmitInfobarOverlay();
-		Overlay_Flush();
 
 		QD3D_CalcFramesPerSecond();
 		DoSDLMaintenance();

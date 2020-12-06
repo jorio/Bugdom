@@ -2,6 +2,7 @@
 #include "PommeInit.h"
 #include "PommeFiles.h"
 #include "PommeGraphics.h"
+#include "GLOverlay.h"
 
 extern "C"
 {
@@ -126,6 +127,8 @@ Boolean FlushMouseButtonPress()
 
 void DoSDLMaintenance()
 {
+	Overlay_Flush();
+
 	SDL_GL_SwapWindow(gSDLWindow);
 
 	static int holdFramerateCap = 0;
