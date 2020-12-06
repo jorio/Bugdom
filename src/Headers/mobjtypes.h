@@ -306,6 +306,29 @@ enum
 };
 
 
+/******************* BONUS SCREEN *************************/
 
+
+enum
+{
+	BONUS_MObjType_0,
+	BONUS_MObjType_1,
+	BONUS_MObjType_2,
+	BONUS_MObjType_3,
+	BONUS_MObjType_4,
+	BONUS_MObjType_5,
+	BONUS_MObjType_6,
+	BONUS_MObjType_7,
+	BONUS_MObjType_8,
+	BONUS_MObjType_9,
+	BONUS_MObjType_Background,
+	BONUS_MObjType_Text,
+	BONUS_MObjType_Score,
+	BONUS_MObjType_SaveIcon,
+	BONUS_MObjType_DontSaveIcon,
+	BONUS_MObjType_GreenClover,
+	BONUS_MObjType_GoldClover,
+	BONUS_MObjType_BlueClover
+};
 
 
