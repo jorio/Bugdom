@@ -3,6 +3,7 @@
 #include "PommeGraphics.h"
 #include "MyPCH_Normal.pch"
 #include "GLOverlay.h"
+#include "GLOverlayFade.h"
 
 #include <memory>
 
@@ -14,8 +15,10 @@ extern "C"
 
 constexpr const bool ALLOW_OVERLAY = true;
 static std::unique_ptr<GLOverlay> glOverlay = nullptr;
+static std::unique_ptr<GLOverlayFade> glOverlayFade = nullptr;
 static GLint viewportBackup[4];
 static SDL_GLContext exclusiveGLContext = nullptr;
+float gFadeIntensity = 0.0f;
 
 class PortGuard
 {
@@ -59,6 +62,8 @@ void Overlay_Alloc()
 		GAME_VIEW_HEIGHT,
 		(unsigned char*) GetOverlayPixPtr());
 
+	glOverlayFade = std::make_unique<GLOverlayFade>();
+
 	ClearPortDamage();
 }
 
@@ -89,6 +94,7 @@ void Overlay_Dispose()
 	}
 
 	glOverlay.reset(nullptr);
+	glOverlayFade.reset(nullptr);
 }
 
 
@@ -149,6 +155,10 @@ void Overlay_Flush()
 
 	glOverlay->FlushQuads(gGamePrefs.textureFiltering);
 
+	if (gFadeIntensity > 0.0f)
+	{
+		glOverlayFade->DrawFade(0, 0, 0, gFadeIntensity);
+	}
 
 	Overlay_End();
 }

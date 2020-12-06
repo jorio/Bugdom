@@ -26,6 +26,7 @@ GLFunctions::GLFunctions()
 	success &= nullptr != (GetUniformLocation       = (PFNGLGETUNIFORMLOCATIONPROC)      SDL_GL_GetProcAddress("glGetUniformLocation"     ));
 	success &= nullptr != (LinkProgram              = (PFNGLLINKPROGRAMPROC)             SDL_GL_GetProcAddress("glLinkProgram"            ));
 	success &= nullptr != (ShaderSource             = (PFNGLSHADERSOURCEPROC)            SDL_GL_GetProcAddress("glShaderSource"           ));
+	success &= nullptr != (Uniform4f                = (PFNGLUNIFORM4FPROC)               SDL_GL_GetProcAddress("glUniform4f"              ));
 	success &= nullptr != (UniformMatrix4fv         = (PFNGLUNIFORMMATRIX4FVPROC)        SDL_GL_GetProcAddress("glUniformMatrix4fv"       ));
 	success &= nullptr != (UseProgram               = (PFNGLUSEPROGRAMPROC)              SDL_GL_GetProcAddress("glUseProgram"             ));
 	success &= nullptr != (VertexAttribPointer      = (PFNGLVERTEXATTRIBPOINTERPROC)     SDL_GL_GetProcAddress("glVertexAttribPointer"    ));

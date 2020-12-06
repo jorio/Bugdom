@@ -26,6 +26,7 @@ public:
 	PFNGLGETUNIFORMLOCATIONPROC       GetUniformLocation;
 	PFNGLLINKPROGRAMPROC              LinkProgram;
 	PFNGLSHADERSOURCEPROC             ShaderSource;
+	PFNGLUNIFORM4FPROC                Uniform4f;
 	PFNGLUNIFORMMATRIX4FVPROC         UniformMatrix4fv;
 	PFNGLUSEPROGRAMPROC               UseProgram;
 	PFNGLVERTEXATTRIBPOINTERPROC      VertexAttribPointer;
