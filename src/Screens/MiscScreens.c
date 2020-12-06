@@ -48,51 +48,16 @@ static void MoveLogoBG(ObjNode *theNode);
 
 void DoPaused(void)
 {
-	Pomme_PauseAllChannels(true);
-
-	const SDL_MessageBoxButtonData buttons[] =
-	{
-		{ SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT|SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, 0, "Resume" },
-		{ 0, 1, "End" },
-		{ 0, 2, "Quit" },
-	};
-
-	const SDL_MessageBoxData messageboxdata =
-	{
-		SDL_MESSAGEBOX_INFORMATION,
-		gSDLWindow,
-		"GAME PAUSED",
-		"TODO: Implement Pretty Pause Screen!",
-		SDL_arraysize(buttons),
-		buttons,
-		NULL
-	};
-
-	int buttonid;
-	if (SDL_ShowMessageBox(&messageboxdata, &buttonid) < 0)
-	{
-		CleanQuit();
-		return;
-	}
-
-	switch (buttonid) {
-		case 2: // quit
-			CleanQuit();
-			return;
-		case 1: // end
-			gGameOverFlag = gAbortedFlag = true;
-			break;
-		default: // resume
-			break;
-	}
-
-	Pomme_PauseAllChannels(false);
-
-#if 0
 PicHandle	pict;
 Rect		r;
 int			i,n;
+int			windowW = -1;
+int			windowH = -1;
+int			pictW = -1;
+int			pictH = -1;
 float		dummy;
+
+	Pomme_PauseAllChannels(true);
 
 	Q3View_Sync(gGameViewInfoPtr->viewObject);					// make sure rendering is done before we do anything
 
@@ -108,14 +73,15 @@ float		dummy;
 	i = -1;
 	do
 	{
+		SDL_GetWindowSize(gSDLWindow, &windowW, &windowH);
+
 		Point	where;
-		
 		GetMouse(&where);
 		
-		if (where.v < (r.top + 94))						// see if resume
+		if (where.v < (r.top + 94)*(windowH/480.0f))		// see if resume
 			n = 0;
 		else
-		if (where.v < (r.top + 110))						// see if end game
+		if (where.v < (r.top + 110)*(windowH/480.0f))		// see if end game
 			n = 1;
 		else												// quit app
 			n = 2;
@@ -133,7 +99,9 @@ float		dummy;
 			}
 			HLock((Handle)pict);
 			r = (*pict)->picFrame;							// get size of pict
-			OffsetRect(&r, (640-(r.right-r.left))/2,(480-(r.bottom-r.top))/2);	
+			pictW = r.right-r.left;
+			pictH = r.bottom-r.top;
+			OffsetRect(&r, (640-pictW)/2, (480-pictH)/2);
 			DrawPicture(pict, &r);							// draw pict
 			ReleaseResource((Handle)pict);					// nuke pict
 			PlayEffect(EFFECT_SELECT);				
@@ -146,6 +114,18 @@ float		dummy;
 			n = 0;
 			break;
 		}
+
+		QD3D_DrawScene(gGameViewInfoPtr, DrawTerrain);
+		SubmitInfobarOverlay();
+		Overlay_SubmitQuad(
+				r.left, r.top, r.right-r.left, r.bottom-r.top,
+				(640.0f-pictW)/2.0f/640.0f,
+				(480.0f-pictH)/2.0f/480.0f,
+				pictW/640.0f,
+				pictH/480.0f
+		);
+		Overlay_Flush();
+		DoSDLMaintenance();
 	
 	}while(!FlushMouseButtonPress());
 	while(FlushMouseButtonPress());							// wait for button up
@@ -176,7 +156,8 @@ bail:
 	gPlayerObj->AccelVector.y = 0;
 
 	GetMouseDelta(&dummy,&dummy);				// read this once to prevent mouse boom
-#endif
+
+	Pomme_PauseAllChannels(false);
 }
 
 

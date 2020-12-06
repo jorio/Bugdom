@@ -26,6 +26,7 @@ extern	short		gMainAppRezFile,gTextureRezfile;
 extern	TerrainItemEntryType 	**gMasterItemList;
 extern	short	  				gNumTerrainItems;
 extern	PrefsType	gGamePrefs;
+extern	Boolean		gShowBottomBar;
 
 
 /****************************/
@@ -1164,5 +1165,16 @@ int		w,x;
 		r.right = x-2;
 		ForeColor(blackColor);
 		PaintRect(&r);
+	}
+}
+
+
+
+void SubmitInfobarOverlay(void)
+{
+	Overlay_SubmitQuad(0,	0,		640,	62,		0,	0,				1.0f,	62.0f/480.0f);
+	if (gShowBottomBar)
+	{
+		Overlay_SubmitQuad(0,	420,	640,	60,		0,	420.0f/480.0f,	1.0f,	60.0f/480.0f);
 	}
 }

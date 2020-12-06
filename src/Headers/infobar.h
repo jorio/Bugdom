@@ -21,6 +21,7 @@ extern	void InitInventoryForGame(void);
 void LoadInfobarArt(void);
 void FreeInfobarArt(void);
 void UpdateInfobar(void);
+void SubmitInfobarOverlay(void);
 void LoseHealth(float amount);
 void ProcessBallTimer(void);
 void GetKey(long keyID);

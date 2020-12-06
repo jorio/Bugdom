@@ -84,6 +84,7 @@ u_short		gLevelTypeMask = 0;
 Boolean		gShowDebug = false;
 Boolean		gLiquidCheat = false;
 Boolean		gUseCyclorama;
+Boolean		gShowBottomBar;
 float		gCurrentYon;
 
 u_long		gAutoFadeStatusBits;
@@ -408,12 +409,7 @@ float fps;
 
 		DoMyTerrainUpdate();
 		QD3D_DrawScene(gGameViewInfoPtr,DrawTerrain);
-
-		Overlay_SubmitQuad(0,	0,		640,	62,		0,	0,				1.0f,	62.0f/480.0f);
-		if (gLevelTable[gRealLevel].isBossLevel || !gGamePrefs.hideBottomBarInNonBossLevels)
-		{
-			Overlay_SubmitQuad(0,	420,	640,	60,		0,	420.0f/480.0f,	1.0f,	60.0f/480.0f);
-		}
+		SubmitInfobarOverlay();
 		Overlay_Flush();
 
 		QD3D_CalcFramesPerSecond();
@@ -523,6 +519,10 @@ QD3DSetupInputType	viewDef;
 		gAutoFadeStatusBits = STATUS_BIT_AUTOFADE|STATUS_BIT_NOTRICACHE;
 	else
 		gAutoFadeStatusBits = 0;
+
+
+	// Source port addition: let user hide bottom bar when it's not needed (i.e. outside boss levels)
+	gShowBottomBar = !gGamePrefs.hideBottomBarInNonBossLevels || gLevelTable[gRealLevel].isBossLevel;
 		
 
 			/*************/
@@ -542,15 +542,11 @@ QD3DSetupInputType	viewDef;
 	viewDef.camera.fov 				= 1.1;
 	
 	viewDef.view.paneClip.top		=	62;
-	viewDef.view.paneClip.bottom	=	60;
+	viewDef.view.paneClip.bottom	=	gShowBottomBar? 60: 0;
 	viewDef.view.paneClip.left		=	0;
 	viewDef.view.paneClip.right		=	0;
 
-	// Source port addition: let user hide bottom bar when it's not needed (i.e. outside boss levels)
-	if (gGamePrefs.hideBottomBarInNonBossLevels && !gLevelTable[gRealLevel].isBossLevel)
-		viewDef.view.paneClip.bottom = 0;
-
-	viewDef.view.clearColor 	= gLevelFogColor[gLevelType];	// set clear & fog color	
+	viewDef.view.clearColor 	= gLevelFogColor[gLevelType];	// set clear & fog color
 
 	
 			/* SET LIGHTS */
