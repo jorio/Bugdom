@@ -32,7 +32,7 @@ extern	TQ3Object	gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
 /*    PROTOTYPES            */
 /****************************/
 
-static void SetupFileScreen(void);
+static void SetupFileScreen(int type);
 static int FileScreenMainLoop(void);
 
 
@@ -80,7 +80,7 @@ static TQ3Point3D	gBonusCameraFrom = {0, 0, 250 };
 
 /********************** DO BONUS SCREEN *************************/
 
-int DoFileSelectScreen(void)
+int DoFileSelectScreen(int type)
 {
 	/*********/
 	/* SETUP */
@@ -88,7 +88,7 @@ int DoFileSelectScreen(void)
 
 	InitCursor();
 
-	SetupFileScreen();
+	SetupFileScreen(type);
 
 	QD3D_CalcFramesPerSecond();
 
@@ -320,7 +320,7 @@ static void MoveBonusBackground(ObjNode *theNode)
 
 
 
-static void SetupFileScreen(void)
+static void SetupFileScreen(int type)
 {
 	FSSpec					spec;
 	QD3DSetupInputType		viewDef;
@@ -407,7 +407,11 @@ static void SetupFileScreen(void)
 //	MakeText("You are entering Level 10", -135.0f, y, 0.33f);
 //	y -= 32.0f;
 
-	MakeTextWithShadow("Pick a Saved Game", -135.0f, y, 1.0f, &gTitleTextColor);
+	if (type == FILE_SELECT_SCREEN_TYPE_LOAD)
+		MakeTextWithShadow("Pick a Saved Game", -135.0f, y, 1.0f, &gTitleTextColor);
+	else
+		MakeTextWithShadow("Save where?", -135.0f, y, 1.0f, &gTitleTextColor);
+
 	y -= 64.0f;
 	MakeFileSlot(0, 4, 0, x, y);
 	y -= 64.0f;

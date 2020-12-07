@@ -215,7 +215,7 @@ getout:
 
 		case	4:				// RESTORE
 			{
-				int pickedFile = DoFileSelectScreen();
+				int pickedFile = DoFileSelectScreen(FILE_SELECT_SCREEN_TYPE_LOAD);
 				if (pickedFile < 0)
 				{
 					goto start_again;

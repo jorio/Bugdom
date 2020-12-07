@@ -127,7 +127,7 @@ Boolean wantToSave = false;
 
 	if (wantToSave)
 	{
-		int pickedFile = DoFileSelectScreen();
+		int pickedFile = DoFileSelectScreen(FILE_SELECT_SCREEN_TYPE_SAVE);
 		SaveGame(pickedFile);
 	}
 }
