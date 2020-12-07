@@ -83,6 +83,7 @@ set(GAME_SOURCES
 	${GAME_SRCDIR}/Ride/DragonFly.c
 	${GAME_SRCDIR}/Ride/WaterBug.c
 	${GAME_SRCDIR}/Screens/BonusScreen.c
+	${GAME_SRCDIR}/Screens/FileSelect.c
 	${GAME_SRCDIR}/Screens/HighScores.c
 	${GAME_SRCDIR}/Screens/Infobar.c
 	${GAME_SRCDIR}/Screens/LevelIntro.c
@@ -128,6 +129,7 @@ set(GAME_HEADERS
 	${GAME_SRCDIR}/Headers/environmentmap.h
 	${GAME_SRCDIR}/Headers/fences.h
 	${GAME_SRCDIR}/Headers/file.h
+	${GAME_SRCDIR}/Headers/fileselect.h
 	${GAME_SRCDIR}/Headers/globals.h
 	${GAME_SRCDIR}/Headers/highscores.h
 	${GAME_SRCDIR}/Headers/infobar.h

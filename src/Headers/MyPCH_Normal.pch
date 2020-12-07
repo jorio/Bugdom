@@ -100,6 +100,7 @@ extern "C"
 #include "mytraps.h"
 #include "triggers.h"
 #include "pick.h"
+#include "fileselect.h"
 
 #include "tga.h"
 
