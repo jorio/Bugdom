@@ -51,4 +51,6 @@ void QD3D_CalcObjectBoundingSphere(QD3DSetupOutputType *setupInfo, TQ3Object the
 void QD3D_SetTextureAlphaThreshold_TriMesh(TQ3Object triMesh);
 void QD3D_SetTextureAlphaThreshold_Recurse(TQ3Object root);
 
+void QD3D_ClearDiffuseColor_TriMesh(TQ3Object triMesh);
+void QD3D_ClearDiffuseColor_Recurse(TQ3Object root);
 

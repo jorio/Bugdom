@@ -1133,3 +1133,77 @@ void QD3D_SetTextureAlphaThreshold_Recurse(TQ3Object root)
 		}
 	}
 }
+
+
+/************** QD3D: NUKE DIFFUSE COLOR ATTRIBUTE FROM TRIMESHES ***********/
+// (SOURCE PORT ADDITION)
+//
+// Remove diffuse color data from meshes so you can render them in
+// a custom color.
+//
+// For example: HighScores.3dmf contains yellow meshes for every letter of
+// the alphabet. Call this function on each letter glyph to make them white.
+// Then you can render letters in any color you like using the attribute
+// kQ3AttributeTypeDiffuseColor.
+
+void QD3D_ClearDiffuseColor_TriMesh(TQ3Object triMesh)
+{
+	TQ3TriMeshData		triMeshData;
+	TQ3Status			status;
+
+	GAME_ASSERT_MESSAGE(Q3Object_IsType(triMesh, kQ3ShapeTypeGeometry) && Q3Geometry_GetType(triMesh) == kQ3GeometryTypeTriMesh,
+						"Not a TriMesh - try _Recurse instead");
+
+	status = Q3TriMesh_GetData(triMesh, &triMeshData);							// get trimesh data
+	GAME_ASSERT(status);
+
+	Q3AttributeSet_Clear(triMeshData.triMeshAttributeSet, kQ3AttributeTypeDiffuseColor);
+
+	Q3TriMesh_EmptyData(&triMeshData);
+}
+
+
+void QD3D_ClearDiffuseColor_Recurse(TQ3Object root)
+{
+	const int	frontierStackLength = 64;
+	TQ3Object	frontier[frontierStackLength];
+	int			top = 0;
+
+	frontier[top] = root;
+
+	while (top >= 0)
+	{
+		TQ3Object obj = frontier[top];
+		frontier[top] = nil;
+		top--;
+
+		if (Q3Object_IsType(obj,kQ3ShapeTypeGeometry) &&
+			Q3Geometry_GetType(obj) == kQ3GeometryTypeTriMesh)		// must be trimesh
+		{
+			QD3D_ClearDiffuseColor_TriMesh(obj);
+		}
+		else if (Q3Object_IsType(obj, kQ3ShapeTypeGroup))			// SEE IF RECURSE SUB-GROUP
+		{
+			TQ3GroupPosition pos = nil;
+			Q3Group_GetFirstPosition(obj, &pos);
+
+			while (pos)												// scan all objects in group
+			{
+				TQ3Object child;
+				Q3Group_GetPositionObject(obj, pos, &child);		// get object from group
+				if (child)
+				{
+					top++;
+					GAME_ASSERT(top < frontierStackLength);
+					frontier[top] = child;
+				}
+				Q3Group_GetNextPosition(obj, &pos);
+			}
+		}
+
+		if (obj != root)
+		{
+			Q3Object_Dispose(obj);						// dispose local ref
+		}
+	}
+}
