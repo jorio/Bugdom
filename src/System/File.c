@@ -9,6 +9,8 @@
 /* EXTERNALS   */
 /***************/
 
+#include <time.h>
+
 
 extern	short			gMainAppRezFile,gTextureRezfile;
 extern  TQ3Object		gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
@@ -54,22 +56,7 @@ static void ReadDataFromPlayfieldFile(FSSpec *specPtr);
 
 #define	SKELETON_FILE_VERS_NUM	0x0110			// v1.1
 
-#define	SAVE_GAME_VERSION	0x0100		// 1.0
-
-
-		/* SAVE GAME */
-		
-typedef struct
-{
-	u_long		version;
-	u_long		score;
-	short		realLevel;
-	short		numLives;
-	float		health;
-	float		ballTimer;
-	Byte		numGoldClovers;
-}SaveGameType;
-
+#define	SAVE_GAME_VERSION	0x00000120			// Bugdom v1.2
 
 
 		/* PLAYFIELD HEADER */
@@ -589,213 +576,129 @@ long				count;
 
 /***************************** SAVE GAME ********************************/
 
-void SaveGame(void)
+void SaveGame(int slot)
 {
-#if 0
-SaveGameType	**dataHandle,*saveData;
-Str255			name = "Bugdom Saved Game";
+SaveGameType 	saveData;
+char			path[128];
 short			fRefNum;
-FSSpec			*specPtr;
-NavReplyRecord	navReply;
 FSSpec			spec;
+OSErr			err;
 
-			
-	InitCursor();		
-	FlushEvents (everyEvent, REMOVE_ALL_EVENTS);	
-	
-	
-	if (!NavServicesAvailable())
-	{	
-		StandardFileReply	reply;
-		
-		/* DO STANDARD FILE DIALOG */
-do_std:	
-		StandardPutFile("Save Game As...",name,&reply);
-		HideCursor();
-		CleanScreenBorder();		
-		if (!reply.sfGood)											// see if cancelled
-			return;
-
-		specPtr = &reply.sfFile;
-
-		if (reply.sfReplacing)										// delete existing file
-			FSpDelete(specPtr);
-	}
-	else
-	{		
-			/* DO NAV SERVICES */
-
-		if (PutFileWithNavServices(&navReply, &spec))
-			goto do_std;	
-		specPtr = &spec;	
-		if (navReply.replacing)										// see if delete
-			FSpDelete(specPtr);
-	}
-
-			
-			/*************************/	
+			/*************************/
 			/* CREATE SAVE GAME DATA */
 			/*************************/	
-					
-	dataHandle = (SaveGameType **)AllocHandle(sizeof(SaveGameType));
-	if (dataHandle == nil)
-		DoFatalAlert("SaveGame: AllocHandle failed!");
-	HLock((Handle)dataHandle);
-	saveData = *dataHandle;
 
-	saveData->version		= SAVE_GAME_VERSION;				// save file version #
-	saveData->score 		= gScore;
-	saveData->realLevel		= gRealLevel+1;						// save @ beginning of next level
-	saveData->numLives 		= gNumLives;
-	saveData->health		= gMyHealth;
-	saveData->ballTimer		= gBallTimer;
-	saveData->numGoldClovers= gNumGoldClovers;
+	saveData.version		= SAVE_GAME_VERSION;				// save file version #
+	saveData.score 			= gScore;
+	saveData.realLevel		= gRealLevel+1;						// save @ beginning of next level
+	saveData.numLives 		= gNumLives;
+	saveData.health			= gMyHealth;
+	saveData.ballTimer		= gBallTimer;
+	saveData.numGoldClovers	= gNumGoldClovers;
+	saveData.timestamp		= time(NULL);
 
-				/* CREATE & OPEN THE REZ-FORK */
-			
-	FSpCreateResFile(specPtr,'BalZ','BSav',nil);
-	if (ResError())
+			/* CREATE & OPEN THE DATA FORK */
+
+	snprintf(path, sizeof(path), ":Bugdom:Save%c", slot + 'A');
+	FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, path, &spec);
+
+	err = FSpCreate(&spec,'BalZ','BSav',0);
+	if (err != noErr)
 	{
-		DoAlert("Error creating Save file");
-		DisposeHandle((Handle)dataHandle);
+		DoAlert("Error creating save file");
 		return;
 	}
-	fRefNum = FSpOpenResFile(specPtr,fsRdWrPerm);
-	if (fRefNum == -1)
+
+	err = FSpOpenDF(&spec, fsWrPerm, &fRefNum);
+	if (err != noErr)
 	{
-		DoAlert("Error opening Save Rez file");
-		DisposeHandle((Handle)dataHandle);
+		DoAlert("Error opening save file for writing");
 		return;
 	}
-				
-	UseResFile(fRefNum);
-	
-				/* WRITE TO FILE */
 
-	AddResource((Handle)dataHandle, 'Save', 1000, "Save Data");
-	WriteResource((Handle)dataHandle);									// force the update
-	ReleaseResource((Handle)dataHandle);								// free the data
-	
-			/* CLOSE REZ FILE */
-			
-	CloseResFile(fRefNum);
-	
-	
-	if (NavServicesAvailable())											// do nav svcs cleanup
+			/* WRITE TO FILE */
+
+	long count = sizeof(SaveGameType);
+	err = FSWrite(fRefNum, &count, (Ptr) &saveData);
+
+			/* CLOSE FILE */
+
+	FSClose(fRefNum);
+
+			/* CHECK THAT WRITING WENT OK */
+
+	if (err != noErr || count != sizeof(SaveGameType))
 	{
-		NavCompleteSave(&navReply, kNavTranslateInPlace);
-		NavDisposeReply(&navReply);
+		DoAlert("Error writing save file");
+		return;
 	}
-	HideCursor();
-#endif
 }
 
 
 /***************************** LOAD SAVED GAME ********************************/
 
-OSErr LoadSavedGame(void)
+OSErr GetSaveGameData(int slot, SaveGameType* saveData)
 {
-	DoAlert("LoadSavedGame: Implement me!");
-	return -1;
-
-#if 0
-SaveGameType	**dataHandle,*saveData;
+char			path[128];
 short			fRefNum;
-FSSpec			spec, *specPtr;
-StandardFileReply	reply;
-SFTypeList		typeList;
-Boolean			hasNav = false;
-Boolean			restartMusic = false;
+FSSpec			spec;
+OSErr			err;
 
-	if (!gMuteMusicFlag)
-	{
-		ToggleMusic();
-		restartMusic = true;
-	}
-	
+	snprintf(path, sizeof(path), ":Bugdom:Save%c", slot + 'A');
+	FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, path, &spec);
 
-	InitCursor();
-	FlushEvents (everyEvent, REMOVE_ALL_EVENTS);	
+			/* OPEN THE DATA FORK */
 
-	{EventRecord theEvent;
-	WaitNextEvent(everyEvent,&theEvent, 0, 0);}
-	
+	err = FSpOpenDF(&spec, fsRdPerm, &fRefNum);
+	if (err != noErr)
+		return err;
 
-			/* SEE IF WE HAVE NAV SERVICES */
-		
-	hasNav = NavServicesAvailable();
+			/* READ STRUCT FROM FILE */
 
-	if (!hasNav)
-	{
-						/* DO STANDARD FILE DIALOG */
+	long count = sizeof(SaveGameType);
+	err = FSRead(fRefNum, &count, (Ptr) saveData);
+	FSClose(fRefNum);
 
-		typeList[0] = 'BSav';
-		StandardGetFile(nil,1,typeList,&reply);
-		HideCursor();
-		CleanScreenBorder();		
-		
-		if (!reply.sfGood)													// see if cancelled
-			goto err_exit;
-		specPtr = &reply.sfFile;											// get ptr to FSSPEC
-	}	
-	else
-	{
-				/* GET FILE WITH NAVIGATION SERVICES */
-			
-		if (GetFileWithNavServices(nil, &spec) != noErr)
-			goto err_exit;
+	if (err != noErr)
+		return err;
 
-		specPtr = &spec;
-	}
-	
-			
-				/* OPEN THE REZ-FORK */
-			
-	fRefNum = FSpOpenResFile(specPtr,fsRdPerm);
-	if (fRefNum == -1)
-	{
-err_exit:	
-		if (restartMusic)
-			ToggleMusic();
-	
-		return(1);
-	}
-	UseResFile(fRefNum);
+			/* CHECK INTEGRITY */
 
-				/* READ FROM FILE */
+	if (count != sizeof(SaveGameType))
+		return badFileFormat;
 
-	dataHandle = (SaveGameType **)GetResource('Save',1000);
-	if (dataHandle == nil)
-	{
-		DoAlert("Error reading save game resource!");
-		return(!noErr);
-	}
-	HLock((Handle)dataHandle);
-	saveData = *dataHandle;
-	
-			/**********************/	
+	if (saveData->version != SAVE_GAME_VERSION)
+		return badFileFormat;
+
+			/* IT'S ALL GOOD */
+
+	return noErr;
+}
+
+
+OSErr LoadSavedGame(int slot)
+{
+OSErr err;
+SaveGameType saveData;
+
+	err = GetSaveGameData(slot, &saveData);
+
+	if (err != noErr)
+		return err;
+
+			/**********************/
 			/* USE SAVE GAME DATA */
 			/**********************/	
-					
-	gScore 			= saveData->score;
-	gRealLevel 		= saveData->realLevel;
-	gMyHealth		= saveData->health;
-	gNumLives		= saveData->numLives;
-	gBallTimer		= saveData->ballTimer;
-	gNumGoldClovers = saveData->numGoldClovers;
-		
-	ReleaseResource((Handle)dataHandle);
-	
-	
-			/* CLOSE REZ FILE */
-			
-	CloseResFile(fRefNum);	
-	
-	if (restartMusic)
-		ToggleMusic();
-		
+
+	gScore 			= saveData.score;
+	gRealLevel 		= saveData.realLevel;
+	gMyHealth		= saveData.health;
+	gNumLives		= saveData.numLives;
+	gBallTimer		= saveData.ballTimer;
+	gNumGoldClovers = saveData.numGoldClovers;
+
 	gRestoringSavedGame = true;
-#endif	
+
 	return(noErr);
 }
 

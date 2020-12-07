@@ -47,12 +47,29 @@ typedef struct
 
 //=================================================
 
+			/* SAVE GAME */
+
+typedef struct
+{
+	uint32_t	version;
+	uint32_t	score;
+	int64_t		timestamp;
+	float		health;
+	float		ballTimer;
+	uint8_t		realLevel;
+	uint8_t		numLives;
+	uint8_t		numGoldClovers;
+} SaveGameType;
+
+//=================================================
+
 extern	SkeletonDefType *LoadSkeletonFile(short skeletonType);
 extern	void	OpenGameFile(Str255 filename,short *fRefNumPtr, Str255 errString);
 extern	OSErr LoadPrefs(PrefsType *prefBlock);
 extern	void SavePrefs(PrefsType *prefs);
-extern	void SaveGame(void);
-extern	OSErr LoadSavedGame(void);
+extern	void SaveGame(int slot);
+extern	OSErr GetSaveGameData(int slot, SaveGameType* saveData);
+extern	OSErr LoadSavedGame(int slot);
 extern	Ptr	LoadAFile(FSSpec *fsSpec);
 
 void LoadPlayfield(FSSpec *specPtr);

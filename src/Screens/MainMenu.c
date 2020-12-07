@@ -180,8 +180,6 @@ tryagain:
 				break;
 
 		case	4:				// RESTORE
-				if (LoadSavedGame())					// try loading saved game
-					goto tryagain;
 				break;
 
 		case	5:				// SETTINGS
@@ -214,9 +212,23 @@ getout:
 		case	1:				// HIGH SCORES
 				ShowHighScoresScreen(0);
 				goto start_again;
+
+		case	4:				// RESTORE
+			{
+				int pickedFile = DoFileSelectScreen();
+				if (pickedFile < 0)
+				{
+					goto start_again;
+				}
+				OSErr err = LoadSavedGame(pickedFile);
+				if (err != noErr)
+				{
+					ShowSystemErr_NonFatal(err);
+					goto start_again;
+				}
+			}
 	}
 	
-//	GammaFadeOut();
 	GameScreenToBlack();
 	
 	return(loop);

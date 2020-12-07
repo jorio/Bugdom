@@ -35,7 +35,7 @@ static void TallyLadyBugs(void);
 static void MoveBonusBackground(ObjNode *theNode);
 static void TallyTotalScore(void);
 static void BuildScoreDigits(void);
-static void AskSaveGame(void);
+static Boolean AskSaveGame(void);
 static void DrawBonusStuff(float duration);
 static void TallyGreenClovers(void);
 static void TallyGoldClovers(void);
@@ -85,6 +85,7 @@ ObjNode	*gSaveYes,*gSaveNo;
 
 void DoBonusScreen(void)
 {
+Boolean wantToSave = false;
 	
 			/*********/
 			/* SETUP */
@@ -108,7 +109,7 @@ void DoBonusScreen(void)
 	TallyTotalScore();
 	
 	if (gRealLevel < LEVEL_NUM_ANTKING)		// dont save game if I just won the last level
-		AskSaveGame();
+		wantToSave = AskSaveGame();
 	else
 		DrawBonusStuff(4);				// otherwise, just wait a while for user to see their score
 	
@@ -121,6 +122,14 @@ void DoBonusScreen(void)
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);		
 	DisposeSoundBank(SOUND_BANK_BONUS);
 	GameScreenToBlack();
+
+			/* SHOW FILE PICKER IF WANT TO SAVE */
+
+	if (wantToSave)
+	{
+		int pickedFile = DoFileSelectScreen();
+		SaveGame(pickedFile);
+	}
 }
 
 
@@ -717,7 +726,7 @@ static void TallyTotalScore(void)
 
 /*************** ASK SAVE GAME *******************/
 
-static void AskSaveGame(void)
+static Boolean AskSaveGame(void)
 {
 u_long		id;
 TQ3StyleObject	pick;
@@ -791,8 +800,7 @@ TQ3StyleObject	pick;
 
 		/* SEE IF SAVE GAME */
 		
-	if (id == 0)
-		SaveGame();	
+	return id == 0;
 }
 
 
