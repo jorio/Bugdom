@@ -66,6 +66,8 @@ static const TQ3ColorRGB gTextColor			= { 1.0f, 0.9f, 0.0f };
 static const TQ3ColorRGB gTitleTextColor	= { 1.0f, 0.9f, 0.0f };
 
 
+static char textBuffer[512];
+
 
 
 
@@ -231,13 +233,15 @@ static void MakeTextWithShadow(
 
 static void MakeFileSlot(
 		const int slotNumber,
-		const int levelNumber,
-		const int64_t timestamp,
 		const float x,
 		const float y
 )
 {
-	char textBuffer[512];
+	SaveGameType saveData;
+	OSErr saveDataErr = GetSaveGameData(slotNumber, &saveData);
+	bool saveDataValid = saveDataErr == noErr;
+
+
 
 	const float gs = 0.8f;
 
@@ -259,21 +263,21 @@ static void MakeFileSlot(
 //	GAME_ASSERT(gNumPickables < MAX_PICKABLES);
 //	pickable[gNumPickables++] = newFloppy->BaseGroup;
 
-	sprintf(textBuffer, "File %c", 'A' + slotNumber);
+	snprintf(textBuffer, sizeof(textBuffer), "File %c", 'A' + slotNumber);
 
 	MakeTextWithShadow(textBuffer, x, y + 16 * gs, .6f * gs, &gTextColor);
 
-	if (levelNumber >= 0)
-		sprintf(textBuffer, "Level %d: %s", 1 + levelNumber, gLevelNames[levelNumber]);
+	if (saveDataValid)
+		snprintf(textBuffer, sizeof(textBuffer), "Level %d: %s", 1 + saveData.realLevel, gLevelNames[saveData.realLevel]);
 	else
-		sprintf(textBuffer, "---- blank ----");
+		snprintf(textBuffer, sizeof(textBuffer), "---- blank ----");
 	MakeTextWithShadow(textBuffer, x, y - 8 * gs, 0.4f * gs, &gTextColor);
 
-	if (levelNumber >= 0)
+	if (saveDataValid)
 	{
 		struct tm tm;
-		tm = *localtime(&timestamp);
-		strftime(textBuffer, 512, "%-e %b %Y   %-l:%M%p", &tm);
+		tm = *localtime(&saveData.timestamp);
+		strftime(textBuffer, sizeof(textBuffer), "%-e %b %Y   %-l:%M%p", &tm);
 		MakeTextWithShadow(textBuffer, x, y - 24 * gs, 0.4f * gs, &gTextColor);
 	}
 
@@ -404,20 +408,25 @@ static void SetupFileScreen(int type)
 
 	float y = 110.0f;
 	float x = -40.0f;
-//	MakeText("You are entering Level 10", -135.0f, y, 0.33f);
-//	y -= 32.0f;
 
 	if (type == FILE_SELECT_SCREEN_TYPE_LOAD)
+	{
 		MakeTextWithShadow("Pick a Saved Game", -135.0f, y, 1.0f, &gTitleTextColor);
+	}
 	else
-		MakeTextWithShadow("Save where?", -135.0f, y, 1.0f, &gTitleTextColor);
+	{
+		MakeTextWithShadow("Save where?", -80.0f, y, 1.0f, &gTitleTextColor);
+
+		snprintf(textBuffer, sizeof(textBuffer), "You are entering Level %d", gRealLevel+2);
+		MakeTextWithShadow(textBuffer, -98.0f, y-25.0f, 0.5f, &gTitleTextColor);
+	}
 
 	y -= 64.0f;
-	MakeFileSlot(0, 4, 0, x, y);
+	MakeFileSlot(0, x, y);
 	y -= 64.0f;
-	MakeFileSlot(1, 8, 0, x, y);
+	MakeFileSlot(1, x, y);
 	y -= 64.0f;
-	MakeFileSlot(2, -1, 0, x, y);
+	MakeFileSlot(2, x, y);
 
 
 	y -= 50.0f;
