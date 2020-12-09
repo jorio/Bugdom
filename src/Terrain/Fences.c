@@ -229,7 +229,7 @@ FencePointType			*nubs;
 		
 		if (gFenceOnThisLevel[gLevelType][i])										// see if this fence exists on this level
 		{
-			shader = QD3D_GetTextureMap(2000+i, nil, true);							// create shader object
+			shader = QD3D_GetTextureMapFromPICTResource(2000+i, true);				// create shader object
 			GAME_ASSERT(shader);
 
 			// Source port addition: clamp texture vertically to avoid ugly line at top

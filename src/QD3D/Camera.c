@@ -125,7 +125,7 @@ static const TQ3Param2D uvs[4] = { {0,1}, {1,1}, {1,0}, {0,0} };
 				
 		if (gLevelType == LEVEL_TYPE_NIGHT)
 		{
-			gMoonFlareShader = QD3D_GetTextureMap(1004, nil, false);
+			gMoonFlareShader = QD3D_GetTextureMapFromPICTResource(1004, false);
 			GAME_ASSERT(gMoonFlareShader);
 		}
 		else
@@ -142,7 +142,7 @@ static const TQ3Param2D uvs[4] = { {0,1}, {1,1}, {1,0}, {0,0} };
 		{
 			for (i = 0; i < NUM_FLARE_TYPES; i++)
 			{
-				gLensFlareShader[i] = QD3D_GetTextureMap(1000+i, nil, false);
+				gLensFlareShader[i] = QD3D_GetTextureMapFromPICTResource(1000+i, false);
 				GAME_ASSERT(gLensFlareShader[i]);
 			}
 				

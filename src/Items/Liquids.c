@@ -284,9 +284,9 @@ static void InitWaterPatch(void)
 				
 	
 		if (gLevelType == LEVEL_TYPE_POND)
-			gWaterShader = QD3D_GetTextureMap(129, nil, false);
+			gWaterShader = QD3D_GetTextureMapFromPICTResource(129, false);
 		else
-			gWaterShader = QD3D_GetTextureMap(128, nil, false);
+			gWaterShader = QD3D_GetTextureMapFromPICTResource(128, false);
 
 
 			/**********************/
@@ -881,7 +881,7 @@ static void InitHoneyPatch(void)
 				
 	if (gLevelType == LEVEL_TYPE_HIVE)
 	{
-		gHoneyShader = QD3D_GetTextureMap(200, nil, false);				// load texture
+		gHoneyShader = QD3D_GetTextureMapFromPICTResource(200, false);				// load texture
 
 
 			/****************/
@@ -1212,7 +1212,7 @@ static void InitSlimePatch(void)
 	{
 			/* LOAD SLIME TEXTURE */
 				
-		gSlimeShader = QD3D_GetTextureMap(201, nil, false);
+		gSlimeShader = QD3D_GetTextureMapFromPICTResource(201, false);
 		
 
 			/****************/
@@ -1543,7 +1543,7 @@ static void InitLavaPatch(void)
 	{
 			/* LOAD LAVA TEXTURE */
 				
-		gLavaShader = QD3D_GetTextureMap(202, nil, false);
+		gLavaShader = QD3D_GetTextureMapFromPICTResource(202, false);
 		
 
 			/****************/

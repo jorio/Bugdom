@@ -955,83 +955,24 @@ TQ3Status				status;
 // based on the PICT converted to a texture map.
 //
 // INPUT: textureRezID = resource ID of texture PICT to get.
-//			myFSSpec != nil if want to load PICT from file instead
 //			blackIsAlpha = true if want to turn alpha on and to scan image for alpha pixels
 //
 // OUTPUT: TQ3ShaderObject = shader object for texture map.  nil == error.
 //
 
-TQ3SurfaceShaderObject	QD3D_GetTextureMap(long	textureRezID, FSSpec *myFSSpec, Boolean blackIsAlpha)
+TQ3SurfaceShaderObject	QD3D_GetTextureMapFromPICTResource(long	textureRezID, Boolean blackIsAlpha)
 {
 PicHandle			picture;
 TQ3SurfaceShaderObject		shader;
-long				pictSize,headerSize;
-OSErr				iErr;
-short				fRefNum;
-char				pictHeader[PICT_HEADER_SIZE];
 
-	if (myFSSpec == nil)
-	{
-					/* LOAD PICT REZ */
-		
-		picture = GetPicture (textureRezID);
-		if (picture == nil)
-		{
-		    iErr = ResError();
-			DoAlert(" load texture PICT resource");
-			ShowSystemErr(iErr);
-		}
-	}
-	else
-	{
-				/* LOAD PICT FROM FILE */
-	
-		iErr = FSpOpenDF(myFSSpec,fsRdPerm,&fRefNum);
-		if (iErr)
-		{
-			DoAlert("Sorry, can open that PICT file!");
-			return(nil);
-		}
+	picture = GetPicture(textureRezID);
+	GAME_ASSERT(picture);
 
-		if	(GetEOF(fRefNum,&pictSize) != noErr)		// get size of file		
-			goto err;
-				
-		headerSize = PICT_HEADER_SIZE;					// check the header					
-		if (FSRead(fRefNum,&headerSize,pictHeader) != noErr)
-			goto err;
+	shader = QD3D_PICTToTexture(picture, blackIsAlpha);
 
-		if ((pictSize -= PICT_HEADER_SIZE) <= 0)
-			goto err;
-			
-		if ((picture = (PicHandle)AllocHandle(pictSize)) == nil)
-		{
-			DoAlert("Sorry, not enough memory to read PICT file!");
-			return(nil);
-		}
-		HLock((Handle)picture);
-			
-		if (FSRead(fRefNum, &pictSize, (Ptr)*picture) != noErr)
-		{
-			DisposeHandle((Handle)picture);
-			goto err;
-		}
-			
-		FSClose(fRefNum);		
-	}
-	
-	
-	shader = QD3D_PICTToTexture(picture,blackIsAlpha);
-		
-	if (myFSSpec == nil)
-		ReleaseResource ((Handle) picture);
-	else
-		DisposeHandle((Handle)picture);
+	ReleaseResource((Handle) picture);
 
-	return(shader);	
-	
-err:
-	DoAlert("Sorry, error reading PICT file!");
-	return(nil);
+	return shader;
 }
 
 
