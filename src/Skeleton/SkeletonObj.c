@@ -287,7 +287,8 @@ short	j,numAnims,numJoints;
 				
 	DisposePtr((Ptr)skeleton->NumAnimEvents);
 	
-	Free_2d_array(skeleton->AnimEventsList);
+	Free2DArray((void**) skeleton->AnimEventsList);
+	skeleton->AnimEventsList = nil;
 	
 //	for (i=0; i < numAnims; i++)
 //		DisposePtr((Ptr)skeleton->AnimEventsList[i]);
@@ -297,7 +298,7 @@ short	j,numAnims,numJoints;
 			
 	for (j=0; j < numJoints; j++)
 	{
-		Free_2d_array(skeleton->JointKeyframes[j].keyFrames);		// dispose 2D array of keyframe data
+		Free2DArray((void**) skeleton->JointKeyframes[j].keyFrames);		// dispose 2D array of keyframe data
 
 		skeleton->JointKeyframes[j].keyFrames = nil;
 	}

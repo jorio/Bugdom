@@ -262,6 +262,35 @@ Ptr	pr;
 }
 
 
+/****************** 2D ARRAY ********************/
+
+void** Alloc2DArray(int sizeofType, int n, int m)
+{
+	GAME_ASSERT_MESSAGE(n > 0, "Alloc2DArray n*m: n cannot be 0");
+
+	char** array = (char**) NewPtr(n * sizeof(Ptr));
+	GAME_ASSERT(array);
+
+	array[0] = NewPtr(n * m * sizeofType);
+	GAME_ASSERT(array[0]);
+
+	for (int i = 1; i < n; i++)
+		array[i] = array[i-1] + m*sizeofType;
+
+	return (void**) array;
+}
+
+
+void Free2DArray(void** array)
+{
+	GAME_ASSERT(array);
+
+	DisposePtr((Ptr) array[0]);
+	DisposePtr((Ptr) array);
+}
+
+
+
 
 #pragma mark -
 

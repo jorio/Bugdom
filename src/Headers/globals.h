@@ -22,27 +22,7 @@
 		/* 2D ARRAY MACROS */
 		/*******************/
 
-#define Alloc_2d_array(type, array, n, m)								\
-{																		\
-int _i;																	\
-																		\
-	array = (type **) AllocPtr((long)(n) * sizeof(type *));				\
-	if (array == nil)													\
-		DoFatalAlert("Alloc_2d_array failed!");						\
-	array[0] = (type *) AllocPtr((long)(n) * (long)(m) * sizeof(type));	\
-	if (array[0] == nil)												\
-		DoFatalAlert("Alloc_2d_array failed!");						\
-	for (_i = 1; _i < (n); _i++)										\
-		array[_i] = array[_i-1] + (m);									\
-}
-
-
-#define Free_2d_array(array)			\
-{										\
-		DisposePtr((Ptr)array[0]);		\
-		DisposePtr((Ptr)array);			\
-		array = nil;					\
-}
+#define Alloc_2d_array(type, array, n, m)   { (array) = (type**) Alloc2DArray(sizeof(type), (n), (m)); }
 
 
 typedef	unsigned char u_char;

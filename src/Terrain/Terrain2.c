@@ -741,7 +741,8 @@ Byte				**shadowFlags;
 	
 			/* CLEANUP */
 			
-	Free_2d_array(shadowFlags);	
+	Free2DArray((void**) shadowFlags);
+	shadowFlags = nil;
 }
 
 

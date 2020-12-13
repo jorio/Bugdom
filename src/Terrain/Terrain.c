@@ -250,44 +250,44 @@ int	i;
 
 	if (gFloorMap != nil)
 	{
-		Free_2d_array(gFloorMap);
+		Free2DArray((void**) gFloorMap);
 		gFloorMap = nil;
 	}
 
 	if (gCeilingMap != nil)
 	{
-		Free_2d_array(gCeilingMap);
+		Free2DArray((void**) gCeilingMap);
 		gCeilingMap = nil;
 	}
 
 #if USE_PATH_LAYER
 	if (gPathMap != nil)
 	{
-		Free_2d_array(gPathMap);
+		Free2DArray((void**) gPathMap);
 		gPathMap = nil;
 	}
 #endif	
 
 	if (gMapYCoords)
 	{
-		Free_2d_array(gMapYCoords);
+		Free2DArray((void**) gMapYCoords);
 		gMapYCoords = nil;
 	}
 	
 	if (gMapInfoMatrix)
 	{
-		Free_2d_array(gMapInfoMatrix);
+		Free2DArray((void**) gMapInfoMatrix);
 		gMapInfoMatrix = nil;
 	}
 
 	if (gVertexColors[0])
 	{
-		Free_2d_array(gVertexColors[0]);
+		Free2DArray((void**) gVertexColors[0]);
 		gVertexColors[0] = nil;
 	}
 	if (gVertexColors[1])
 	{
-		Free_2d_array(gVertexColors[1]);
+		Free2DArray((void**) gVertexColors[1]);
 		gVertexColors[1] = nil;
 	}
 			/* NUKE SPLINE DATA */

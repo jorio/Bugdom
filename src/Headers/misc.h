@@ -13,6 +13,8 @@ extern	void SetMyRandomSeed(unsigned long seed);
 extern	unsigned long MyRandomLong(void);
 extern	Handle	AllocHandle(long size);
 extern	Ptr	AllocPtr(long size);
+extern	void** Alloc2DArray(int sizeofType, int n, int m);
+extern	void Free2DArray(void** array);
 extern	void InitMyRandomSeed(void);
 extern	void VerifySystem(void);
 extern	float RandomFloat(void);
