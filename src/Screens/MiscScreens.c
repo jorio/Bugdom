@@ -49,7 +49,7 @@ static void MoveLogoBG(ObjNode *theNode);
 void DoPaused(void)
 {
 PicHandle	pict;
-Rect		r;
+Rect		r = { 0, 0, 0, 0 };
 int			i,n;
 int			windowW = -1;
 int			windowH = -1;
