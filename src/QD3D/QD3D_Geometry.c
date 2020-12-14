@@ -36,6 +36,8 @@ static void ScrollUVs_TriMesh(TQ3Object theTriMesh, short whichShader);
 
 const TQ3Float32 gTextureAlphaThreshold = 0.5f;
 
+#define OBJTREE_FRONTIER_STACK_LENGTH 64
+
 
 /*********************/
 /*    VARIABLES      */
@@ -1086,8 +1088,7 @@ void QD3D_SetTextureAlphaThreshold_TriMesh(TQ3Object triMesh)
 
 void QD3D_SetTextureAlphaThreshold_Recurse(TQ3Object root)
 {
-	const int	frontierStackLength = 64;
-	TQ3Object	frontier[frontierStackLength];
+	TQ3Object	frontier[OBJTREE_FRONTIER_STACK_LENGTH];
 	int			top = 0;
 
 	frontier[top] = root;
@@ -1120,7 +1121,7 @@ void QD3D_SetTextureAlphaThreshold_Recurse(TQ3Object root)
 				if (child)
 				{
 					top++;
-					GAME_ASSERT(top < frontierStackLength);
+					GAME_ASSERT(top < OBJTREE_FRONTIER_STACK_LENGTH);
 					frontier[top] = child;
 				}
 				Q3Group_GetNextPosition(obj, &pos);
@@ -1165,8 +1166,7 @@ void QD3D_ClearDiffuseColor_TriMesh(TQ3Object triMesh)
 
 void QD3D_ClearDiffuseColor_Recurse(TQ3Object root)
 {
-	const int	frontierStackLength = 64;
-	TQ3Object	frontier[frontierStackLength];
+	TQ3Object	frontier[OBJTREE_FRONTIER_STACK_LENGTH];
 	int			top = 0;
 
 	frontier[top] = root;
@@ -1194,7 +1194,7 @@ void QD3D_ClearDiffuseColor_Recurse(TQ3Object root)
 				if (child)
 				{
 					top++;
-					GAME_ASSERT(top < frontierStackLength);
+					GAME_ASSERT(top < OBJTREE_FRONTIER_STACK_LENGTH);
 					frontier[top] = child;
 				}
 				Q3Group_GetNextPosition(obj, &pos);
