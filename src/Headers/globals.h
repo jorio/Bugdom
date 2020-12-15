@@ -125,7 +125,8 @@ enum
 	STATUS_BIT_AUTOFADE		=	(1<<19),	// calculate fade xparency value for object when rendering
 	STATUS_BIT_DETACHED		=	(1<<20),	// set if objnode is free-floating and not attached to linked list
 	STATUS_BIT_ONSPLINE		=	(1<<21),	// if objnode is attached to spline
-	STATUS_BIT_REVERSESPLINE =	(1<<22)		// if going reverse direction on spline
+	STATUS_BIT_REVERSESPLINE =	(1<<22),	// if going reverse direction on spline
+	STATUS_BIT_CLONE		=	(1<<23),	// set so Display Group node creates its own copy of model; then you can modify the model freely
 };
 
 

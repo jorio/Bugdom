@@ -252,7 +252,14 @@ Byte	group,type;
 	
 	GAME_ASSERT(type < gNumObjectsInGroupList[group]);					// see if illegal
 
-	AttachGeometryToDisplayGroupObject(newObj,gObjectGroupList[group][type]);
+	if (newObjDef->flags & STATUS_BIT_CLONE)
+	{
+		AttachGeometryToDisplayGroupObject(newObj, Q3Object_Duplicate(gObjectGroupList[group][type]));
+	}
+	else
+	{
+		AttachGeometryToDisplayGroupObject(newObj, gObjectGroupList[group][type]);
+	}
 
 			/* CALC RADIUS */
 			
