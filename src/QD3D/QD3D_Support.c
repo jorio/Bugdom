@@ -1015,6 +1015,55 @@ long					width,height;
 }
 
 
+TQ3SurfaceShaderObject	QD3D_TGAToTexture(FSSpec* spec)
+{
+TQ3Mipmap 				mipmap;
+TQ3TextureObject		texture;
+TQ3SurfaceShaderObject	shader;
+Handle					tgaHandle = nil;
+TGAHeader				header;
+OSErr					err;
+
+	err = ReadTGA(spec, &tgaHandle, &header);
+	if (err != noErr)
+	{
+		return nil;
+	}
+
+	GAME_ASSERT(header.bpp == 24);
+	GAME_ASSERT(header.imageType == TGA_IMAGETYPE_RAW_RGB);
+
+	int rowBytes = (header.bpp/8) * header.width;
+
+	mipmap.image = Q3MemoryStorage_New((unsigned char*)*tgaHandle, rowBytes * header.height);
+	GAME_ASSERT(mipmap.image);
+
+	mipmap.useMipmapping = kQ3False;							// not actually using mipmaps (just 1 srcmap)
+	mipmap.pixelType = kQ3PixelTypeRGB24;
+
+	mipmap.bitOrder = kQ3EndianBig;
+	mipmap.byteOrder = kQ3EndianLittle;
+	mipmap.reserved = 0;
+	mipmap.mipmaps[0].width = header.width;
+	mipmap.mipmaps[0].height = header.height;
+	mipmap.mipmaps[0].rowBytes = rowBytes;
+	mipmap.mipmaps[0].offset = 0;
+
+	texture = Q3MipmapTexture_New(&mipmap);							// make new mipmap
+	GAME_ASSERT(texture);
+
+	shader = Q3TextureShader_New(texture);
+	GAME_ASSERT(shader);
+
+	Q3Object_Dispose(texture);
+	Q3Object_Dispose(mipmap.image);			// disposes of extra reference to storage obj
+
+	DisposeHandle(tgaHandle);
+
+	return shader;
+}
+
+
 /**************** QD3D GWORLD TO TEXTURE ***********************/
 //
 // INPUT: picture = handle to PICT.
@@ -1055,7 +1104,6 @@ TQ3SurfaceShaderObject		shader;
 
 static void DrawPICTIntoMipmap(PicHandle pict,long width, long height, TQ3Mipmap *mipmap, Boolean blackIsAlpha)
 {
-#if 1
 	GAME_ASSERT(width  == (**pict).picFrame.right  - (**pict).picFrame.left);
 	GAME_ASSERT(height == (**pict).picFrame.bottom - (**pict).picFrame.top);
 	
@@ -1091,73 +1139,6 @@ static void DrawPICTIntoMipmap(PicHandle pict,long width, long height, TQ3Mipmap
 	mipmap->mipmaps[0].height = height;
 	mipmap->mipmaps[0].rowBytes = pictRowBytes;
 	mipmap->mipmaps[0].offset = 0;
-#else
-Rect 					rectGW;
-GWorldPtr 				pGWorld;
-PixMapHandle 			hPixMap;
-OSErr					myErr;
-GDHandle				oldGD;
-GWorldPtr				oldGW;
-PictInfo				thePictInfo;
-short					depth;
-
-	GetGWorld(&oldGW, &oldGD);										// save current port
-
-
-				/* GET PICT INFO TO FIND COLOR DEPTH */
-				
-	myErr = GetPictInfo(pict, &thePictInfo, 0, 0, systemMethod, 0);
-	if (myErr)
-	{
-		DoAlert("DrawPICTIntoMipmap: GetPictInfo failed!");
-		ShowSystemErr(myErr);
-	}
-
-	depth = thePictInfo.depth;
-	
-	if (thePictInfo.commentHandle)									// free pict info
-		DisposeHandle((Handle)thePictInfo.commentHandle);
-	if (thePictInfo.fontHandle)
-		DisposeHandle((Handle)thePictInfo.fontHandle);
-	if (thePictInfo.fontNamesHandle)
-		DisposeHandle((Handle)thePictInfo.fontNamesHandle);
-	if (thePictInfo.theColorTable)
-		DisposeCTable(thePictInfo.theColorTable);
-
-
-
-				/* CREATE A GWORLD TO DRAW INTO */
-
-	SetRect(&rectGW, 0, 0, width, height);							// set dimensions
-	myErr = NewGWorld(&pGWorld, depth, &rectGW, 0, 0, 0);			// try app mem
-	if (myErr)
-	{
-		myErr = NewGWorld(&pGWorld, depth, &rectGW, 0, 0, useTempMem);	// try sys mem
-		if (myErr)
-			DoFatalAlert("DrawPICTIntoMipmap: NewGWorld failed!");
-	}
-	
-	hPixMap = GetGWorldPixMap(pGWorld);								// get gworld's pixmap
-	
-	if (depth == 32)
-		(**hPixMap).cmpCount = 4;	// we want full 4-component argb (defaults to only rgb)
-		
-
-			/* DRAW PICTURE INTO GWORLD */
-			
-	SetGWorld(pGWorld, nil);	
-	LockPixels(hPixMap);
-	EraseRect(&rectGW);
-	DrawPicture(pict, &rectGW);
-
-
-			/* MAKE A MIPMAP FROM GWORLD */
-			
-	QD3D_GWorldToMipMap(pGWorld,mipmap,false, blackIsAlpha);
-	
-	SetGWorld (oldGW, oldGD);
-	DisposeGWorld (pGWorld);
-#endif
 }
 
 

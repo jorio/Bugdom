@@ -108,6 +108,7 @@ extern	void QD3D_SetPointLightCoords(QD3DSetupOutputType *setupInfo, TQ3GroupPos
 extern	void QD3D_SetPointLightBrightness(QD3DSetupOutputType *setupInfo, TQ3GroupPosition lightPosition, float bright);
 extern	void QD3D_DeleteLight(QD3DSetupOutputType *setupInfo, TQ3GroupPosition lightPosition);
 TQ3SurfaceShaderObject	QD3D_PICTToTexture(PicHandle picture, Boolean blackIsAlpha);
+TQ3SurfaceShaderObject	QD3D_TGAToTexture(FSSpec* spec);
 TQ3SurfaceShaderObject	QD3D_GWorldToTexture(GWorldPtr theGWorld, Boolean pointToGWorld, Boolean blackIsAlpha);
 extern	void SetBackFaceStyle(QD3DSetupOutputType *setupInfo, TQ3BackfacingStyle style);
 extern	void SetFillStyle(QD3DSetupOutputType *setupInfo, TQ3FillStyle style);
