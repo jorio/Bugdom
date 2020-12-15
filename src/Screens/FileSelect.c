@@ -271,12 +271,22 @@ static void MakeFileSlot(
 	gNewObjectDefinition.coord.y 	= y;
 	gNewObjectDefinition.coord.z 	= 0;
 	gNewObjectDefinition.slot 		= 100;
-	gNewObjectDefinition.flags 		= 0;
+	gNewObjectDefinition.flags 		= STATUS_BIT_CLONE;
 	gNewObjectDefinition.moveCall 	= MoveFloppy;
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= 2.0f * gs;
 	ObjNode* newFloppy = MakeNewDisplayGroupObject(&gNewObjectDefinition);
 	newFloppy->SpecialL[0] = slotNumber;
+
+	if (saveDataValid)
+	{
+		snprintf(textBuffer, sizeof(textBuffer), ":Floppy:%d.tga", saveData.realLevel);
+		FSSpec floppyLabelPictSpec;
+		FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, textBuffer, &floppyLabelPictSpec);
+		TQ3ShaderObject shaderObject = QD3D_TGAToTexture(&floppyLabelPictSpec);
+		GAME_ASSERT(shaderObject);
+		QD3D_ReplaceGeometryTexture(newFloppy->BaseGroup, shaderObject);
+	}
 
 //	GAME_ASSERT(gNumPickables < MAX_PICKABLES);
 //	gPickables[gNumPickables++] = newFloppy->BaseGroup;
