@@ -54,7 +54,7 @@ TQ3Area GetAdjustedPane(int windowWidth, int windowHeight, Rect paneClip)
 	return pane;
 }
 
-OSErr DrawPictureIntoGWorld(FSSpec* spec, GWorldPtr* theGWorld)
+static OSErr ReadPictureFile(FSSpec* spec, Pomme::Graphics::ARGBPixmap& pict)
 {
 	short refNum;
 
@@ -65,8 +65,20 @@ OSErr DrawPictureIntoGWorld(FSSpec* spec, GWorldPtr* theGWorld)
 	}
 
 	auto& stream = Pomme::Files::GetStream(refNum);
-	auto pict = Pomme::Graphics::ReadPICT(stream, true);
+	pict = Pomme::Graphics::ReadPICT(stream, true);
 	FSClose(refNum);
+
+	return noErr;
+}
+
+OSErr DrawPictureIntoGWorld(FSSpec* spec, GWorldPtr* theGWorld)
+{
+	Pomme::Graphics::ARGBPixmap pict;
+	OSErr err = ReadPictureFile(spec, pict);
+	if (err != noErr)
+	{
+		return err;
+	}
 
 	Rect boundsRect;
 	boundsRect.left = 0;
@@ -87,17 +99,12 @@ OSErr DrawPictureIntoGWorld(FSSpec* spec, GWorldPtr* theGWorld)
 
 OSErr DrawPictureToScreen(FSSpec* spec, short x, short y)
 {
-	short refNum;
-
-	OSErr error = FSpOpenDF(spec, fsRdPerm, &refNum);
-	if (noErr != error)
+	Pomme::Graphics::ARGBPixmap pict;
+	OSErr err = ReadPictureFile(spec, pict);
+	if (err != noErr)
 	{
-		return error;
+		return err;
 	}
-
-	auto& stream = Pomme::Files::GetStream(refNum);
-	auto pict = Pomme::Graphics::ReadPICT(stream, true);
-	FSClose(refNum);
 
 	GrafPtr oldPort;
 	GetPort(&oldPort);
