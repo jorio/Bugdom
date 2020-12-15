@@ -43,15 +43,15 @@ static int FileScreenMainLoop(void);
 static const char* gLevelNames[10] =
 {
 	"Training",
-	"The Lawn",
-	"The Pond",
-	"The Forest",
-	"The Hive Attack",
-	"The Bee Hive",
-	"The Queen Bee",
+	"Lawn",
+	"Pond",
+	"Forest",
+	"Hive Attack",
+	"Bee Hive",
+	"Queen Bee",
 	"Night Attack",
-	"The Ant Hill",
-	"The Ant King",
+	"Ant Hill",
+	"Ant King",
 };
 
 
@@ -267,46 +267,53 @@ static void MakeFileSlot(
 	// Make floppy
 	gNewObjectDefinition.group 		= MODEL_GROUP_BONUS;
 	gNewObjectDefinition.type 		= BONUS_MObjType_SaveIcon;
-	gNewObjectDefinition.coord.x 	= x - 50 * gs;
+	gNewObjectDefinition.coord.x 	= x;
 	gNewObjectDefinition.coord.y 	= y;
 	gNewObjectDefinition.coord.z 	= 0;
 	gNewObjectDefinition.slot 		= 100;
 	gNewObjectDefinition.flags 		= 0;
 	gNewObjectDefinition.moveCall 	= MoveFloppy;
 	gNewObjectDefinition.rot 		= 0;
-	gNewObjectDefinition.scale 		= 1.0f * gs;
+	gNewObjectDefinition.scale 		= 2.0f * gs;
 	ObjNode* newFloppy = MakeNewDisplayGroupObject(&gNewObjectDefinition);
 	newFloppy->SpecialL[0] = slotNumber;
 
 //	GAME_ASSERT(gNumPickables < MAX_PICKABLES);
-//	pickable[gNumPickables++] = newFloppy->BaseGroup;
+//	gPickables[gNumPickables++] = newFloppy->BaseGroup;
 
 	snprintf(textBuffer, sizeof(textBuffer), "File %c", 'A' + slotNumber);
 
-	MakeTextWithShadow(textBuffer, x, y + 16 * gs, .6f * gs, &gTextColor);
+	MakeTextWithShadow(textBuffer, x, y + 72 * gs, .6f * gs, &gTextColor);
 
 	if (saveDataValid)
-		snprintf(textBuffer, sizeof(textBuffer), "Level %d: %s", 1 + saveData.realLevel, gLevelNames[saveData.realLevel]);
+	{
+		snprintf(textBuffer, sizeof(textBuffer), "Level %d", 1 + saveData.realLevel);
+		MakeTextWithShadow(textBuffer, x, y - 75 * gs, 0.35f * gs, &gTextColor);
+		MakeTextWithShadow(gLevelNames[saveData.realLevel], x, y - 90 * gs, 0.35f * gs, &gTextColor);
+	}
 	else
-		snprintf(textBuffer, sizeof(textBuffer), "---- blank ----");
-	MakeTextWithShadow(textBuffer, x, y - 8 * gs, 0.4f * gs, &gTextColor);
+	{
+		MakeTextWithShadow("-- blank --", x, y - 75 * gs, 0.35f * gs, &gTextColor);
+	}
 
 	if (saveDataValid)
 	{
 		struct tm tm;
 		tm = *localtime(&saveData.timestamp);
-		strftime(textBuffer, sizeof(textBuffer), "%-e %b %Y   %-l:%M%p", &tm);
-		MakeTextWithShadow(textBuffer, x, y - 24 * gs, 0.4f * gs, &gTextColor);
+		strftime(textBuffer, sizeof(textBuffer), "%-e %b %Y", &tm);
+		MakeTextWithShadow(textBuffer, x, y - 115 * gs, 0.35f * gs, &gTextColor);
+		strftime(textBuffer, sizeof(textBuffer), "%-l:%M%p", &tm);
+		MakeTextWithShadow(textBuffer, x, y - 130 * gs, 0.35f * gs, &gTextColor);
 	}
 
 
 	{
 		// INIT PICKABLE QUAD GEOMETRY
 
-		float left		= x - 70;
-		float right		= x + 150;
-		float top		= y + 25 * gs;
-		float bottom	= y - 25 * gs;
+		float left		= x - 50;
+		float right		= x + 50;
+		float top		= y + 50;
+		float bottom	= y - 50;
 
 		TQ3PolygonData pickableQuad;
 
@@ -425,26 +432,25 @@ static void SetupFileScreen(int type)
 	/* TEXT */
 
 	float y = 110.0f;
-	float x = -40.0f;
+	float x = 0;
 
 	if (type == FILE_SELECT_SCREEN_TYPE_LOAD)
 	{
-		MakeTextWithShadow("Pick a Saved Game", -135.0f, y, 1.0f, &gTitleTextColor);
+		MakeTextWithShadow("Pick a Saved Game", 0.0f, y, 1.0f, &gTitleTextColor);
 	}
 	else
 	{
-		MakeTextWithShadow("Save where?", -80.0f, y, 1.0f, &gTitleTextColor);
+		MakeTextWithShadow("Save where?", 0.0f, y, 1.0f, &gTitleTextColor);
 
 		snprintf(textBuffer, sizeof(textBuffer), "You are entering Level %d", gRealLevel+2);
-		MakeTextWithShadow(textBuffer, -98.0f, y-25.0f, 0.5f, &gTitleTextColor);
+		MakeTextWithShadow(textBuffer, 0, y-25.0f, 0.5f, &gTitleTextColor);
 	}
 
-	y -= 64.0f;
-	MakeFileSlot(0, x, y);
-	y -= 64.0f;
+	y -= 120.0f;
+
+	MakeFileSlot(0, x - 120.0f, y);
 	MakeFileSlot(1, x, y);
-	y -= 64.0f;
-	MakeFileSlot(2, x, y);
+	MakeFileSlot(2, x + 120.0f, y);
 
 
 	y -= 50.0f;
