@@ -155,6 +155,10 @@ static void MakeText(
 	const float characterSpacing = 16.0f;
 	const float spaceAdvance = 20.0f;
 
+	float startX = x;
+	ObjNode* firstTextNode = nil;
+	ObjNode* lastTextNode = nil;
+
 	for (; *text; text++)
 	{
 		char c = *text;
@@ -208,6 +212,10 @@ static void MakeText(
 		gNewObjectDefinition.scale 		= baseScale * (isLower? 0.8f: 1.0f);
 		ObjNode* glyph = MakeNewDisplayGroupObject(&gNewObjectDefinition);
 
+		lastTextNode = glyph;
+		if (!firstTextNode)
+			firstTextNode = glyph;
+
 		TQ3AttributeSet attrs = Q3AttributeSet_New();
 		Q3AttributeSet_Add(attrs, kQ3AttributeTypeDiffuseColor, color);
 		AttachGeometryToDisplayGroupObject(glyph, attrs);
@@ -217,6 +225,16 @@ static void MakeText(
 
 		x = glyph->Coord.x;
 		x += characterSpacing * baseScale * (isLower ? 1.0f : 1.2f);
+	}
+
+	// Center text horizontally
+	float totalWidth = x - startX;
+	for (ObjNode* node = firstTextNode; node; node = node->NextNode)
+	{
+		node->Coord.x -= (totalWidth - characterSpacing * baseScale) / 2.0f;
+		UpdateObjectTransforms(node);
+		if (node == lastTextNode)
+			break;
 	}
 }
 
