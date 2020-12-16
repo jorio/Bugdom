@@ -194,7 +194,11 @@ void Overlay_EndExclusive()
 void Overlay_FadeOutFrozenFrame(float duration)
 {
 	SDL_GLContext currentContext = SDL_GL_GetCurrentContext();
-	GAME_ASSERT_MESSAGE(currentContext, "GL context got nuked before starting fade out!");
+	if (!currentContext)
+	{
+		printf("%s: no GL context; skipping fade out\n", __func__);
+		return;
+	}
 
 	int windowWidth, windowHeight;
 	SDL_GetWindowSize(gSDLWindow, &windowWidth, &windowHeight);
