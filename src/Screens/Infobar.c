@@ -448,6 +448,10 @@ static void LoadSpriteResources(FSSpec *spec)
 int			i,n;
 int			fRefNum;
 OSErr		iErr;
+GDHandle	oldGD;
+GWorldPtr	oldGW;
+
+	GetGWorld(&oldGW, &oldGD);										// save current port
 
 	fRefNum = FSpOpenResFile(spec,fsRdPerm);
 	GAME_ASSERT(fRefNum != -1);
@@ -462,9 +466,7 @@ OSErr		iErr;
 	{
 		PicHandle	pict;
 		Rect		r;
-		GDHandle	oldGD;
-		GWorldPtr	oldGW;
-		
+
 		pict = GetPicture(128+i);										// load pict
 		HLock((Handle)pict);
 		r = (*pict)->picFrame;											// get size of pict
@@ -474,12 +476,10 @@ OSErr		iErr;
 		iErr = NewGWorld(&gSprites[gNumSprites], 16, &r, nil, nil, 0);	// try app mem
 		GAME_ASSERT(noErr == iErr);
 
-		GetGWorld(&oldGW, &oldGD);										// save current port
-		SetGWorld(gSprites[gNumSprites], nil);	
+		SetGWorld(gSprites[gNumSprites], nil);
 		DoLockPixels(gSprites[gNumSprites]);
 		DrawPicture(pict, &r);											// draw pict into gworld
-		SetGWorld (oldGW, oldGD);										// restore port
-		
+
 		ReleaseResource((Handle)pict);									// nuke pict
 		
 		gNumSprites++;
@@ -487,6 +487,8 @@ OSErr		iErr;
 			/* CLOSE REZ FILE */
 			
 	CloseResFile(fRefNum);
+
+	SetGWorld (oldGW, oldGD);										// restore port
 }
 
 
