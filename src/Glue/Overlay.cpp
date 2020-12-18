@@ -210,8 +210,16 @@ void Overlay_FadeOutFrozenFrame(float duration)
 	uint32_t startTicks = nowTicks;
 	uint32_t endTicks = startTicks + durationTicks;
 
+
+	// Back up viewport
+	glGetIntegerv(GL_VIEWPORT, viewportBackup);
+
+	// Use entire screen
 	glDisable(GL_SCISSOR_TEST);
-	glViewport(0,0,windowWidth,windowHeight);
+
+	// Set viewport
+	glViewport(0, 0, windowWidth, windowHeight);
+
 
 	while (nowTicks < endTicks)
 	{
@@ -227,4 +235,8 @@ void Overlay_FadeOutFrozenFrame(float duration)
 	// Draw solid black frame before moving on
 	glOverlayFade->DrawFade(0, 0, 0, 1.0);
 	SDL_GL_SwapWindow(gSDLWindow);
+
+	// Restore scissor test & viewport because Quesa doesn't reset it
+	glEnable(GL_SCISSOR_TEST);
+	glViewport(viewportBackup[0], viewportBackup[1], (GLsizei) viewportBackup[2], (GLsizei) viewportBackup[3]);
 }
