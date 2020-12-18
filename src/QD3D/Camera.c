@@ -306,6 +306,40 @@ float	fps = gFramesPerSecondFrac;
 	
 }
 
+/*************** FRUSTUM CALCS ***************/
+// Planes 0,1: X axis. Right, left
+// Planes 2,3: Y axis. Top, bottom
+// Planes 4,5: Z axis. Near, far
+
+static void CalcFrustumPlane(int plane)
+{
+#define M(a,b)	gCameraWorldToFrustumMatrix.value[a][b]
+	int axis = plane >> 1u;							// 0=X, 1=Y, 2=Z
+	float sign = plane%2 == 0 ? -1.0f : 1.0f;		// To pick either frustum plane on the axis.
+
+	float x = M(0,3) + sign * M(0,axis);
+	float y = M(1,3) + sign * M(1,axis);
+	float z = M(2,3) + sign * M(2,axis);
+	float w = M(3,3) + sign * M(3,axis);
+
+	float t = sqrtf(x*x + y*y + z*z);				// Normalize
+	gFrustumPlanes[plane].x = x/t;
+	gFrustumPlanes[plane].y = y/t;
+	gFrustumPlanes[plane].z = z/t;
+	gFrustumPlanes[plane].w = w/t;
+#undef M
+}
+
+static inline Boolean IsSphereFacingFrustumPlane(int plane, const TQ3Point3D* inWorldPt, float radius)
+{
+	float planeDot =
+			inWorldPt->x * gFrustumPlanes[plane].x +
+			inWorldPt->y * gFrustumPlanes[plane].y +
+			inWorldPt->z * gFrustumPlanes[plane].z +
+			gFrustumPlanes[plane].w;
+
+	return planeDot > -radius;
+}
 
 /********************** CALC CAMERA MATRIX INFO ************************/
 //
@@ -334,46 +368,22 @@ void CalcCameraMatrixInfo(QD3DSetupOutputType *viewPtr)
 			/* PREPARE FRUSTUM PLANES FOR SPHERE VISIBILITY CHECKS */
 			// (Source port addition)
 
-#define M(a,b)	gCameraWorldToFrustumMatrix.value[a][b]
-	// Planes 0,1: right, left
-	// Planes 2,3: top, bottom
-	// Planes 4,5: near, far
-	for (int plane = 0; plane < 6; plane++)
-	{
-		int axis = plane >> 1u;							// 0=X, 1=Y, 2=Z
-		float sign = plane%2 == 0 ? -1.0f : 1.0f;		// To pick either frustum plane on the axis.
-
-		float x = M(0,3) + sign * M(0,axis);
-		float y = M(1,3) + sign * M(1,axis);
-		float z = M(2,3) + sign * M(2,axis);
-		float w = M(3,3) + sign * M(3,axis);
-
-		float t = sqrtf(x*x + y*y + z*z);				// Normalize
-		gFrustumPlanes[plane].x = x/t;
-		gFrustumPlanes[plane].y = y/t;
-		gFrustumPlanes[plane].z = z/t;
-		gFrustumPlanes[plane].w = w/t;
-	}
-#undef M
+	// The game doesn't do frustum checks on the Y axis, so skip planes 2 and 3.
+	CalcFrustumPlane(0);
+	CalcFrustumPlane(1);
+	CalcFrustumPlane(4);
+	CalcFrustumPlane(5);
 }
 
 /********************** SPHERE VISIBILITY CHECK ************************/
 
 Boolean IsSphereInFrustum(const TQ3Point3D* inWorldPt, float radius)
 {
-	for (int plane = 0; plane < 6; plane++)
-	{
-		float planeDot =
-				inWorldPt->x * gFrustumPlanes[plane].x +
-				inWorldPt->y * gFrustumPlanes[plane].y +
-				inWorldPt->z * gFrustumPlanes[plane].z +
-				gFrustumPlanes[plane].w;
-
-		if (planeDot <= -radius)
-			return false;
-	}
-
-	return true;
+	// The game doesn't do frustum checks on the Y axis, so skip planes 2 and 3.
+	return IsSphereFacingFrustumPlane(0, inWorldPt, radius)
+		&& IsSphereFacingFrustumPlane(1, inWorldPt, radius)
+		&& IsSphereFacingFrustumPlane(4, inWorldPt, radius)
+		&& IsSphereFacingFrustumPlane(5, inWorldPt, radius);
 }
 
 /**************** MOVE CAMERA: MANUAL ********************/
