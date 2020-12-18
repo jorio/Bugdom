@@ -285,6 +285,8 @@ void DoModelDebug(void)
 	/***************/
 
 
+	GammaOn();
+
 	Regen();
 
 
