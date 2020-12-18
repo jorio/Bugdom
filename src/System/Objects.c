@@ -27,6 +27,7 @@ extern	Boolean		gShowDebug;
 
 static void FlushObjectDeleteQueue(void);
 static void DrawCollisionBoxes(ObjNode *theNode, TQ3ViewObject view);
+static void DrawBoundingSphere(ObjNode *theNode, TQ3ViewObject view);
 
 
 /****************************/
@@ -633,7 +634,8 @@ short			skelType;
 			
 		if (gShowDebug)
 		{
-			DrawCollisionBoxes(theNode,view);		
+			DrawCollisionBoxes(theNode,view);
+			DrawBoundingSphere(theNode, view);
 		}
 
 				
@@ -1286,23 +1288,41 @@ float			left,right,top,bottom,front,back;
 	}
 }
 
+/************************ DRAW BOUNDING SPHERE (FOR CULLING) ****************************/
 
+static void DrawBoundingSphere(ObjNode* theNode, TQ3ViewObject view)
+{
+	static TQ3SubdivisionStyleData sub;
+	sub.method = kQ3SubdivisionMethodConstant;
+	sub.c1 = 64;
+	sub.c2 = 64;
+	Q3SubdivisionStyle_Submit(&sub, view);
 
+	TQ3Point3D C = theNode->Coord;
+	C.x += theNode->BoundingSphere.origin.x;
+	C.y += theNode->BoundingSphere.origin.y;
+	C.z += theNode->BoundingSphere.origin.z;
+	float R = theNode->BoundingSphere.radius;
+	static const TQ3Vector3D up = {0,1,0};
+	TQ3Matrix4x4 m;
+	SetLookAtMatrix(&m, &up, &C, &gGameViewInfoPtr->currentCameraCoords);
 
+	TQ3Vector3D majorV = {R,0,0};
+	TQ3Vector3D minorV = {0,R,0};
+	Q3Point3D_Transform((TQ3Point3D*) &majorV, &m, (TQ3Point3D*) &majorV);
+	Q3Vector3D_Normalize(&majorV, &majorV);
+	majorV.x *= R;
+	majorV.y *= R;
+	majorV.z *= R;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	TQ3EllipseData ellipseData;
+	ellipseData.uMin = 0;
+	ellipseData.uMax = 1;
+	ellipseData.ellipseAttributeSet = nil;
+	ellipseData.origin = C;
+	ellipseData.majorRadius = majorV;
+	ellipseData.minorRadius = minorV;
+	Q3Ellipse_Submit(&ellipseData, view);
+}
 
 
