@@ -91,6 +91,7 @@ float			x,z,placement;
 	newObj->Health 			= SLUG_HEALTH;
 	newObj->Damage 			= SLUG_DAMAGE;
 	newObj->Kind 			= ENEMY_KIND_SLUG;
+	newObj->BoundingSphere.radius *= 1.5f;					// Source port fix: enlarge bounding sphere, otherwise tail gets culled early
 	
 				/* SET COLLISION INFO */
 

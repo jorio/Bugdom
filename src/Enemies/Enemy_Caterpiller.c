@@ -93,6 +93,7 @@ float			x,z,placement;
 	newObj->Health 			= CATERPILLER_HEALTH;
 	newObj->Damage 			= CATERPILLER_DAMAGE;
 	newObj->Kind 			= ENEMY_KIND_CATERPILLER;
+	newObj->BoundingSphere.radius *= 1.5f;						// Source port fix: enlarge bounding sphere, otherwise tail gets culled early
 	
 				/* SET COLLISION INFO */
 
