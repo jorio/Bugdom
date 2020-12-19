@@ -152,19 +152,17 @@ void DoSDLMaintenance()
 		holdFramerateCap--;
 	}
 
-#if 0
 #if _DEBUG
 	UInt32 now = SDL_GetTicks();
 	UInt32 ticksElapsed = now - debugText.lastUpdateAt;
 	if (ticksElapsed >= debugText.updateInterval) {
 		float fps = 1000 * debugText.frameAccumulator / (float)ticksElapsed;
-		snprintf(debugText.titleBuffer, 1024, "Bugdom - %d fps - %ld nodes drawn", (int)round(fps), gNodesDrawn);
+		snprintf(debugText.titleBuffer, 1024, "Bugdom - %d fps", (int)round(fps));
 		SDL_SetWindowTitle(gSDLWindow, debugText.titleBuffer);
 		debugText.frameAccumulator = 0;
 		debugText.lastUpdateAt = now;
 	}
 	debugText.frameAccumulator++;
-#endif
 #endif
 
 	if (GetNewKeyState(kKey_ToggleFullscreen))

@@ -116,6 +116,11 @@ int CommonMain(int argc, const char** argv)
 
 int main(int argc, char** argv)
 {
+#if _DEBUG
+	// In debug builds, don't show a fancy dialog in case of an uncaught exception.
+	// This way, it's easier to get a clean stack trace.
+	return CommonMain(argc, const_cast<const char**>(argv));
+#else
 	std::string uncaught;
 
 	try
@@ -134,4 +139,5 @@ int main(int argc, char** argv)
 	std::cerr << "Uncaught exception: " << uncaught << "\n";
 	SDL_ShowSimpleMessageBox(0, "Uncaught Exception", uncaught.c_str(), nullptr);
 	return 1;
+#endif
 }

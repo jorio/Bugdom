@@ -719,7 +719,9 @@ static void DoDeathReset(void)
 
 static void CheckForCheats(void)
 {
-#if __APPLE__
+#if _DEBUG
+											// in debug builds, expose cheats without needing command/control key
+#elif __APPLE__
 	if (GetKeyState(kVK_Command))			// must hold down the help key
 #else
 	if (GetKeyState(kVK_Control))			// must hold down the help key
