@@ -1112,6 +1112,9 @@ static void DrawPICTIntoMipmap(PicHandle pict,long width, long height, TQ3Mipmap
 
 	if (blackIsAlpha)
 	{
+		const uint32_t alphaMask = 0x000000FF;
+
+		// First clear black areas
 		uint32_t*	rowPtr = (uint32_t *)pictMapAddr;
 
 		for (int y = 0; y < height; y++)
@@ -1119,8 +1122,8 @@ static void DrawPICTIntoMipmap(PicHandle pict,long width, long height, TQ3Mipmap
 			for (int x = 0; x < width; x++)
 			{
 				uint32_t pixel = rowPtr[x];
-				if (!(pixel & 0xFFFFFF00))
-					rowPtr[x] &= 0xFFFFFF00;
+				if (!(pixel & ~alphaMask))
+					rowPtr[x] = 0;
 			}
 			rowPtr += pictRowBytes / 4;
 		}
@@ -1139,6 +1142,11 @@ static void DrawPICTIntoMipmap(PicHandle pict,long width, long height, TQ3Mipmap
 	mipmap->mipmaps[0].height = height;
 	mipmap->mipmaps[0].rowBytes = pictRowBytes;
 	mipmap->mipmaps[0].offset = 0;
+
+	if (blackIsAlpha)											// apply edge padding to texture to avoid black seams
+	{															// where texels are being discarded
+		ApplyEdgePadding(mipmap);
+	}
 }
 
 

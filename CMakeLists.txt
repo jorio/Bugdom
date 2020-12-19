@@ -171,6 +171,7 @@ set(GAME_HEADERS
 
 set(GAME_GLUE_SOURCES
 	${GAME_SRCDIR}/Main.cpp
+	${GAME_SRCDIR}/Glue/EdgePadding.cpp
 	${GAME_SRCDIR}/Glue/GamePatches.cpp
 	${GAME_SRCDIR}/Glue/GLFunctions.cpp
 	${GAME_SRCDIR}/Glue/GLOverlay.cpp

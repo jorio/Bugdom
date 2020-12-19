@@ -19,6 +19,11 @@ void FlushQuesaErrors(void);
 Boolean FlushMouseButtonPress(void);
 
 //-----------------------------------------------------------------------------
+// Texture edge padding
+
+void ApplyEdgePadding(const TQ3Mipmap* mipmap);
+
+//-----------------------------------------------------------------------------
 // Overlay
 
 void Overlay_BeginExclusive(void);

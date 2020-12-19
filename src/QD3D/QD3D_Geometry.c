@@ -1075,10 +1075,35 @@ void QD3D_SetTextureAlphaThreshold_TriMesh(TQ3Object triMesh)
 	if (Q3AttributeSet_Contains(triMeshData.triMeshAttributeSet, kQ3AttributeTypeSurfaceShader))
 	{
 		TQ3SurfaceShaderObject	shader;
+		TQ3TextureObject		texture;
+		TQ3Mipmap				mipmap;
+
 		status = Q3AttributeSet_Get(triMeshData.triMeshAttributeSet, kQ3AttributeTypeSurfaceShader, &shader);
 		GAME_ASSERT(status);
+
+				/* ADD ALPHA TEST ELEMENT */
+
 		status = Q3Object_AddElement(shader, kQ3ElementTypeTextureShaderAlphaTest, &gTextureAlphaThreshold);
 		GAME_ASSERT(status);
+
+				/* GET MIPMAP & APPLY EDGE PADDING TO IMAGE */
+				/* (TO AVOID BLACK SEAMS WHERE TEXELS ARE BEING DISCARDED) */
+
+		status = Q3TextureShader_GetTexture(shader, &texture);
+		GAME_ASSERT(status);
+
+		status = Q3MipmapTexture_GetMipmap(texture, &mipmap);
+		GAME_ASSERT(status);
+
+		if (mipmap.pixelType == kQ3PixelTypeARGB16 ||			// Edge padding only effective if image has alpha channel
+			mipmap.pixelType == kQ3PixelTypeARGB32)
+		{
+			ApplyEdgePadding(&mipmap);
+		}
+
+				/* DISPOSE REFS */
+
+		Q3Object_Dispose(texture);
 		Q3Object_Dispose(shader);
 	}
 
