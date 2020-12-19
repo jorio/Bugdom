@@ -17,7 +17,7 @@ enum
 };
 
 #define	MAX_3DMF_GROUPS			6
-#define	MAX_OBJECTS_IN_GROUP	100
+#define	MAX_OBJECTS_IN_GROUP	64
 
 
 
