@@ -177,8 +177,9 @@ TQ3Vector3D			fillDirection2 = { -.8, .8, -.2 };
 	viewDef->lights.fogStart 	= .8;
 	viewDef->lights.fogEnd 		= 1.0;
 	viewDef->lights.fogDensity	= 1.0;
-	
 	viewDef->lights.fogMode		= kQ3FogModePlaneBasedLinear;
+	viewDef->lights.useCustomFogColor = false;
+	viewDef->lights.fogColor	= clearColor;
 }
 
 /************** SETUP QD3D WINDOW *******************/
@@ -236,8 +237,11 @@ QD3DSetupOutputType	*outputPtr;
 			
 	if (setupDefPtr->lights.useFog)
 	{
-		QD3D_SetRaveFog(setupDefPtr->lights.fogStart,setupDefPtr->lights.fogEnd,setupDefPtr->lights.fogDensity,
-						&setupDefPtr->view.clearColor,setupDefPtr->lights.fogMode);
+		gFogMode	= setupDefPtr->lights.fogMode;
+		gFogStart 	= setupDefPtr->lights.fogStart;
+		gFogEnd 	= setupDefPtr->lights.fogEnd;
+		gFogDensity = setupDefPtr->lights.fogDensity;
+		gFogColor	= setupDefPtr->lights.useCustomFogColor ? setupDefPtr->lights.fogColor : setupDefPtr->view.clearColor;
 	}
 }
 
@@ -1675,24 +1679,6 @@ void QD3D_QDColorToColor(RGBColor *in, TQ3ColorRGB *out)
 
 
 #pragma mark -
-
-
-
-/********************** SET RAVE FOG ******************************/
-
-void QD3D_SetRaveFog(float fogStart, float fogEnd, float fogDensity, TQ3ColorARGB *fogColor, short fogMode)
-{
-	GAME_ASSERT(gQD3D_DrawContext);
-		
-		/* SET FOG PARAMETERS */
-		
-	gFogMode = (TQ3FogMode)fogMode;
-	
-	gFogStart 	= fogStart;
-	gFogEnd 	= fogEnd;
-	gFogDensity = fogDensity;
-	gFogColor	= *fogColor;
-}
 
 
 

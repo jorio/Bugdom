@@ -212,6 +212,20 @@ static const TQ3ColorARGB	gLevelFogColor[NUM_LEVELS] =
 	{ 1.000f, 0.150f, 0.070f, 0.150f },				// anthill
 };
 
+// Source port addition: on rare occasions you get to see the void "above" the cyclorama.
+// To camouflage this, we make the clear color roughly match the color at the top of the cyc.
+// This is not necessarily the same color as the fog!
+// NOTE: If there's no cyc in a level, this value is ignored and the fog color is used instead.
+static const TQ3ColorARGB	gLevelClearColorWithCyc[NUM_LEVELS] =
+{
+	{ 1.000f, 0.352f, 0.380f, 1.000f },				// garden		(DIFFERENT FROM FOG)
+	{ 1.000f, 0.900f, 0.900f, 0.850f },				// boat			(same)
+	{ 1.000f, 0.482f, 0.188f, 0.129f },				// dragonfly	(DIFFERENT FROM FOG)
+	{ 1.000f, 0.700f, 0.600f, 0.400f },				// hive			(same)
+	{ 1.000f, 0.000f, 0.000f, 0.000f },				// night		(DIFFERENT FROM FOG)
+	{ 1.000f, 0.150f, 0.070f, 0.150f },				// anthill		(same)
+};
+
 
 
 //======================================================================================
@@ -585,11 +599,18 @@ QD3DSetupInputType	viewDef;
 			/* SET FOG */
 			
 	viewDef.lights.useFog 		= true;
+	viewDef.lights.fogColor		= gLevelFogColor[gLevelType];
 	viewDef.lights.fogStart 	= gLevelFogStart[gLevelType];
 	viewDef.lights.fogEnd	 	= gLevelFogEnd[gLevelType];
 	viewDef.lights.fogDensity 	= 1.0;	
-	
-	viewDef.lights.fogMode = kQ3FogModePlaneBasedLinear;  // Source port note: plane-based linear fog accurately reproduces fog rendering on real Macs
+	viewDef.lights.fogMode		= kQ3FogModePlaneBasedLinear;  // Source port note: plane-based linear fog accurately reproduces fog rendering on real Macs
+
+	// Source port addition: camouflage seam in sky with custom clear color that roughly matches top of cyc
+	if (gUseCyclorama)
+	{
+		viewDef.lights.useCustomFogColor = true;	// need this so fog color will be different from clear color
+		viewDef.view.clearColor = gLevelClearColorWithCyc[gLevelType];
+	}
 	
 //	if (gUseCyclorama && (gLevelType != LEVEL_TYPE_FOREST) && (gLevelType != LEVEL_TYPE_NIGHT))
 //		viewDef.view.dontClear		= true;

@@ -47,6 +47,8 @@ typedef	struct
 	float			fogEnd;
 	float			fogDensity;
 	short			fogMode;
+	Boolean			useCustomFogColor;		// if false (by default), fog will use view clear color instead of fogColor below
+	TQ3ColorARGB	fogColor;
 
 	float			ambientBrightness;
 	TQ3ColorRGB		ambientColor;
@@ -123,7 +125,6 @@ extern	TQ3SurfaceShaderObject	QD3D_Data16ToTexture_NoMip(Ptr data, short width, 
 TQ3StorageObject QD3D_GetMipmapStorageObjectFromAttrib(TQ3AttributeSet attribSet);
 void QD3D_GWorldToMipMap(GWorldPtr pGWorld, TQ3Mipmap *mipmap, Boolean pointToGWorld, Boolean blackIsAlpha);
 
-void QD3D_SetRaveFog(float fogStart, float fogEnd, float fogDensity, TQ3ColorARGB *fogColor, short fogMode);
 void QD3D_DisableFog(const QD3DSetupOutputType *setupInfo);
 void QD3D_ReEnableFog(const QD3DSetupOutputType *setupInfo);
 void QD3D_SetTriangleCacheMode(Boolean isOn);
