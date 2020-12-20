@@ -79,7 +79,6 @@ typedef struct
 typedef struct
 {
 	long	left,right,front,back,top,bottom;
-	long	oldLeft,oldRight,oldFront,oldBack,oldTop,oldBottom;
 }CollisionBoxType;
 
 
@@ -288,6 +287,7 @@ struct ObjNode
 	u_long			CBits;				// collision attribute bits
 	Byte			NumCollisionBoxes;
 	CollisionBoxType	*CollisionBoxes;// Ptr to array of collision rectangles
+	CollisionBoxType	*OldCollisionBoxes;
 	short			LeftOff,RightOff,FrontOff,BackOff,TopOff,BottomOff;		// box offsets (only used by simple objects with 1 collision box)
 	
 	struct ObjNode	*MPlatform;			// current moving platform

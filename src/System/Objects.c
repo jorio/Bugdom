@@ -193,7 +193,8 @@ unsigned long flags = newObjDef->flags;
 	newNodePtr->BaseTransformObject = nil;
 	newNodePtr->NumCollisionBoxes = 0;
 	newNodePtr->CollisionBoxes = nil;					// no collision boxes yet
-				
+	newNodePtr->OldCollisionBoxes = nil;				// no collision boxes yet
+
 	newNodePtr->EffectChannel = -1;						// no streaming sound effect
 	newNodePtr->ParticleGroup = -1;						// no particle group
 

@@ -206,18 +206,9 @@ float	rotY;
 
 		GAME_ASSERT(newObj->NumCollisionBoxes > 0);
 
-		if (oldObj->NumCollisionBoxes == 0)
+		if (oldObj->NumCollisionBoxes != 0)  // old obj may have 0 collision boxes in title screen!
 		{
-			// No-op (may happen in title screen)
-		}
-		else
-		{
-			newObj->CollisionBoxes[0].oldLeft	=	oldObj->CollisionBoxes[0].oldLeft;
-			newObj->CollisionBoxes[0].oldRight	=	oldObj->CollisionBoxes[0].oldRight;
-			newObj->CollisionBoxes[0].oldTop	=	oldObj->CollisionBoxes[0].oldTop;
-			newObj->CollisionBoxes[0].oldBottom	=	oldObj->CollisionBoxes[0].oldBottom;
-			newObj->CollisionBoxes[0].oldFront	=	oldObj->CollisionBoxes[0].oldFront;
-			newObj->CollisionBoxes[0].oldBack	=	oldObj->CollisionBoxes[0].oldBack;
+			newObj->OldCollisionBoxes[0] = oldObj->OldCollisionBoxes[0];
 		}
 		
 		DeleteObject(oldObj);

@@ -63,35 +63,19 @@ ObjNode 	*thisNode;
 u_long		sideBits,cBits,cType;
 float		relDX,relDY,relDZ;						// relative deltas
 float		realDX,realDY,realDZ;					// real deltas
-float		x,y,z,oldX,oldZ,oldY;
-short		numBaseBoxes,targetNumBoxes,target;
-CollisionBoxType *baseBoxList;
-CollisionBoxType *targetBoxList;
-long		leftSide,rightSide,frontSide,backSide,bottomSide,topSide,oldBottomSide;
+float		oldX,oldZ,oldY;
 
 	gNumCollisions = startNumCollisions;								// clear list
 
 			/* GET BASE BOX INFO */
 			
-	numBaseBoxes = baseNode->NumCollisionBoxes;
-	if (numBaseBoxes == 0)
+	if (baseNode->NumCollisionBoxes == 0)
 		return;
-	baseBoxList = baseNode->CollisionBoxes;
 
-	leftSide 		= baseBoxList->left;
-	rightSide 		= baseBoxList->right;
-	frontSide 		= baseBoxList->front;
-	backSide 		= baseBoxList->back;
-	bottomSide 		= baseBoxList->bottom;
-	topSide 		= baseBoxList->top;
-	oldBottomSide 	= baseBoxList->oldBottom;
+	const CollisionBoxType *const baseBoxList		= baseNode->CollisionBoxes;
+	const CollisionBoxType *const baseBoxListOld	= baseNode->OldCollisionBoxes;
 
-	x = gCoord.x;									// copy coords into registers
-	y = gCoord.y;
-	z = gCoord.z;
-
-
-	oldY = baseNode->OldCoord.y;	
+	oldY = baseNode->OldCoord.y;					// copy coords into registers
 	oldX = baseNode->OldCoord.x;
 	oldZ = baseNode->OldCoord.z;
 	
@@ -155,37 +139,29 @@ long		leftSide,rightSide,frontSide,backSide,bottomSide,topSide,oldBottomSide;
 				/* NOW DO COLLISION BOX CHECK */
 				/******************************/		
 					
-		targetNumBoxes = thisNode->NumCollisionBoxes;			// see if target has any boxes
+		int targetNumBoxes = thisNode->NumCollisionBoxes;		// see if target has any boxes
 		if (targetNumBoxes)
 		{
-			targetBoxList = thisNode->CollisionBoxes;
-		
-		
+			const CollisionBoxType *const	targetBoxList		= thisNode->CollisionBoxes;
+			const CollisionBoxType *const	targetBoxListOld	= thisNode->OldCollisionBoxes;
+
 				/******************************************/
 				/* CHECK BASE BOX AGAINST EACH TARGET BOX */
 				/*******************************************/
 				
-			for (target = 0; target < targetNumBoxes; target++)
+			for (int target = 0; target < targetNumBoxes; target++)
 			{
 						/* DO RECTANGLE INTERSECTION */
 			
-				if (rightSide < targetBoxList[target].left)
+				if (	baseBoxList->right	< targetBoxList[target].left
+					||	baseBoxList->left	> targetBoxList[target].right
+					||	baseBoxList->front	< targetBoxList[target].back
+					||	baseBoxList->back	> targetBoxList[target].front
+					||	baseBoxList->bottom	> targetBoxList[target].top
+					||	baseBoxList->top	< targetBoxList[target].bottom)
+				{
 					continue;
-					
-				if (leftSide > targetBoxList[target].right)
-					continue;
-					
-				if (frontSide < targetBoxList[target].back)
-					continue;
-					
-				if (backSide > targetBoxList[target].front)
-					continue;
-					
-				if (bottomSide > targetBoxList[target].top)
-					continue;
-
-				if (topSide < targetBoxList[target].bottom)
-					continue;
+				}
 					
 									
 						/* THERE HAS BEEN A COLLISION SO CHECK WHICH SIDE PASSED THRU */
@@ -204,7 +180,7 @@ long		leftSide,rightSide,frontSide,backSide,bottomSide,topSide,oldBottomSide;
 			
 				if ((cBits & SIDE_BITS_BACK) && (relDZ > 0.0f))						// see if target has solid back & we are going relatively +Z
 				{
-					if (baseBoxList->oldFront < targetBoxList[target].oldBack)		// get old & see if already was in target (if so, skip)
+					if (baseBoxListOld->front < targetBoxListOld[target].back)		// get old & see if already was in target (if so, skip)
 					{
 						if ((baseBoxList->front >= targetBoxList[target].back) &&	// see if currently in target
 							(baseBoxList->front <= targetBoxList[target].front))
@@ -216,7 +192,7 @@ long		leftSide,rightSide,frontSide,backSide,bottomSide,topSide,oldBottomSide;
 			
 				if ((cBits & SIDE_BITS_FRONT) && (relDZ < 0.0f))					// see if target has solid front & we are going relatively -Z
 				{
-					if (baseBoxList->oldBack > targetBoxList[target].oldFront)		// get old & see if already was in target	
+					if (baseBoxListOld->back > targetBoxListOld[target].front)		// get old & see if already was in target
 						if ((baseBoxList->back <= targetBoxList[target].front) &&	// see if currently in target
 							(baseBoxList->back >= targetBoxList[target].back))
 							sideBits = SIDE_BITS_BACK;
@@ -228,7 +204,7 @@ long		leftSide,rightSide,frontSide,backSide,bottomSide,topSide,oldBottomSide;
 			
 				if ((cBits & SIDE_BITS_LEFT) && (relDX > 0.0f))						// see if target has solid left & we are going relatively right
 				{
-					if (baseBoxList->oldRight < targetBoxList[target].oldLeft)		// get old & see if already was in target	
+					if (baseBoxListOld->right < targetBoxListOld[target].left)		// get old & see if already was in target
 						if ((baseBoxList->right >= targetBoxList[target].left) &&	// see if currently in target
 							(baseBoxList->right <= targetBoxList[target].right))
 							sideBits |= SIDE_BITS_RIGHT;
@@ -239,7 +215,7 @@ long		leftSide,rightSide,frontSide,backSide,bottomSide,topSide,oldBottomSide;
 
 				if ((cBits & SIDE_BITS_RIGHT) && (relDX < 0.0f))					// see if target has solid right & we are going relatively left
 				{
-					if (baseBoxList->oldLeft > targetBoxList[target].oldRight)		// get old & see if already was in target	
+					if (baseBoxListOld->left > targetBoxListOld[target].right)		// get old & see if already was in target
 						if ((baseBoxList->left <= targetBoxList[target].right) &&	// see if currently in target
 							(baseBoxList->left >= targetBoxList[target].left))
 							sideBits |= SIDE_BITS_LEFT;
@@ -249,7 +225,7 @@ long		leftSide,rightSide,frontSide,backSide,bottomSide,topSide,oldBottomSide;
 			
 				if ((cBits & SIDE_BITS_BOTTOM) && (relDY > 0.0f))					// see if target has solid bottom & we are going relatively up
 				{
-					if (baseBoxList->oldTop < targetBoxList[target].oldBottom)		// get old & see if already was in target	
+					if (baseBoxListOld->top < targetBoxListOld[target].bottom)		// get old & see if already was in target
 						if ((baseBoxList->top >= targetBoxList[target].bottom) &&	// see if currently in target
 							(baseBoxList->top <= targetBoxList[target].top))
 							sideBits |= SIDE_BITS_TOP;
@@ -260,7 +236,7 @@ long		leftSide,rightSide,frontSide,backSide,bottomSide,topSide,oldBottomSide;
 				else
 				if ((cBits & SIDE_BITS_TOP) && (relDY < 0.0f))						// see if target has solid top & we are going relatively down
 				{
-					if (baseBoxList->oldBottom >= targetBoxList[target].oldTop)		// get old & see if already was in target	
+					if (baseBoxListOld->bottom >= targetBoxListOld[target].top)		// get old & see if already was in target
 					{
 						if ((baseBoxList->bottom <= targetBoxList[target].top) &&	// see if currently in target
 							(baseBoxList->bottom >= targetBoxList[target].bottom))

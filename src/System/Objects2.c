@@ -9,8 +9,6 @@
 /* EXTERNALS   */
 /***************/
 
-#include "3dmath.h"
-
 extern	TQ3Object	gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
 extern	TQ3BoundingSphere		gObjectGroupRadiusList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
 extern	TQ3Matrix4x4	gCameraWorldToViewMatrix,gCameraViewToFrustumMatrix;
@@ -53,12 +51,15 @@ extern	PrefsType	gGamePrefs;
 
 void AllocateCollisionBoxMemory(ObjNode *theNode, short numBoxes)
 {
-Ptr	mem;
-
 			/* FREE OLD STUFF */
 			
 	if (theNode->CollisionBoxes)
-		DisposePtr((Ptr)theNode->CollisionBoxes);		
+	{
+		DisposePtr((Ptr)theNode->CollisionBoxes);
+		DisposePtr((Ptr)theNode->OldCollisionBoxes);
+		theNode->CollisionBoxes = nil;
+		theNode->OldCollisionBoxes = nil;
+	}
 
 				/* SET # */
 				
@@ -68,9 +69,10 @@ Ptr	mem;
 
 				/* CURRENT LIST */
 				
-	mem = AllocPtr(sizeof(CollisionBoxType)*numBoxes);
-	GAME_ASSERT(mem);
-	theNode->CollisionBoxes = (CollisionBoxType *)mem;
+	theNode->CollisionBoxes		= (CollisionBoxType *) NewPtr(sizeof(CollisionBoxType) * numBoxes);
+	theNode->OldCollisionBoxes	= (CollisionBoxType *) NewPtr(sizeof(CollisionBoxType) * numBoxes);
+	GAME_ASSERT(theNode->CollisionBoxes);
+	GAME_ASSERT(theNode->OldCollisionBoxes);
 }
 
 
@@ -81,17 +83,10 @@ Ptr	mem;
 
 void KeepOldCollisionBoxes(ObjNode *theNode)
 {
-long	i;
-
-	for (i = 0; i < theNode->NumCollisionBoxes; i++)
+	for (int i = 0; i < theNode->NumCollisionBoxes; i++)
 	{
-		theNode->CollisionBoxes[i].oldTop = theNode->CollisionBoxes[i].top;
-		theNode->CollisionBoxes[i].oldBottom = theNode->CollisionBoxes[i].bottom;
-		theNode->CollisionBoxes[i].oldLeft = theNode->CollisionBoxes[i].left;
-		theNode->CollisionBoxes[i].oldRight = theNode->CollisionBoxes[i].right;
-		theNode->CollisionBoxes[i].oldFront = theNode->CollisionBoxes[i].front;
-		theNode->CollisionBoxes[i].oldBack = theNode->CollisionBoxes[i].back;
-	}	
+		theNode->OldCollisionBoxes[i] = theNode->CollisionBoxes[i];
+	}
 
 	theNode->OldCoord = theNode->Coord;			// remember coord also
 }
