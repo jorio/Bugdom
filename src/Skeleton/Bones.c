@@ -58,7 +58,7 @@ TQ3Object		newModel;
 	GAME_ASSERT(newModel);
 
 
-	QD3D_SetTextureAlphaThreshold_Recurse(newModel);	// DISCARD TRANSPARENT TEXELS (Source port addition)
+	ForEachTriMesh(newModel, QD3D_SetTextureAlphaThreshold_TriMesh);	// DISCARD TRANSPARENT TEXELS (Source port addition)
 
 
 	gCurrentSkeleton = skeleton;

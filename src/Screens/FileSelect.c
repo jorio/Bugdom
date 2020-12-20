@@ -415,7 +415,7 @@ static void SetupFileScreen(int type)
 	// Nuke color attribute from glyph models so we can draw them in whatever color we like later.
 	for (int i = SCORES_ObjType_0; i <= SCORES_ObjType_Colon; i++)
 	{
-		QD3D_ClearDiffuseColor_Recurse(gObjectGroupList[MODEL_GROUP_LEVELSPECIFIC][i]);
+		ForEachTriMesh(gObjectGroupList[MODEL_GROUP_LEVELSPECIFIC][i], QD3D_ClearDiffuseColor_TriMesh);
 	}
 
 	/* LOAD SOUNDS */

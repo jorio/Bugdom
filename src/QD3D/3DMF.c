@@ -329,7 +329,7 @@ TQ3GroupPosition	position;
 	{
 		if (alphaTestObjectMask & (1uL << i))						// should we apply the alpha test to this object?
 		{
-			QD3D_SetTextureAlphaThreshold_Recurse(gObjectGroupList[groupNum][i]);
+			ForEachTriMesh(gObjectGroupList[groupNum][i], QD3D_SetTextureAlphaThreshold_TriMesh);
 		}
 	}
 }
