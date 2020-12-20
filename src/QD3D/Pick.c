@@ -40,7 +40,7 @@ extern	ObjNode				*gSaveYes,*gSaveNo;
 //			pickID = pickID of picked object
 //
 
-Boolean	PickMainMenuIcon(TQ3Point2D point,u_long *pickID)
+Boolean	PickMainMenuIcon(TQ3Point2D point, TQ3Int32 *pickID)
 {
 TQ3PickObject			myPickObject;
 TQ3Uns32			myNumHits;
@@ -130,7 +130,7 @@ TQ3PickObject			myPickObject;
 //			pickID = pickID of picked object
 //
 
-Boolean	PickSaveGameIcon(TQ3Point2D point,u_long *pickID)
+Boolean	PickSaveGameIcon(TQ3Point2D point, TQ3Int32 *pickID)
 {
 TQ3PickObject			myPickObject;
 TQ3Uns32			myNumHits;

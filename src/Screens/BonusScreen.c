@@ -728,7 +728,7 @@ static void TallyTotalScore(void)
 
 static Boolean AskSaveGame(void)
 {
-u_long		id;
+TQ3Int32		id;
 TQ3StyleObject	pick;
 
 		/*************************/
@@ -808,6 +808,9 @@ TQ3StyleObject	pick;
 
 static void DrawBonusStuff(float duration)
 {
+#if _DEBUG
+	duration = 0.05f;
+#endif
 	do
 	{
 		UpdateInput();

@@ -61,7 +61,7 @@ static double		gCamDX,gCamDY,gCamDZ;
 static TQ3Point3D	gCamCenter = { -10, 10, 250 };		// Source port change from {-40,40,250} (looks better in widescreen)
 ObjNode				*gMenuIcons[NUM_MENU_ICONS];
 static ObjNode		*gSpider;
-static u_long		gMenuSelection;
+static TQ3Int32		gMenuSelection;
 
 /********************** DO MAIN MENU *************************/
 //

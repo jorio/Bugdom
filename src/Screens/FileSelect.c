@@ -484,7 +484,7 @@ static void SetupFileScreen(int type)
 //			pickID = pickID of picked object
 //
 
-Boolean	PickFileSelectIcon(TQ3Point2D point,u_long *pickID)
+static Boolean	PickFileSelectIcon(TQ3Point2D point, TQ3Int32 *pickID)
 {
 	TQ3PickObject			myPickObject;
 	TQ3Uns32			myNumHits;
@@ -569,7 +569,7 @@ static int FileScreenMainLoop()
 			pt.x = mouse.h;
 			pt.y = mouse.v;
 
-			u_long pickID;
+			TQ3Int32 pickID;
 			if (PickFileSelectIcon(pt, &pickID))
 			{
 				gHoveredPick = pickID;
