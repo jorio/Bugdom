@@ -278,42 +278,40 @@ static void MakeFileSlot(
 	ObjNode* newFloppy = MakeNewDisplayGroupObject(&gNewObjectDefinition);
 	newFloppy->SpecialL[0] = slotNumber;
 
+	// Get path to floppy label image
 	if (saveDataValid)
-	{
 		snprintf(textBuffer, sizeof(textBuffer), ":Floppy:%d.tga", saveData.realLevel);
-		FSSpec floppyLabelPictSpec;
-		FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, textBuffer, &floppyLabelPictSpec);
-		TQ3ShaderObject shaderObject = QD3D_TGAToTexture(&floppyLabelPictSpec);
-		GAME_ASSERT(shaderObject);
-		QD3D_ReplaceGeometryTexture(newFloppy->BaseGroup, shaderObject);
-	}
+	else
+		snprintf(textBuffer, sizeof(textBuffer), ":Floppy:NewGame.tga");
+
+	// Set floppy label texture
+	FSSpec floppyLabelPictSpec;
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, textBuffer, &floppyLabelPictSpec);
+	TQ3ShaderObject shaderObject = QD3D_TGAToTexture(&floppyLabelPictSpec);
+	GAME_ASSERT(shaderObject);
+	QD3D_ReplaceGeometryTexture(newFloppy->BaseGroup, shaderObject);
 
 //	GAME_ASSERT(gNumPickables < MAX_PICKABLES);
 //	gPickables[gNumPickables++] = newFloppy->BaseGroup;
 
 	snprintf(textBuffer, sizeof(textBuffer), "File %c", 'A' + slotNumber);
 
-	MakeTextWithShadow(textBuffer, x, y + 72 * gs, .6f * gs, &gTextColor);
+	MakeTextWithShadow(textBuffer, x, y + 80 * gs, .6f * gs, &gTextColor);
 
 	if (saveDataValid)
 	{
 		snprintf(textBuffer, sizeof(textBuffer), "Level %d", 1 + saveData.realLevel);
-		MakeTextWithShadow(textBuffer, x, y - 75 * gs, 0.35f * gs, &gTextColor);
-		MakeTextWithShadow(gLevelNames[saveData.realLevel], x, y - 90 * gs, 0.35f * gs, &gTextColor);
-	}
-	else
-	{
-		MakeTextWithShadow("-- blank --", x, y - 75 * gs, 0.35f * gs, &gTextColor);
-	}
+		MakeTextWithShadow(textBuffer, x, y - 70 * gs, 0.35f * gs, &gTextColor);
+		MakeTextWithShadow(gLevelNames[saveData.realLevel], x, y - 80 * gs, 0.25f * gs, &gTextColor);
 
-	if (saveDataValid)
-	{
 		struct tm tm;
 		tm = *localtime(&saveData.timestamp);
-		strftime(textBuffer, sizeof(textBuffer), "%-e %b %Y", &tm);
-		MakeTextWithShadow(textBuffer, x, y - 115 * gs, 0.35f * gs, &gTextColor);
-		strftime(textBuffer, sizeof(textBuffer), "%-l:%M%p", &tm);
-		MakeTextWithShadow(textBuffer, x, y - 130 * gs, 0.35f * gs, &gTextColor);
+		strftime(textBuffer, sizeof(textBuffer), "%-e %b %Y   %-l%:%M%p", &tm);
+		for (char *c = textBuffer; *c; c++)
+			*c = tolower(*c);
+		MakeTextWithShadow(textBuffer, x, y + 65 * gs, 0.25f * gs, &gTextColor);
+//		strftime(textBuffer, sizeof(textBuffer), "%-l:%M%p", &tm);
+//		MakeTextWithShadow(textBuffer, x, y - 130 * gs, 0.35f * gs, &gTextColor);
 	}
 
 
