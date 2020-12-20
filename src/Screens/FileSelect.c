@@ -64,10 +64,25 @@ static int gHoveredPick = -1;
 static const TQ3ColorRGB gTextShadowColor	= { 0.0f, 0.0f, 0.3f };
 static const TQ3ColorRGB gTextColor			= { 1.0f, 0.9f, 0.0f };
 static const TQ3ColorRGB gTitleTextColor	= { 1.0f, 0.9f, 0.0f };
+static const TQ3ColorRGB gDeleteColor		= { 0.9f, 0.3f, 0.1f };
+static const TQ3ColorRGB gBackColor			= { 1,1,1 };
 
 
 static char textBuffer[512];
 
+
+enum
+{
+	PICK_FILE_A_FLOPPY,
+	PICK_FILE_A_DELETE,
+	PICK_FILE_B_FLOPPY,
+	PICK_FILE_B_DELETE,
+	PICK_FILE_C_FLOPPY,
+	PICK_FILE_C_DELETE,
+};
+
+
+static ObjNode* floppies[3];
 
 
 
@@ -114,7 +129,7 @@ int DoFileSelectScreen(int type)
 	FreeAllSkeletonFiles(-1);
 	DeleteAll3DMFGroups();
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
-	DisposeSoundBank(SOUND_BANK_BONUS);
+	DisposeSoundBank(SOUND_BANK_DEFAULT);
 	GameScreenToBlack();
 
 	return picked;
@@ -131,11 +146,20 @@ static void MoveFloppy(ObjNode *theNode)
 	{
 		theNode->SpecialF[0] += fps * 5.0f;
 		theNode->Rot.y = cosf(0.5f * theNode->SpecialF[0]) * 0.53f;
+		theNode->Rot.z = 0;
 		theNode->Coord.y = theNode->InitCoord.y + fabsf(cosf(1.0f*theNode->SpecialF[0])) * 7.0f;
+	}
+	else if (gHoveredPick == theNode->SpecialL[1])
+	{
+		theNode->SpecialF[0] += fps * 9.0f;
+		float t = theNode->SpecialF[0];
+		theNode->Rot.y = 0;
+		theNode->Rot.z = cosf(1.2f * t) * 0.1f * sinf(3.0f * t);
 	}
 	else
 	{
 		theNode->Rot.y = 0;
+		theNode->Rot.z = 0;
 		theNode->SpecialF[0] = 0;
 		theNode->Coord.y = theNode->InitCoord.y;
 	}
@@ -249,6 +273,38 @@ static void MakeTextWithShadow(
 	MakeText(text, x+2*baseScale, y-2*baseScale, -0.001, baseScale, &gTextShadowColor);
 }
 
+static void AddPickableQuad(
+		float x,
+		float y,
+		float width,
+		float height
+		)
+{
+	// INIT PICKABLE QUAD GEOMETRY
+
+	float left		= x - width/2.0f;
+	float right		= x + width/2.0f;
+	float top		= y + height/2.0f;
+	float bottom	= y - height/2.0f;
+
+	TQ3PolygonData pickableQuad;
+
+	TQ3Vertex3D pickableQuadVertices[4] = {
+			{{left, top, 0}, nil},
+			{{right, top, 0}, nil},
+			{{right, bottom, 0}, nil},
+			{{left, bottom, 0}, nil},
+	};
+
+	pickableQuad.numVertices = 4;
+	pickableQuad.vertices = pickableQuadVertices;
+	pickableQuad.polygonAttributeSet = nil;
+
+	TQ3GeometryObject poly = Q3Polygon_New(&pickableQuad);
+	GAME_ASSERT(gNumPickables < MAX_PICKABLES);
+	gPickables[gNumPickables++] = poly;
+}
+
 static void MakeFileSlot(
 		const int slotNumber,
 		const float x,
@@ -276,7 +332,11 @@ static void MakeFileSlot(
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= 2.0f * gs;
 	ObjNode* newFloppy = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-	newFloppy->SpecialL[0] = slotNumber;
+
+	newFloppy->SpecialL[0] = PICK_FILE_A_FLOPPY + slotNumber * 2;
+	newFloppy->SpecialL[1] = PICK_FILE_A_DELETE + slotNumber * 2;
+
+	floppies[slotNumber] = newFloppy;
 
 	// Get path to floppy label image
 	if (saveDataValid)
@@ -298,6 +358,7 @@ static void MakeFileSlot(
 
 	MakeTextWithShadow(textBuffer, x, y + 80 * gs, .6f * gs, &gTextColor);
 
+
 	if (saveDataValid)
 	{
 		snprintf(textBuffer, sizeof(textBuffer), "Level %d", 1 + saveData.realLevel);
@@ -312,35 +373,15 @@ static void MakeFileSlot(
 		MakeTextWithShadow(textBuffer, x, y + 65 * gs, 0.25f * gs, &gTextColor);
 //		strftime(textBuffer, sizeof(textBuffer), "%-l:%M%p", &tm);
 //		MakeTextWithShadow(textBuffer, x, y - 130 * gs, 0.35f * gs, &gTextColor);
+
+
+		MakeTextWithShadow("delete", x + 30, y + 90 * gs, 0.3f * gs, &gDeleteColor);
 	}
 
 
-	{
-		// INIT PICKABLE QUAD GEOMETRY
 
-		float left		= x - 50;
-		float right		= x + 50;
-		float top		= y + 50;
-		float bottom	= y - 50;
-
-		TQ3PolygonData pickableQuad;
-
-		TQ3Vertex3D pickableQuadVertices[4] = {
-				{{left, top, 0}, nil},
-				{{right, top, 0}, nil},
-				{{right, bottom, 0}, nil},
-				{{left, bottom, 0}, nil},
-		};
-
-		pickableQuad.numVertices = 4;
-		pickableQuad.vertices = pickableQuadVertices;
-		pickableQuad.polygonAttributeSet = nil;
-
-		TQ3GeometryObject poly = Q3Polygon_New(&pickableQuad);
-		GAME_ASSERT(gNumPickables < MAX_PICKABLES);
-		gPickables[gNumPickables++] = poly;
-	}
-
+	AddPickableQuad(x, y, 50, 50);				// Floppy
+	AddPickableQuad(x+30, y+90*gs, 20, 5);		// Delete
 }
 
 
@@ -418,8 +459,8 @@ static void SetupFileScreen(int type)
 
 	/* LOAD SOUNDS */
 
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:bonus.sounds", &spec);
-	LoadSoundBank(&spec, SOUND_BANK_BONUS);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:Main.sounds", &spec);
+	LoadSoundBank(&spec, SOUND_BANK_DEFAULT);
 
 	/*******************/
 	/* MAKE BACKGROUND */
@@ -445,13 +486,16 @@ static void SetupFileScreen(int type)
 	if (type == FILE_SELECT_SCREEN_TYPE_LOAD)
 	{
 		MakeTextWithShadow("Pick a Saved Game", 0.0f, y, 1.0f, &gTitleTextColor);
+
+		//MakeTextWithShadow("Delete", -50.0f, -100, 0.5f, &gTitleTextColor, true);
+		MakeTextWithShadow("BACK", 50.0f, -100, 0.5f, &gBackColor);
 	}
 	else
 	{
 		MakeTextWithShadow("Save where?", 0.0f, y, 1.0f, &gTitleTextColor);
 
-		snprintf(textBuffer, sizeof(textBuffer), "You are entering Level %d", gRealLevel+2);
-		MakeTextWithShadow(textBuffer, 0, y-25.0f, 0.5f, &gTitleTextColor);
+		snprintf(textBuffer, sizeof(textBuffer), "You are entering Level %d", gRealLevel+2, true);
+		MakeTextWithShadow(textBuffer, 0, y - 25.0f, 0.5f, &gTitleTextColor);
 	}
 
 	y -= 120.0f;
@@ -538,11 +582,24 @@ static Boolean	PickFileSelectIcon(TQ3Point2D point, TQ3Int32 *pickID)
 
 
 
+static void DeleteSlot(int slotNumber)
+{
+	QD3D_ExplodeGeometry(floppies[slotNumber], 200.0f, PARTICLE_MODE_UPTHRUST|PARTICLE_MODE_NULLSHADER, 1, 0.5f);
+	PlayEffect_Parms3D(EFFECT_POP, &floppies[slotNumber]->Coord, kMiddleC-6, 3.0);
+	floppies[slotNumber]->StatusBits |= STATUS_BIT_HIDDEN;
+}
+
 
 
 
 
 /******************* DRAW BONUS STUFF ********************/
+
+static void FileScreenDrawStuff(const QD3DSetupOutputType *setupInfo)
+{
+	DrawObjects(setupInfo);
+	QD3D_DrawParticles(setupInfo);
+}
 
 static int FileScreenMainLoop()
 {
@@ -550,9 +607,8 @@ static int FileScreenMainLoop()
 	{
 		UpdateInput();
 		MoveObjects();
-
-		QD3D_DrawScene(gGameViewInfoPtr,DrawObjects);
-
+		QD3D_MoveParticles();
+		QD3D_DrawScene(gGameViewInfoPtr, FileScreenDrawStuff);
 		QD3D_CalcFramesPerSecond();
 		DoSDLMaintenance();
 
@@ -574,7 +630,24 @@ static int FileScreenMainLoop()
 
 				if (FlushMouseButtonPress())
 				{
-					return pickID;
+					switch (pickID)
+					{
+						case PICK_FILE_A_DELETE:
+							DeleteSlot(0);
+							break;
+						case PICK_FILE_B_DELETE:
+							DeleteSlot(1);
+							break;
+						case PICK_FILE_C_DELETE:
+							DeleteSlot(2);
+							break;
+						case PICK_FILE_A_FLOPPY:
+							return 0;
+						case PICK_FILE_B_FLOPPY:
+							return 1;
+						case PICK_FILE_C_FLOPPY:
+							return 2;
+					}
 				}
 			}
 		}
