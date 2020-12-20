@@ -83,24 +83,6 @@ typedef struct
 }CollisionBoxType;
 
 
-		/****************************/
-		/* POLYGONAL COLLISION INFO */
-		/****************************/
-		
-typedef struct
-{
-	TQ3Point3D			verts[3];			// coords of each vertex
-	TQ3PlaneEquation	planeEQ;			// plane equation of triangle
-}CollisionTriangleType;
-
-typedef struct
-{
-	TQ3BoundingBox			bBox;				// bounding box of these triangles
-	short					numTriangles;		// # triangles in list
-	CollisionTriangleType	*triangles;			// ptr to list of collision triangles
-}TriangleCollisionList;
-
-
 //*************************** SKELETON *****************************************/
 
 		/* BONE SPECIFICATIONS */

@@ -173,8 +173,6 @@ float	realSpeed;
 
 	for (i=0; i < gNumCollisions; i++)						
 	{
-		if (gCollisionList[i].type == COLLISION_TYPE_OBJ)
-		{
 			hitObj = gCollisionList[i].objectPtr;				// get ObjNode of this collision
 			ctype = hitObj->CType;
 
@@ -196,7 +194,6 @@ float	realSpeed;
 			{
 				theEnemy->StatusBits |= STATUS_BIT_UNDERWATER;
 			}
-		}
 	}
 	
 				/* CHECK PARTICLE COLLISION */
