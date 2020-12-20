@@ -116,10 +116,6 @@ set(GAME_HEADERS
 	${GAME_SRCDIR}/Headers/3dmath.h
 	${GAME_SRCDIR}/Headers/3dmf.h
 	${GAME_SRCDIR}/Headers/MyPCH_Normal.pch
-	${GAME_SRCDIR}/Headers/Prefix_Demo.h
-	${GAME_SRCDIR}/Headers/Prefix_Normal.h
-	${GAME_SRCDIR}/Headers/Prefix_OEM.h
-	${GAME_SRCDIR}/Headers/Prefix_Shareware.h
 	${GAME_SRCDIR}/Headers/bones.h
 	${GAME_SRCDIR}/Headers/bonusscreen.h
 	${GAME_SRCDIR}/Headers/camera.h
