@@ -1183,3 +1183,22 @@ void QD3D_ClearDiffuseColor_TriMesh(TQ3TriMeshData triMeshData)
 
 
 
+
+void QD3D_SetUVClamp_TriMesh(TQ3TriMeshData triMeshData, Boolean uClamp, Boolean vClamp)
+{
+	if (!Q3AttributeSet_Contains(triMeshData.triMeshAttributeSet, kQ3AttributeTypeSurfaceShader))
+		return;
+
+	TQ3SurfaceShaderObject	shader;
+	TQ3Status 				status;
+
+	status = Q3AttributeSet_Get(triMeshData.triMeshAttributeSet, kQ3AttributeTypeSurfaceShader, &shader);
+	GAME_ASSERT(status);
+
+	Q3Shader_SetUBoundary(shader, uClamp ? kQ3ShaderUVBoundaryClamp : kQ3ShaderUVBoundaryWrap);
+	Q3Shader_SetVBoundary(shader, vClamp ? kQ3ShaderUVBoundaryClamp : kQ3ShaderUVBoundaryWrap);
+
+			/* DISPOSE REFS */
+
+	Q3Object_Dispose(shader);
+}

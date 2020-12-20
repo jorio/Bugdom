@@ -52,3 +52,4 @@ void ForEachTriMesh(TQ3Object root, void (*callback)(TQ3TriMeshData triMeshData)
 
 void QD3D_SetTextureAlphaThreshold_TriMesh(TQ3TriMeshData root);
 void QD3D_ClearDiffuseColor_TriMesh(TQ3TriMeshData triMeshData);
+void QD3D_SetUVClamp_TriMesh(TQ3TriMeshData triMeshData, Boolean uClamp, Boolean vClamp);
