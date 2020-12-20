@@ -99,128 +99,53 @@ void InitObjectManager(void)
 ObjNode	*MakeNewObject(NewObjectDefinitionType *newObjDef)
 {
 ObjNode	*newNodePtr;
-long	slot;
-unsigned long flags = newObjDef->flags;
-	
+
+				/* MAKE SURE SCALE != 0 */
+
+	float scale = newObjDef->scale;
+	if (scale == 0.0f)
+		scale = 0.0001f;
+
 				/* INITIALIZE NEW NODE */
 	
-	newNodePtr = (ObjNode *)AllocPtr(sizeof(ObjNode));
+	newNodePtr = (ObjNode*) NewPtrClear(sizeof(ObjNode));	// source port change: use NewPtrClear so all fields start at 0
 	GAME_ASSERT(newNodePtr);
 
-	slot = newObjDef->slot;
+	newNodePtr->Slot		= newObjDef->slot;
+	newNodePtr->Type		= newObjDef->type;
+	newNodePtr->Group		= newObjDef->group;
+	newNodePtr->Genre		= newObjDef->genre;
+	newNodePtr->StatusBits	= newObjDef->flags;
 
-	newNodePtr->Slot = slot;
-	newNodePtr->Type = newObjDef->type;
-	newNodePtr->Group = newObjDef->group;
-	
-	if (flags & STATUS_BIT_ONSPLINE)
-	{
-		newNodePtr->MoveCall = nil;
-		newNodePtr->SplineMoveCall = newObjDef->moveCall;				// save spline move routine
-	}
-	else
-	{
-		newNodePtr->MoveCall = newObjDef->moveCall;						// save move routine
-		newNodePtr->SplineMoveCall = nil;
-	}
-	
-	newNodePtr->CustomDrawFunction = nil;
-	
-	newNodePtr->Genre = newObjDef->genre;
-	newNodePtr->Coord = newNodePtr->InitCoord = newNodePtr->OldCoord = newObjDef->coord;		// save coords
-	newNodePtr->StatusBits = flags;
-	newNodePtr->Flag[0] = 
-	newNodePtr->Flag[1] = 
-	newNodePtr->Flag[2] = 
-	newNodePtr->Flag[3] = 
-	newNodePtr->Flag[4] = 
-	newNodePtr->Flag[5] = 
-	newNodePtr->SpecialL[0] =
-	newNodePtr->SpecialL[1] =
-	newNodePtr->SpecialL[2] =
-	newNodePtr->SpecialL[3] =
-	newNodePtr->SpecialL[4] =
-	newNodePtr->SpecialL[5] =
-	newNodePtr->SpecialF[0] = 
-	newNodePtr->SpecialF[1] = 
-	newNodePtr->SpecialF[2] = 
-	newNodePtr->SpecialF[3] = 
-	newNodePtr->SpecialF[4] = 
-	newNodePtr->SpecialF[5] = 
-	newNodePtr->CType =							// must init ctype to something ( INVALID_NODE_FLAG might be set from last delete)
-	newNodePtr->CBits =
-	newNodePtr->Delta.x =
-	newNodePtr->Delta.y = 
-	newNodePtr->Delta.z = 
-//	newNodePtr->RotDelta.x = 
-//	newNodePtr->RotDelta.y = 
-//	newNodePtr->RotDelta.z = 
-	newNodePtr->Rot.x =
-	newNodePtr->Rot.z = 0;
-	newNodePtr->Rot.y =  newObjDef->rot;
-	newNodePtr->Scale.x =
-	newNodePtr->Scale.y = 
-	newNodePtr->Scale.z = newObjDef->scale;
-	newNodePtr->TargetOff.x =
-	newNodePtr->TargetOff.y = 0;
-	newNodePtr->BoundingSphere.origin.x = 0;					// set default bounding sphere
-	newNodePtr->BoundingSphere.origin.y = 0;					
-	newNodePtr->BoundingSphere.origin.z = 0;			
-	newNodePtr->BoundingSphere.radius = 40;
-	
-	newNodePtr->SpecialPtr[0] =
-	newNodePtr->SpecialPtr[1] =
-	newNodePtr->SpecialPtr[2] =
-	newNodePtr->SpecialPtr[3] =
-	newNodePtr->SpecialPtr[4] =
-	newNodePtr->SpecialPtr[5] = nil;
+	newNodePtr->CType		= 0;						// must init ctype to something (INVALID_NODE_FLAG might be set from last delete)
 
-	newNodePtr->AccelVector.x =
-	newNodePtr->AccelVector.y = 0;
-	
-	newNodePtr->Damage = 0;
-	newNodePtr->Health = 0;
-	newNodePtr->Mode = 0;
-		
-	newNodePtr->Speed = 0;
-			
-	newNodePtr->MPlatform = nil;						// no moving platform yet
-	newNodePtr->ChainNode = nil;
-	newNodePtr->ChainHead = nil;
-	newNodePtr->BaseGroup = nil;						// nothing attached as QD3D object yet
-	newNodePtr->ShadowNode = nil;
-	newNodePtr->MPlatform = nil;
-	newNodePtr->BaseTransformObject = nil;
-	newNodePtr->NumCollisionBoxes = 0;
-	newNodePtr->CollisionBoxes = nil;					// no collision boxes yet
-	newNodePtr->OldCollisionBoxes = nil;				// no collision boxes yet
+	newNodePtr->Coord		= newObjDef->coord;
+	newNodePtr->InitCoord	= newObjDef->coord;
+	newNodePtr->OldCoord	= newObjDef->coord;
+
+	newNodePtr->Scale.x		= scale;
+	newNodePtr->Scale.y		= scale;
+	newNodePtr->Scale.z		= scale;
+
+	newNodePtr->Rot.x		= 0;
+	newNodePtr->Rot.y		= newObjDef->rot;
+	newNodePtr->Rot.z		= 0;
+
+	newNodePtr->BoundingSphere.radius = 40;				// set default bounding sphere at offset 0,0,0
 
 	newNodePtr->EffectChannel = -1;						// no streaming sound effect
 	newNodePtr->ParticleGroup = -1;						// no particle group
-
-	newNodePtr->TerrainItemPtr = nil;					// assume not a terrain item
-	newNodePtr->SplineItemPtr = nil;					// assume not a spline item
-	newNodePtr->SplineNum = 0;
 	newNodePtr->SplineObjectIndex = -1;					// no index yet
-	newNodePtr->SplinePlacement = 0;
-	
-	newNodePtr->Skeleton = nil;
 
-			/* MAKE SURE SCALE != 0 */
-			
-	if (newNodePtr->Scale.x == 0.0f)
-		newNodePtr->Scale.x = 0.0001f;
-	if (newNodePtr->Scale.y == 0.0f)
-		newNodePtr->Scale.y = 0.0001f;
-	if (newNodePtr->Scale.z == 0.0f)
-		newNodePtr->Scale.z = 0.0001f;
-
+	if (newObjDef->flags & STATUS_BIT_ONSPLINE)
+		newNodePtr->SplineMoveCall = newObjDef->moveCall;	// save spline move routine
+	else
+		newNodePtr->MoveCall = newObjDef->moveCall;			// save move routine
 
 				/* INSERT NODE INTO LINKED LIST */
 				
 	newNodePtr->StatusBits |= STATUS_BIT_DETACHED;		// its not attached to linked list yet
 	AttachObject(newNodePtr);
-
 
 				/* CLEANUP */
 				
