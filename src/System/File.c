@@ -57,6 +57,10 @@ static void ReadDataFromPlayfieldFile(FSSpec *specPtr);
 
 #define	SAVE_GAME_VERSION	0x00000120			// Bugdom v1.2
 
+#define PREFS_HEADER_LENGTH 16
+#define PREFS_FILE_NAME ":Bugdom:Prefs"
+const char PREFS_HEADER_STRING[PREFS_HEADER_LENGTH] = "NewBugdomPrefs01";		// Bump this every time prefs struct changes
+
 
 		/* PLAYFIELD HEADER */
 		// (READ IN FROM FILE -- MUST BE BYTESWAPPED!)
@@ -513,22 +517,39 @@ OSErr		iErr;
 short		refNum;
 FSSpec		file;
 long		count;
+char		header[PREFS_HEADER_LENGTH + 1];
 				
 				/*************/
 				/* READ FILE */
 				/*************/
 					
-	FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, ":Bugdom:Prefs2", &file);
+	FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, PREFS_FILE_NAME, &file);
 	iErr = FSpOpenDF(&file, fsRdPerm, &refNum);	
 	if (iErr)
 		return(iErr);
 
+				/* READ HEADER */
+
+	count = PREFS_HEADER_LENGTH;
+	iErr = FSRead(refNum, &count, header);
+	header[PREFS_HEADER_LENGTH] = '\0';
+	if (iErr ||
+		count != PREFS_HEADER_LENGTH ||
+		0 != strncmp(header, PREFS_HEADER_STRING, PREFS_HEADER_LENGTH))
+	{
+		FSClose(refNum);
+		return badFileFormat;
+	}
+
+				/* READ PREFS STRUCT */
+
 	count = sizeof(PrefsType);
 	iErr = FSRead(refNum, &count,  (Ptr)prefBlock);		// read data from file
-	if (iErr)
+	if (iErr ||
+		count != sizeof(PrefsType))
 	{
 		FSClose(refNum);			
-		return(iErr);
+		return(badFileFormat);
 	}
 	
 	FSClose(refNum);			
@@ -548,7 +569,7 @@ long				count;
 						
 				/* CREATE BLANK FILE */
 				
-	FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, ":Bugdom:Prefs2", &file);
+	FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, PREFS_FILE_NAME, &file);
 	FSpDelete(&file);															// delete any existing file
 	iErr = FSpCreate(&file, 'BalZ', 'Pref', smSystemScript);					// create blank file
 	if (iErr)
@@ -562,11 +583,23 @@ long				count;
 		FSpDelete(&file);
 		return;
 	}
-		
+
+
+				/* WRITE HEADER */
+
+	count = PREFS_HEADER_LENGTH;
+	iErr = FSWrite(refNum, &count, (Ptr) PREFS_HEADER_STRING);
+	GAME_ASSERT(iErr == noErr);
+	GAME_ASSERT(count == PREFS_HEADER_LENGTH);
+
+
 				/* WRITE DATA */
 
 	count = sizeof(PrefsType);
-	FSWrite(refNum, &count, (Ptr) prefs);
+	iErr = FSWrite(refNum, &count, (Ptr) prefs);
+	GAME_ASSERT(iErr == noErr);
+	GAME_ASSERT(count == sizeof(PrefsType));
+
 	FSClose(refNum);
 }
 
