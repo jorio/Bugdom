@@ -340,23 +340,6 @@ u_char		sides;
 			}
 		}
 	}
-	
-		/********************************/
-		/* CHECK FOR SPECIAL PATH TILES */
-		/********************************/
-
-//	gMyLatestPathTileNum = GetPathTileNum(gCoord.x, gCoord.z);		// get path tile under there	
-//	gMyLatestTileAttribs = GetTileAttribs(gCoord.x, gCoord.z);		// get tile attributes here (before move)
-		
-//	if (gMyDistToFloor < 1.0f)									// must be on terrain for these checks
-//	{
-//			/* SEE IF ON LAVA */
-//			
-//		if (gMyLatestTileAttribs & TILE_ATTRIB_LAVA)
-//		{
-//			PlayerGotHurt(theNode,.05,false,true);
-//		}
-//	}
 
 	return(gPlayerGotKilledFlag);
 }

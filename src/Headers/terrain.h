@@ -7,8 +7,6 @@
 
 #include "qd3d_support.h"
 
-#define	USE_PATH_LAYER	0
-
 #define	MAP_ITEM_MYSTARTCOORD		0				// map item # for my start coords
 #define	MAP_ITEM_FIREFLYTARGET		42				// map item # for firefly target
 #define	MAP_ITEM_QUEENBEEBASE		49
@@ -20,58 +18,6 @@ enum
 {
 	FLOOR = 0,
 	CEILING = 1
-};
-
-		/* PATH TILES */
-
-enum
-{
-	PATH_TILE_PATHUP = 1,
-	PATH_TILE_PATHUPRIGHT,
-	PATH_TILE_PATHRIGHT,
-	PATH_TILE_PATHDOWNRIGHT,
-	PATH_TILE_PATHDOWN,
-	PATH_TILE_PATHDOWNLEFT,
-	PATH_TILE_PATHLEFT,
-	PATH_TILE_PATHUPLEFT,
-	PATH_TILE_SOLID_ALL,
-	PATH_TILE_SOLID_TOP,
-	PATH_TILE_SOLID_RIGHT,
-	PATH_TILE_SOLID_BOTTOM,
-	PATH_TILE_SOLID_LEFT,
-	PATH_TILE_SOLID_TOPBOTTOM,
-	PATH_TILE_SOLID_LEFTRIGHT,
-	PATH_TILE_SOLID_TOPRIGHT,
-	PATH_TILE_SOLID_BOTTOMRIGHT,
-	PATH_TILE_SOLID_BOTTOMLEFT,
-	PATH_TILE_SOLID_TOPLEFT,
-	PATH_TILE_SOLID_TOPLEFTRIGHT,
-	PATH_TILE_SOLID_TOPRIGHTBOTTOM,
-	PATH_TILE_SOLID_BOTTOMLEFTRIGHT,
-	PATH_TILE_SOLID_TOPBOTTOMLEFT,
-
-	PATH_TILE_SOLID_ALL2,
-	PATH_TILE_SOLID_TOP2,
-	PATH_TILE_SOLID_RIGHT2,
-	PATH_TILE_SOLID_BOTTOM2,
-	PATH_TILE_SOLID_LEFT2,
-	PATH_TILE_SOLID_TOPBOTTOM2,
-	PATH_TILE_SOLID_LEFTRIGHT2,
-	PATH_TILE_SOLID_TOPRIGHT2,
-	PATH_TILE_SOLID_BOTTOMRIGHT2,
-	PATH_TILE_SOLID_BOTTOMLEFT2,
-	PATH_TILE_SOLID_TOPLEFT2,
-	PATH_TILE_SOLID_TOPLEFTRIGHT2,
-	PATH_TILE_SOLID_TOPRIGHTBOTTOM2,
-	PATH_TILE_SOLID_BOTTOMLEFTRIGHT2,
-	PATH_TILE_SOLID_TOPBOTTOMLEFT2,
-
-	PATH_TILE_PATHREVERSE,
-	PATH_TILE_HURT,
-	PATH_TILE_FOLD_A,
-	PATH_TILE_FOLD_B,
-	PATH_TILE_SLOPEFORCE
-
 };
 
 		/* SUPER TILE MODES */
@@ -135,24 +81,6 @@ struct SuperTileMemoryType
 };
 typedef struct SuperTileMemoryType SuperTileMemoryType;
 
-
-typedef struct TileAttribType
-{
-	u_short	bits;
-	short	parm0;
-	Byte	parm1,parm2;
-	short	undefined;
-}TileAttribType;
-
-enum
-{
-	TILE_ATTRIB_MAKEDUST	=	1<<4,
-	TILE_ATTRIB_LAVA		=	1<<5,
-	TILE_ATTRIB_WATER		=	1<<7
-};
-
-#define	TILE_ATTRIB_ALLSOLID	(TILE_ATTRIB_TOPSOLID+TILE_ATTRIB_BOTTOMSOLID+TILE_ATTRIB_LEFTSOLID+TILE_ATTRIB_RIGHTSOLID)
-
 #define	TILENUM_MASK		0x0fff					// b0000111111111111 = mask to filter out tile #
 #define	TILE_FLIPX_MASK		(1<<15)
 #define	TILE_FLIPY_MASK		(1<<14)
@@ -202,10 +130,6 @@ void CreateSuperTileMemoryList(void);
 void DisposeSuperTileMemoryList(void);
 extern 	void DisposeTerrain(void);
 extern	void DrawTerrain(const QD3DSetupOutputType *setupInfo);
-extern 	u_short	GetTileAttribsAtRowCol(short row, short col);
-extern	u_short	GetTileCollisionBitsAtRowCol(short row, short col, Boolean checkAlt);
-extern 	u_short	GetTileCollisionBitsAtRowCol2(short row, short col);
-extern	u_short	GetTileAttribs(long x, long z);
 extern	void GetSuperTileInfo(long x, long z, long *superCol, long *superRow, long *tileCol, long *tileRow);
 extern	void InitTerrainManager(void);
 extern	void ClearScrollBuffer(void);
@@ -220,8 +144,6 @@ extern 	Boolean TrackTerrainItem(ObjNode *theNode);
 void PrimeInitialTerrain(Boolean justReset);
 extern 	void FindMyStartCoordItem(void);
 Boolean TrackTerrainItem_Far(ObjNode *theNode, float range);
-extern 	u_short	GetPathTileNum(float x, float z);
-extern	u_short	GetPathTileNumAtRowCol(long row, long col);
 void RotateOnTerrain(ObjNode *theNode, float yOffset);
 extern	void DoMyTerrainUpdate(void);
 

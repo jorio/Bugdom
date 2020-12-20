@@ -21,7 +21,6 @@ extern	long			gPrefsFolderDirID,gNumTerrainTextureTiles;
 extern	long			gTerrainTileWidth,gTerrainTileDepth,gTerrainUnitWidth,gTerrainUnitDepth;		
 extern	long			gNumSuperTilesDeep,gNumSuperTilesWide;
 extern	u_short			**gFloorMap,**gCeilingMap,**gTileDataHandle;
-extern	u_char			**gPathMap;
 extern	long			gCurrentSuperTileRow,gCurrentSuperTileCol;
 extern	long			gMyStartX,gMyStartZ,gNumSplines;
 extern	FSSpec			gDataSpec;
@@ -814,17 +813,6 @@ short					**xlateTableHand,*xlateTbl;
 	}
 
 
-#if 0
-			/* READ TILE ATTRIBUTES */
-
-	hand = GetResource('Atrb',1000);
-	GAME_ASSERT(hand);
-	{
-		DetachResource(hand);							// lets keep this data around
-		gTileAttributes = (TileAttribType **)hand;
-	}
-#endif
-
 			/* READ TILE->IMAGE XLATE TABLE */
 
 	hand = GetResource('Xlat',1000);
@@ -894,30 +882,6 @@ short					**xlateTableHand,*xlateTbl;
 	ReleaseResource((Handle)xlateTableHand);								// we dont need the xlate table anymore
 
 
-#if USE_PATH_LAYER
-			/* READ PATH MAP */
-				
-	Alloc_2d_array(u_char, gPathMap, gTerrainTileDepth, gTerrainTileWidth);			// alloc 2D array for map
-	
-	hand = GetResource('Layr',1002);												// load map from rez
-	GAME_ASSERT(hand);
-																					// copy rez into 2D array
-	{
-		BYTESWAP_SCALAR_ARRAY_HANDLE_2(u_short, gTerrainTileDepth*gTerrainTileWidth, hand);
-		u_short	*src = (u_short *)*hand;
-		for (row = 0; row < gTerrainTileDepth; row++)
-			for (col = 0; col < gTerrainTileWidth; col++)
-			{
-				int	num = *src++ - BASE_PATH_TILE;				
-				if (num < 0)
-					num = 0;
-				gPathMap[row][col] = num;						// convert to 0 based (0 = blank, >0 = tile)
-			}
-				
-		ReleaseResource(hand);
-	}		
-#endif	
-	
 			/* READ HEIGHT DATA MATRIX */
 	
 	yScale = TERRAIN_POLYGON_SIZE / g3DTileSize;						// need to scale original geometry units to game units

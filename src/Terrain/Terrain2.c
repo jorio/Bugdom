@@ -16,7 +16,6 @@ extern	long		gMyStartX,gMyStartZ;
 extern	long	gNumTerrainTextureTiles;
 extern	long	gNumSuperTilesDeep,gNumSuperTilesWide;
 extern	long	gTerrainUnitWidth,gTerrainUnitDepth;
-extern	u_short	**gPathMap;
 extern	TQ3Point3D	gCoord,gMyCoord;
 extern	const float	gOneOver_TERRAIN_POLYGON_SIZE;
 extern	Byte		gMyStartAim;
@@ -370,59 +369,6 @@ float	x,z;
 
 	return(false);
 }
-
-/***************** GET PATH TILE NUM ******************/
-//
-// Given a world x/z coord, return the path tile # there.
-// NOTE: does it by calculating the row/col and then calling other routine.
-//
-// INPUT: x/z = world coords
-//
-// OUTPUT: tile #
-//
-
-u_short	GetPathTileNum(float x, float z)
-{
-long	row,col,y;
-
-	y = z;
-
-	if ((x < 0) || (y < 0))										// see if out of bounds
-		return(0);
-	if ((x >= gTerrainUnitWidth) || (y >= gTerrainUnitDepth))
-		return(0);
-
-	col = x*gOneOver_TERRAIN_POLYGON_SIZE;	 							// calc map row/col that the coord lies on
-	row = y*gOneOver_TERRAIN_POLYGON_SIZE;
-
-#if 1
-	SOURCE_PORT_PLACEHOLDER();
-	return -1;
-#else
-	return(GetPathTileNumAtRowCol(row,col));
-#endif
- }
-
-#if USE_PATH_LAYER
-/***************** GET PATH TILE NUM AT ROW COL ******************/
-//
-// Given a row,col coord, return the path tile # there
-//
-// INPUT: ROW/COL = world coords
-//
-// OUTPUT: tile #
-//
-
-u_short	GetPathTileNumAtRowCol(long row, long col)
-{
-u_short tile;
-
-	tile = gPathMap[row][col];							// get path data from map
-	tile = tile&TILENUM_MASK; 							  		// filter out tile # 
-
-	return(tile);
-}
-#endif
 
 /*************************** ROTATE ON TERRAIN ***************************/
 //
