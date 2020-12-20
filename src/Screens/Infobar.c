@@ -252,7 +252,7 @@ Rect		r;
 
 			/* DO TOP */
 			
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":images:infobartop", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Images:InfobarTop.pict", &spec);
 	DrawPictureIntoGWorld(&spec, &gInfoBarTop);
 	SetRect(&r, 0,0, 640,62);
 	DumpGWorld2(gInfoBarTop, gCoverWindow,&r);
@@ -260,7 +260,7 @@ Rect		r;
 	
 			/* DO BOTTOM */
 			
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":images:infobarbottom", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Images:InfobarBottom.pict", &spec);
 	DrawPictureToScreen(&spec, 0, 480-60);
 
 

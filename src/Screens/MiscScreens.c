@@ -347,8 +347,7 @@ static void Slideshow(const struct SlideshowEntry* slides, bool doFade)
 		{
 			OSErr result;
 			result = FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, slide->imagePath, &spec);
-			if (result != noErr)
-				continue;
+			GAME_ASSERT_MESSAGE(result == noErr, slide->imagePath);
 			DrawPictureToScreen(&spec, 0, 0);
 		}
 		else
@@ -392,9 +391,9 @@ void DoAboutScreens(void)
 {
 	const struct SlideshowEntry slides[] =
 	{
-		{ SLIDESHOW_FILE, ":Images:credits", NULL },
-		{ SLIDESHOW_FILE, ":Images:help2", NULL },
-		{ SLIDESHOW_FILE, ":Images:help", NULL },
+		{ SLIDESHOW_FILE, ":Images:About1.pict", NULL },
+		{ SLIDESHOW_FILE, ":Images:About2.pict", NULL },
+		{ SLIDESHOW_FILE, ":Images:About3.pict", NULL },
 		{ SLIDESHOW_STOP, NULL, NULL },
 	};
 	Slideshow(slides, true);
@@ -578,7 +577,7 @@ void ShowIntroScreens(void)
 {
 	const struct SlideshowEntry slides[] =
 	{
-		{ SLIDESHOW_FILE, ":images:Info1", NULL },
+		{ SLIDESHOW_FILE, ":Images:Boot.pict", NULL },
 		{ SLIDESHOW_STOP, NULL, NULL },
 	};
 	Slideshow(slides, true);
