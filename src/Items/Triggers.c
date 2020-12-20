@@ -812,6 +812,9 @@ Boolean	isOpen;
 	newObj->TriggerSides 	= ALL_SOLID_SIDES;				// side(s) to activate it
 	newObj->Kind 			= TRIGTYPE_TWIGDOOR;
 
+	newObj->BoundingSphere.origin.x = 0;					// source port mod:
+	newObj->BoundingSphere.origin.z = 0;					// give door a more generous bounding sphere
+	newObj->BoundingSphere.radius = 600.0f;					// (it tended to be culled too aggressively)
 
 			/* SET COLLISION INFO */
 		
