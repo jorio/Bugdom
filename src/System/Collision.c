@@ -316,8 +316,7 @@ long		offset,maxOffsetX,maxOffsetZ,maxOffsetY;
 long		offXSign,offZSign,offYSign;
 Byte		base,target;
 ObjNode		*targetObj;
-CollisionBoxType *baseBoxPtr,*targetBoxPtr;
-long		leftSide,rightSide,frontSide,backSide,bottomSide;
+CollisionBoxType *baseBoxPtr;
 CollisionBoxType *boxList;
 short		numSolidHits, numPasses = 0;
 Boolean		hitImpenetrable = false;
@@ -346,11 +345,6 @@ again:
 	if (theNode->NumCollisionBoxes == 0)					// it's gotta have a collision box
 		return(0);
 	boxList = theNode->CollisionBoxes;
-	leftSide = boxList->left;
-	rightSide = boxList->right;
-	frontSide = boxList->front;
-	backSide = boxList->back;
-	bottomSide = boxList->bottom;
 
 
 			/* SCAN THRU ALL RETURNED COLLISIONS */	
@@ -361,21 +355,11 @@ again:
 		base = gCollisionList[i].baseBox;					// get collision box index for base & target
 		target = gCollisionList[i].targetBox;
 		targetObj = gCollisionList[i].objectPtr;			// get ptr to target objnode
-		
+
 		baseBoxPtr = boxList + base;						// calc ptrs to base & target collision boxes
 
 		GAME_ASSERT(targetObj);
-		
-		if (targetObj->CType == INVALID_NODE_FLAG)
-		{
-			printf("Collided with dead object!\n");
-			continue;
-		}
-		
-		targetBoxPtr = targetObj->CollisionBoxes;	
-		targetBoxPtr += target;
-		
-		
+
 				/*********************************************/
 				/* HANDLE ANY SPECIAL OBJECT COLLISION TYPES */
 				/*********************************************/
@@ -383,7 +367,14 @@ again:
 				/* SEE IF THIS OBJECT HAS SINCE BECOME INVALID */
 
 		if (targetObj->CType == INVALID_NODE_FLAG)
+		{
+			printf("Collided with dead object!\n");
 			continue;
+		}
+
+				/* SAVE COPY OF TARGET COLLISION BOX (ORIGINAL MAY BECOME GARBLED IF TRIGGER DELETES TARGET OBJ) */
+
+		CollisionBoxType targetBox = targetObj->CollisionBoxes[target];
 
 				/* HANDLE TRIGGERS */
 
@@ -394,11 +385,6 @@ again:
 
 			maxOffsetX = gCoord.x - originalX;								// see if trigger caused a move
 			maxOffsetZ = gCoord.z - originalZ;
-			if (targetObj && targetObj->CType == INVALID_NODE_FLAG)
-			{
-				printf("Target object died after trigger!\n");
-				continue;
-			}
 		}
 
 					/********************************/
@@ -418,7 +404,7 @@ again:
 
 			if (gCollisionList[i].sides & SIDE_BITS_BACK)					// SEE IF BACK HIT
 			{
-				offset = (targetBoxPtr->front - baseBoxPtr->back)+1;		// see how far over it went
+				offset = (targetBox.front - baseBoxPtr->back)+1;			// see how far over it went
 				if (offset > maxOffsetZ)
 				{
 					maxOffsetZ = offset;
@@ -429,7 +415,7 @@ again:
 			else
 			if (gCollisionList[i].sides & SIDE_BITS_FRONT)					// SEE IF FRONT HIT
 			{
-				offset = (baseBoxPtr->front - targetBoxPtr->back)+1;		// see how far over it went
+				offset = (baseBoxPtr->front - targetBox.back)+1;			// see how far over it went
 				if (offset > maxOffsetZ)
 				{
 					maxOffsetZ = offset;
@@ -440,7 +426,7 @@ again:
 
 			if (gCollisionList[i].sides & SIDE_BITS_LEFT)					// SEE IF HIT LEFT
 			{
-				offset = (targetBoxPtr->right - baseBoxPtr->left)+1;		// see how far over it went
+				offset = (targetBox.right - baseBoxPtr->left)+1;			// see how far over it went
 				if (offset > maxOffsetX)
 				{
 					maxOffsetX = offset;
@@ -451,7 +437,7 @@ again:
 			else
 			if (gCollisionList[i].sides & SIDE_BITS_RIGHT)					// SEE IF HIT RIGHT
 			{
-				offset = (baseBoxPtr->right - targetBoxPtr->left)+1;		// see how far over it went
+				offset = (baseBoxPtr->right - targetBox.left)+1;			// see how far over it went
 				if (offset > maxOffsetX)
 				{
 					maxOffsetX = offset;
@@ -462,7 +448,7 @@ again:
 
 			if (gCollisionList[i].sides & SIDE_BITS_BOTTOM)					// SEE IF HIT BOTTOM
 			{
-				offset = (targetBoxPtr->top - baseBoxPtr->bottom)+1;		// see how far over it went
+				offset = (targetBox.top - baseBoxPtr->bottom)+1;			// see how far over it went
 				if (offset > maxOffsetY)
 				{
 					maxOffsetY = offset;
@@ -473,7 +459,7 @@ again:
 			else
 			if (gCollisionList[i].sides & SIDE_BITS_TOP)					// SEE IF HIT TOP
 			{
-				offset = (baseBoxPtr->top - targetBoxPtr->bottom)+1;		// see how far over it went
+				offset = (baseBoxPtr->top - targetBox.bottom)+1;			// see how far over it went
 				if (offset > maxOffsetY)
 				{
 					maxOffsetY = offset;
