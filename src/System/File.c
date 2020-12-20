@@ -102,6 +102,8 @@ typedef struct
 
 float	g3DTileSize, g3DMinY, g3DMaxY;
 
+int		gCurrentSaveSlot = -1;
+
 /******************* LOAD SKELETON *******************/
 //
 // Loads a skeleton file & creates storage for it.
@@ -713,10 +715,16 @@ OSErr LoadSavedGame(int slot)
 OSErr err;
 SaveGameType saveData;
 
+	gCurrentSaveSlot = slot;
+
 	err = GetSaveGameData(slot, &saveData);
 
 	if (err != noErr)
-		return err;
+	{
+		InitInventoryForGame();
+		gRealLevel = 0;
+		return noErr;
+	}
 
 			/**********************/
 			/* USE SAVE GAME DATA */

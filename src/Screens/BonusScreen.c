@@ -22,6 +22,7 @@ extern	PrefsType	gGamePrefs;
 extern	u_short		gLevelType,gRealLevel;
 extern	short		gNumLadyBugsThisArea,gNumGreenClovers,gNumGoldClovers,gNumBlueClovers;
 extern	u_long			gScore;
+extern 	int 		gCurrentSaveSlot;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -127,8 +128,11 @@ Boolean wantToSave = false;
 
 	if (wantToSave)
 	{
-		int pickedFile = DoFileSelectScreen(FILE_SELECT_SCREEN_TYPE_SAVE);
-		SaveGame(pickedFile);
+		if (gCurrentSaveSlot < 0)
+		{
+			gCurrentSaveSlot = DoFileSelectScreen(FILE_SELECT_SCREEN_TYPE_SAVE);
+		}
+		SaveGame(gCurrentSaveSlot);
 	}
 }
 

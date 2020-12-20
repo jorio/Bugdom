@@ -21,6 +21,7 @@ extern	FSSpec		gDataSpec;
 extern	PrefsType	gGamePrefs;
 extern	u_short		gLevelType;
 extern	TQ3Matrix4x4	gCameraWindowToWorldMatrix;
+extern	int			gCurrentSaveSlot;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -173,6 +174,7 @@ tryagain:
 				break;
 
 		case	2:				// PLAY
+				gCurrentSaveSlot = -1;
 				break;
 
 		case	3:				// QUIT
