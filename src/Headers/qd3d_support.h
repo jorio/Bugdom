@@ -111,7 +111,6 @@ extern	void QD3D_SetPointLightBrightness(QD3DSetupOutputType *setupInfo, TQ3Grou
 extern	void QD3D_DeleteLight(QD3DSetupOutputType *setupInfo, TQ3GroupPosition lightPosition);
 TQ3SurfaceShaderObject	QD3D_PICTToTexture(PicHandle picture, Boolean blackIsAlpha);
 TQ3SurfaceShaderObject	QD3D_TGAToTexture(FSSpec* spec);
-TQ3SurfaceShaderObject	QD3D_GWorldToTexture(GWorldPtr theGWorld, Boolean pointToGWorld, Boolean blackIsAlpha);
 extern	void SetBackFaceStyle(QD3DSetupOutputType *setupInfo, TQ3BackfacingStyle style);
 extern	void SetFillStyle(QD3DSetupOutputType *setupInfo, TQ3FillStyle style);
 extern	void QD3D_DeleteAllLights(QD3DSetupOutputType *setupInfo);
@@ -119,20 +118,14 @@ extern	TQ3GroupPosition QD3D_AddFillLight(QD3DSetupOutputType *setupInfo,TQ3Vect
 extern	TQ3GroupPosition QD3D_AddAmbientLight(QD3DSetupOutputType *setupInfo, TQ3ColorRGB *color, float brightness);
 extern	void QD3D_ShowRecentError(void);
 extern	void QD3D_NewViewDef(QD3DSetupInputType *viewDef, WindowPtr theWindow);
-extern	void QD3D_ColorToQDColor(TQ3ColorRGB *in, RGBColor *out);
-extern	void QD3D_QDColorToColor(RGBColor *in, TQ3ColorRGB *out);
 extern	TQ3SurfaceShaderObject	QD3D_Data16ToTexture_NoMip(Ptr data, short width, short height);
 TQ3StorageObject QD3D_GetMipmapStorageObjectFromAttrib(TQ3AttributeSet attribSet);
-void QD3D_GWorldToMipMap(GWorldPtr pGWorld, TQ3Mipmap *mipmap, Boolean pointToGWorld, Boolean blackIsAlpha);
 
 void QD3D_DisableFog(const QD3DSetupOutputType *setupInfo);
 void QD3D_ReEnableFog(const QD3DSetupOutputType *setupInfo);
 void QD3D_SetTriangleCacheMode(Boolean isOn);
 void QD3D_SetAdditiveBlending(Boolean isOn);
 void QD3D_SetZWrite(Boolean isOn);
-
-TQ3SurfaceShaderObject	QD3D_Data16ToTexture_Pixmap(Ptr data, short width, short height);
-TQ3StorageObject QD3D_GetPixmapStorageObjectFromAttrib(TQ3AttributeSet attribSet);
 
 void ShowNormal(TQ3Point3D *where, TQ3Vector3D *normal);
 
@@ -144,8 +137,6 @@ void ShowNormal(TQ3Point3D *where, TQ3Vector3D *normal);
 
 #define	kQATag_ZSortedHint	0
 #define	kQATag_ZBufferMask	0
-#define	kQATagGL_TextureWrapU	0
-#define	kQATagGL_TextureWrapV	0
 
 
 

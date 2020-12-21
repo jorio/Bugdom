@@ -31,7 +31,6 @@ static void CreateLights(QD3DLightDefType *lightDefPtr);
 static void CreateView(QD3DSetupInputType *setupDefPtr);
 static void DrawPICTIntoMipmap(PicHandle pict,long width, long height, TQ3Mipmap *mipmap, Boolean blackIsAlpha);
 static void Data16ToMipmap(Ptr data, short width, short height, TQ3Mipmap *mipmap);
-static void Data16ToPixmap(Ptr data, short width, short height, TQ3StoragePixmap *pixmap);
 static void DrawNormal(TQ3ViewObject view);
 static void QASetInt(TQ3DrawContextObject, int, int);
 
@@ -1067,40 +1066,6 @@ OSErr					err;
 	return shader;
 }
 
-
-/**************** QD3D GWORLD TO TEXTURE ***********************/
-//
-// INPUT: picture = handle to PICT.
-//
-// OUTPUT: TQ3ShaderObject = shader object for texture map.
-//
-
-TQ3SurfaceShaderObject	QD3D_GWorldToTexture(GWorldPtr theGWorld, Boolean pointToGWorld, Boolean blackIsAlpha)
-{
-TQ3Mipmap 					mipmap;
-TQ3TextureObject			texture;
-TQ3SurfaceShaderObject		shader;
-
-			/* CREATE MIPMAP */
-			
-	QD3D_GWorldToMipMap(theGWorld,&mipmap, pointToGWorld, blackIsAlpha);
-
-
-			/* MAKE NEW MIPMAP TEXTURE */
-			
-	texture = Q3MipmapTexture_New(&mipmap);							// make new mipmap	
-	GAME_ASSERT(texture);
-			
-	shader = Q3TextureShader_New(texture);
-	GAME_ASSERT(shader);
-
-	Q3Object_Dispose (texture);
-	Q3Object_Dispose (mipmap.image);					// dispose of extra ref to storage object
-
-	return(shader);	
-}
-
-
 /******************** DRAW PICT INTO MIPMAP ********************/
 //
 // OUTPUT: mipmap = new mipmap holding texture image
@@ -1151,125 +1116,6 @@ static void DrawPICTIntoMipmap(PicHandle pict,long width, long height, TQ3Mipmap
 	{															// where texels are being discarded
 		ApplyEdgePadding(mipmap);
 	}
-}
-
-
-/******************** GWORLD TO MIPMAP ********************/
-//
-// Creates a mipmap from an existing GWorld
-//
-// NOTE: Assumes that GWorld is 16bit!!!!
-//
-// OUTPUT: mipmap = new mipmap holding texture image
-//
-
-void QD3D_GWorldToMipMap(GWorldPtr pGWorld, TQ3Mipmap *mipmap, Boolean pointToGWorld, Boolean blackIsAlpha)
-{
-#if 1
-	SOURCE_PORT_PLACEHOLDER();
-#else
-unsigned long 			pictMapAddr;
-PixMapHandle 			hPixMap;
-unsigned long 			pictRowBytes;
-long					width, height;
-short					depth;
-	
-				/* GET GWORLD INFO */
-				
-	hPixMap = GetGWorldPixMap(pGWorld);								// calc addr & rowbytes
-	
-	depth = (**hPixMap).pixelSize;									// get gworld depth
-	
-	pictMapAddr = (unsigned long )GetPixBaseAddr(hPixMap);
-	pictRowBytes = (unsigned long)(**hPixMap).rowBytes & 0x3fff;
-	width = ((**hPixMap).bounds.right - (**hPixMap).bounds.left);
-	height = ((**hPixMap).bounds.bottom - (**hPixMap).bounds.top);
-
-
-			/* CONVERT 16-BIT BLACK TO ALPHA */
-			
-	if (blackIsAlpha && (depth == 16))
-	{
-		long	x,y;
-		u_short	pixel,*rowPtr;		
-		
-		rowPtr = (u_short *)pictMapAddr;
-		
-		for (y = 0; y < height; y++)
-		{
-			for (x = 0; x < width; x++)
-			{
-				pixel = rowPtr[x];					// get pixel
-				if (pixel != 0x0000)				// if pure black then 
-					rowPtr[x] = pixel | 0x8000;		// set alpha bit on this opaque thing
-			}
-			rowPtr += pictRowBytes>>1;
-		}
-	}
-
-#if 0
-	if (blackIsAlpha && (depth == 32))
-	{	
-		long	x,y;
-		u_long	pixel,*rowPtr;		
-	
-		if ((**hPixMap).cmpCount == 3)
-			DebugStr("xxxxxxxxx");
-		
-		rowPtr = (u_long *)pictMapAddr;
-		
-		for (y = 0; y < height; y++)
-		{
-			for (x = 0; x < width; x++)
-			{
-				pixel = rowPtr[x];					// get pixel
-				if (!(pixel & 0xff000000))
-					rowPtr[x] = 0xff00ff00;//((x*4)<<24) | 0xff00;		// set alpha bit on this opaque thing
-			}
-			rowPtr += pictRowBytes>>2;
-		}
-	}
-#endif	
-
-	
-			/* MAKE MIPMAP */
-
-	if (pointToGWorld)	
-	{
-		LockPixels(hPixMap);										// we don't want this to move on us
-		mipmap->image = (void *)Q3MemoryStorage_NewBuffer ((unsigned char *) pictMapAddr, pictRowBytes * height,pictRowBytes * height);
-	}
-	else
-		mipmap->image = (void *)Q3MemoryStorage_New ((unsigned char *) pictMapAddr, pictRowBytes * height);
-		
-	if (mipmap->image == nil)
-		DoFatalAlert("Q3MemoryStorage_New Failed!");
-
-	mipmap->useMipmapping = kQ3False;							// not actually using mipmaps (just 1 srcmap)
-	
-	if (blackIsAlpha)
-	{
-		if (depth == 16)
-			mipmap->pixelType = kQ3PixelTypeARGB16;						
-		else
-			mipmap->pixelType = kQ3PixelTypeARGB32;
-	}
-	else
-	{
-		if (depth == 16)
-			mipmap->pixelType = kQ3PixelTypeRGB16;						
-		else
-			mipmap->pixelType = kQ3PixelTypeRGB32;
-	}
-	
-	mipmap->bitOrder = kQ3EndianBig;
-	mipmap->byteOrder = kQ3EndianBig;
-	mipmap->reserved = nil;
-	mipmap->mipmaps[0].width = width;
-	mipmap->mipmaps[0].height = height;
-	mipmap->mipmaps[0].rowBytes = pictRowBytes;
-	mipmap->mipmaps[0].offset = 0;
-#endif
 }
 
 
@@ -1388,114 +1234,6 @@ TQ3SurfaceShaderObject	surfaceShader;
 	return(storage);
 }
 
-
-/**************** QD3D: DATA16 TO TEXTURE_PIXMAP ***********************/
-//
-// Converts input data to pixmap texture
-//
-// INPUT: .
-//
-// OUTPUT: TQ3ShaderObject = shader object for texture map.
-//
-
-TQ3SurfaceShaderObject	QD3D_Data16ToTexture_Pixmap(Ptr data, short width, short height)
-{
-TQ3StoragePixmap			pixmap;
-TQ3TextureObject			texture;
-TQ3SurfaceShaderObject		shader;
-
-			/* CREATE PIXMAP */
-			
-	Data16ToPixmap(data,width,height,&pixmap);
-
-
-			/* MAKE NEW PIXMAP TEXTURE */
-			
-	texture = Q3PixmapTexture_New(&pixmap);				
-	GAME_ASSERT(texture);
-			
-	shader = Q3TextureShader_New(texture);
-	GAME_ASSERT(shader);
-
-	Q3Object_Dispose (texture);
-	Q3Object_Dispose (pixmap.image);					// dispose of extra ref to storage object
-
-	return(shader);	
-}
-
-
-/******************** DATA16 TO PIXMAP ********************/
-//
-// Creates a pixmap from an existing 16bit data buffer
-//
-// NOTE: Assumes that GWorld is 16bit!!!!
-//
-// OUTPUT: pixmap = new pixmap holding texture image
-//
-
-static void Data16ToPixmap(Ptr data, short width, short height, TQ3StoragePixmap *pixmap)
-{
-long	size = width * height * 2;
-
-			/* MAKE 16bit MIPMAP */
-
-	pixmap->image = (void *)Q3MemoryStorage_NewBuffer ((unsigned char *) data, size, size);
-	GAME_ASSERT(pixmap->image);
-
-	pixmap->width 		= width;
-	pixmap->height 		= height;
-	pixmap->rowBytes	= width*2;
-
-	pixmap->pixelSize 	= 16;
-	pixmap->pixelType 	= kQ3PixelTypeRGB16;						
-	pixmap->bitOrder 	= kQ3EndianBig;
-	pixmap->byteOrder 	= kQ3EndianBig;
-}
-
-
-/**************** QD3D: GET PIXMAP STORAGE OBJECT FROM ATTRIB **************************/
-//
-// NOTE: the pixmap.image and surfaceShader are *valid* references which need to be de-referenced later!!!
-//
-// INPUT: attribSet
-//
-// OUTPUT: surfaceShader = shader extracted from attribute set
-//
-
-TQ3StorageObject QD3D_GetPixmapStorageObjectFromAttrib(TQ3AttributeSet attribSet)
-{
-TQ3Status	status;
-
-TQ3TextureObject		texture;
-TQ3StoragePixmap 		pixmap;
-TQ3StorageObject		storage;
-TQ3SurfaceShaderObject	surfaceShader;
-
-			/* GET SHADER FROM ATTRIB */
-			
-	status = Q3AttributeSet_Get(attribSet, kQ3AttributeTypeSurfaceShader, &surfaceShader);
-	GAME_ASSERT(status);
-
-			/* GET TEXTURE */
-			
-	status = Q3TextureShader_GetTexture(surfaceShader, &texture);
-	GAME_ASSERT(status);
-
-			/* GET PIXMAP */
-			
-	status = Q3PixmapTexture_GetPixmap(texture,&pixmap);
-	GAME_ASSERT(status);
-
-		/* GET A LEGAL REF TO STORAGE OBJ */
-			
-	storage = pixmap.image;
-	
-			/* DISPOSE REFS */
-			
-	Q3Object_Dispose(texture);	
-	Q3Object_Dispose(surfaceShader);
-	return(storage);
-}
 
 #pragma mark -
 
@@ -1642,40 +1380,6 @@ Str255		s;
 		DoFatalAlert(s);
 	}
 }
-
-
-/**************** QD3D: COLOR TO QUICKDRAW COLOR ******************/
-//
-// Converts QD3D colors to RGBColors.
-//
-
-void QD3D_ColorToQDColor(TQ3ColorRGB *in, RGBColor *out)
-{
-	out->red = in->r * 0xffff;
-	out->green = in->g * 0xffff;
-	out->blue = in->b * 0xffff;
-
-
-
-}
-
-
-/**************** QD3D: QD COLOR TO QD3D COLOR ******************/
-//
-// Converts QD3D colors to RGBColors.
-//
-
-void QD3D_QDColorToColor(RGBColor *in, TQ3ColorRGB *out)
-{
-	out->r = (float)in->red / (float)0xffff;
-	out->g = (float)in->green / (float)0xffff;
-	out->b = (float)in->blue / (float)0xffff;
-
-}
-
-
-
-
 
 
 #pragma mark -
