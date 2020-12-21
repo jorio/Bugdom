@@ -17,15 +17,12 @@
 #include <time.h>
 
 extern	float				gFramesPerSecondFrac,gFramesPerSecond;
-extern	TQ3Point3D			gCoord;
 extern	WindowPtr			gCoverWindow;
 extern	NewObjectDefinitionType	gNewObjectDefinition;
 extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	Boolean		gSongPlayingFlag,gResetSong,gDisableAnimSounds,gSongPlayingFlag;
 extern	FSSpec		gDataSpec;
 extern	PrefsType	gGamePrefs;
 extern	u_short		gLevelType,gRealLevel;
-extern	u_long			gScore;
 extern 	ObjNode 	*gFirstNodePtr;
 
 /****************************/
