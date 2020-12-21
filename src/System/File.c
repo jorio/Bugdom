@@ -671,15 +671,23 @@ OSErr			err;
 
 /***************************** LOAD SAVED GAME ********************************/
 
-OSErr GetSaveGameData(int slot, SaveGameType* saveData)
+static FSSpec MakeSaveGameFSSpec(int slot)
 {
 char			path[128];
-short			fRefNum;
 FSSpec			spec;
-OSErr			err;
 
 	snprintf(path, sizeof(path), ":Bugdom:Save%c", slot + 'A');
 	FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, path, &spec);
+
+	return spec;
+}
+
+OSErr GetSaveGameData(int slot, SaveGameType* saveData)
+{
+short			fRefNum;
+OSErr			err;
+
+	FSSpec spec = MakeSaveGameFSSpec(slot);
 
 			/* OPEN THE DATA FORK */
 
@@ -740,6 +748,13 @@ SaveGameType saveData;
 	gRestoringSavedGame = true;
 
 	return(noErr);
+}
+
+OSErr DeleteSavedGame(int slot)
+{
+
+	FSSpec spec = MakeSaveGameFSSpec(slot);
+	return FSpDelete(&spec);
 }
 
 

@@ -70,7 +70,7 @@ extern	void SavePrefs(PrefsType *prefs);
 extern	void SaveGame(int slot);
 extern	OSErr GetSaveGameData(int slot, SaveGameType* saveData);
 extern	OSErr LoadSavedGame(int slot);
-extern	Ptr	LoadAFile(FSSpec *fsSpec);
+extern	OSErr DeleteSavedGame(int slot);
 
 void LoadPlayfield(FSSpec *specPtr);
 

@@ -40,7 +40,9 @@ static int FileScreenMainLoop(void);
 /*    CONSTANTS             */
 /****************************/
 
-static const char* gLevelNames[10] =
+#define NUM_SAVE_FILES 3
+
+static const char* gLevelNames[NUM_LEVELS] =
 {
 	"Training",
 	"Lawn",
@@ -52,6 +54,13 @@ static const char* gLevelNames[10] =
 	"Night Attack",
 	"Ant Hill",
 	"Ant King",
+};
+
+static const TQ3Point3D gFloppyPositions[NUM_SAVE_FILES] =
+{
+	{ -120.0f, -10.0f },
+	{    0.0f, -10.0f },
+	{  120.0f, -10.0f },
 };
 
 
@@ -199,17 +208,18 @@ static void AddPickableQuad(
 	gPickables[gNumPickables++] = poly;
 }
 
-static void MakeFileSlot(
-		const int slotNumber,
-		const float x,
-		const float y
-)
+static void MakeFileObjects(const int fileNumber, bool createPickables)
 {
+	GAME_ASSERT(fileNumber < NUM_SAVE_FILES);
+
 	SaveGameType saveData;
-	OSErr saveDataErr = GetSaveGameData(slotNumber, &saveData);
+	OSErr saveDataErr = GetSaveGameData(fileNumber, &saveData);
 	bool saveDataValid = saveDataErr == noErr;
 
+	float x = gFloppyPositions[fileNumber].x;
+	float y = gFloppyPositions[fileNumber].y;
 
+	short objNodeSlotID = 10000 + fileNumber;				// all nodes related to this file slot will have this
 
 	const float gs = 0.8f;
 
@@ -220,17 +230,17 @@ static void MakeFileSlot(
 	gNewObjectDefinition.coord.x 	= x;
 	gNewObjectDefinition.coord.y 	= y;
 	gNewObjectDefinition.coord.z 	= 0;
-	gNewObjectDefinition.slot 		= 100;
+	gNewObjectDefinition.slot 		= objNodeSlotID;
 	gNewObjectDefinition.flags 		= STATUS_BIT_CLONE;
 	gNewObjectDefinition.moveCall 	= MoveFloppy;
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= 2.0f * gs;
 	ObjNode* newFloppy = MakeNewDisplayGroupObject(&gNewObjectDefinition);
 
-	newFloppy->SpecialL[0] = PICK_FILE_A_FLOPPY + slotNumber * 2;
-	newFloppy->SpecialL[1] = PICK_FILE_A_DELETE + slotNumber * 2;
+	newFloppy->SpecialL[0] = PICK_FILE_A_FLOPPY + fileNumber * 2;
+	newFloppy->SpecialL[1] = PICK_FILE_A_DELETE + fileNumber * 2;
 
-	floppies[slotNumber] = newFloppy;
+	floppies[fileNumber] = newFloppy;
 
 	// Get path to floppy label image
 	if (saveDataValid)
@@ -248,13 +258,14 @@ static void MakeFileSlot(
 //	GAME_ASSERT(gNumPickables < MAX_PICKABLES);
 //	gPickables[gNumPickables++] = newFloppy->BaseGroup;
 
-	snprintf(textBuffer, sizeof(textBuffer), "File %c", 'A' + slotNumber);
+	snprintf(textBuffer, sizeof(textBuffer), "File %c", 'A' + fileNumber);
 
 
 	TextMeshDef tmd;
 	TextMesh_FillDef(&tmd);
 	tmd.color			= gTextColor;
 	tmd.shadowColor		= gTextShadowColor;
+	tmd.slot			= objNodeSlotID;
 
 	tmd.coord.x	= x;
 	tmd.coord.y	= y+80*gs;
@@ -291,8 +302,11 @@ static void MakeFileSlot(
 
 
 
-	AddPickableQuad(x, y, 50, 50);				// Floppy
-	AddPickableQuad(x+30, y+90*gs, 20, 5);		// Delete
+	if (createPickables)
+	{
+		AddPickableQuad(x, y, 50, 50);				// Floppy
+		AddPickableQuad(x+30, y+90*gs, 20, 5);		// Delete
+	}
 }
 
 
@@ -375,7 +389,7 @@ static void SetupFileScreen(int type)
 	gNewObjectDefinition.group 		= MODEL_GROUP_BONUS;
 	gNewObjectDefinition.type 		= BONUS_MObjType_Background;
 	gNewObjectDefinition.coord		= gBonusCameraFrom;
-	gNewObjectDefinition.slot 		= 100;
+	gNewObjectDefinition.slot 		= 999;
 	gNewObjectDefinition.flags 		= STATUS_BIT_NOFOG|STATUS_BIT_NULLSHADER;
 	gNewObjectDefinition.moveCall 	= MoveBonusBackground;
 	gNewObjectDefinition.rot 		= 0;
@@ -403,9 +417,9 @@ static void SetupFileScreen(int type)
 
 	y -= 120.0f;
 
-	MakeFileSlot(0, x - 120.0f, y);
-	MakeFileSlot(1, x, y);
-	MakeFileSlot(2, x + 120.0f, y);
+	MakeFileObjects(0, true);
+	MakeFileObjects(1, true);
+	MakeFileObjects(2, true);
 
 
 	y -= 50.0f;
@@ -485,11 +499,26 @@ static Boolean	PickFileSelectIcon(TQ3Point2D point, TQ3Int32 *pickID)
 
 
 
-static void DeleteSlot(int slotNumber)
+static void DeleteFile(int fileNumber)
 {
-	QD3D_ExplodeGeometry(floppies[slotNumber], 200.0f, PARTICLE_MODE_UPTHRUST|PARTICLE_MODE_NULLSHADER, 1, 0.5f);
-	PlayEffect_Parms3D(EFFECT_POP, &floppies[slotNumber]->Coord, kMiddleC-6, 3.0);
-	floppies[slotNumber]->StatusBits |= STATUS_BIT_HIDDEN;
+	QD3D_ExplodeGeometry(floppies[fileNumber], 200.0f, PARTICLE_MODE_UPTHRUST | PARTICLE_MODE_NULLSHADER, 1, 0.5f);
+	PlayEffect_Parms3D(EFFECT_POP, &floppies[fileNumber]->Coord, kMiddleC - 6, 3.0);
+	floppies[fileNumber]->StatusBits |= STATUS_BIT_HIDDEN;
+
+	ObjNode* node = gFirstNodePtr;
+	while (node)
+	{
+		ObjNode* nextNode = node->NextNode;
+		if (node->Slot == 10000 + fileNumber)
+		{
+			DeleteObject(node);
+		}
+		node = nextNode;
+	}
+
+	DeleteSavedGame(fileNumber);
+
+	MakeFileObjects(fileNumber, false);
 }
 
 
@@ -536,13 +565,13 @@ static int FileScreenMainLoop()
 					switch (pickID)
 					{
 						case PICK_FILE_A_DELETE:
-							DeleteSlot(0);
+							DeleteFile(0);
 							break;
 						case PICK_FILE_B_DELETE:
-							DeleteSlot(1);
+							DeleteFile(1);
 							break;
 						case PICK_FILE_C_DELETE:
-							DeleteSlot(2);
+							DeleteFile(2);
 							break;
 						case PICK_FILE_A_FLOPPY:
 							return 0;
