@@ -125,7 +125,7 @@ ObjNode *newObj;
 	if (newObj == nil)
 		return;
 
-	ForEachTriMesh(newObj->BaseGroup, SetCycloramaClampingParams_Callback);
+	ForEachTriMesh(newObj->BaseGroup, SetCycloramaClampingParams_Callback, NULL);
 		
 #ifdef FORMAC
     newObj->Scale.y *= 1.5f;

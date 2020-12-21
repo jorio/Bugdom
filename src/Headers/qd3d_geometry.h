@@ -48,8 +48,8 @@ extern	void QD3D_CopyTriMeshData(const TQ3TriMeshData *inData, TQ3TriMeshData *o
 extern	void QD3D_FreeCopyTriMeshData(TQ3TriMeshData *data);
 void QD3D_CalcObjectBoundingSphere(QD3DSetupOutputType *setupInfo, TQ3Object theObject, TQ3BoundingSphere *sphere);
 
-void ForEachTriMesh(TQ3Object root, void (*callback)(TQ3TriMeshData triMeshData));
+void ForEachTriMesh(TQ3Object root, void (*callback)(TQ3TriMeshData triMeshData, void* userData), void* userData);
 
-void QD3D_SetTextureAlphaThreshold_TriMesh(TQ3TriMeshData root);
+void QD3D_SetTextureAlphaThreshold_TriMesh(TQ3TriMeshData root, void* userData_thresholdFloatPtr);
 void QD3D_ClearDiffuseColor_TriMesh(TQ3TriMeshData triMeshData);
 void QD3D_SetUVClamp_TriMesh(TQ3TriMeshData triMeshData, Boolean uClamp, Boolean vClamp);

@@ -125,7 +125,7 @@ void TextMesh_Load(void)
 	// Nuke color attribute from glyph models so we can draw them in whatever color we like later.
 	for (int i = SCORES_ObjType_0; i <= SCORES_ObjType_Colon; i++)
 	{
-		ForEachTriMesh(gObjectGroupList[MODEL_GROUP_TEXTMESH][i], QD3D_ClearDiffuseColor_TriMesh);
+		ForEachTriMesh(gObjectGroupList[MODEL_GROUP_TEXTMESH][i], QD3D_ClearDiffuseColor_TriMesh, NULL);
 	}
 }
 

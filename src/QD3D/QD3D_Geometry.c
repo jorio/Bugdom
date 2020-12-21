@@ -35,7 +35,7 @@ static void ScrollUVs_TriMesh(TQ3Object theTriMesh, short whichShader);
 /*    CONSTANTS             */
 /****************************/
 
-const TQ3Float32 gTextureAlphaThreshold = 0.5f;
+const TQ3Float32 gTextureAlphaThreshold = 0.501111f;		// We really want 0.5, but the weird number makes it easier to spot when debugging Quesa.
 
 #define OBJTREE_FRONTIER_STACK_LENGTH 64
 
@@ -1055,7 +1055,7 @@ void QD3D_FreeCopyTriMeshData(TQ3TriMeshData *data)
 // Convenience function that traverses the object graph and runs the given callback on all trimeshes.
 //
 
-void ForEachTriMesh(TQ3Object root, void (*callback)(TQ3TriMeshData triMeshData))
+void ForEachTriMesh(TQ3Object root, void (*callback)(TQ3TriMeshData triMeshData, void* userData), void* userData)
 {
 	TQ3Object	frontier[OBJTREE_FRONTIER_STACK_LENGTH];
 	int			top = 0;
@@ -1077,7 +1077,7 @@ void ForEachTriMesh(TQ3Object root, void (*callback)(TQ3TriMeshData triMeshData)
 			status = Q3TriMesh_GetData(obj, &triMeshData);		// get trimesh data
 			GAME_ASSERT(status);
 
-			callback(triMeshData);
+			callback(triMeshData, userData);
 
 			Q3TriMesh_EmptyData(&triMeshData);
 		}
@@ -1129,7 +1129,7 @@ void ForEachTriMesh(TQ3Object root, void (*callback)(TQ3TriMeshData triMeshData)
 // In the case of textures that are either fully-opaque or fully-transparent, though, we don't
 // need that extra depth sorting. The transparent texels can simply be discarded instead.
 
-void QD3D_SetTextureAlphaThreshold_TriMesh(TQ3TriMeshData triMeshData)
+void QD3D_SetTextureAlphaThreshold_TriMesh(TQ3TriMeshData triMeshData, void* userData_thresholdFloatPtr)
 {
 	// SEE IF HAS A TEXTURE
 	if (Q3AttributeSet_Contains(triMeshData.triMeshAttributeSet, kQ3AttributeTypeSurfaceShader))
@@ -1144,7 +1144,7 @@ void QD3D_SetTextureAlphaThreshold_TriMesh(TQ3TriMeshData triMeshData)
 
 				/* ADD ALPHA TEST ELEMENT */
 
-		status = Q3Object_AddElement(shader, kQ3ElementTypeTextureShaderAlphaTest, &gTextureAlphaThreshold);
+		status = Q3Object_AddElement(shader, kQ3ElementTypeTextureShaderAlphaTest, (void*) &gTextureAlphaThreshold);
 		GAME_ASSERT(status);
 
 				/* GET MIPMAP & APPLY EDGE PADDING TO IMAGE */
