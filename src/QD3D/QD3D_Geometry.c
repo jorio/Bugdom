@@ -17,6 +17,7 @@ extern	float				gFramesPerSecondFrac;
 extern	TQ3Point3D			gCoord;
 extern	TQ3Object	gKeepBackfaceStyleObject;
 extern	TQ3TriMeshData	**gLocalTriMeshesOfSkelType;
+extern	u_short			**gFloorMap;
 
 
 /****************************/
@@ -512,6 +513,7 @@ TQ3Matrix4x4	matrix,matrix2;
 		return;
 
 	fps = gFramesPerSecondFrac;
+	ty = -100.0f;														// source port add: "floor" point if we have no terrain
 
 	for (i=0; i < MAX_PARTICLES2; i++)
 	{
@@ -537,8 +539,10 @@ TQ3Matrix4x4	matrix,matrix2;
 		
 		
 					/* SEE IF BOUNCE */
-					
-		ty = GetTerrainHeightAtCoord(x,z, FLOOR);				// get terrain height here
+
+		if (gFloorMap)
+			ty = GetTerrainHeightAtCoord(x,z, FLOOR);			// get terrain height here
+
 		if (y <= ty)
 		{
 			if (gParticles[i].mode & PARTICLE_MODE_BOUNCE)
