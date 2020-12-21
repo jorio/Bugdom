@@ -5,7 +5,7 @@
 void DoPaused(void);
 Boolean DoLevelCheatDialog(void);
 void ShowLevelIntroScreen(void);
-void DoSettingsDialog(void);
+void DoSettingsScreen(void);
 void DoAboutScreens(void);
 void ShowIntroScreens(void);
 void DoPangeaLogo(void);

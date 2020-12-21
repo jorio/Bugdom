@@ -185,8 +185,7 @@ tryagain:
 				break;
 
 		case	5:				// SETTINGS
-				DoSettingsDialog();
-				goto tryagain;
+				break;
 	}
 	
 			/***********/
@@ -229,6 +228,12 @@ getout:
 					goto start_again;
 				}
 			}
+			break;
+
+		case	5:				// SETTINGS
+				DoSettingsScreen();
+				goto start_again;
+				break;
 	}
 	
 	GameScreenToBlack();

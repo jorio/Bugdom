@@ -90,6 +90,7 @@ set(GAME_SOURCES
 	${GAME_SRCDIR}/Screens/MainMenu.c
 	${GAME_SRCDIR}/Screens/MiscScreens.c
 	${GAME_SRCDIR}/Screens/ModelDebug.c
+	${GAME_SRCDIR}/Screens/SettingsScreen.c
 	${GAME_SRCDIR}/Screens/Title.c
 	${GAME_SRCDIR}/Screens/WinLose.c
 	${GAME_SRCDIR}/Skeleton/Bones.c
