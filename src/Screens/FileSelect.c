@@ -56,12 +56,19 @@ static const char* gLevelNames[NUM_LEVELS] =
 	"Ant King",
 };
 
-static const TQ3Point3D gFloppyPositions[NUM_SAVE_FILES] =
+static const TQ3Point2D gFloppyPositions[NUM_SAVE_FILES] =
 {
 	{ -120.0f, -10.0f },
 	{    0.0f, -10.0f },
 	{  120.0f, -10.0f },
 };
+
+struct
+{
+	bool		isSaveDataValid;
+	TQ3Int32 	floppyPickID;
+	TQ3Int32	deletePickID;
+} fileInfos[NUM_SAVE_FILES];
 
 
 #define MAX_PICKABLES 32
@@ -151,14 +158,16 @@ static void MoveFloppy(ObjNode *theNode)
 {
 	float	fps = gFramesPerSecondFrac;
 
-	if (gHoveredPick == theNode->SpecialL[0])
+	int fileNumber = theNode->SpecialL[0];
+
+	if (gHoveredPick == fileInfos[fileNumber].floppyPickID)
 	{
 		theNode->SpecialF[0] += fps * 5.0f;
 		theNode->Rot.y = cosf(0.5f * theNode->SpecialF[0]) * 0.53f;
 		theNode->Rot.z = 0;
 		theNode->Coord.y = theNode->InitCoord.y + fabsf(cosf(1.0f*theNode->SpecialF[0])) * 7.0f;
 	}
-	else if (gHoveredPick == theNode->SpecialL[1])
+	else if (gHoveredPick == fileInfos[fileNumber].deletePickID && fileInfos[fileNumber].isSaveDataValid)
 	{
 		theNode->SpecialF[0] += fps * 9.0f;
 		float t = theNode->SpecialF[0];
@@ -219,6 +228,10 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 	float x = gFloppyPositions[fileNumber].x;
 	float y = gFloppyPositions[fileNumber].y;
 
+	fileInfos[fileNumber].isSaveDataValid = saveDataValid;
+	fileInfos[fileNumber].floppyPickID = PICK_FILE_A_FLOPPY + fileNumber * 2;
+	fileInfos[fileNumber].deletePickID = PICK_FILE_A_DELETE + fileNumber * 2;
+
 	short objNodeSlotID = 10000 + fileNumber;				// all nodes related to this file slot will have this
 
 	const float gs = 0.8f;
@@ -237,8 +250,7 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 	gNewObjectDefinition.scale 		= 2.0f * gs;
 	ObjNode* newFloppy = MakeNewDisplayGroupObject(&gNewObjectDefinition);
 
-	newFloppy->SpecialL[0] = PICK_FILE_A_FLOPPY + fileNumber * 2;
-	newFloppy->SpecialL[1] = PICK_FILE_A_DELETE + fileNumber * 2;
+	newFloppy->SpecialL[0] = fileNumber;
 
 	floppies[fileNumber] = newFloppy;
 
@@ -399,7 +411,6 @@ static void SetupFileScreen(int type)
 	/* TEXT */
 
 	float y = 110.0f;
-	float x = 0;
 
 	if (type == FILE_SELECT_SCREEN_TYPE_LOAD)
 	{
@@ -414,8 +425,6 @@ static void SetupFileScreen(int type)
 		snprintf(textBuffer, sizeof(textBuffer), "You are entering Level %d", gRealLevel+2, true);
 //		MakeTextWithShadow(textBuffer, 0, y - 25.0f, 0.5f, &gTitleTextColor);
 	}
-
-	y -= 120.0f;
 
 	MakeFileObjects(0, true);
 	MakeFileObjects(1, true);
@@ -501,6 +510,10 @@ static Boolean	PickFileSelectIcon(TQ3Point2D point, TQ3Int32 *pickID)
 
 static void DeleteFile(int fileNumber)
 {
+	if (!fileInfos[fileNumber].isSaveDataValid)
+		return;
+
+
 	QD3D_ExplodeGeometry(floppies[fileNumber], 200.0f, PARTICLE_MODE_UPTHRUST | PARTICLE_MODE_NULLSHADER, 1, 0.5f);
 	PlayEffect_Parms3D(EFFECT_POP, &floppies[fileNumber]->Coord, kMiddleC - 6, 3.0);
 	floppies[fileNumber]->StatusBits |= STATUS_BIT_HIDDEN;
