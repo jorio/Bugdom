@@ -101,7 +101,7 @@ extern "C"
 #include "triggers.h"
 #include "pick.h"
 #include "fileselect.h"
-
+#include "textmesh.h"
 #include "tga.h"
 
 #ifdef __cplusplus

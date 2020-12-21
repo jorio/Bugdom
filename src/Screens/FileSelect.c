@@ -26,7 +26,7 @@ extern	FSSpec		gDataSpec;
 extern	PrefsType	gGamePrefs;
 extern	u_short		gLevelType,gRealLevel;
 extern	u_long			gScore;
-extern	TQ3Object	gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
+extern 	ObjNode 	*gFirstNodePtr;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -167,112 +167,6 @@ static void MoveFloppy(ObjNode *theNode)
 	UpdateObjectTransforms(theNode);
 }
 
-
-static void MakeText(
-		const char* text,
-		float x,
-		float y,
-		float z,
-		const float baseScale,
-		const TQ3ColorRGB* color)
-{
-	const float characterSpacing = 16.0f;
-	const float spaceAdvance = 20.0f;
-
-	float startX = x;
-	ObjNode* firstTextNode = nil;
-	ObjNode* lastTextNode = nil;
-
-	for (; *text; text++)
-	{
-		char c = *text;
-		bool isLower = false;
-		int type = SCORES_ObjType_0;
-
-		switch (c)
-		{
-			case ' ':
-				x += spaceAdvance * baseScale;
-				continue;
-
-			case '0':	case '1':	case '2':	case '3':	case '4':
-			case '5':	case '6':	case '7':	case '8':	case '9':
-				type = SCORES_ObjType_0 + (c - '0'); break;
-
-			case '.': type = SCORES_ObjType_Period; break;
-			case '#': type = SCORES_ObjType_Pound; break;
-			case '?': type = SCORES_ObjType_Question; break;
-			case '!': type = SCORES_ObjType_Exclamation; break;
-			case '-': type = SCORES_ObjType_Dash; break;
-			case '\'': type = SCORES_ObjType_Apostrophe; break;
-			case ':': type = SCORES_ObjType_Colon; break;
-
-			default:
-				if (c >= 'A' && c <= 'Z')
-				{
-					type = SCORES_ObjType_A + (c - 'A');
-				}
-				else if (c >= 'a' && c <= 'z')
-				{
-					type = SCORES_ObjType_A + (c - 'a');
-					isLower = true;
-				}
-				else
-				{
-					type = SCORES_ObjType_Question;
-				}
-				break;
-		}
-
-		gNewObjectDefinition.group 		= MODEL_GROUP_LEVELSPECIFIC;
-		gNewObjectDefinition.type		= type;
-		gNewObjectDefinition.coord.x 	= x;
-		gNewObjectDefinition.coord.y 	= y;
-		gNewObjectDefinition.coord.z 	= z;
-		gNewObjectDefinition.slot 		= 100;
-		gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER;
-		gNewObjectDefinition.moveCall 	= nil;
-		gNewObjectDefinition.rot 		= 0.0f;
-		gNewObjectDefinition.scale 		= baseScale * (isLower? 0.8f: 1.0f);
-		ObjNode* glyph = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-
-		lastTextNode = glyph;
-		if (!firstTextNode)
-			firstTextNode = glyph;
-
-		TQ3AttributeSet attrs = Q3AttributeSet_New();
-		Q3AttributeSet_Add(attrs, kQ3AttributeTypeDiffuseColor, color);
-		AttachGeometryToDisplayGroupObject(glyph, attrs);
-
-		glyph->SpecialL[0] = 0;
-		glyph->SpecialF[0] = 0;
-
-		x = glyph->Coord.x;
-		x += characterSpacing * baseScale * (isLower ? 1.0f : 1.2f);
-	}
-
-	// Center text horizontally
-	float totalWidth = x - startX;
-	for (ObjNode* node = firstTextNode; node; node = node->NextNode)
-	{
-		node->Coord.x -= (totalWidth - characterSpacing * baseScale) / 2.0f;
-		UpdateObjectTransforms(node);
-		if (node == lastTextNode)
-			break;
-	}
-}
-
-static void MakeTextWithShadow(
-		const char* text,
-		float x,
-		float y,
-		const float baseScale,
-		const TQ3ColorRGB* color)
-{
-	MakeText(text, x, y, 0, baseScale, color);
-	MakeText(text, x+2*baseScale, y-2*baseScale, -0.001, baseScale, &gTextShadowColor);
-}
-
 static void AddPickableQuad(
 		float x,
 		float y,
@@ -356,26 +250,43 @@ static void MakeFileSlot(
 
 	snprintf(textBuffer, sizeof(textBuffer), "File %c", 'A' + slotNumber);
 
-	MakeTextWithShadow(textBuffer, x, y + 80 * gs, .6f * gs, &gTextColor);
+
+	TextMeshDef tmd;
+	TextMesh_FillDef(&tmd);
+	tmd.color			= gTextColor;
+	tmd.shadowColor		= gTextShadowColor;
+
+	tmd.coord.x	= x;
+	tmd.coord.y	= y+80*gs;
+	tmd.scale	= 0.6f * gs;
+	TextMesh_Create(&tmd, textBuffer);
 
 
 	if (saveDataValid)
 	{
 		snprintf(textBuffer, sizeof(textBuffer), "Level %d", 1 + saveData.realLevel);
-		MakeTextWithShadow(textBuffer, x, y - 70 * gs, 0.35f * gs, &gTextColor);
-		MakeTextWithShadow(gLevelNames[saveData.realLevel], x, y - 80 * gs, 0.25f * gs, &gTextColor);
+
+		tmd.coord.y	= y-70*gs;
+		tmd.scale	= .35f * gs;
+		TextMesh_Create(&tmd, textBuffer);
+
+		tmd.coord.y	-= 10*gs;
+		tmd.scale	= .25f * gs;
+		TextMesh_Create(&tmd, gLevelNames[saveData.realLevel]);
 
 		struct tm tm;
 		tm = *localtime(&saveData.timestamp);
 		strftime(textBuffer, sizeof(textBuffer), "%-e %b %Y   %-l%:%M%p", &tm);
 		for (char *c = textBuffer; *c; c++)
 			*c = tolower(*c);
-		MakeTextWithShadow(textBuffer, x, y + 65 * gs, 0.25f * gs, &gTextColor);
-//		strftime(textBuffer, sizeof(textBuffer), "%-l:%M%p", &tm);
-//		MakeTextWithShadow(textBuffer, x, y - 130 * gs, 0.35f * gs, &gTextColor);
+		tmd.coord.y	= y+65*gs;
+		TextMesh_Create(&tmd, textBuffer);
 
-
-		MakeTextWithShadow("delete", x + 30, y + 90 * gs, 0.3f * gs, &gDeleteColor);
+		tmd.color		= gDeleteColor;
+		tmd.coord.x	= x+30*gs;
+		tmd.coord.y	= y+90*gs;
+		tmd.scale	= .3f * gs;
+		TextMesh_Create(&tmd, "delete");
 	}
 
 
@@ -448,14 +359,7 @@ static void SetupFileScreen(int type)
 	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:BonusScreen.3dmf", &spec);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_BONUS);
 
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:HighScores.3dmf", &spec);
-	LoadGrouped3DMF(&spec,MODEL_GROUP_LEVELSPECIFIC);
-
-	// Nuke color attribute from glyph models so we can draw them in whatever color we like later.
-	for (int i = SCORES_ObjType_0; i <= SCORES_ObjType_Colon; i++)
-	{
-		ForEachTriMesh(gObjectGroupList[MODEL_GROUP_LEVELSPECIFIC][i], QD3D_ClearDiffuseColor_TriMesh);
-	}
+	TextMesh_Load();
 
 	/* LOAD SOUNDS */
 
@@ -485,17 +389,16 @@ static void SetupFileScreen(int type)
 
 	if (type == FILE_SELECT_SCREEN_TYPE_LOAD)
 	{
-		MakeTextWithShadow("Pick a Saved Game", 0.0f, y, 1.0f, &gTitleTextColor);
+//		MakeTextWithShadow("Pick a Saved Game", 0.0f, y, 1.0f, &gTitleTextColor);
 
-		//MakeTextWithShadow("Delete", -50.0f, -100, 0.5f, &gTitleTextColor, true);
-		MakeTextWithShadow("BACK", 50.0f, -100, 0.5f, &gBackColor);
+//		MakeTextWithShadow("BACK", 50.0f, -100, 0.5f, &gBackColor);
 	}
 	else
 	{
-		MakeTextWithShadow("Save where?", 0.0f, y, 1.0f, &gTitleTextColor);
+//		MakeTextWithShadow("Save where?", 0.0f, y, 1.0f, &gTitleTextColor);
 
 		snprintf(textBuffer, sizeof(textBuffer), "You are entering Level %d", gRealLevel+2, true);
-		MakeTextWithShadow(textBuffer, 0, y - 25.0f, 0.5f, &gTitleTextColor);
+//		MakeTextWithShadow(textBuffer, 0, y - 25.0f, 0.5f, &gTitleTextColor);
 	}
 
 	y -= 120.0f;

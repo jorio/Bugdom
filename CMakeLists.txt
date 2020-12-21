@@ -162,6 +162,7 @@ set(GAME_HEADERS
 	${GAME_SRCDIR}/Headers/GLOverlay.h
 	${GAME_SRCDIR}/Headers/GLOverlayFade.h
 	${GAME_SRCDIR}/Headers/gamepatches.h
+	${GAME_SRCDIR}/Headers/textmesh.h
 	${GAME_SRCDIR}/Headers/tga.h
 )
 
@@ -174,6 +175,7 @@ set(GAME_GLUE_SOURCES
 	${GAME_SRCDIR}/Glue/GLOverlayFade.cpp
 	${GAME_SRCDIR}/Glue/Overlay.cpp
 	${GAME_SRCDIR}/Glue/Q3FSSpecStorage.cpp
+	${GAME_SRCDIR}/Glue/TextMesh.c
 	${GAME_SRCDIR}/Glue/TGA.c
 )
 
