@@ -14,11 +14,17 @@ static const TextMeshDef gDefaultTextMeshDef =
 	.slot				= 100,
 	.centered			= true,
 	.shadowOffset		= { 2, -2 },
-	.characterSpacing	= 16,
-	.spaceWidth			= 20,
-	.lowercaseScale		= 0.8f,
+	.characterSpacing	= 2,
+	.spaceWidth			= 16,
+	.lowercaseScale		= 0.75f,
 	.uppercaseScale		= 1.0f,
 };
+
+static void GetTriMeshBoundingBox(TQ3TriMeshData triMeshData, void* userData_outPtrBBox)
+{
+	TQ3BoundingBox* outBBox = (TQ3BoundingBox*) userData_outPtrBBox;
+	*outBBox = triMeshData.bBox;
+}
 
 static void MakeText(
 		const TextMeshDef* def,
@@ -54,8 +60,10 @@ static void MakeText(
 			case '?':	type = SCORES_ObjType_Question;		break;
 			case '!':	type = SCORES_ObjType_Exclamation;	break;
 			case '-':	type = SCORES_ObjType_Dash;			break;
+			case ',':	type = SCORES_ObjType_Apostrophe;	break;
 			case '\'':	type = SCORES_ObjType_Apostrophe;	break;
 			case ':':	type = SCORES_ObjType_Colon;		break;
+			case '/':	type = SCORES_ObjType_I;			break;
 
 			default:
 				if (c >= 'A' && c <= 'Z')
@@ -74,6 +82,8 @@ static void MakeText(
 				break;
 		}
 
+		float scale = def->scale * (isLower? def->lowercaseScale: def->uppercaseScale);
+
 		gNewObjectDefinition.group 		= MODEL_GROUP_TEXTMESH;
 		gNewObjectDefinition.type		= type;
 		gNewObjectDefinition.slot		= def->slot;
@@ -83,8 +93,29 @@ static void MakeText(
 		gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER;
 		gNewObjectDefinition.moveCall 	= nil;
 		gNewObjectDefinition.rot 		= 0.0f;
-		gNewObjectDefinition.scale 		= def->scale * (isLower ? def->lowercaseScale : def->uppercaseScale);
+		gNewObjectDefinition.scale 		= scale;
+
 		ObjNode* glyph = MakeNewDisplayGroupObject(&gNewObjectDefinition);
+
+		// Get glyph width via the bounding box of its mesh
+		TQ3BoundingBox glyphBBox;
+		glyphBBox.min.x = 0;
+		glyphBBox.max.x = 0;
+		ForEachTriMesh(glyph->BaseGroup, GetTriMeshBoundingBox, (void *) &glyphBBox);
+		float glyphWidth = glyphBBox.max.x - glyphBBox.min.x;
+
+		// Hack to create missing glyph from another with a little transform
+		if (c == ',')
+		{
+			glyph->Coord.y -= 22 * scale;
+			glyph->Rot.z = -0.4f;
+		}
+		else if (c == '/')
+		{
+			glyph->Scale.y *= 1.4f;
+			glyph->Rot.z = -0.4f;
+			glyphWidth *= 3.0f;
+		}
 
 		lastTextNode = glyph;
 		if (!firstTextNode)
@@ -97,8 +128,12 @@ static void MakeText(
 		glyph->SpecialL[0] = 0;
 		glyph->SpecialF[0] = 0;
 
-		x = glyph->Coord.x;
-		x += def->characterSpacing * def->scale * (isLower ? 1.0f : 1.2f);
+		x = glyph->Coord.x
+			+ def->characterSpacing * scale
+			+ scale * glyphWidth;
+
+		glyph->Coord.x += scale * glyphWidth / 2.0f;
+		UpdateObjectTransforms(glyph);
 	}
 
 	// Center text horizontally
