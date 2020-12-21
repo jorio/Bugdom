@@ -47,6 +47,10 @@ typedef struct
 
 //=================================================
 
+			/* SAVE FILE SLOTS */
+
+#define NUM_SAVE_FILES 3
+
 			/* SAVE GAME */
 
 typedef struct

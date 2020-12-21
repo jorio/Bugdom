@@ -132,7 +132,12 @@ Boolean wantToSave = false;
 		{
 			gCurrentSaveSlot = DoFileSelectScreen(FILE_SELECT_SCREEN_TYPE_SAVE);
 		}
-		SaveGame(gCurrentSaveSlot);
+
+		// Re-check current save slot. Maybe user doesn't want to save after all.
+		if (gCurrentSaveSlot >= 0)
+		{
+			SaveGame(gCurrentSaveSlot);
+		}
 	}
 }
 

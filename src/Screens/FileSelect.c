@@ -37,8 +37,6 @@ static int FileScreenMainLoop(void);
 /*    CONSTANTS             */
 /****************************/
 
-#define NUM_SAVE_FILES 3
-
 static const char* gLevelNames[NUM_LEVELS] =
 {
 	"Training",

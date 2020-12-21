@@ -607,13 +607,28 @@ long				count;
 
 #pragma mark -
 
+/******************* GET FSSPEC FOR SAVE GAME SLOT *********************/
+
+static FSSpec MakeSaveGameFSSpec(int slot)
+{
+	char			path[128];
+	FSSpec			spec;
+
+	GAME_ASSERT(slot >= 0);
+	GAME_ASSERT(slot < NUM_SAVE_FILES);
+
+	snprintf(path, sizeof(path), ":Bugdom:Save%c", slot + 'A');
+	FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, path, &spec);
+
+	return spec;
+}
+
 
 /***************************** SAVE GAME ********************************/
 
 void SaveGame(int slot)
 {
 SaveGameType 	saveData;
-char			path[128];
 short			fRefNum;
 FSSpec			spec;
 OSErr			err;
@@ -633,8 +648,7 @@ OSErr			err;
 
 			/* CREATE & OPEN THE DATA FORK */
 
-	snprintf(path, sizeof(path), ":Bugdom:Save%c", slot + 'A');
-	FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, path, &spec);
+	spec = MakeSaveGameFSSpec(slot);
 
 	err = FSpCreate(&spec,'BalZ','BSav',0);
 	if (err != noErr)
@@ -670,17 +684,6 @@ OSErr			err;
 
 
 /***************************** LOAD SAVED GAME ********************************/
-
-static FSSpec MakeSaveGameFSSpec(int slot)
-{
-char			path[128];
-FSSpec			spec;
-
-	snprintf(path, sizeof(path), ":Bugdom:Save%c", slot + 'A');
-	FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, path, &spec);
-
-	return spec;
-}
 
 OSErr GetSaveGameData(int slot, SaveGameType* saveData)
 {
