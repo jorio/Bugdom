@@ -297,8 +297,9 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 		tmd.scale	= .25f * gs;
 		TextMesh_Create(&tmd, gLevelNames[saveData.realLevel]);
 
+		time_t timestamp = saveData.timestamp;
 		struct tm tm;
-		tm = *localtime(&saveData.timestamp);
+		tm = *localtime(&timestamp);
 		strftime(textBuffer, sizeof(textBuffer), "%-e %b %Y   %-l%:%M%p", &tm);
 		for (char *c = textBuffer; *c; c++)
 			*c = tolower(*c);
