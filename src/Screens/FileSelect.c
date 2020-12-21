@@ -61,15 +61,8 @@ static const TQ3Point2D gFloppyPositions[NUM_SAVE_FILES] =
 struct
 {
 	bool		isSaveDataValid;
-	TQ3Int32 	floppyPickID;
-	TQ3Int32	deletePickID;
 } fileInfos[NUM_SAVE_FILES];
 
-
-#define MAX_PICKABLES 32
-
-static TQ3Object gPickables[MAX_PICKABLES];
-static int gNumPickables = 0;
 static int gHoveredPick = -1;
 
 static const TQ3ColorRGB gTextShadowColor	= { 0.0f, 0.0f, 0.3f };
@@ -84,12 +77,9 @@ static char textBuffer[512];
 
 enum
 {
-	PICK_FILE_A_FLOPPY,
-	PICK_FILE_A_DELETE,
-	PICK_FILE_B_FLOPPY,
-	PICK_FILE_B_DELETE,
-	PICK_FILE_C_FLOPPY,
-	PICK_FILE_C_DELETE,
+	kPickBits_FileNumberMask	= 0x0000FFFF,
+	kPickBits_Floppy			= 0x00010000,
+	kPickBits_Delete			= 0x00020000,
 };
 
 
@@ -128,12 +118,7 @@ int DoFileSelectScreen(int type)
 
 	/* CLEANUP */
 
-	for (int i = 0; i < gNumPickables; i++)
-	{
-		Q3Object_Dispose(gPickables[i]);
-		gPickables[i] = nil;
-	}
-	gNumPickables = 0;
+	PickableQuads_DisposeAll();
 
 	GammaFadeOut();
 	DeleteAllObjects();
@@ -155,14 +140,14 @@ static void MoveFloppy(ObjNode *theNode)
 
 	int fileNumber = theNode->SpecialL[0];
 
-	if (gHoveredPick == fileInfos[fileNumber].floppyPickID)
+	if (gHoveredPick == (kPickBits_Floppy | fileNumber))
 	{
 		theNode->SpecialF[0] += fps * 5.0f;
 		theNode->Rot.y = cosf(0.5f * theNode->SpecialF[0]) * 0.53f;
 		theNode->Rot.z = 0;
 		theNode->Coord.y = theNode->InitCoord.y + fabsf(cosf(1.0f*theNode->SpecialF[0])) * 7.0f;
 	}
-	else if (gHoveredPick == fileInfos[fileNumber].deletePickID && fileInfos[fileNumber].isSaveDataValid)
+	else if (gHoveredPick == (kPickBits_Delete | fileNumber) && fileInfos[fileNumber].isSaveDataValid)
 	{
 		theNode->SpecialF[0] += fps * 9.0f;
 		float t = theNode->SpecialF[0];
@@ -180,38 +165,6 @@ static void MoveFloppy(ObjNode *theNode)
 	UpdateObjectTransforms(theNode);
 }
 
-static void AddPickableQuad(
-		float x,
-		float y,
-		float width,
-		float height
-		)
-{
-	// INIT PICKABLE QUAD GEOMETRY
-
-	float left		= x - width/2.0f;
-	float right		= x + width/2.0f;
-	float top		= y + height/2.0f;
-	float bottom	= y - height/2.0f;
-
-	TQ3PolygonData pickableQuad;
-
-	TQ3Vertex3D pickableQuadVertices[4] = {
-			{{left, top, 0}, nil},
-			{{right, top, 0}, nil},
-			{{right, bottom, 0}, nil},
-			{{left, bottom, 0}, nil},
-	};
-
-	pickableQuad.numVertices = 4;
-	pickableQuad.vertices = pickableQuadVertices;
-	pickableQuad.polygonAttributeSet = nil;
-
-	TQ3GeometryObject poly = Q3Polygon_New(&pickableQuad);
-	GAME_ASSERT(gNumPickables < MAX_PICKABLES);
-	gPickables[gNumPickables++] = poly;
-}
-
 static void MakeFileObjects(const int fileNumber, bool createPickables)
 {
 	GAME_ASSERT(fileNumber < NUM_SAVE_FILES);
@@ -224,8 +177,6 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 	float y = gFloppyPositions[fileNumber].y;
 
 	fileInfos[fileNumber].isSaveDataValid = saveDataValid;
-	fileInfos[fileNumber].floppyPickID = PICK_FILE_A_FLOPPY + fileNumber * 2;
-	fileInfos[fileNumber].deletePickID = PICK_FILE_A_DELETE + fileNumber * 2;
 
 	short objNodeSlotID = 10000 + fileNumber;				// all nodes related to this file slot will have this
 
@@ -262,7 +213,6 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 	GAME_ASSERT(shaderObject);
 	QD3D_ReplaceGeometryTexture(newFloppy->BaseGroup, shaderObject);
 
-//	GAME_ASSERT(gNumPickables < MAX_PICKABLES);
 //	gPickables[gNumPickables++] = newFloppy->BaseGroup;
 
 	snprintf(textBuffer, sizeof(textBuffer), "File %c", 'A' + fileNumber);
@@ -312,8 +262,12 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 
 	if (createPickables)
 	{
-		AddPickableQuad(x, y, 50, 50);				// Floppy
-		AddPickableQuad(x+30, y+90*gs, 20, 5);		// Delete
+		TQ3Point3D quadCenter = {x, y, 0};
+		PickableQuads_NewQuad(quadCenter, 85, 85, kPickBits_Floppy | fileNumber);			// Floppy
+
+		quadCenter.x += 30;
+		quadCenter.y += 90*gs;
+		PickableQuads_NewQuad(quadCenter, 20, 5, kPickBits_Delete | fileNumber);			// Delete
 	}
 }
 
@@ -342,7 +296,7 @@ static void SetupFileScreen(int type)
 
 
 	/* RESET PICKABLE ITEMS */
-	gNumPickables = 0;
+	PickableQuads_DisposeAll();
 
 	/*************/
 	/* MAKE VIEW */
@@ -422,9 +376,10 @@ static void SetupFileScreen(int type)
 //		MakeTextWithShadow(textBuffer, 0, y - 25.0f, 0.5f, &gTitleTextColor);
 	}
 
-	MakeFileObjects(0, true);
-	MakeFileObjects(1, true);
-	MakeFileObjects(2, true);
+	for (int i = 0; i < NUM_SAVE_FILES; i++)
+	{
+		MakeFileObjects(i, true);
+	}
 
 
 	y -= 50.0f;
@@ -435,72 +390,6 @@ static void SetupFileScreen(int type)
 
 	MakeFadeEvent(true);
 }
-
-
-
-
-
-/*************** PICK FILE SELECT ICON ********************/
-//
-// INPUT: point = point of click
-//
-// OUTPUT: TRUE = something got picked
-//			pickID = pickID of picked object
-//
-
-static Boolean	PickFileSelectIcon(TQ3Point2D point, TQ3Int32 *pickID)
-{
-	TQ3PickObject			myPickObject;
-	TQ3Uns32			myNumHits;
-	TQ3Status				myErr;
-
-	/* CREATE PICK OBJECT */
-
-	myPickObject = CreateDefaultPickObject(&point);						// create pick object
-
-
-
-	/*************/
-	/* PICK LOOP */
-	/*************/
-
-	myErr = Q3View_StartPicking(gGameViewInfoPtr->viewObject,myPickObject);
-	GAME_ASSERT(myErr);
-	do
-	{
-		for (int j = 0; j < gNumPickables; j++)
-		{
-			Q3PickIDStyle_Submit(j, gGameViewInfoPtr->viewObject);
-			Q3Object_Submit(gPickables[j], gGameViewInfoPtr->viewObject);
-		}
-	} while (Q3View_EndPicking(gGameViewInfoPtr->viewObject) == kQ3ViewStatusRetraverse);
-
-
-	/*********************************/
-	/* SEE WHETHER ANY HITS OCCURRED */
-	/*********************************/
-
-	if (Q3Pick_GetNumHits(myPickObject, &myNumHits) != kQ3Failure)
-	{
-		if (myNumHits > 0)
-		{
-			/* PROCESS THE HIT */
-
-			Q3Pick_GetPickDetailData(myPickObject,0,kQ3PickDetailMaskPickID,pickID);	// get pickID
-			Q3Object_Dispose(myPickObject);												// dispose of pick object
-			return(true);
-		}
-	}
-
-	/* DIDNT HIT ANYTHING */
-
-	Q3Object_Dispose(myPickObject);
-	return(false);
-}
-
-
-
-
 
 
 
@@ -529,7 +418,6 @@ static void DeleteFile(int fileNumber)
 
 	MakeFileObjects(fileNumber, false);
 }
-
 
 
 
@@ -565,29 +453,23 @@ static int FileScreenMainLoop()
 			pt.y = mouse.v;
 
 			TQ3Int32 pickID;
-			if (PickFileSelectIcon(pt, &pickID))
+			if (PickableQuads_GetPick(gGameViewInfoPtr->viewObject, pt, &pickID))
 			{
 				gHoveredPick = pickID;
 
 				if (FlushMouseButtonPress())
 				{
-					switch (pickID)
+					if (gHoveredPick & kPickBits_Floppy)
 					{
-						case PICK_FILE_A_DELETE:
-							DeleteFile(0);
-							break;
-						case PICK_FILE_B_DELETE:
-							DeleteFile(1);
-							break;
-						case PICK_FILE_C_DELETE:
-							DeleteFile(2);
-							break;
-						case PICK_FILE_A_FLOPPY:
-							return 0;
-						case PICK_FILE_B_FLOPPY:
-							return 1;
-						case PICK_FILE_C_FLOPPY:
-							return 2;
+						return gHoveredPick & kPickBits_FileNumberMask;
+					}
+					else if (gHoveredPick & kPickBits_Delete)
+					{
+						DeleteFile(gHoveredPick & kPickBits_FileNumberMask);
+					}
+					else
+					{
+						ShowSystemErr_NonFatal(gHoveredPick);
 					}
 				}
 			}
