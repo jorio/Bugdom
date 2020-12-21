@@ -12,7 +12,7 @@ static const TextMeshDef gDefaultTextMeshDef =
 	.color				= { 1, 1, 1 },
 	.shadowColor		= { 0, 0, 0 },
 	.slot				= 100,
-	.centered			= true,
+	.align				= TEXTMESH_ALIGN_CENTER,
 	.shadowOffset		= { 2, -2 },
 	.characterSpacing	= 2,
 	.spaceWidth			= 16,
@@ -137,12 +137,13 @@ static void MakeText(
 	}
 
 	// Center text horizontally
-	if (def->centered)
+	if (def->align != TEXTMESH_ALIGN_LEFT)
 	{
+		float xAlignFactor = def->align == TEXTMESH_ALIGN_CENTER ? 0.5f : 1.0f;
 		float totalWidth = x - startX;
 		for (ObjNode* node = firstTextNode; node; node = node->NextNode)
 		{
-			node->Coord.x -= (totalWidth - def->characterSpacing * def->scale) / 2.0f;
+			node->Coord.x -= (totalWidth - def->characterSpacing * def->scale) * xAlignFactor;
 			UpdateObjectTransforms(node);
 			if (node == lastTextNode)
 				break;

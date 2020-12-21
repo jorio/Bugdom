@@ -2,12 +2,19 @@
 
 #include <Quesa.h>
 
+enum
+{
+	TEXTMESH_ALIGN_LEFT,
+	TEXTMESH_ALIGN_CENTER,
+	TEXTMESH_ALIGN_RIGHT,
+};
+
 typedef struct
 {
 	short			slot;
 	TQ3Point3D		coord;
 	TQ3ColorRGB		color;
-	bool	 		centered;
+	int 	 		align;
 	float 			scale;
 	float			lowercaseScale;
 	float			uppercaseScale;
