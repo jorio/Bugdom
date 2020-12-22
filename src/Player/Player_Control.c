@@ -293,10 +293,12 @@ Boolean				killed = false;
 			/* CHECK & HANDLE TERRAIN FOOT/HEAD COLLISION */
 			/**********************************************/
 
-
-//		realSpeed = FastVectorLength3D(gDelta.x, gDelta.y, gDelta.z);		// calc real 3D speed for terrain collision
-		realSpeed = FastVectorLength2D(gDelta.x, gDelta.z);					// NOTE: CALC 2D SINCE DELTA-Y WAS CAUSING PLAYER TO WALK UNCONTROLLABLY UP-HILL
-
+		// Source port fix. The original source used to completely ignore gDelta.y to compute realSpeed.
+		// But, at very high (500+) FPS, this slowed the player down to a crawl when walking up gentle slopes.
+		realSpeed = FastVectorLength3D(				// calc real 3D speed for terrain collision
+				gDelta.x,
+				gDelta.y + PLAYER_GRAVITY*fps,		// cancel gravity contribution from DoFrictionAndGravity, OTHERWISE PLAYER WILL WALK UNCONTROLLABLY UPHILL @60FPS
+				gDelta.z);
 
 		if (HandleFloorAndCeilingCollision(&gCoord, &oldCoord, &gDelta, &oldDelta,
 											-gPlayerObj->BottomOff, gPlayerObj->TopOff,
