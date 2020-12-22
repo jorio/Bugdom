@@ -63,7 +63,6 @@ struct
 	bool		isSaveDataValid;
 } fileInfos[NUM_SAVE_FILES];
 
-static int gHoveredPick = -1;
 
 static const TQ3ColorRGB gTextShadowColor	= { 0.0f, 0.0f, 0.3f };
 static const TQ3ColorRGB gTextColor			= { 1.0f, 0.9f, 0.0f };
@@ -96,6 +95,9 @@ static ObjNode* floppies[3];
 
 static int 			gCurrentFileScreenType = FILE_SELECT_SCREEN_TYPE_LOAD;
 
+static bool			gFileScreenAwaitingInput = true;
+
+static int			gHoveredPick = -1;
 
 static TQ3Point3D	gBonusCameraFrom = {0, 0, 250 };
 
@@ -140,37 +142,114 @@ int DoFileSelectScreen(int type)
 
 /****************** SETUP FILE SCREEN **************************/
 
+static float UpdateFloppyState(ObjNode* theNode, uint32_t currentStateID)
+{
+	long*	stateID		= &theNode->SpecialL[5];
+	float*	stateTimer	= &theNode->SpecialF[5];
+
+	if (*stateID != currentStateID)
+	{
+		*stateID = currentStateID;
+		*stateTimer = 0;
+	}
+	else
+	{
+		*stateTimer += gFramesPerSecondFrac;
+	}
+
+	return *stateTimer;
+}
+
 static void MoveFloppy_Bounce(ObjNode* theNode)
 {
-	theNode->SpecialF[0] += gFramesPerSecondFrac * 5.0f;
-	theNode->Rot.y = cosf(0.5f * theNode->SpecialF[0]) * 0.53f;
-	theNode->Rot.z = 0;
-	theNode->Coord.y = theNode->InitCoord.y + fabsf(cosf(1.0f*theNode->SpecialF[0])) * 7.0f;
+	const float t = UpdateFloppyState(theNode, 'BNCE');
+	const float D = 0.5f;
+
+	TweenTowardsTQ3Vector3D(t, D, &theNode->Rot, (TQ3Vector3D){
+		0,
+		cosf(2.5f*t) * 0.53f,
+		0
+	});
+
+	TweenTowardsTQ3Point3D(t, D, &theNode->Coord, (TQ3Point3D){
+		theNode->InitCoord.x,
+		theNode->InitCoord.y + fabsf(cosf(5*t)) * 7,
+		theNode->InitCoord.z
+	});
 }
 
 static void MoveFloppy_Shiver(ObjNode* theNode)
 {
-	theNode->SpecialF[0] += gFramesPerSecondFrac * 9.0f;
-	float t = theNode->SpecialF[0];
-	theNode->Rot.y = 0;
-	theNode->Rot.z = cosf(1.2f * t) * 0.1f * sinf(3.0f * t);
+	const float t = UpdateFloppyState(theNode, 'SHVR');
+	const float D = 0.5f;
+	TweenTowardsTQ3Vector3D(t, D, &theNode->Rot, (TQ3Vector3D){
+		0,
+		0,
+		cosf(1*9*t) * 0.1f * sinf(3*9*t)
+	});
 }
 
 static void MoveFloppy_Neutral(ObjNode* theNode)
 {
-
-	theNode->Rot.y = 0;
-	theNode->Rot.z = 0;
-	theNode->SpecialF[0] = 0;
-	theNode->Coord.y = theNode->InitCoord.y;
+	const float t = UpdateFloppyState(theNode, 'NTRL');
+	const float D = 0.5f;
+	TweenTowardsTQ3Vector3D(t, D, &theNode->Rot, (TQ3Vector3D){0,0,0});
+	TweenTowardsTQ3Point3D(t, D, &theNode->Coord, theNode->InitCoord);
 }
+
+static void MoveFloppy_Appear(ObjNode* theNode)
+{
+	const float t = UpdateFloppyState(theNode, 'APPR');
+	const float D = 0.25f;
+	theNode->Coord = TweenTQ3Point3D(
+			EaseOutQuad, t, D,
+			(TQ3Point3D){
+				theNode->InitCoord.x,
+				theNode->InitCoord.y,
+				theNode->InitCoord.z - 500
+				},
+			theNode->InitCoord);
+}
+
+
+static void MoveFloppy_Loading(ObjNode* theNode)
+{
+	const float t = UpdateFloppyState(theNode, 'LDNG');
+	const float D = 1.0f;
+
+	TweenTowardsTQ3Vector3D(t, D/2.0f, &theNode->Rot, (TQ3Vector3D){0,0,0});
+
+	theNode->Coord = TweenTQ3Point3D(
+			EaseOutExpo, t, D,
+			theNode->InitCoord,
+			(TQ3Point3D){
+					0,
+					-16,
+					200
+			});
+}
+
 
 static void MoveFloppy(ObjNode *theNode)
 {
 	int fileNumber = theNode->SpecialL[0];
 
-	if (	!(gHoveredPick & kPickBits_DontSave) &&
-			(gHoveredPick & kPickBits_FileNumberMask) == fileNumber)
+	float* age = &theNode->SpecialF[0];
+
+	bool isPickingMe = !(gHoveredPick & kPickBits_DontSave)
+					   && (gHoveredPick & kPickBits_FileNumberMask) == fileNumber;
+
+	if (!gFileScreenAwaitingInput
+		&& gCurrentFileScreenType == FILE_SELECT_SCREEN_TYPE_LOAD
+		&& isPickingMe)
+	{
+		MoveFloppy_Loading(theNode);
+	}
+	else if (*age < 0.5f)
+	{
+		MoveFloppy_Appear(theNode);
+	}
+	else if (isPickingMe)
 	{
 		if (gCurrentFileScreenType == FILE_SELECT_SCREEN_TYPE_LOAD)
 		{
@@ -190,6 +269,8 @@ static void MoveFloppy(ObjNode *theNode)
 	{
 		MoveFloppy_Neutral(theNode);
 	}
+
+	*age += gFramesPerSecondFrac;
 
 	UpdateObjectTransforms(theNode);
 }
@@ -456,15 +537,8 @@ static void SetupFileScreen(void)
 }
 
 
-
-static void DeleteFile(int fileNumber)
+static void PopFloppy(int fileNumber)
 {
-	GAME_ASSERT(fileNumber >= 0 && fileNumber < NUM_SAVE_FILES);
-
-	if (!fileInfos[fileNumber].isSaveDataValid)
-		return;
-
-
 	QD3D_ExplodeGeometry(floppies[fileNumber], 200.0f, PARTICLE_MODE_UPTHRUST | PARTICLE_MODE_NULLSHADER, 1, 0.5f);
 	PlayEffect_Parms3D(EFFECT_POP, &floppies[fileNumber]->Coord, kMiddleC - 6, 3.0);
 	floppies[fileNumber]->StatusBits |= STATUS_BIT_HIDDEN;
@@ -479,6 +553,17 @@ static void DeleteFile(int fileNumber)
 		}
 		node = nextNode;
 	}
+}
+
+
+static void DeleteFile(int fileNumber)
+{
+	GAME_ASSERT(fileNumber >= 0 && fileNumber < NUM_SAVE_FILES);
+
+	if (!fileInfos[fileNumber].isSaveDataValid)
+		return;
+
+	PopFloppy(fileNumber);
 
 	DeleteSavedGame(fileNumber);
 
@@ -499,8 +584,18 @@ static void FileScreenDrawStuff(const QD3DSetupOutputType *setupInfo)
 #endif
 }
 
+enum
+{
+	FILE_SCREEN_STATE_AWAITING_INPUT,
+	FILE_SCREEN_STATE_TRANSITIONING_AWAY
+};
+
 static int FileScreenMainLoop()
 {
+	gFileScreenAwaitingInput = true;
+	int finalPick = -1;
+	float transitionAwayTime = 0;
+
 	while (1)
 	{
 		UpdateInput();
@@ -511,8 +606,11 @@ static int FileScreenMainLoop()
 		DoSDLMaintenance();
 
 		// See if user hovered/clicked on a pickable item
-		gHoveredPick = -1;
+
+		if (gFileScreenAwaitingInput)
 		{
+			gHoveredPick = -1;
+
 			Point		mouse;
 			TQ3Point2D	pt;
 
@@ -531,7 +629,15 @@ static int FileScreenMainLoop()
 					switch (gHoveredPick & ~kPickBits_FileNumberMask)
 					{
 						case kPickBits_Floppy:
-							return gHoveredPick & kPickBits_FileNumberMask;
+							finalPick = gHoveredPick & kPickBits_FileNumberMask;
+							gFileScreenAwaitingInput = false;
+							transitionAwayTime = 1.0f;
+
+							if (gCurrentFileScreenType == FILE_SELECT_SCREEN_TYPE_SAVE)
+							{
+								PopFloppy(finalPick);
+							}
+							break;
 
 						case kPickBits_Delete:
 							DeleteFile(gHoveredPick & kPickBits_FileNumberMask);
@@ -545,11 +651,17 @@ static int FileScreenMainLoop()
 					}
 				}
 			}
-		}
 
-		if (GetNewKeyState(kVK_Escape))
+			if (GetNewKeyState(kVK_Escape))
+			{
+				return -1;
+			}
+		}
+		else
 		{
-			return -1;
+			transitionAwayTime -= gFramesPerSecondFrac;
+			if (transitionAwayTime <= 0)
+				return finalPick;
 		}
 	}
 }
