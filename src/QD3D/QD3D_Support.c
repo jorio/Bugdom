@@ -14,7 +14,6 @@
 #include "3dmath.h"
 
 extern	WindowPtr			gCoverWindow;
-extern	long		gScreenXOffset,gScreenYOffset;
 extern	Boolean		gShowDebug;
 extern	Byte		gDemoMode;
 extern	PrefsType	gGamePrefs;

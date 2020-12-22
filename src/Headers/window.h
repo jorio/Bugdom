@@ -26,7 +26,6 @@ extern	void GammaFadeIn(void);
 extern	void GammaOn(void);
 
 extern	void GameScreenToBlack(void);
-extern	void CleanScreenBorder(void);
 
 void DoLockPixels(GWorldPtr world);
 void DumpGWorldTransparent(GWorldPtr thisWorld, WindowPtr thisWindow,Rect *destRect);

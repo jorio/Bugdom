@@ -38,12 +38,7 @@ static void MoveFadeEvent(ObjNode *theNode);
 /*     VARIABLES      */
 /**********************/
 
-long					gScreenXOffset,gScreenYOffset;
 extern WindowPtr		gCoverWindow;
-#if 0  // Source port removal
-DSpContextReference 	gDisplayContext = nil;
-#endif
-Boolean					gLoadedDrawSprocket = false;
 
 
 float		gGammaFadePercent;
@@ -52,9 +47,6 @@ float		gGammaFadePercent;
 
 void InitWindowStuff(void)
 {
-	gScreenXOffset = 0;										// calc offsets to center it
-	gScreenYOffset = 0;	
-		
 	SetPort(GetWindowPort(gCoverWindow));
 	ForeColor(whiteColor);
 	BackColor(blackColor);
@@ -239,51 +231,6 @@ void GameScreenToBlack(void)
 		EraseRect(&r);
 	}
 }
-
-
-/*********************** CLEAN SCREEN BORDER ****************************/
-//
-// This clears to black the border around the QD3D view and the cover window's rect.
-//
-
-void CleanScreenBorder(void)
-{
-#if 0
-Rect	r;
-
-	if (gAdditionalClipping == 0)
-		return;
-
-	SetPort(GetWindowPort(gCoverWindow));
-	BackColor(blackColor);
-	
-			/* TOP MARGIN */
-			
-	r = gCoverWindow->portRect;
-	r.bottom = r.top + (gAdditionalClipping*.75);
-	EraseRect(&r);
-
-			/* BOTTOM MARGIN */
-			
-	r = gCoverWindow->portRect;
-	r.top = r.bottom - (gAdditionalClipping*.75);
-	EraseRect(&r);
-
-			/* LEFT MARGIN */
-			
-	r = gCoverWindow->portRect;
-	r.right = r.left + gAdditionalClipping;
-	EraseRect(&r);
-	
-			/* RIGHT MARGIN */
-			
-	r = gCoverWindow->portRect;
-	r.left = r.right - gAdditionalClipping;
-	EraseRect(&r);
-#endif	
-}
-
-
 
 #pragma mark -
 
