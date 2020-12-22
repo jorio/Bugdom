@@ -353,10 +353,13 @@ typedef struct
 	Boolean	playerRelativeKeys;
 	Boolean fullscreen;
 	Boolean	vsync;
+	Boolean antiAliasing;
 	Boolean textureFiltering;
 	Byte	mouseSensitivityLevel;
 	Byte	terrainTextureDetail;
 	Boolean	hideBottomBarInNonBossLevels;
+	Boolean useCyclorama;
+	Boolean useAutoFade;
 	Byte	reserved[8];
 }PrefsType;
 

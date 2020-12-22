@@ -273,9 +273,12 @@ FSSpec		spec;
 	gGamePrefs.playerRelativeKeys	= false;	
 	gGamePrefs.fullscreen			= true;
 	gGamePrefs.vsync				= true;
+	gGamePrefs.antiAliasing			= false;
 	gGamePrefs.textureFiltering		= true;
 	gGamePrefs.mouseSensitivityLevel= DEFAULT_MOUSE_SENSITIVITY_LEVEL;
 	gGamePrefs.hideBottomBarInNonBossLevels = true;
+	gGamePrefs.useCyclorama			= true;
+	gGamePrefs.useAutoFade			= true;
 	gGamePrefs.terrainTextureDetail = TERRAIN_TEXTURE_PREF_1_LOD_160;
 				
 	LoadPrefs(&gGamePrefs);							// attempt to read from prefs file		
@@ -498,9 +501,9 @@ QD3DSetupInputType	viewDef;
 	gPlayerMode 			= PLAYER_MODE_BUG;						// init this here so infobar looks correct
 	gPlayerObj 				= nil;
 
-	gAutoFadeStartDist	= gLevelAutoFadeStart[gLevelType];
-	gUseCyclorama		 = gLevelHasCyc[gLevelType];
-	gDrawLensFlare		= gLevelHasLenseFlare[gLevelType];
+	gUseCyclorama			= gGamePrefs.useCyclorama && gLevelHasCyc[gLevelType];
+	gAutoFadeStartDist		= gGamePrefs.useAutoFade ? gLevelAutoFadeStart[gLevelType] : 0;
+	gDrawLensFlare			= gLevelHasLenseFlare[gLevelType];
 		
 	gDoCeiling				= gLevelHasCeiling[gLevelType];
 	gSuperTileActiveRange	= gLevelSuperTileActiveRange[gLevelType];
