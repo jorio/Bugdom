@@ -60,12 +60,9 @@ enum
 /*    VARIABLES      */
 /*********************/
 
-TQ3GroupPosition	gMyLightPosition = 0;
-
 long		gMyStartX,gMyStartZ;
 TQ3Point3D	gMyCoord;
 ObjNode		*gPlayerObj,*gMyBuddy;
-u_short		gMyLatestPathTileNum = 0, gMyLatestTileAttribs = 0;
 float		gShieldTimer = 0,gShieldRingTick = 0;
 short		gShieldParticleGroupA,gShieldParticleGroupB;
 u_long		gShieldMagicA, gShieldMagicB;
@@ -92,12 +89,10 @@ void InitPlayerAtStartOfLevel(void)
 {
 			/* SET SOME GLOBALS */
 			
-	gMyLatestPathTileNum = 	gMyLatestTileAttribs = 0;		
 	gShieldTimer = 0;			
 	gShieldRingTick = 0;	
 	gShieldChannel = -1;
 	gMyBuddy = nil;
-	gMyLightPosition = 0;	
 	gShieldRot = 0;
 	gCurrentLiquidType = LIQUID_WATER;
 	gTorchPlayer = false;

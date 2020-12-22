@@ -17,7 +17,6 @@ extern	Byte			gPlayerMode;
 extern	TQ3Point3D		gCoord;
 extern	TQ3Vector3D		gDelta;
 extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	u_short			gMyLatestPathTileNum,gMyLatestTileAttribs;
 extern	QD3DSetupOutputType		*gGameViewInfoPtr;
 extern	TQ3Vector3D		gRecentTerrainNormal[2];
 extern	float			gPlayerMaxSpeed,gPlayerCurrentWaterY;
