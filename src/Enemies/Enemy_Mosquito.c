@@ -224,6 +224,7 @@ float	r,aim;
 					if (theNode->Skeleton->AnimNum != MOSQUITO_ANIM_FLY)
 						MorphToSkeletonAnim(theNode->Skeleton, MOSQUITO_ANIM_FLYFULL, 6);
 				}
+				gCoord.y = GetTerrainHeightAtCoord(gCoord.x, gCoord.z, FLOOR) + MOSQUITO_FLIGHT_HEIGHT;	// calc y coord
 				gCoord.y += MosquitoWobbleOff;
 				break;
 	
