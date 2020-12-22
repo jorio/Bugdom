@@ -6,6 +6,10 @@
 #define __INPUT_H
 
 
+#define NUM_MOUSE_SENSITIVITY_LEVELS		5
+#define DEFAULT_MOUSE_SENSITIVITY_LEVEL		(NUM_MOUSE_SENSITIVITY_LEVELS/2)
+
+
 			/* ASCII */
 			
 #define	CHAR_RETURN			0x0d	/* ASCII code for Return key */

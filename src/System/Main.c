@@ -274,7 +274,7 @@ FSSpec		spec;
 	gGamePrefs.fullscreen			= true;
 	gGamePrefs.vsync				= true;
 	gGamePrefs.textureFiltering		= true;
-	gGamePrefs.mouseSensitivity		= 0.05f;
+	gGamePrefs.mouseSensitivityLevel= DEFAULT_MOUSE_SENSITIVITY_LEVEL;
 	gGamePrefs.hideBottomBarInNonBossLevels = true;
 	gGamePrefs.terrainTextureDetail = TERRAIN_TEXTURE_PREF_1_LOD_160;
 				

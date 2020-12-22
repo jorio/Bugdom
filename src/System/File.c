@@ -555,6 +555,16 @@ char		header[PREFS_HEADER_LENGTH + 1];
 	}
 	
 	FSClose(refNum);			
+
+
+				/* SAFETY CHECKS */
+
+	if (prefBlock->mouseSensitivityLevel >= NUM_MOUSE_SENSITIVITY_LEVELS)
+	{
+		DoAlert("Illegal mouse sensitivity level in prefs!");
+		prefBlock->mouseSensitivityLevel = DEFAULT_MOUSE_SENSITIVITY_LEVEL;
+	}
+
 	
 	return(noErr);
 }

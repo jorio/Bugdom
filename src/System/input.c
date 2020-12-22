@@ -24,6 +24,15 @@ static Boolean WeAreFrontProcess(void);
 /*    CONSTANTS             */
 /****************************/
 
+static const float kMouseSensitivityTable[NUM_MOUSE_SENSITIVITY_LEVELS] =
+{
+	 12 * 0.001f,
+	 25 * 0.001f,
+	 50 * 0.001f,
+	 75 * 0.001f,
+	100 * 0.001f,
+};
+
 
 
 /**********************/
@@ -409,8 +418,9 @@ void GetMouseDelta(float *dx, float *dy)
 		return;
 	}
 
-	*dx = 1600.0f * gFramesPerSecondFrac * gMouseDeltaX * gGamePrefs.mouseSensitivity;
-	*dy = 1600.0f * gFramesPerSecondFrac * gMouseDeltaY * gGamePrefs.mouseSensitivity;
+	const float mouseSensitivity = 1600.0f * kMouseSensitivityTable[gGamePrefs.mouseSensitivityLevel];
+	*dx = gFramesPerSecondFrac * gMouseDeltaX * mouseSensitivity;
+	*dy = gFramesPerSecondFrac * gMouseDeltaY * mouseSensitivity;
 }
 
 

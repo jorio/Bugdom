@@ -354,7 +354,7 @@ typedef struct
 	Boolean fullscreen;
 	Boolean	vsync;
 	Boolean textureFiltering;
-	float	mouseSensitivity;
+	Byte	mouseSensitivityLevel;
 	Byte	terrainTextureDetail;
 	Boolean	hideBottomBarInNonBossLevels;
 	Byte	reserved[8];
