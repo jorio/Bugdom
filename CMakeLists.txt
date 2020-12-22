@@ -166,6 +166,7 @@ set(GAME_HEADERS
 	${GAME_SRCDIR}/Headers/textmesh.h
 	${GAME_SRCDIR}/Headers/tga.h
 	${GAME_SRCDIR}/Headers/pickablequads.h
+	${GAME_SRCDIR}/Headers/tween.h
 )
 
 set(GAME_GLUE_SOURCES
@@ -180,6 +181,7 @@ set(GAME_GLUE_SOURCES
 	${GAME_SRCDIR}/Glue/Q3FSSpecStorage.cpp
 	${GAME_SRCDIR}/Glue/TextMesh.c
 	${GAME_SRCDIR}/Glue/TGA.c
+	${GAME_SRCDIR}/Glue/Tween.c
 )
 
 set(GAME_ALL_SOURCES

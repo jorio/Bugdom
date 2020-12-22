@@ -103,6 +103,7 @@ extern "C"
 #include "fileselect.h"
 #include "textmesh.h"
 #include "tga.h"
+#include "tween.h"
 
 #ifdef __cplusplus
 };
