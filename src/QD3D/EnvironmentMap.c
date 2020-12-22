@@ -11,7 +11,6 @@
 
 #include "3dmath.h"
 
-extern	Boolean	gCanDo_frsqrte;
 extern	TQ3Matrix4x4 		gWorkMatrix;
 extern	ObjNode			*gFirstNodePtr;
 extern	QD3DSetupOutputType		*gGameViewInfoPtr;

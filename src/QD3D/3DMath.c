@@ -69,67 +69,38 @@ Byte	i,j;
 
 
 /******************** FAST NORMALIZE VECTOR ***********************/
-//
-// My special version here will use the frsqrte opcode if available.
-// It does Newton-Raphson refinement to get a good result.
-//
+// Source port note: original started with PowerPC's frsqrte and refined it with Newton-Raphson.
+// Changed to sqrtf.
 
 void FastNormalizeVector(float vx, float vy, float vz, TQ3Vector3D *outV)
 {
-float	temp;
-float	isqrt, temp1, temp2;		
-	
 	if ((vx == 0.0f) && (vy == 0.0f) && (vz == 0.0f))		// check for zero length vectors
 	{
 		outV->x = outV->y = outV->z = 0;
 		return;
 	}
-	
-	temp = vx * vx;
-	temp += vy * vy;
-	temp += vz * vz;
-	
-	isqrt = __frsqrte (temp);					// isqrt = first approximation of 1/sqrt() 
-	temp1 = temp * (float)(-.5);				// temp1 = -a / 2 		
-	temp2 = isqrt * isqrt;						// temp2 = sqrt^2
-	temp1 *= isqrt;								// temp1 = -a * sqrt / 2 
-	isqrt *= (float)(3.0/2.0);					// isqrt = 3 * sqrt / 2 
-	temp = isqrt + temp1 * temp2;				// isqrt = (3 * sqrt - a * sqrt^3) / 2 
-	
-	outV->x = vx * temp;						// return results
-	outV->y = vy * temp;
-	outV->z = vz * temp;
+
+	float invmag = 1.0f / (sqrtf(vx*vx + vy*vy + vz*vz) + FLT_MIN);
+	outV->x = vx * invmag;
+	outV->y = vy * invmag;
+	outV->z = vz * invmag;
 }
 
 /******************** FAST NORMALIZE VECTOR 2D ***********************/
-//
-// My special version here will use the frsqrte opcode if available.
-// It does Newton-Raphson refinement to get a good result.
-//
+// Source port note: original started with PowerPC's frsqrte and refined it with Newton-Raphson.
+// Changed to sqrtf.
 
 void FastNormalizeVector2D(float vx, float vy, TQ3Vector2D *outV)
 {
-float	temp;
-float	isqrt, temp1, temp2;		
-	
 	if ((vx == 0.0f) && (vy == 0.0f))			// check for zero length vectors
 	{
 		outV->x = outV->y = 0;
 		return;
 	}
-	
-	temp = vx * vx;
-	temp += vy * vy;
-	
-	isqrt = __frsqrte (temp);					// isqrt = first approximation of 1/sqrt() 
-	temp1 = temp * (float)(-.5);				// temp1 = -a / 2 		
-	temp2 = isqrt * isqrt;						// temp2 = sqrt^2
-	temp1 *= isqrt;								// temp1 = -a * sqrt / 2 
-	isqrt *= (float)(3.0/2.0);					// isqrt = 3 * sqrt / 2 
-	temp = isqrt + temp1 * temp2;				// isqrt = (3 * sqrt - a * sqrt^3) / 2 
-	
-	outV->x = vx * temp;						// return results
-	outV->y = vy * temp;
+
+	float invmag = 1.0f / (sqrtf(vx*vx + vy*vy) + FLT_MIN);
+	outV->x = vx * invmag;
+	outV->y = vy * invmag;
 }
 
 
@@ -142,8 +113,8 @@ float CalcQuickDistance(float x1, float y1, float x2, float y2)
 {
 float	diffX,diffY;
 
-	diffX = fabs(x1-x2);
-	diffY = fabs(y1-y2);
+	diffX = fabsf(x1-x2);
+	diffY = fabsf(y1-y2);
 
 	if (diffX > diffY)
 	{
@@ -209,10 +180,10 @@ float CalcDistance(float x1, float y1, float x2, float y2)
 {
 float	diffX,diffY;
 
-	diffX = fabs(x1-x2);
-	diffY = fabs(y1-y2);
+	diffX = fabsf(x1-x2);
+	diffY = fabsf(y1-y2);
 
-	return(sqrt(diffX*diffX + diffY*diffY));
+	return sqrtf(diffX*diffX + diffY*diffY);
 }
 
 
