@@ -29,7 +29,7 @@ extern 	ObjNode 	*gFirstNodePtr;
 /*    PROTOTYPES            */
 /****************************/
 
-static void SetupFileScreen(int type);
+static void SetupFileScreen(void);
 static int FileScreenMainLoop(void);
 
 
@@ -80,6 +80,7 @@ enum
 	kPickBits_FileNumberMask	= 0x0000FFFF,
 	kPickBits_Floppy			= 0x00010000,
 	kPickBits_Delete			= 0x00020000,
+	kPickBits_DontSave			= 0x00040000,
 };
 
 
@@ -93,6 +94,9 @@ static ObjNode* floppies[3];
 /*********************/
 
 
+static int 			gCurrentFileScreenType = FILE_SELECT_SCREEN_TYPE_LOAD;
+
+
 static TQ3Point3D	gBonusCameraFrom = {0, 0, 250 };
 
 
@@ -100,13 +104,15 @@ static TQ3Point3D	gBonusCameraFrom = {0, 0, 250 };
 
 int DoFileSelectScreen(int type)
 {
+	gCurrentFileScreenType = type;
+
 	/*********/
 	/* SETUP */
 	/*********/
 
 	InitCursor();
 
-	SetupFileScreen(type);
+	SetupFileScreen();
 
 	QD3D_CalcFramesPerSecond();
 
@@ -134,32 +140,55 @@ int DoFileSelectScreen(int type)
 
 /****************** SETUP FILE SCREEN **************************/
 
+static void MoveFloppy_Bounce(ObjNode* theNode)
+{
+	theNode->SpecialF[0] += gFramesPerSecondFrac * 5.0f;
+	theNode->Rot.y = cosf(0.5f * theNode->SpecialF[0]) * 0.53f;
+	theNode->Rot.z = 0;
+	theNode->Coord.y = theNode->InitCoord.y + fabsf(cosf(1.0f*theNode->SpecialF[0])) * 7.0f;
+}
+
+static void MoveFloppy_Shiver(ObjNode* theNode)
+{
+	theNode->SpecialF[0] += gFramesPerSecondFrac * 9.0f;
+	float t = theNode->SpecialF[0];
+	theNode->Rot.y = 0;
+	theNode->Rot.z = cosf(1.2f * t) * 0.1f * sinf(3.0f * t);
+}
+
+static void MoveFloppy_Neutral(ObjNode* theNode)
+{
+
+	theNode->Rot.y = 0;
+	theNode->Rot.z = 0;
+	theNode->SpecialF[0] = 0;
+	theNode->Coord.y = theNode->InitCoord.y;
+}
+
 static void MoveFloppy(ObjNode *theNode)
 {
-	float	fps = gFramesPerSecondFrac;
-
 	int fileNumber = theNode->SpecialL[0];
 
-	if (gHoveredPick == (kPickBits_Floppy | fileNumber))
+	if (	!(gHoveredPick & kPickBits_DontSave) &&
+			(gHoveredPick & kPickBits_FileNumberMask) == fileNumber)
 	{
-		theNode->SpecialF[0] += fps * 5.0f;
-		theNode->Rot.y = cosf(0.5f * theNode->SpecialF[0]) * 0.53f;
-		theNode->Rot.z = 0;
-		theNode->Coord.y = theNode->InitCoord.y + fabsf(cosf(1.0f*theNode->SpecialF[0])) * 7.0f;
-	}
-	else if (gHoveredPick == (kPickBits_Delete | fileNumber) && fileInfos[fileNumber].isSaveDataValid)
-	{
-		theNode->SpecialF[0] += fps * 9.0f;
-		float t = theNode->SpecialF[0];
-		theNode->Rot.y = 0;
-		theNode->Rot.z = cosf(1.2f * t) * 0.1f * sinf(3.0f * t);
+		if (gCurrentFileScreenType == FILE_SELECT_SCREEN_TYPE_LOAD)
+		{
+			if (gHoveredPick & kPickBits_Floppy)
+				MoveFloppy_Bounce(theNode);
+			else if (gHoveredPick & kPickBits_Delete && fileInfos[fileNumber].isSaveDataValid)
+				MoveFloppy_Shiver(theNode);
+			else
+				MoveFloppy_Neutral(theNode);
+		}
+		else
+		{
+			MoveFloppy_Shiver(theNode);
+		}
 	}
 	else
 	{
-		theNode->Rot.y = 0;
-		theNode->Rot.z = 0;
-		theNode->SpecialF[0] = 0;
-		theNode->Coord.y = theNode->InitCoord.y;
+		MoveFloppy_Neutral(theNode);
 	}
 
 	UpdateObjectTransforms(theNode);
@@ -167,20 +196,23 @@ static void MoveFloppy(ObjNode *theNode)
 
 static void MakeFileObjects(const int fileNumber, bool createPickables)
 {
-	GAME_ASSERT(fileNumber < NUM_SAVE_FILES);
+	bool canDelete = gCurrentFileScreenType == FILE_SELECT_SCREEN_TYPE_LOAD;
+
+	GAME_ASSERT(fileNumber >= 0 && fileNumber < NUM_SAVE_FILES);
 
 	SaveGameType saveData;
 	OSErr saveDataErr = GetSaveGameData(fileNumber, &saveData);
 	bool saveDataValid = saveDataErr == noErr;
 
-	float x = gFloppyPositions[fileNumber].x;
-	float y = gFloppyPositions[fileNumber].y;
+	const float x = gFloppyPositions[fileNumber].x;
+	const float y = gFloppyPositions[fileNumber].y;
+
+	const float gs = 1.0f;			// global scale of objects created in this function
+	const float deleteScale = 0.33f;
 
 	fileInfos[fileNumber].isSaveDataValid = saveDataValid;
 
 	short objNodeSlotID = 10000 + fileNumber;				// all nodes related to this file slot will have this
-
-	const float gs = 0.8f;
 
 	// ----------------------
 	// Make floppy
@@ -223,12 +255,10 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 	tmd.color			= gTextColor;
 	tmd.shadowColor		= gTextShadowColor;
 	tmd.slot			= objNodeSlotID;
-
-	tmd.coord.x	= x;
-	tmd.coord.y	= y+80*gs;
-	tmd.scale	= 0.6f * gs;
+	tmd.coord.x			= x;
+	tmd.coord.y			= y+80 * gs;
+	tmd.scale			= 0.6f * gs;
 	TextMesh_Create(&tmd, textBuffer);
-
 
 	if (saveDataValid)
 	{
@@ -251,23 +281,29 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 		tmd.coord.y	= y+65*gs;
 		TextMesh_Create(&tmd, textBuffer);
 
-		tmd.color		= gDeleteColor;
-		tmd.coord.x	= x+30*gs;
-		tmd.coord.y	= y+90*gs;
-		tmd.scale	= .3f * gs;
-		TextMesh_Create(&tmd, "delete");
+		if (canDelete)
+		{
+			tmd.color		= gDeleteColor;
+			tmd.coord.x		= x+30 * gs;
+			tmd.coord.y		= y+100 * gs;
+			tmd.scale		= deleteScale * gs;
+			TextMesh_Create(&tmd, "delete");
+		}
 	}
-
 
 
 	if (createPickables)
 	{
-		TQ3Point3D quadCenter = {x, y, 0};
-		PickableQuads_NewQuad(quadCenter, 85, 85, kPickBits_Floppy | fileNumber);			// Floppy
+		{
+			TQ3Point3D quadCenter = {x, y, 0};
+			PickableQuads_NewQuad(quadCenter, 90, 90, kPickBits_Floppy | fileNumber);            // Floppy
+		}
 
-		quadCenter.x += 30;
-		quadCenter.y += 90*gs;
-		PickableQuads_NewQuad(quadCenter, 20, 5, kPickBits_Delete | fileNumber);			// Delete
+		if (canDelete)
+		{
+			TQ3Point3D quadCenter = { x+30*gs, y+100*gs, 0 };
+			PickableQuads_NewQuad(quadCenter, .3f*100*gs, deleteScale*50*gs, kPickBits_Delete | fileNumber);		// Delete
+		}
 	}
 }
 
@@ -285,7 +321,7 @@ static void MoveBonusBackground(ObjNode *theNode)
 
 
 
-static void SetupFileScreen(int type)
+static void SetupFileScreen(void)
 {
 	FSSpec					spec;
 	QD3DSetupInputType		viewDef;
@@ -342,6 +378,8 @@ static void SetupFileScreen(int type)
 	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:Main.sounds", &spec);
 	LoadSoundBank(&spec, SOUND_BANK_DEFAULT);
 
+	QD3D_InitParticles();
+
 	/*******************/
 	/* MAKE BACKGROUND */
 	/*******************/
@@ -360,9 +398,13 @@ static void SetupFileScreen(int type)
 
 	/* TEXT */
 
-	float y = 110.0f;
+	TextMeshDef tmd;
+	TextMesh_FillDef(&tmd);
+	tmd.coord.y		= 110.0f;
+	tmd.color		= gTitleTextColor;
+	tmd.shadowColor	= gTextShadowColor;
 
-	if (type == FILE_SELECT_SCREEN_TYPE_LOAD)
+	if (gCurrentFileScreenType == FILE_SELECT_SCREEN_TYPE_LOAD)
 	{
 //		MakeTextWithShadow("Pick a Saved Game", 0.0f, y, 1.0f, &gTitleTextColor);
 
@@ -370,21 +412,43 @@ static void SetupFileScreen(int type)
 	}
 	else
 	{
-//		MakeTextWithShadow("Save where?", 0.0f, y, 1.0f, &gTitleTextColor);
+		//TextMesh_Create(&tmd, "Save where?");
 
-		snprintf(textBuffer, sizeof(textBuffer), "You are entering Level %d", gRealLevel+2, true);
-//		MakeTextWithShadow(textBuffer, 0, y - 25.0f, 0.5f, &gTitleTextColor);
+		snprintf(textBuffer, sizeof(textBuffer), "ENTERING LEVEL %d. SAVE WHERE?", gRealLevel+2);
+		tmd.scale	= .33f;
+		tmd.color = gTitleTextColor;
+		TextMesh_Create(&tmd, textBuffer);
+
+		tmd.coord.x = 140;
+		tmd.coord.y = -120;
+		tmd.scale = .33f;
+		tmd.color = gDeleteColor;
+		tmd.align = TEXTMESH_ALIGN_RIGHT;
+		TextMesh_Create(&tmd, "DON'T SAVE");
+
+		// Make floppy
+		gNewObjectDefinition.group 		= MODEL_GROUP_BONUS;
+		gNewObjectDefinition.type 		= BONUS_MObjType_DontSaveIcon;
+		gNewObjectDefinition.coord.x 	= tmd.coord.x + 20;
+		gNewObjectDefinition.coord.y 	= tmd.coord.y;
+		gNewObjectDefinition.coord.z 	= 0;
+		gNewObjectDefinition.slot 		= 100;
+		gNewObjectDefinition.flags 		= STATUS_BIT_CLONE;
+		gNewObjectDefinition.moveCall 	= nil;
+		gNewObjectDefinition.rot 		= 0;
+		gNewObjectDefinition.scale 		= 0.3f;
+		MakeNewDisplayGroupObject(&gNewObjectDefinition);
+
+		// Make pickable quad
+		TQ3Point3D dontSaveQuadCenter = tmd.coord;
+		dontSaveQuadCenter.x -= 15;
+		PickableQuads_NewQuad(dontSaveQuadCenter, 100, 25, kPickBits_DontSave);
 	}
 
 	for (int i = 0; i < NUM_SAVE_FILES; i++)
 	{
 		MakeFileObjects(i, true);
 	}
-
-
-	y -= 50.0f;
-	//MakeFloppy(floppyx, y-16.0f);
-//	MakeText("Continue without saving", x, y, 0.5f); y -= 16.0f;
 
 	//---------------------------------------------------------------
 
@@ -395,6 +459,8 @@ static void SetupFileScreen(int type)
 
 static void DeleteFile(int fileNumber)
 {
+	GAME_ASSERT(fileNumber >= 0 && fileNumber < NUM_SAVE_FILES);
+
 	if (!fileInfos[fileNumber].isSaveDataValid)
 		return;
 
@@ -428,6 +494,9 @@ static void FileScreenDrawStuff(const QD3DSetupOutputType *setupInfo)
 {
 	DrawObjects(setupInfo);
 	QD3D_DrawParticles(setupInfo);
+#if _DEBUG
+	PickableQuads_Draw(setupInfo->viewObject);
+#endif
 }
 
 static int FileScreenMainLoop()
@@ -459,17 +528,20 @@ static int FileScreenMainLoop()
 
 				if (FlushMouseButtonPress())
 				{
-					if (gHoveredPick & kPickBits_Floppy)
+					switch (gHoveredPick & ~kPickBits_FileNumberMask)
 					{
-						return gHoveredPick & kPickBits_FileNumberMask;
-					}
-					else if (gHoveredPick & kPickBits_Delete)
-					{
-						DeleteFile(gHoveredPick & kPickBits_FileNumberMask);
-					}
-					else
-					{
-						ShowSystemErr_NonFatal(gHoveredPick);
+						case kPickBits_Floppy:
+							return gHoveredPick & kPickBits_FileNumberMask;
+
+						case kPickBits_Delete:
+							DeleteFile(gHoveredPick & kPickBits_FileNumberMask);
+							break;
+
+						case kPickBits_DontSave:
+							return -1;
+
+						default:
+							ShowSystemErr_NonFatal(gHoveredPick);
 					}
 				}
 			}
