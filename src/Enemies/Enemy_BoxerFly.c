@@ -209,7 +209,6 @@ float	r,aim;
 				
 				gCoord.x += gDelta.x * fps;
 				gCoord.z += gDelta.z * fps;
-				gCoord.y = GetTerrainHeightAtCoord(gCoord.x, gCoord.z, FLOOR) + BOXERFLY_FLIGHT_HEIGHT;	// calc y coord
 
 						/* SEE IF THERE */
 						
@@ -235,8 +234,6 @@ float	r,aim;
 				
 				gCoord.x += gDelta.x * fps;
 				gCoord.z += gDelta.z * fps;
-				gCoord.y = GetTerrainHeightAtCoord(gCoord.x, gCoord.z, FLOOR) + BOXERFLY_FLIGHT_HEIGHT;	// calc y coord
-		
 				
 				/* SEE IF CLOSE ENOUGH TO PUNCH */
 					
@@ -260,7 +257,8 @@ float	r,aim;
 
 
 				/* DO WOBBLE */
-				
+
+	gCoord.y = GetTerrainHeightAtCoord(gCoord.x, gCoord.z, FLOOR) + BOXERFLY_FLIGHT_HEIGHT;	// calc y coord
 	gCoord.y += BoxerFlyWobbleOff;
 
 
