@@ -45,6 +45,172 @@ static char textBuffer[512];
 static TQ3Point3D	gBonusCameraFrom = {0, 0, 250 };
 
 
+
+
+typedef struct
+{
+	Byte* ptr;
+	const char* label;
+	Byte subtitleShownForValue;
+	const char* subtitle;
+	void (*callback)(void);
+	unsigned int nChoices;
+	const char* choices[8];
+	float y;
+
+} SettingEntry;
+
+static unsigned int PositiveModulo(int value, unsigned int m)
+{
+	int mod = value % (int) m;
+	if (mod < 0)
+	{
+		mod += m;
+	}
+	return mod;
+}
+
+static void SettingEntry_Cycle(SettingEntry* entry, int delta)
+{
+	if (entry->nChoices == 0 && entry->choices)
+	{
+		// compute nChoices
+		for (entry->nChoices = 0; entry->choices[entry->nChoices]; entry->nChoices++);
+	}
+
+
+	unsigned int value = (unsigned int) *entry->ptr;
+
+
+	value = PositiveModulo(value + delta, entry->nChoices);
+	*entry->ptr = value;
+	if (entry->callback)
+	{
+		entry->callback();
+	}
+}
+
+
+#define CHOICES_NO_YES {"NO","YES",NULL}
+
+static SettingEntry gSettingEntries[] =
+{
+	{
+		&gGamePrefs.easyMode,
+		"KIDDIE MODE",
+		1, "PLAYER TAKES LESS DAMAGE",
+		NULL,
+		0,
+		CHOICES_NO_YES,
+		0,
+	},
+	{
+		&gGamePrefs.mouseSensitivityLevel,
+		"MOUSE SENSITIVITY",
+		0, NULL,
+		NULL,
+		0,
+		{"VERY LOW", "LOW", "NORMAL", "HIGH", "VERY HIGH", NULL},
+		0,
+	},
+	{
+		&gGamePrefs.fullscreen,
+		"FULLSCREEN",
+		0, NULL,
+		SetFullscreenMode,
+		0,
+		CHOICES_NO_YES,
+		0,
+	},
+	{
+		&gGamePrefs.vsync,
+		"V-SYNC",
+		0, NULL,
+		NULL,
+		0,
+		CHOICES_NO_YES,
+		0,
+	},
+	{
+		&gGamePrefs.antiAliasing,
+		"ANTI-ALIASING",
+		0, NULL,
+		NULL,
+		0,
+		{"NO","YES",NULL},
+		0,
+	},
+	{
+		&gGamePrefs.useCyclorama,
+		"CYCLORAMA",
+		0, "THE ''ATI RAGE II'' LOOK",
+		NULL,
+		0,
+		CHOICES_NO_YES,
+		0,
+	},
+	{
+		&gGamePrefs.useAutoFade,
+		"FADE FARAWAY OBJS",
+		1, "EXPERIMENTAL. MAY DEGRADE PERFORMANCE.",
+		NULL,
+		0,
+		CHOICES_NO_YES,
+		0,
+	},
+	/*
+	{
+		&gGamePrefs.textureFiltering,
+		"TEXTURE FILTERING",
+		0, NULL,
+		NULL,
+		0,
+		CHOICES_NO_YES,
+		0,
+	},
+	*/
+	/*
+	{
+		&gGamePrefs.terrainTextureDetail,
+		"TERRAIN QUALITY",
+		"3 LODs, 128x128 MAX",
+		NULL,
+		0,
+		{ "LOW (VANILLA)", "MEDIUM", "HIGH" },
+	},
+	 */
+	/*
+	{
+		&gGamePrefs.hideBottomBarInNonBossLevels,
+		"BOTTOM BAR",
+		NULL,
+		NULL,
+		0,
+		{"ALWAYS SHOWN","ONLY WHEN NEEDED",NULL},
+	},
+	{
+		&gGamePrefs.playerRelativeKeys,
+		"PLAYER-RELATIVE KEYS",
+		NULL,
+		NULL,
+		0,
+		CHOICES_NO_YES
+	},
+	 */
+	{
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		0,
+		NULL,
+		0,
+	}
+};
+
+
+
+
 /********************** DO BONUS SCREEN *************************/
 
 void DoSettingsScreen(void)
@@ -92,6 +258,72 @@ static void MoveBonusBackground(ObjNode *theNode)
 	UpdateObjectTransforms(theNode);
 }
 
+static void MakeSettingsObjects(void)
+{
+	/* BACKGROUND */
+
+	gNewObjectDefinition.group 		= MODEL_GROUP_BONUS;
+	gNewObjectDefinition.type 		= BONUS_MObjType_Background;
+	gNewObjectDefinition.coord		= gBonusCameraFrom;
+	gNewObjectDefinition.slot 		= 999;
+	gNewObjectDefinition.flags 		= STATUS_BIT_NOFOG|STATUS_BIT_NULLSHADER /*| STATUS_BIT_HIDDEN*/;
+	gNewObjectDefinition.moveCall 	= MoveBonusBackground;
+	gNewObjectDefinition.rot 		= 0;
+	gNewObjectDefinition.scale 		= 30.0;
+	MakeNewDisplayGroupObject(&gNewObjectDefinition);
+
+	/* TEXT */
+
+
+	TextMeshDef tmd;
+	TextMesh_FillDef(&tmd);
+	tmd.coord.y += 110;
+
+	TextMesh_Create(&tmd, "Bugdom Settings");
+	tmd.coord.y -= 32;
+
+
+	float XSPREAD = 100;
+
+	float LH = 16;
+	tmd.align = TEXTMESH_ALIGN_LEFT;
+	tmd.coord.x = -XSPREAD;
+	tmd.scale = 0.3f;
+
+	for (int i = 0; gSettingEntries[i].ptr; i++)
+	{
+		SettingEntry* entry = &gSettingEntries[i];
+
+		tmd.slot = 100;
+
+		tmd.coord.x = 0;
+		PickableQuads_NewQuad(tmd.coord, XSPREAD*2.0f, LH*0.9f, i);
+
+		tmd.coord.x = -XSPREAD;
+		tmd.align = TEXTMESH_ALIGN_LEFT;
+		TextMesh_Create(&tmd, entry->label);
+
+		tmd.slot = 10000 + i;
+		tmd.coord.x = XSPREAD/2.0f;
+		tmd.align = TEXTMESH_ALIGN_CENTER;
+		TextMesh_Create(&tmd, entry->choices[*entry->ptr]);
+
+		tmd.slot = 100;
+		//if (entry->subtitle)
+		{
+			tmd.coord.y -= LH / 2.0f;
+			if (entry->subtitle && *entry->ptr == entry->subtitleShownForValue)
+			{
+				float scaleBackup = tmd.scale;
+				tmd.scale *= 0.5f;
+				TextMesh_Create(&tmd, entry->subtitle);
+				tmd.scale = scaleBackup;
+			}
+		}
+		tmd.coord.y -= LH;
+
+	}
+}
 
 static void SetupSettingsScreen(void)
 {
@@ -154,25 +386,7 @@ static void SetupSettingsScreen(void)
 	/* MAKE BACKGROUND */
 	/*******************/
 
-	/* BACKGROUND */
-
-	gNewObjectDefinition.group 		= MODEL_GROUP_BONUS;
-	gNewObjectDefinition.type 		= BONUS_MObjType_Background;
-	gNewObjectDefinition.coord		= gBonusCameraFrom;
-	gNewObjectDefinition.slot 		= 999;
-	gNewObjectDefinition.flags 		= STATUS_BIT_NOFOG|STATUS_BIT_NULLSHADER;
-	gNewObjectDefinition.moveCall 	= MoveBonusBackground;
-	gNewObjectDefinition.rot 		= 0;
-	gNewObjectDefinition.scale 		= 30.0;
-	MakeNewDisplayGroupObject(&gNewObjectDefinition);
-
-	/* TEXT */
-
-
-	TextMeshDef tmd;
-	TextMesh_FillDef(&tmd);
-
-	TextMesh_Create(&tmd, "Settings");
+	MakeSettingsObjects();
 
 	//---------------------------------------------------------------
 
@@ -211,28 +425,18 @@ static int SettingsScreenMainLoop()
 			pt.y = mouse.v;
 
 			TQ3Int32 pickID;
-			/*
 			if (PickableQuads_GetPick(gGameViewInfoPtr->viewObject, pt, &pickID))
 			{
 				gHoveredPick = pickID;
 
 				if (FlushMouseButtonPress())
 				{
-					if (gHoveredPick & kPickBits_Floppy)
-					{
-						return gHoveredPick & kPickBits_FileNumberMask;
-					}
-					else if (gHoveredPick & kPickBits_Delete)
-					{
-						DeleteFile(gHoveredPick & kPickBits_FileNumberMask);
-					}
-					else
-					{
-						ShowSystemErr_NonFatal(gHoveredPick);
-					}
+					SettingEntry_Cycle(&gSettingEntries[pickID], 1);
+					DeleteAllObjects();
+					PickableQuads_DisposeAll();
+					MakeSettingsObjects();
 				}
 			}
-			 */
 		}
 
 		if (GetNewKeyState(kVK_Escape))
