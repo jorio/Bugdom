@@ -9,8 +9,6 @@
 /*    EXTERNALS             */
 /****************************/
 
-#include "3dmath.h"
-
 extern	float				gFramesPerSecondFrac,gFramesPerSecond;
 extern	TQ3Point3D			gCoord;
 extern	WindowPtr			gCoverWindow;
@@ -82,11 +80,14 @@ static float	gSD2[MAX_DIGITS_IN_SCORE];
 
 ObjNode	*gSaveYes,*gSaveNo;
 
+static float	gMoveTextUpwards;
+
 /********************** DO BONUS SCREEN *************************/
 
 void DoBonusScreen(void)
 {
 Boolean wantToSave = false;
+
 	
 			/*********/
 			/* SETUP */
@@ -156,6 +157,10 @@ int						i;
 
 	PlaySong(SONG_BONUS,false);
 
+	// Reset move text upwards
+	gMoveTextUpwards = 0;
+
+
 			/*************/
 			/* MAKE VIEW */
 			/*************/
@@ -199,6 +204,8 @@ int						i;
 	
 	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:bonus.sounds", &spec);
 	LoadSoundBank(&spec, SOUND_BANK_BONUS);
+
+	TextMesh_Load();
 
 			/*******************/
 			/* MAKE BACKGROUND */
@@ -412,6 +419,9 @@ float	fps = gFramesPerSecondFrac;
 
 	theNode->Coord.z = cos(theNode->SpecialF[1] += fps*4.7f) * 10.0f;
 	theNode->Rot.x = sin(theNode->SpecialF[2] += fps*3.0f) * .5f;
+
+	theNode->Coord.y = theNode->InitCoord.y + gMoveTextUpwards;
+
 	UpdateObjectTransforms(theNode);
 }
 
@@ -427,6 +437,9 @@ int		i;
 
 	theNode->Coord.z = cos(gBD1[i] += fps*3.7f) * 8.0f;
 	theNode->Rot.x = sin(gBD2[i] += fps*2.0f) * .3f;
+
+	theNode->Coord.y = theNode->InitCoord.y + gMoveTextUpwards;
+
 	UpdateObjectTransforms(theNode);
 }
 
@@ -749,7 +762,7 @@ TQ3StyleObject	pick;
 	gNewObjectDefinition.group 		= MODEL_GROUP_BONUS;	
 	gNewObjectDefinition.type 		= BONUS_MObjType_SaveIcon;	
 	gNewObjectDefinition.coord.x 	= -50;
-	gNewObjectDefinition.coord.y 	= -110;
+	gNewObjectDefinition.coord.y 	= -100-70;
 	gNewObjectDefinition.coord.z 	= 0;
 	gNewObjectDefinition.slot 		= 100;
 	gNewObjectDefinition.flags 		= 0;
@@ -767,7 +780,7 @@ TQ3StyleObject	pick;
 	gNewObjectDefinition.group 		= MODEL_GROUP_BONUS;	
 	gNewObjectDefinition.type 		= BONUS_MObjType_DontSaveIcon;	
 	gNewObjectDefinition.coord.x 	= 50;
-	gNewObjectDefinition.coord.y 	= -110;
+	gNewObjectDefinition.coord.y 	= -100-70;
 	gNewObjectDefinition.coord.z 	= 0;
 	gNewObjectDefinition.slot 		= 100;
 	gNewObjectDefinition.flags 		= 0;
@@ -779,12 +792,44 @@ TQ3StyleObject	pick;
 	AttachGeometryToDisplayGroupObject(gSaveNo, pick);
 	Q3Object_Dispose(pick);
 
-
+	gMoveTextUpwards = 0;
+	float moveTextUpwardsTween = 0;
+	bool captionsCreatedYet = false;
 
 	InitCursor();
 	FlushEvents (everyEvent, REMOVE_ALL_EVENTS);	
 	while(true)
 	{
+		moveTextUpwardsTween += gFramesPerSecondFrac;
+
+		gMoveTextUpwards = TweenFloat(EaseInOutQuad, moveTextUpwardsTween, 1.0f, 0, 100);
+
+		if (moveTextUpwardsTween > 1.0f && !captionsCreatedYet)
+		{
+			TextMeshDef tmd;
+			TextMesh_FillDef(&tmd);
+			tmd.scale = 0.2f;
+
+			tmd.coord = (TQ3Point3D) {-50,-100,0};
+			tmd.color = (TQ3ColorRGB) {0,.5,1.0f};
+			if (gCurrentSaveSlot >= 0)
+			{
+				char message[] = "SAVE TO FILE 'X'";
+				message[sizeof(message)-3] = 'A' + gCurrentSaveSlot;
+				TextMesh_Create(&tmd, message);
+			}
+			else
+			{
+				TextMesh_Create(&tmd, "SAVE");
+			}
+
+			tmd.coord = (TQ3Point3D) {50,-100,0};
+			tmd.color = (TQ3ColorRGB) {.9f,.3f,.1f};
+			TextMesh_Create(&tmd, "DON'T SAVE YET");
+
+			captionsCreatedYet = true;
+		}
+
 		UpdateInput();
 		MoveObjects();
 		QD3D_DrawScene(gGameViewInfoPtr,DrawObjects);
