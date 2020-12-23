@@ -275,7 +275,7 @@ OSErr		err;
 	gGamePrefs.playerRelativeKeys	= false;	
 	gGamePrefs.fullscreen			= true;
 	gGamePrefs.vsync				= true;
-	gGamePrefs.antiAliasing			= false;
+	gGamePrefs.antiAliasing			= true;
 	gGamePrefs.textureFiltering		= true;
 	gGamePrefs.mouseSensitivityLevel= DEFAULT_MOUSE_SENSITIVITY_LEVEL;
 	gGamePrefs.hideBottomBarInNonBossLevels = true;

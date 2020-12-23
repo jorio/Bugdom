@@ -117,6 +117,14 @@ static SettingEntry gSettingEntries[] =
 		0, false, CHOICES_NO_YES,
 		0,
 	},
+	{
+		&gGamePrefs.antiAliasing,
+		"ANTI-ALIASING",
+		0, NULL,
+		NULL,
+		0, false, {"NO","YES",NULL},
+		0,
+	},
 #if _DEBUG
 	{
 		&gGamePrefs.vsync,
@@ -124,14 +132,6 @@ static SettingEntry gSettingEntries[] =
 		0, NULL,
 		NULL,
 		0, false, CHOICES_NO_YES,
-		0,
-	},
-	{
-		&gGamePrefs.antiAliasing,
-		"ANTI-ALIASING",
-		0, NULL,
-		NULL,
-		0, false, {"NO","YES",NULL},
 		0,
 	},
 	{
