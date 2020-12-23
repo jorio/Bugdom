@@ -15,8 +15,6 @@ extern "C"
 	extern PrefsType gGamePrefs;
 	extern short gPrefsFolderVRefNum;
 	extern long gPrefsFolderDirID;
-	extern long					gMouseDeltaX;
-	extern long					gMouseDeltaY;
 	extern long					gEatMouse;
 	Boolean gMouseButtonPressed = false;
 	extern Boolean	gMouseButtonState[3];
@@ -174,8 +172,7 @@ void DoSDLMaintenance()
 	// Reset these on every new frame
 	gTypedAsciiKey = '\0';
 	gMouseButtonPressed = false;
-	gMouseDeltaX = 0;
-	gMouseDeltaY = 0;
+	MouseSmoothing_StartFrame();
 
 	Uint32 mouseButtons = SDL_GetMouseState(nullptr, nullptr);
 	gMouseButtonState[0] = mouseButtons & SDL_BUTTON(SDL_BUTTON_LEFT);
@@ -217,8 +214,7 @@ void DoSDLMaintenance()
 				break;
 
 			case SDL_MOUSEMOTION:
-				gMouseDeltaX += event.motion.xrel;
-				gMouseDeltaY += event.motion.yrel;
+				MouseSmoothing_OnMouseMotion(&event.motion);
 				break;
 		}
 	}
@@ -226,8 +222,7 @@ void DoSDLMaintenance()
 	if (gEatMouse)
 	{
 		gEatMouse--;
-		gMouseDeltaX = 0;
-		gMouseDeltaY = 0;
+		MouseSmoothing_ResetState(true);
 		gMouseButtonPressed = false;
 		gMouseButtonState[0] = false;
 		gMouseButtonState[1] = false;

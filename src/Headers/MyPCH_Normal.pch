@@ -104,6 +104,7 @@ extern "C"
 #include "textmesh.h"
 #include "tga.h"
 #include "tween.h"
+#include "mousesmoothing.h"
 
 #ifdef __cplusplus
 };

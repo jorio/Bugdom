@@ -39,8 +39,6 @@ static const float kMouseSensitivityTable[NUM_MOUSE_SENSITIVITY_LEVELS] =
 /*     VARIABLES      */
 /**********************/
 
-long					gMouseDeltaX = 0;
-long					gMouseDeltaY = 0;
 long					gEatMouse = 0;
 
 
@@ -419,8 +417,10 @@ void GetMouseDelta(float *dx, float *dy)
 	}
 
 	const float mouseSensitivity = 1600.0f * kMouseSensitivityTable[gGamePrefs.mouseSensitivityLevel];
-	*dx = gFramesPerSecondFrac * gMouseDeltaX * mouseSensitivity;
-	*dy = gFramesPerSecondFrac * gMouseDeltaY * mouseSensitivity;
+	int mdx, mdy;
+	MouseSmoothing_GetDelta(&mdx, &mdy);
+	*dx = gFramesPerSecondFrac * mdx * mouseSensitivity;
+	*dy = gFramesPerSecondFrac * mdy * mouseSensitivity;
 }
 
 
