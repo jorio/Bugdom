@@ -1027,6 +1027,13 @@ float	refDist,volumeFactor;
 u_long	volume,left,right;
 u_long	maxLeft,maxRight;
 
+			/* TONE DOWN ANNOYING BUZZ EFFECT */
+
+	if (effectNum == EFFECT_BUZZ)
+	{
+		volAdjust *= .5f;
+	}
+
 	dist 	= Q3Point3D_Distance(where, &gEarCoords);		// calc dist to sound for pane 0
 		
 			/* DO VOLUME CALCS */
