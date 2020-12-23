@@ -782,7 +782,11 @@ static void CheckForCheats(void)
 		}
 
 		if (GetNewKeyState(kVK_F6))			// see if liquid invincible
+		{
 			gLiquidCheat = !gLiquidCheat;
+			MoveTo(0, 12);
+			DrawStringC(gLiquidCheat ? "Liquid cheat ON   " : "Liquid cheat OFF   ");
+		}
 
 		if (GetNewKeyState(kVK_F9))
 			gShowDebug = !gShowDebug;
