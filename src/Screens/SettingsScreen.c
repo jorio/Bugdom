@@ -55,6 +55,7 @@ typedef struct
 	const char* subtitle;
 	void (*callback)(void);
 	unsigned int nChoices;
+	bool useClovers;
 	const char* choices[8];
 	float y;
 
@@ -100,8 +101,7 @@ static SettingEntry gSettingEntries[] =
 		"KIDDIE MODE",
 		1, "PLAYER TAKES LESS DAMAGE",
 		NULL,
-		0,
-		CHOICES_NO_YES,
+		0, false, CHOICES_NO_YES,
 		0,
 	},
 	{
@@ -109,8 +109,7 @@ static SettingEntry gSettingEntries[] =
 		"MOUSE SENSITIVITY",
 		0, NULL,
 		NULL,
-		0,
-		{"VERY LOW", "LOW", "NORMAL", "HIGH", "VERY HIGH", NULL},
+		NUM_MOUSE_SENSITIVITY_LEVELS, true, NULL,
 		0,
 	},
 	{
@@ -118,8 +117,7 @@ static SettingEntry gSettingEntries[] =
 		"FULLSCREEN",
 		0, NULL,
 		SetFullscreenMode,
-		0,
-		CHOICES_NO_YES,
+		0, false, CHOICES_NO_YES,
 		0,
 	},
 	{
@@ -127,8 +125,7 @@ static SettingEntry gSettingEntries[] =
 		"V-SYNC",
 		0, NULL,
 		NULL,
-		0,
-		CHOICES_NO_YES,
+		0, false, CHOICES_NO_YES,
 		0,
 	},
 	{
@@ -136,8 +133,7 @@ static SettingEntry gSettingEntries[] =
 		"ANTI-ALIASING",
 		0, NULL,
 		NULL,
-		0,
-		{"NO","YES",NULL},
+		0, false, {"NO","YES",NULL},
 		0,
 	},
 	{
@@ -145,8 +141,7 @@ static SettingEntry gSettingEntries[] =
 		"CYCLORAMA",
 		0, "THE ''ATI RAGE II'' LOOK",
 		NULL,
-		0,
-		CHOICES_NO_YES,
+		0, false, CHOICES_NO_YES,
 		0,
 	},
 	{
@@ -154,8 +149,7 @@ static SettingEntry gSettingEntries[] =
 		"FADE FARAWAY OBJS",
 		1, "EXPERIMENTAL. MAY DEGRADE PERFORMANCE.",
 		NULL,
-		0,
-		CHOICES_NO_YES,
+		0, false, CHOICES_NO_YES,
 		0,
 	},
 	/*
@@ -202,8 +196,7 @@ static SettingEntry gSettingEntries[] =
 		NULL,
 		NULL,
 		NULL,
-		0,
-		NULL,
+		0, false, NULL,
 		0,
 	}
 };
@@ -294,9 +287,9 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 	tmd.scale = 0.3f;
 	tmd.slot = 10000 + settingID;
 
-	// Create pickable quad
 	if (firstTime)
 	{
+		// Create pickable quad
 		PickableQuads_NewQuad(tmd.coord, XSPREAD*2.0f, LH*0.9f, settingID);
 
 		// Create caption text
@@ -306,10 +299,32 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 	}
 
 	// Create value text
-	tmd.slot = 20000 + settingID;
 	tmd.coord.x = XSPREAD/2.0f;
-	tmd.align = TEXTMESH_ALIGN_CENTER;
-	TextMesh_Create(&tmd, entry->choices[*entry->ptr]);
+	if (entry->useClovers)
+	{
+		for (unsigned int i = 0; i < entry->nChoices; i++)
+		{
+			TQ3Point3D coord = tmd.coord;
+			coord.x += 12.0f * (i - (entry->nChoices-1)/2.0f);
+			gNewObjectDefinition.group 		= MODEL_GROUP_BONUS;
+			gNewObjectDefinition.type 		= BONUS_MObjType_BlueClover;
+			gNewObjectDefinition.coord		= coord;
+			gNewObjectDefinition.slot 		= 20000 + settingID;
+			gNewObjectDefinition.flags 		= 0;
+			gNewObjectDefinition.moveCall 	= nil;
+			gNewObjectDefinition.rot 		= PI+PI/2;
+			gNewObjectDefinition.scale 		= .03;
+			ObjNode* clover = MakeNewDisplayGroupObject(&gNewObjectDefinition);
+			if (i > *entry->ptr)
+				MakeObjectTransparent(clover, 0.25f);
+		}
+	}
+	else
+	{
+		tmd.slot = 20000 + settingID;
+		tmd.align = TEXTMESH_ALIGN_CENTER;
+		TextMesh_Create(&tmd, entry->choices[*entry->ptr]);
+	}
 
 	// Create subtitle text
 	tmd.coord.y -= LH / 2.0f;
