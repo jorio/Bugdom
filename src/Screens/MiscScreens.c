@@ -248,73 +248,6 @@ Boolean			dialogDone = false;
 }
 
 
-/*************** SLIDESHOW (source port refactor) **********************/
-
-enum SlideshowEntryOpcode
-{
-	SLIDESHOW_STOP,
-	SLIDESHOW_FILE
-};
-
-struct SlideshowEntry
-{
-	int opcode;
-	const char* imagePath;
-	void (*postDrawCallback)(void);
-};
-
-static void Slideshow(const struct SlideshowEntry* slides, bool doFade)
-{
-	FSSpec spec;
-
-	Overlay_BeginExclusive();
-
-	for (int i = 0; slides[i].opcode != SLIDESHOW_STOP; i++)
-	{
-		const struct SlideshowEntry* slide = &slides[i];
-
-		if (slide->opcode == SLIDESHOW_FILE)
-		{
-			OSErr result;
-			result = FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, slide->imagePath, &spec);
-			GAME_ASSERT_MESSAGE(result == noErr, slide->imagePath);
-			DrawPictureToScreen(&spec, 0, 0);
-		}
-		else
-		{
-			DoAlert("unsupported slideshow opcode");
-			continue;
-		}
-
-		if (slide->postDrawCallback)
-		{
-			slide->postDrawCallback();
-		}
-
-		GammaFadeIn();
-
-		do
-		{
-			UpdateInput();
-			DoSoundMaintenance();
-			Overlay_SubmitQuad(
-					0, 0, 640, 480,
-					0.0f, 0.0f, 1.0f, 1.0f);
-			QD3D_CalcFramesPerSecond(); // required for DoSDLMaintenance to properly cap the framerate
-			DoSDLMaintenance();
-		} while (!FlushMouseButtonPress() && !GetNewKeyState(kVK_Return) && !GetNewKeyState(kVK_Escape) && !GetNewKeyState(kVK_Space));
-	}
-
-	if (doFade)
-	{
-		GammaFadeOut();
-		GameScreenToBlack();
-	}
-
-	Overlay_EndExclusive();
-}
-
-
 #pragma mark -
 
 /********************** DO PANGEA LOGO **********************************/
@@ -477,22 +410,4 @@ static void MoveLogoBG(ObjNode *theNode)
 {
 	theNode->Coord.z += 15.0f * gFramesPerSecondFrac;
 	UpdateObjectTransforms(theNode);
-}
-
-#pragma mark -
-
-
-/*************** SHOW INTRO SCRENES **********************/
-//
-// Shows actual charity info
-//
-
-void ShowIntroScreens(void)
-{
-	const struct SlideshowEntry slides[] =
-	{
-		{ SLIDESHOW_FILE, ":Images:Boot.pict", NULL },
-		{ SLIDESHOW_STOP, NULL, NULL },
-	};
-	Slideshow(slides, true);
 }

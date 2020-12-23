@@ -890,12 +890,10 @@ unsigned long	someLong;
 
 
 			/* DO INTRO */
-			
-	ShowIntroScreens();
 
-	CheckDebugShortcutKeysOnBoot();
 
 	DoPangeaLogo();
+	CheckDebugShortcutKeysOnBoot();
 
 
 		/* MAIN LOOP */
