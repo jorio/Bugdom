@@ -82,6 +82,7 @@ enum
 	kPickBits_Floppy			= 0x00010000,
 	kPickBits_Delete			= 0x00020000,
 	kPickBits_DontSave			= 0x00040000,
+	kPickBits_Spider			= 0x00080000,
 };
 
 
@@ -191,7 +192,7 @@ static void MoveFloppy_Appear(ObjNode* theNode)
 	const float t = UpdateFloppyState(theNode, 'APPR');
 	const float D = 0.25f;
 	theNode->Coord = TweenTQ3Point3D(
-			EaseOutQuad, t, D,
+			EaseOutExpo, t, D,
 			(TQ3Point3D){
 				theNode->InitCoord.x,
 				theNode->InitCoord.y,
@@ -204,7 +205,7 @@ static void MoveFloppy_Appear(ObjNode* theNode)
 static void MoveFloppy_Loading(ObjNode* theNode)
 {
 	const float t = UpdateFloppyState(theNode, 'LDNG');
-	const float D = 1.0f;
+	const float D = .5f;
 
 	TweenTowardsTQ3Vector3D(t, D/2.0f, &theNode->Rot, (TQ3Vector3D){0,0,0});
 
@@ -275,9 +276,10 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 	bool saveDataValid = saveDataErr == noErr;
 
 	const float x = gFloppyPositions[fileNumber].x;
-	const float y = gFloppyPositions[fileNumber].y;
+	const float y = gFloppyPositions[fileNumber].y +
+			(gCurrentFileScreenType == FILE_SELECT_SCREEN_TYPE_LOAD? 15: 0);
 
-	const float gs = 1.0f;			// global scale of objects created in this function
+	const float gs = .9f;			// global scale of objects created in this function
 	const float deleteScale = 0.33f;
 
 	fileInfos[fileNumber].isSaveDataValid = saveDataValid;
@@ -323,21 +325,24 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 	tmd.shadowColor		= gTextShadowColor;
 	tmd.slot			= objNodeSlotID;
 	tmd.coord.x			= x;
-	tmd.coord.y			= y+80 * gs;
+	tmd.coord.y			= y+90 * gs;
 	tmd.scale			= 0.6f * gs;
 	TextMesh_Create(&tmd, textBuffer);
 
+
 	if (saveDataValid)
 	{
-		snprintf(textBuffer, sizeof(textBuffer), "Level %d", 1 + saveData.realLevel);
+		snprintf(textBuffer, sizeof(textBuffer), "Level %d: %s", 1 + saveData.realLevel, gLevelNames[saveData.realLevel]);
 
-		tmd.coord.y	= y-70*gs;
-		tmd.scale	= .35f * gs;
+		tmd.coord.y	= y+70*gs;
+		tmd.scale	= .25f * gs;
 		TextMesh_Create(&tmd, textBuffer);
 
+		/*
 		tmd.coord.y	-= 10*gs;
 		tmd.scale	= .25f * gs;
 		TextMesh_Create(&tmd, gLevelNames[saveData.realLevel]);
+		*/
 
 		time_t timestamp = saveData.timestamp;
 		struct tm tm;
@@ -345,14 +350,14 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 		strftime(textBuffer, sizeof(textBuffer), "%-e %b %Y   %-l%:%M%p", &tm);
 		for (char *c = textBuffer; *c; c++)
 			*c = tolower(*c);
-		tmd.coord.y	= y+65*gs;
+		tmd.coord.y	-= 10*gs;
 		TextMesh_Create(&tmd, textBuffer);
 
 		if (canDelete)
 		{
 			tmd.color		= gDeleteColor;
 			tmd.coord.x		= x+30 * gs;
-			tmd.coord.y		= y+100 * gs;
+			tmd.coord.y		= y-65 * gs;
 			tmd.scale		= deleteScale * gs;
 			TextMesh_Create(&tmd, "delete");
 		}
@@ -368,7 +373,7 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 
 		if (canDelete)
 		{
-			TQ3Point3D quadCenter = { x+30*gs, y+100*gs, 0 };
+			TQ3Point3D quadCenter = { x+30*gs, y-65*gs, 0 };
 			PickableQuads_NewQuad(quadCenter, .3f*100*gs, deleteScale*50*gs, kPickBits_Delete | fileNumber);		// Delete
 		}
 	}
@@ -389,9 +394,7 @@ static void SetupFileScreen(void)
 
 	if (gCurrentFileScreenType == FILE_SELECT_SCREEN_TYPE_LOAD)
 	{
-//		MakeTextWithShadow("Pick a Saved Game", 0.0f, y, 1.0f, &gTitleTextColor);
-
-//		MakeTextWithShadow("BACK", 50.0f, -100, 0.5f, &gBackColor);
+		MakeSpiderButton((TQ3Point3D) {-140, -100, 0}, "BACK", kPickBits_Spider);
 	}
 	else
 	{
@@ -432,6 +435,7 @@ static void SetupFileScreen(void)
 	{
 		MakeFileObjects(i, true);
 	}
+
 
 	//---------------------------------------------------------------
 
@@ -522,6 +526,7 @@ static int FileScreenMainLoop()
 						break;
 
 					case kPickBits_DontSave:
+					case kPickBits_Spider:
 						return -1;
 
 					default:

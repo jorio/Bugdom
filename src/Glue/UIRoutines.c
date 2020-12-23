@@ -165,8 +165,10 @@ void MakeSpiderButton(
 		const char* caption,
 		int pickID)
 {
+	float gs = 0.95f;
+
 	// Create pickable quad
-	PickableQuads_NewQuad(coord, 38, 38, pickID);
+	PickableQuads_NewQuad(coord, 38*gs, 38*gs, pickID);
 
 	// Create spider blade
 	gNewObjectDefinition.group 		= MODEL_GROUP_LEVELSPECIFIC;
@@ -177,7 +179,7 @@ void MakeSpiderButton(
 	gNewObjectDefinition.flags 		= 0;
 	gNewObjectDefinition.moveCall 	= MoveSpider;
 	gNewObjectDefinition.rot 		= 0;
-	gNewObjectDefinition.scale 		= .2f;
+	gNewObjectDefinition.scale 		= .2f * gs;
 	ObjNode* spider = MakeNewSkeletonObject(&gNewObjectDefinition);
 	spider->Rot.y = 1.25f * PI / 2.0f;
 	UpdateObjectTransforms(spider);
@@ -191,7 +193,7 @@ void MakeSpiderButton(
 	tmd.slot  = SLOT_OF_DUMB;
 	tmd.coord = (TQ3Point3D){coord.x, coord.y-16, coord.z};
 	tmd.align = TEXTMESH_ALIGN_CENTER;
-	tmd.scale = 0.3f;
+	tmd.scale = 0.3f * gs;
 	tmd.color = (TQ3ColorRGB){ 190/255.0f,224/255.0f,0 };
 	TextMesh_Create(&tmd, caption);
 }
