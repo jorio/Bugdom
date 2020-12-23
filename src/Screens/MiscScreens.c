@@ -315,22 +315,6 @@ static void Slideshow(const struct SlideshowEntry* slides, bool doFade)
 }
 
 
-/********************* DO ABOUT SCREENS ************************/
-
-void DoAboutScreens(void)
-{
-	const struct SlideshowEntry slides[] =
-	{
-		{ SLIDESHOW_FILE, ":Images:About1.pict", NULL },
-		{ SLIDESHOW_FILE, ":Images:About2.pict", NULL },
-		{ SLIDESHOW_FILE, ":Images:About3.pict", NULL },
-		{ SLIDESHOW_STOP, NULL, NULL },
-	};
-	Slideshow(slides, true);
-}
-
-
-
 #pragma mark -
 
 /********************** DO PANGEA LOGO **********************************/

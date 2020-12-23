@@ -82,6 +82,7 @@ set(GAME_SOURCES
 	${GAME_SRCDIR}/QD3D/QD3D_Support.c
 	${GAME_SRCDIR}/Ride/DragonFly.c
 	${GAME_SRCDIR}/Ride/WaterBug.c
+	${GAME_SRCDIR}/Screens/AboutScreen.c
 	${GAME_SRCDIR}/Screens/BonusScreen.c
 	${GAME_SRCDIR}/Screens/FileSelect.c
 	${GAME_SRCDIR}/Screens/HighScores.c
