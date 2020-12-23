@@ -258,6 +258,70 @@ static void MoveBonusBackground(ObjNode *theNode)
 	UpdateObjectTransforms(theNode);
 }
 
+static void NukeObjectsInSlot(int objNodeSlotID)
+{
+	ObjNode* node = gFirstNodePtr;
+	while (node)
+	{
+		ObjNode* nextNode = node->NextNode;
+		if (node->Slot == objNodeSlotID)
+		{
+			DeleteObject(node);
+		}
+		node = nextNode;
+	}
+}
+
+static void MakeSettingEntryObjects(int settingID, bool firstTime)
+{
+	static const float XSPREAD = 100;
+	static const float LH = 16;
+
+	SettingEntry* entry = &gSettingEntries[settingID];
+
+	// If it's not the first time we're setting up the screen, nuke old value objects
+	if (!firstTime)
+	{
+		NukeObjectsInSlot(20000 + settingID);
+	}
+
+	TextMeshDef tmd;
+	TextMesh_FillDef(&tmd);
+
+	tmd.coord.x = 0;
+	tmd.coord.y += 80 - LH * settingID;
+	tmd.align = TEXTMESH_ALIGN_LEFT;
+	tmd.scale = 0.3f;
+	tmd.slot = 10000 + settingID;
+
+	// Create pickable quad
+	if (firstTime)
+	{
+		PickableQuads_NewQuad(tmd.coord, XSPREAD*2.0f, LH*0.9f, settingID);
+
+		// Create caption text
+		tmd.coord.x = -XSPREAD;
+		tmd.align = TEXTMESH_ALIGN_LEFT;
+		TextMesh_Create(&tmd, entry->label);
+	}
+
+	// Create value text
+	tmd.slot = 20000 + settingID;
+	tmd.coord.x = XSPREAD/2.0f;
+	tmd.align = TEXTMESH_ALIGN_CENTER;
+	TextMesh_Create(&tmd, entry->choices[*entry->ptr]);
+
+	// Create subtitle text
+	tmd.coord.y -= LH / 2.0f;
+	if (entry->subtitle && *entry->ptr == entry->subtitleShownForValue)
+	{
+		float scaleBackup = tmd.scale;
+		tmd.scale *= 0.5f;
+		TextMesh_Create(&tmd, entry->subtitle);
+		tmd.scale = scaleBackup;
+	}
+}
+
 static void MakeSettingsObjects(void)
 {
 	/* BACKGROUND */
@@ -274,54 +338,14 @@ static void MakeSettingsObjects(void)
 
 	/* TEXT */
 
-
 	TextMeshDef tmd;
 	TextMesh_FillDef(&tmd);
 	tmd.coord.y += 110;
-
 	TextMesh_Create(&tmd, "Bugdom Settings");
-	tmd.coord.y -= 32;
-
-
-	float XSPREAD = 100;
-
-	float LH = 16;
-	tmd.align = TEXTMESH_ALIGN_LEFT;
-	tmd.coord.x = -XSPREAD;
-	tmd.scale = 0.3f;
 
 	for (int i = 0; gSettingEntries[i].ptr; i++)
 	{
-		SettingEntry* entry = &gSettingEntries[i];
-
-		tmd.slot = 100;
-
-		tmd.coord.x = 0;
-		PickableQuads_NewQuad(tmd.coord, XSPREAD*2.0f, LH*0.9f, i);
-
-		tmd.coord.x = -XSPREAD;
-		tmd.align = TEXTMESH_ALIGN_LEFT;
-		TextMesh_Create(&tmd, entry->label);
-
-		tmd.slot = 10000 + i;
-		tmd.coord.x = XSPREAD/2.0f;
-		tmd.align = TEXTMESH_ALIGN_CENTER;
-		TextMesh_Create(&tmd, entry->choices[*entry->ptr]);
-
-		tmd.slot = 100;
-		//if (entry->subtitle)
-		{
-			tmd.coord.y -= LH / 2.0f;
-			if (entry->subtitle && *entry->ptr == entry->subtitleShownForValue)
-			{
-				float scaleBackup = tmd.scale;
-				tmd.scale *= 0.5f;
-				TextMesh_Create(&tmd, entry->subtitle);
-				tmd.scale = scaleBackup;
-			}
-		}
-		tmd.coord.y -= LH;
-
+		MakeSettingEntryObjects(i, true);
 	}
 }
 
@@ -400,6 +424,9 @@ static void SettingsScreenDrawStuff(const QD3DSetupOutputType *setupInfo)
 {
 	DrawObjects(setupInfo);
 	QD3D_DrawParticles(setupInfo);
+#if _DEBUG
+	PickableQuads_Draw(setupInfo->viewObject);
+#endif
 }
 
 static int SettingsScreenMainLoop()
@@ -432,9 +459,7 @@ static int SettingsScreenMainLoop()
 				if (FlushMouseButtonPress())
 				{
 					SettingEntry_Cycle(&gSettingEntries[pickID], 1);
-					DeleteAllObjects();
-					PickableQuads_DisposeAll();
-					MakeSettingsObjects();
+					MakeSettingEntryObjects(pickID, false);
 				}
 			}
 		}
