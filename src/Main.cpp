@@ -73,8 +73,16 @@ static const char* GetWindowTitle()
 
 int CommonMain(int argc, const char** argv)
 {
+	Pomme::InitParams params
+	{
+		.windowName		= GetWindowTitle(),
+		.windowWidth	= 640,
+		.windowHeight	= 480,
+		.msaaSamples	= 4
+	};
+
 	// Start our "machine"
-	Pomme::Init(GetWindowTitle());
+	Pomme::Init(params);
 
 	// Set up globals that the game expects
 	gCoverWindow = Pomme::Graphics::GetScreenPort();

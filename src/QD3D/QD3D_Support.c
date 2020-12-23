@@ -635,6 +635,9 @@ TQ3ViewStatus			myViewStatus;
 		gQD3D_FreshDrawContext = false;
 	}
 
+	if (gGamePrefs.antiAliasing)
+		glEnable(GL_MULTISAMPLE);
+
 
 
 			/***************/
