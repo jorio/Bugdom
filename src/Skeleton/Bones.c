@@ -48,10 +48,10 @@ static	TQ3Vector3D			gTransformedNormals[MAX_DECOMPOSED_NORMALS];	// temporary b
 
 /******************** LOAD BONES REFERENCE MODEL *********************/
 //
-// INPUT: inSpec = spec of 3dmf file to load or nil to StdDialog it.
+// INPUT: inSpec = spec of 3dmf file to load.
 //
 
-void LoadBonesReferenceModel(FSSpec	*inSpec, SkeletonDefType *skeleton)
+void LoadBonesReferenceModel(const FSSpec	*inSpec, SkeletonDefType *skeleton)
 {
 TQ3Object		newModel;
 

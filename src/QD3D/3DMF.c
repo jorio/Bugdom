@@ -18,7 +18,7 @@ extern	QD3DSetupOutputType		*gGameViewInfoPtr;
 /****************************/
 
 static TQ3Status MyRead3DMFModel(TQ3FileObject file, TQ3Object *model);
-static TQ3FileObject	Create3DMFFileObject(FSSpec *myFSSpec);
+static TQ3FileObject	Create3DMFFileObject(const FSSpec *myFSSpec);
 
 /****************************/
 /*    CONSTANTS             */
@@ -81,12 +81,12 @@ short	i;
 
 /*************** LOAD 3DMF MODEL **************/
 //
-// INPUT: inFile = nil if use Standard File Dialog, else FSSpec of file to load
+// INPUT: inFile = FSSpec of file to load
 //
 // OUTPUT: nil = didnt happen
 //
 
-TQ3Object	Load3DMFModel(FSSpec *inFile)
+TQ3Object	Load3DMFModel(const FSSpec *inFile)
 {
 TQ3FileObject		fileObj;
 TQ3Object			theModel;
@@ -124,7 +124,7 @@ TQ3Object			theModel;
 // INPUT: myFSSpec = file to create object for
 //
 
-static TQ3FileObject	Create3DMFFileObject(FSSpec *myFSSpec)
+static TQ3FileObject	Create3DMFFileObject(const FSSpec *myFSSpec)
 {
 TQ3FileObject		myFileObj;
 TQ3StorageObject	myStorageObj;

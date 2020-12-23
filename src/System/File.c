@@ -41,7 +41,7 @@ extern	short			gNumGoldClovers;
 /*    PROTOTYPES            */
 /****************************/
 
-static void ReadDataFromSkeletonFile(SkeletonDefType *skeleton, FSSpec *fsSpec);
+static void ReadDataFromSkeletonFile(SkeletonDefType *skeleton, const FSSpec* fsSpec3DMF);
 static void ReadDataFromPlayfieldFile(FSSpec *specPtr);
 
 
@@ -117,117 +117,57 @@ int		gCurrentSaveSlot = -1;
 SkeletonDefType *LoadSkeletonFile(short skeletonType)
 {
 short		fRefNum;
-FSSpec		fsSpec;
-SkeletonDefType	*skeleton;					
+FSSpec		fsSpecSkeleton;
+FSSpec		fsSpec3DMF;
+SkeletonDefType	*skeleton;
+const char* modelName = NULL;
+char		pathBuf[128];
 
 				/* SET CORRECT FILENAME */
-					
+
 	switch(skeletonType)
 	{
-		case	SKELETON_TYPE_BOXERFLY:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:BoxerFly.skeleton", &fsSpec);
-				break;
-				
-		case	SKELETON_TYPE_ME:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:DoodleBug.skeleton", &fsSpec);
-				break;
-
-		case	SKELETON_TYPE_SLUG:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:Slug.skeleton", &fsSpec);
-				break;
-
-		case	SKELETON_TYPE_ANT:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:Ant.skeleton", &fsSpec);
-				break;
-
-		case	SKELETON_TYPE_FIREANT:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:FireAnt.skeleton", &fsSpec);
-				break;
-		
-		case	SKELETON_TYPE_WATERBUG:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:WaterBug.skeleton", &fsSpec);
-				break;
-
-		case	SKELETON_TYPE_DRAGONFLY:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:DragonFly.skeleton", &fsSpec);
-				break;
-
-		case	SKELETON_TYPE_PONDFISH:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:PondFish.skeleton", &fsSpec);
-				break;
-		
-		case	SKELETON_TYPE_MOSQUITO:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:Mosquito.skeleton", &fsSpec);
-				break;
-
-		case	SKELETON_TYPE_FOOT:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:Foot.skeleton", &fsSpec);
-				break;
-				
-		case	SKELETON_TYPE_SPIDER:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:Spider.skeleton", &fsSpec);
-				break;
-
-		case	SKELETON_TYPE_CATERPILLER:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:Caterpiller.skeleton", &fsSpec);
-				break;
-				
-		case	SKELETON_TYPE_FIREFLY:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:FireFly.skeleton", &fsSpec);
-				break;
-
-		case	SKELETON_TYPE_BAT:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:Bat.skeleton", &fsSpec);
-				break;
-
-		case	SKELETON_TYPE_LADYBUG:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:LadyBug.skeleton", &fsSpec);
-				break;
-		
-		case	SKELETON_TYPE_ROOTSWING:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:RootSwing.skeleton", &fsSpec);
-				break;
-				
-		case	SKELETON_TYPE_LARVA:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:Larva.skeleton", &fsSpec);
-				break;
-		
-		case	SKELETON_TYPE_FLYINGBEE:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:FlyingBee.skeleton", &fsSpec);
-				break;
-				
-		case	SKELETON_TYPE_WORKERBEE:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:WorkerBee.skeleton", &fsSpec);
-				break;
-		
-		case	SKELETON_TYPE_QUEENBEE:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:QueenBee.skeleton", &fsSpec);
-				break;
-
-		case	SKELETON_TYPE_ROACH:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:Roach.skeleton", &fsSpec);
-				break;
-		
-		case	SKELETON_TYPE_BUDDY:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:Buddy.skeleton", &fsSpec);
-				break;
-
-		case	SKELETON_TYPE_SKIPPY:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:Skippy.skeleton", &fsSpec);
-				break;
-
-		case	SKELETON_TYPE_KINGANT:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:AntKing.skeleton", &fsSpec);
-				break;
-		
+		case	SKELETON_TYPE_BOXERFLY:		modelName = "BoxerFly";			break;
+		case	SKELETON_TYPE_ME:			modelName = "DoodleBug";		break;
+		case	SKELETON_TYPE_SLUG:			modelName = "Slug";				break;
+		case	SKELETON_TYPE_ANT:			modelName = "Ant";				break;
+		case	SKELETON_TYPE_FIREANT:		modelName = "WingedFireAnt";	break;
+		case	SKELETON_TYPE_WATERBUG:		modelName = "WaterBug";			break;
+		case	SKELETON_TYPE_DRAGONFLY:	modelName = "DragonFly";		break;
+		case	SKELETON_TYPE_PONDFISH:		modelName = "PondFish";			break;
+		case	SKELETON_TYPE_MOSQUITO:		modelName = "Mosquito";			break;
+		case	SKELETON_TYPE_FOOT:			modelName = "Foot";				break;
+		case	SKELETON_TYPE_SPIDER:		modelName = "Spider";			break;
+		case	SKELETON_TYPE_CATERPILLER:	modelName = "Caterpillar";		break;
+		case	SKELETON_TYPE_FIREFLY:		modelName = "FireFly";			break;
+		case	SKELETON_TYPE_BAT:			modelName = "Bat";				break;
+		case	SKELETON_TYPE_LADYBUG:		modelName = "LadyBug";			break;
+		case	SKELETON_TYPE_ROOTSWING:	modelName = "RootSwing";		break;
+		case	SKELETON_TYPE_LARVA:		modelName = "Larva";			break;
+		case	SKELETON_TYPE_FLYINGBEE:	modelName = "FlyingBee";		break;
+		case	SKELETON_TYPE_WORKERBEE:	modelName = "WorkerBee";		break;
+		case	SKELETON_TYPE_QUEENBEE:		modelName = "QueenBee";			break;
+		case	SKELETON_TYPE_ROACH:		modelName = "Roach";			break;
+		case	SKELETON_TYPE_BUDDY:		modelName = "Buddy";			break;
+		case	SKELETON_TYPE_SKIPPY:		modelName = "Skippy";			break;
+		case	SKELETON_TYPE_KINGANT:		modelName = "AntKing";			break;
 		default:
 				DoFatalAlert("LoadSkeleton: Unknown skeletonType!");
 	}
-	
-	
+
+
+
+	snprintf(pathBuf, sizeof(pathBuf), ":Skeletons:%s.skeleton", modelName);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, pathBuf, &fsSpecSkeleton);
+
+	snprintf(pathBuf, sizeof(pathBuf), ":Skeletons:%s.3dmf", modelName);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, pathBuf, &fsSpec3DMF);
+
+
+
 			/* OPEN THE FILE'S REZ FORK */
 
-	fRefNum = FSpOpenResFile(&fsSpec,fsRdPerm);
+	fRefNum = FSpOpenResFile(&fsSpecSkeleton, fsRdPerm);
 	GAME_ASSERT(fRefNum != -1);
 
 	UseResFile(fRefNum);
@@ -242,7 +182,7 @@ SkeletonDefType	*skeleton;
 
 			/* READ SKELETON RESOURCES */
 			
-	ReadDataFromSkeletonFile(skeleton,&fsSpec);
+	ReadDataFromSkeletonFile(skeleton, &fsSpec3DMF);
 	PrimeBoneData(skeleton);
 	
 			/* CLOSE REZ FILE */
@@ -261,7 +201,9 @@ SkeletonDefType	*skeleton;
 // Current rez file is set to the file. 
 //
 
-static void ReadDataFromSkeletonFile(SkeletonDefType *skeleton, FSSpec *fsSpec)
+static void ReadDataFromSkeletonFile(
+		SkeletonDefType *skeleton,
+		const FSSpec *fsSpec3DMF)
 {
 Handle				hand;
 short				i,k,j;
@@ -270,10 +212,6 @@ AnimEventType		*animEventPtr;
 JointKeyframeType	*keyFramePtr;
 SkeletonFile_Header_Type	*headerPtr;
 short				version;
-AliasHandle				alias;
-OSErr					iErr;
-FSSpec					target;
-Boolean					wasChanged;
 TQ3Point3D				*pointPtr;
 SkeletonFile_AnimHeader_Type	*animHeaderPtr;
 
@@ -307,7 +245,14 @@ SkeletonFile_AnimHeader_Type	*animHeaderPtr;
 		/********************************/
 		/* 	LOAD THE REFERENCE GEOMETRY */
 		/********************************/
-		
+
+#if 1
+	// Source port change: original game used to resolve path to 3DMF via alias resource within skeleton rez fork.
+	// Instead, we're forcing the 3DMF's filename (sans extension) to match the skeleton's.
+	LoadBonesReferenceModel(fsSpec3DMF, skeleton);
+#else
+	AliasHandle				alias;
+	FSSpec					target;
 	alias = (AliasHandle)GetResource(rAliasType,1000);				// alias to geometry 3DMF file
 	if (alias != nil)
 	{
@@ -316,6 +261,8 @@ SkeletonFile_AnimHeader_Type	*animHeaderPtr;
 		LoadBonesReferenceModel(&target,skeleton);
 		ReleaseResource((Handle)alias);
 	}
+#endif
+
 
 
 		/***********************************/
