@@ -31,7 +31,11 @@ static void MoveFadeEvent(ObjNode *theNode);
 /*    CONSTANTS             */
 /****************************/
 
+#if _DEBUG
+#define	ALLOW_FADE		0
+#else
 #define	ALLOW_FADE		1
+#endif
 
 
 /**********************/
@@ -53,35 +57,14 @@ void InitWindowStuff(void)
 }
 
 
-/**************** GAMMA FADE IN *************************/
-
-void GammaFadeIn(void)
-{
-	gGammaFadePercent = 100;
-	SOURCE_PORT_MINOR_PLACEHOLDER();
-#if 0 //ALLOW_FADE
-	if (gDisplayContext)
-	{
-		while(gGammaFadePercent < 100)
-		{
-			gGammaFadePercent += 5;
-			if (gGammaFadePercent > 100)
-				gGammaFadePercent = 100;
-
-			DSpContext_FadeGamma(gDisplayContext,gGammaFadePercent,nil);
-		
-			Wait(1);
-		}
-	}
-#endif		
-}
-
 /**************** GAMMA FADE OUT *************************/
 
 void GammaFadeOut(void)
 {
+#if ALLOW_FADE
 	Overlay_FadeOutFrozenFrame(.3f);
 	gGammaFadePercent = 0;
+#endif
 }
 
 /********************** GAMMA ON *********************/

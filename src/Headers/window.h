@@ -22,7 +22,6 @@ void DumpGWorld2(GWorldPtr thisWorld, WindowPtr thisWindow,Rect *destRect);
 
 extern	void CleanupDisplay(void);
 extern	void GammaFadeOut(void);
-extern	void GammaFadeIn(void);
 extern	void GammaOn(void);
 
 extern	void GameScreenToBlack(void);
