@@ -1136,7 +1136,7 @@ int		w,x;
 		frameRect.top		-= thickness;
 		frameRect.right		+= thickness;
 		frameRect.bottom	+= thickness;
-		for (int i = 0; i < thickness; i++)
+		for (int i = 0; i <= thickness; i++)
 		{
 			++frameRect.left;
 			++frameRect.top;
