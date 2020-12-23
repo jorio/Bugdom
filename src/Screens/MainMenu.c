@@ -9,8 +9,6 @@
 /*    EXTERNALS             */
 /****************************/
 
-#include "3dmath.h"
-
 extern	float				gFramesPerSecondFrac,gFramesPerSecond;
 extern	TQ3Point3D			gCoord;
 extern	WindowPtr			gCoverWindow;
@@ -96,7 +94,6 @@ start_again:
 			
 	gDisableAnimSounds = true;
 	
-tryagain:			
 	QD3D_CalcFramesPerSecond();
 	QD3D_CalcFramesPerSecond();
 		
@@ -104,10 +101,6 @@ tryagain:
 	FlushEvents (everyEvent, REMOVE_ALL_EVENTS);	
 	while(true)	
 	{
-//		EventRecord theEvent;
-	
-//		WaitNextEvent(everyEvent,&theEvent, 0, 0);	//----------
-	
 		MoveObjects();
 		MoveMenuCamera();
 		QD3D_DrawScene(gGameViewInfoPtr,DrawObjects);
@@ -165,27 +158,10 @@ tryagain:
 	
 	Q3View_Sync(gGameViewInfoPtr->viewObject);					// make sure rendering is done before we do anything
 
-	switch(gMenuSelection)
+	if (gMenuSelection == 3)	// QUIT
 	{
-		case	0:				// ABOUT
-				break;
-
-		case	1:				// SCORES
-				break;
-
-		case	2:				// PLAY
-				gCurrentSaveSlot = -1;
-				break;
-
-		case	3:				// QUIT
-				CleanQuit();
-				break;
-
-		case	4:				// RESTORE
-				break;
-
-		case	5:				// SETTINGS
-				break;
+		CleanQuit();
+		return false;
 	}
 	
 			/***********/
@@ -193,6 +169,8 @@ tryagain:
 			/***********/
 
 getout:
+	gCurrentSaveSlot = -1;
+
 	GammaFadeOut();
 	HideCursor();
 	DeleteAllObjects();
