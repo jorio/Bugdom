@@ -1154,25 +1154,6 @@ both:
 				newDelta->x *= scale;								// scale new delta down to match old velocity
 				newDelta->y *= scale;
 				newDelta->z *= scale;
-
-#if 0					
-					/* IF MOTION VECTOR CHANGED GREATLY, ABSORB ENERGY */
-				{
-					TQ3Vector3D	n1,n2;
-					float		dot;
-					
-					FastNormalizeVector(oldDelta->x,oldDelta->y,oldDelta->z, &n1);
-					FastNormalizeVector(newDelta->x,newDelta->y,newDelta->z, &n2);
-					dot = Q3Vector3D_Dot(&n1, &n2);
-					
-					if (dot < .75f)									// if angle was steep enough, then absorb energy
-					{
-						newDelta->x *= dot;
-						newDelta->y *= dot;
-						newDelta->z *= dot;
-					}
-				}
-#endif
 			}			
 			
 						/* IF DY IS STILL DOWN, THEN BOUNCE DY */
