@@ -25,6 +25,8 @@ extern	PrefsType	gGamePrefs;
 extern	u_short		gLevelType,gRealLevel;
 extern 	ObjNode 	*gFirstNodePtr;
 
+extern	TQ3Int32	gHoveredPick;
+
 /****************************/
 /*    PROTOTYPES            */
 /****************************/
@@ -97,10 +99,6 @@ static int 			gCurrentFileScreenType = FILE_SELECT_SCREEN_TYPE_LOAD;
 
 static bool			gFileScreenAwaitingInput = true;
 
-static int			gHoveredPick = -1;
-
-static TQ3Point3D	gBonusCameraFrom = {0, 0, 250 };
-
 
 /********************** DO BONUS SCREEN *************************/
 
@@ -112,8 +110,7 @@ int DoFileSelectScreen(int type)
 	/* SETUP */
 	/*********/
 
-	InitCursor();
-
+	SetupUIStuff();
 	SetupFileScreen();
 
 	QD3D_CalcFramesPerSecond();
@@ -126,15 +123,7 @@ int DoFileSelectScreen(int type)
 
 	/* CLEANUP */
 
-	PickableQuads_DisposeAll();
-
-	GammaFadeOut();
-	DeleteAllObjects();
-	FreeAllSkeletonFiles(-1);
-	DeleteAll3DMFGroups();
-	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
-	DisposeSoundBank(SOUND_BANK_DEFAULT);
-	GameScreenToBlack();
+	CleanupUIStuff();
 
 	return picked;
 }
@@ -391,92 +380,8 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 
 /**************** MOVE BONUS BACKGROUND *********************/
 
-static void MoveBonusBackground(ObjNode *theNode)
-{
-	float	fps = gFramesPerSecondFrac;
-
-	theNode->Rot.y += fps * .03f;
-	UpdateObjectTransforms(theNode);
-}
-
-
-
-
 static void SetupFileScreen(void)
 {
-	FSSpec					spec;
-	QD3DSetupInputType		viewDef;
-	TQ3Point3D				cameraTo = {0, 0, 0 };
-	TQ3ColorRGB				lightColor = { 1.0, 1.0, .9 };
-	TQ3Vector3D				fillDirection1 = { 1, -.4, -.8 };			// key
-	TQ3Vector3D				fillDirection2 = { -.7, -.2, -.9 };			// fill
-
-
-	/* RESET PICKABLE ITEMS */
-	PickableQuads_DisposeAll();
-
-	/*************/
-	/* MAKE VIEW */
-	/*************/
-
-	QD3D_NewViewDef(&viewDef, gCoverWindow);
-
-	viewDef.camera.hither 			= 40;
-	viewDef.camera.yon 				= 2000;
-	viewDef.camera.fov 				= 1.0;
-	viewDef.styles.usePhong 		= false;
-	viewDef.camera.from				= gBonusCameraFrom;
-	viewDef.camera.to	 			= cameraTo;
-
-	viewDef.lights.numFillLights 	= 2;
-	viewDef.lights.ambientBrightness = 0.2;
-	viewDef.lights.fillDirection[0] = fillDirection1;
-	viewDef.lights.fillDirection[1] = fillDirection2;
-	viewDef.lights.fillColor[0] 	= lightColor;
-	viewDef.lights.fillColor[1] 	= lightColor;
-	viewDef.lights.fillBrightness[0] = 1.0;
-	viewDef.lights.fillBrightness[1] = .2;
-
-	viewDef.view.dontClear = false;
-	viewDef.view.clearColor.r =
-	viewDef.view.clearColor.g =
-	viewDef.view.clearColor.b = 0;
-
-
-	QD3D_SetupWindow(&viewDef, &gGameViewInfoPtr);
-
-	/************/
-	/* LOAD ART */
-	/************/
-
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:BonusScreen.3dmf", &spec);
-	LoadGrouped3DMF(&spec,MODEL_GROUP_BONUS);
-
-	TextMesh_Load();
-
-	/* LOAD SOUNDS */
-
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:Main.sounds", &spec);
-	LoadSoundBank(&spec, SOUND_BANK_DEFAULT);
-
-	QD3D_InitParticles();
-
-	/*******************/
-	/* MAKE BACKGROUND */
-	/*******************/
-
-	/* BACKGROUND */
-
-	gNewObjectDefinition.group 		= MODEL_GROUP_BONUS;
-	gNewObjectDefinition.type 		= BONUS_MObjType_Background;
-	gNewObjectDefinition.coord		= gBonusCameraFrom;
-	gNewObjectDefinition.slot 		= 999;
-	gNewObjectDefinition.flags 		= STATUS_BIT_NOFOG|STATUS_BIT_NULLSHADER;
-	gNewObjectDefinition.moveCall 	= MoveBonusBackground;
-	gNewObjectDefinition.rot 		= 0;
-	gNewObjectDefinition.scale 		= 30.0;
-	MakeNewDisplayGroupObject(&gNewObjectDefinition);
-
 	/* TEXT */
 
 	TextMeshDef tmd;
@@ -543,16 +448,7 @@ static void PopFloppy(int fileNumber)
 	PlayEffect_Parms3D(EFFECT_POP, &floppies[fileNumber]->Coord, kMiddleC - 6, 3.0);
 	floppies[fileNumber]->StatusBits |= STATUS_BIT_HIDDEN;
 
-	ObjNode* node = gFirstNodePtr;
-	while (node)
-	{
-		ObjNode* nextNode = node->NextNode;
-		if (node->Slot == 10000 + fileNumber)
-		{
-			DeleteObject(node);
-		}
-		node = nextNode;
-	}
+	NukeObjectsInSlot(10000 + fileNumber);
 }
 
 
@@ -584,12 +480,6 @@ static void FileScreenDrawStuff(const QD3DSetupOutputType *setupInfo)
 #endif
 }
 
-enum
-{
-	FILE_SCREEN_STATE_AWAITING_INPUT,
-	FILE_SCREEN_STATE_TRANSITIONING_AWAY
-};
-
 static int FileScreenMainLoop()
 {
 	gFileScreenAwaitingInput = true;
@@ -609,52 +499,37 @@ static int FileScreenMainLoop()
 
 		if (gFileScreenAwaitingInput)
 		{
-			gHoveredPick = -1;
-
-			Point		mouse;
-			TQ3Point2D	pt;
-
-			SetPort(GetWindowPort(gCoverWindow));
-			GetMouse(&mouse);
-			pt.x = mouse.h;
-			pt.y = mouse.v;
-
-			TQ3Int32 pickID;
-			if (PickableQuads_GetPick(gGameViewInfoPtr->viewObject, pt, &pickID))
-			{
-				gHoveredPick = pickID;
-
-				if (FlushMouseButtonPress())
-				{
-					switch (gHoveredPick & ~kPickBits_FileNumberMask)
-					{
-						case kPickBits_Floppy:
-							finalPick = gHoveredPick & kPickBits_FileNumberMask;
-							gFileScreenAwaitingInput = false;
-							transitionAwayTime = 1.0f;
-
-							if (gCurrentFileScreenType == FILE_SELECT_SCREEN_TYPE_SAVE)
-							{
-								PopFloppy(finalPick);
-							}
-							break;
-
-						case kPickBits_Delete:
-							DeleteFile(gHoveredPick & kPickBits_FileNumberMask);
-							break;
-
-						case kPickBits_DontSave:
-							return -1;
-
-						default:
-							ShowSystemErr_NonFatal(gHoveredPick);
-					}
-				}
-			}
-
 			if (GetNewKeyState(kVK_Escape))
 			{
 				return -1;
+			}
+
+			int pickID = UpdateHoveredPickID();
+			if (pickID >= 0 && FlushMouseButtonPress())
+			{
+				switch (pickID & ~kPickBits_FileNumberMask)
+				{
+					case kPickBits_Floppy:
+						finalPick = pickID & kPickBits_FileNumberMask;
+						gFileScreenAwaitingInput = false;
+						transitionAwayTime = 1.0f;
+
+						if (gCurrentFileScreenType == FILE_SELECT_SCREEN_TYPE_SAVE)
+						{
+							PopFloppy(finalPick);
+						}
+						break;
+
+					case kPickBits_Delete:
+						DeleteFile(pickID & kPickBits_FileNumberMask);
+						break;
+
+					case kPickBits_DontSave:
+						return -1;
+
+					default:
+						ShowSystemErr_NonFatal(pickID);
+				}
 			}
 		}
 		else

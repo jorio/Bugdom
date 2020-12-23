@@ -12,3 +12,12 @@ void DoPangeaLogo(void);
 void DoWinScreen(void);
 void DoLoseScreen(void);
 void DoModelDebug(void);
+
+
+
+// UIRoutines.c
+void SetupUIStuff(void);
+void CleanupUIStuff(void);
+void MakeSpiderButton(TQ3Point3D coord, const char* caption, int pickID);
+int UpdateHoveredPickID(void);
+void NukeObjectsInSlot(u_short objNodeSlotID);

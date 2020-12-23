@@ -31,7 +31,6 @@ static void MoveBonusText(ObjNode *theNode);
 static void BuildBonusDigits(void);
 static void MoveBonusDigit(ObjNode *theNode);
 static void TallyLadyBugs(void);
-static void MoveBonusBackground(ObjNode *theNode);
 static void TallyTotalScore(void);
 static void BuildScoreDigits(void);
 static Boolean AskSaveGame(void);
@@ -72,8 +71,6 @@ static float	gBD2[MAX_DIGITS_IN_BONUS];
 
 static int		gBonusValue;
 
-static TQ3Point3D	gBonusCameraFrom = {0, 0, 250 };
-
 static ObjNode	*gScoreDigits[MAX_DIGITS_IN_SCORE];
 static float	gSD1[MAX_DIGITS_IN_SCORE];
 static float	gSD2[MAX_DIGITS_IN_SCORE];
@@ -92,7 +89,8 @@ Boolean wantToSave = false;
 			/*********/
 			/* SETUP */
 			/*********/
-			
+
+	SetupUIStuff();
 	SetupBonusScreen();
 
 	QD3D_CalcFramesPerSecond();
@@ -117,13 +115,7 @@ Boolean wantToSave = false;
 	
 			/* CLEANUP */
 
-	GammaFadeOut();
-	DeleteAllObjects();
-	FreeAllSkeletonFiles(-1);
-	DeleteAll3DMFGroups();
-	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);		
-	DisposeSoundBank(SOUND_BANK_BONUS);
-	GameScreenToBlack();
+	CleanupUIStuff();
 
 			/* SHOW FILE PICKER IF WANT TO SAVE */
 
@@ -147,81 +139,14 @@ Boolean wantToSave = false;
 
 static void SetupBonusScreen(void)
 {
-FSSpec					spec;
-QD3DSetupInputType		viewDef;
-TQ3Point3D				cameraTo = {0, 0, 0 };
-TQ3ColorRGB				lightColor = { 1.0, 1.0, .9 };
-TQ3Vector3D				fillDirection1 = { 1, -.4, -.8 };			// key
-TQ3Vector3D				fillDirection2 = { -.7, -.2, -.9 };			// fill
-int						i;
-
 	PlaySong(SONG_BONUS,false);
 
 	// Reset move text upwards
 	gMoveTextUpwards = 0;
 
-
-			/*************/
-			/* MAKE VIEW */
-			/*************/
-
-	QD3D_NewViewDef(&viewDef, gCoverWindow);
-	
-	viewDef.camera.hither 			= 40;
-	viewDef.camera.yon 				= 2000;
-	viewDef.camera.fov 				= 1.0;
-	viewDef.styles.usePhong 		= false;
-	viewDef.camera.from				= gBonusCameraFrom;
-	viewDef.camera.to	 			= cameraTo;
-	
-	viewDef.lights.numFillLights 	= 2;
-	viewDef.lights.ambientBrightness = 0.2;
-	viewDef.lights.fillDirection[0] = fillDirection1;
-	viewDef.lights.fillDirection[1] = fillDirection2;
-	viewDef.lights.fillColor[0] 	= lightColor;
-	viewDef.lights.fillColor[1] 	= lightColor;
-	viewDef.lights.fillBrightness[0] = 1.0;
-	viewDef.lights.fillBrightness[1] = .2;
-	
-	
-	viewDef.view.clearColor.r = 
-	viewDef.view.clearColor.g = 
-	viewDef.view.clearColor.b = 0;
-
-		
-	QD3D_SetupWindow(&viewDef, &gGameViewInfoPtr);
-
-			/************/
 			/* LOAD ART */
-			/************/
-			
+
 	LoadASkeleton(SKELETON_TYPE_LADYBUG);
-			
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:BonusScreen.3dmf", &spec);
-	LoadGrouped3DMF(&spec,MODEL_GROUP_MENU);	
-
-				/* LOAD SOUNDS */
-	
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:bonus.sounds", &spec);
-	LoadSoundBank(&spec, SOUND_BANK_BONUS);
-
-	TextMesh_Load();
-
-			/*******************/
-			/* MAKE BACKGROUND */
-			/*******************/
-			
-			/* BACKGROUND */
-				
-	gNewObjectDefinition.group 		= MODEL_GROUP_BONUS;	
-	gNewObjectDefinition.type 		= BONUS_MObjType_Background;	
-	gNewObjectDefinition.coord		= gBonusCameraFrom;
-	gNewObjectDefinition.slot 		= 100;
-	gNewObjectDefinition.flags 		= STATUS_BIT_NOFOG|STATUS_BIT_NULLSHADER;
-	gNewObjectDefinition.moveCall 	= MoveBonusBackground;
-	gNewObjectDefinition.rot 		= 0;
-	gNewObjectDefinition.scale 		= 30.0;
-	MakeNewDisplayGroupObject(&gNewObjectDefinition);
 
 			/* TEXT */
 				
@@ -242,7 +167,7 @@ int						i;
 		/* CREATE BONUS SCORE DIGITS */
 		/*****************************/
 
-	for (i = 0; i < MAX_DIGITS_IN_BONUS; i++)
+	for (int i = 0; i < MAX_DIGITS_IN_BONUS; i++)
 	{
 		gBonusDigits[i] = nil;
 		gBD1[i] = RandomFloat()*PI2;
@@ -257,7 +182,7 @@ int						i;
 		/* CREATE TOTAL SCORE DIGITS */
 		/*****************************/
 
-	for (i = 0; i < MAX_DIGITS_IN_SCORE; i++)
+	for (int i = 0; i < MAX_DIGITS_IN_SCORE; i++)
 	{
 		gScoreDigits[i] = nil;
 		gSD1[i] = RandomFloat()*PI2;
@@ -452,17 +377,6 @@ float	fps = gFramesPerSecondFrac;
 	theNode->Coord.y =theNode->InitCoord.y + cos(theNode->SpecialF[0] += fps*3.0f) * 5.0f;
 	UpdateObjectTransforms(theNode);
 }
-
-/**************** MOVE BONUS BACKGROUND *********************/
-
-static void MoveBonusBackground(ObjNode *theNode)
-{
-float	fps = gFramesPerSecondFrac;
-
-	theNode->Rot.y += fps * .03f;
-	UpdateObjectTransforms(theNode);
-}
-
 
 
 #pragma mark -

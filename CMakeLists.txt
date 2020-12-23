@@ -184,6 +184,7 @@ set(GAME_GLUE_SOURCES
 	${GAME_SRCDIR}/Glue/TGA.c
 	${GAME_SRCDIR}/Glue/Tween.c
 	${GAME_SRCDIR}/Glue/MouseSmoothing.c
+	${GAME_SRCDIR}/Glue/UIRoutines.c
 )
 
 set(GAME_ALL_SOURCES

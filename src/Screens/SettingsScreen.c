@@ -14,7 +14,6 @@ extern	NewObjectDefinitionType		gNewObjectDefinition;
 extern	QD3DSetupOutputType			*gGameViewInfoPtr;
 extern	FSSpec						gDataSpec;
 extern	PrefsType					gGamePrefs;
-extern 	ObjNode 					*gFirstNodePtr;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -28,13 +27,6 @@ static void SettingsScreenMainLoop(void);
 /*    CONSTANTS             */
 /****************************/
 
-static int gHoveredPick = -1;
-
-static const TQ3ColorRGB gTextShadowColor	= { 0.0f, 0.0f, 0.3f };
-static const TQ3ColorRGB gTextColor			= { 1.0f, 0.9f, 0.0f };
-static const TQ3ColorRGB gTitleTextColor	= { 1.0f, 0.9f, 0.0f };
-static const TQ3ColorRGB gDeleteColor		= { 0.9f, 0.3f, 0.1f };
-static const TQ3ColorRGB gBackColor			= { 1,1,1 };
 static const TQ3ColorRGB gValueTextColor	= { 190/255.0f,224/255.0f,0 };
 
 enum
@@ -48,8 +40,6 @@ enum
 /*********************/
 /*    VARIABLES      */
 /*********************/
-
-static TQ3Point3D	gBonusCameraFrom = {0, 0, 250 };
 
 
 
@@ -221,8 +211,7 @@ void DoSettingsScreen(void)
 	/* SETUP */
 	/*********/
 
-	InitCursor();
-
+	SetupUIStuff();
 	SetupSettingsScreen();
 
 	QD3D_CalcFramesPerSecond();
@@ -237,94 +226,10 @@ void DoSettingsScreen(void)
 
 	/* CLEANUP */
 
-	PickableQuads_DisposeAll();
-
-	GammaFadeOut();
-	DeleteAllObjects();
-	FreeAllSkeletonFiles(-1);
-	DeleteAll3DMFGroups();
-	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
-	DisposeSoundBank(SOUND_BANK_DEFAULT);
-	GameScreenToBlack();
+	CleanupUIStuff();
 }
 
 /****************** SETUP FILE SCREEN **************************/
-
-/**************** MOVE BONUS BACKGROUND *********************/
-
-static void MoveBonusBackground(ObjNode *theNode)
-{
-	float	fps = gFramesPerSecondFrac;
-
-	theNode->Rot.y += fps * .03f;
-	UpdateObjectTransforms(theNode);
-}
-
-static void NukeObjectsInSlot(long objNodeSlotID)
-{
-	ObjNode* node = gFirstNodePtr;
-	while (node)
-	{
-		ObjNode* nextNode = node->NextNode;
-		if (node->Slot == objNodeSlotID)
-		{
-			//QD3D_ExplodeGeometry(node, 200.0f, PARTICLE_MODE_UPTHRUST | PARTICLE_MODE_NULLSHADER, 1, 0.5f);
-			DeleteObject(node);
-		}
-		node = nextNode;
-	}
-}
-
-static void MoveSpider(ObjNode* objNode)
-{
-	long* isWalking = &objNode->SpecialL[5];
-	bool isHovered = gHoveredPick == PICKID_SPIDER;
-
-	if (*isWalking && !isHovered)
-	{
-		*isWalking = false;
-		MorphToSkeletonAnim(objNode->Skeleton, 0 /*SPIDER_ANIM_WAIT*/, 10);
-	}
-	else if (!*isWalking && isHovered)
-	{
-		*isWalking = true;
-		MorphToSkeletonAnim(objNode->Skeleton, 2 /*SPIDER_ANIM_WALK*/, 10);
-		objNode->Skeleton->AnimSpeed = 1.25f;
-	}
-}
-
-static void MakeSpiderButton(
-		TQ3Point3D coord,
-		const char* caption)
-{
-
-	// Create pickable quad
-	PickableQuads_NewQuad(coord, 38, 38, PICKID_SPIDER);
-
-	// Create spider blade
-	gNewObjectDefinition.group 		= MODEL_GROUP_LEVELSPECIFIC;
-	gNewObjectDefinition.type 		= SKELETON_TYPE_SPIDER;
-	gNewObjectDefinition.animNum	= 0;
-	gNewObjectDefinition.slot		= SLOT_OF_DUMB;
-	gNewObjectDefinition.coord		= (TQ3Point3D){coord.x, coord.y-1, coord.z-1};
-	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER;
-	gNewObjectDefinition.moveCall 	= MoveSpider;
-	gNewObjectDefinition.rot 		= 0;
-	gNewObjectDefinition.scale 		= .2f;
-	ObjNode* spider = MakeNewSkeletonObject(&gNewObjectDefinition);
-	spider->Rot.y = 1.25f * PI / 2.0f;
-	UpdateObjectTransforms(spider);
-
-	// Create caption text
-	TextMeshDef tmd;
-	TextMesh_FillDef(&tmd);
-	tmd.slot  = SLOT_OF_DUMB;
-	tmd.coord = (TQ3Point3D){coord.x, coord.y-16, coord.z};
-	tmd.align = TEXTMESH_ALIGN_CENTER;
-	tmd.scale = 0.3f;
-	tmd.color = gValueTextColor;
-	TextMesh_Create(&tmd, caption);
-}
 
 static void MakeSettingEntryObjects(int settingID, bool firstTime)
 {
@@ -424,22 +329,8 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 	}
 }
 
-static void MakeSettingsObjects(void)
+static void SetupSettingsScreen(void)
 {
-	/* BACKGROUND */
-
-	gNewObjectDefinition.group 		= MODEL_GROUP_BONUS;
-	gNewObjectDefinition.type 		= BONUS_MObjType_Background;
-	gNewObjectDefinition.coord		= gBonusCameraFrom;
-	gNewObjectDefinition.slot 		= 999;
-	gNewObjectDefinition.flags 		= STATUS_BIT_NOFOG|STATUS_BIT_NULLSHADER /*| STATUS_BIT_HIDDEN*/;
-	gNewObjectDefinition.moveCall 	= MoveBonusBackground;
-	gNewObjectDefinition.rot 		= 0;
-	gNewObjectDefinition.scale 		= 30.0;
-	MakeNewDisplayGroupObject(&gNewObjectDefinition);
-
-	/* TEXT */
-
 	TextMeshDef tmd;
 	TextMesh_FillDef(&tmd);
 	tmd.coord.y += 110;
@@ -450,80 +341,7 @@ static void MakeSettingsObjects(void)
 		MakeSettingEntryObjects(i, true);
 	}
 
-	MakeSpiderButton((TQ3Point3D) {-100, -100, 0}, "BACK");
-}
-
-static void SetupSettingsScreen(void)
-{
-	FSSpec					spec;
-	QD3DSetupInputType		viewDef;
-	TQ3Point3D				cameraTo = {0, 0, 0 };
-	TQ3ColorRGB				lightColor = { 1.0, 1.0, .9 };
-	TQ3Vector3D				fillDirection1 = { 1, -.4, -.8 };			// key
-	TQ3Vector3D				fillDirection2 = { -.7, -.2, -.9 };			// fill
-
-
-	/* RESET PICKABLE ITEMS */
-	PickableQuads_DisposeAll();
-
-	/*************/
-	/* MAKE VIEW */
-	/*************/
-
-	QD3D_NewViewDef(&viewDef, gCoverWindow);
-
-	viewDef.camera.hither 			= 40;
-	viewDef.camera.yon 				= 2000;
-	viewDef.camera.fov 				= 1.0;
-	viewDef.styles.usePhong 		= false;
-	viewDef.camera.from				= gBonusCameraFrom;
-	viewDef.camera.to	 			= cameraTo;
-
-	viewDef.lights.numFillLights 	= 2;
-	viewDef.lights.ambientBrightness = 0.2;
-	viewDef.lights.fillDirection[0] = fillDirection1;
-	viewDef.lights.fillDirection[1] = fillDirection2;
-	viewDef.lights.fillColor[0] 	= lightColor;
-	viewDef.lights.fillColor[1] 	= lightColor;
-	viewDef.lights.fillBrightness[0] = 1.0;
-	viewDef.lights.fillBrightness[1] = .2;
-
-	viewDef.view.dontClear = false;
-	viewDef.view.clearColor.r =
-	viewDef.view.clearColor.g =
-	viewDef.view.clearColor.b = 0;
-
-
-	QD3D_SetupWindow(&viewDef, &gGameViewInfoPtr);
-
-	/************/
-	/* LOAD ART */
-	/************/
-
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:BonusScreen.3dmf", &spec);
-	LoadGrouped3DMF(&spec,MODEL_GROUP_BONUS);
-
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:Lawn_Models2.3dmf", &spec);
-	LoadGrouped3DMF(&spec,MODEL_GROUP_LEVELSPECIFIC2);
-
-	TextMesh_Load();
-
-	LoadASkeleton(SKELETON_TYPE_SPIDER);
-
-	/* LOAD SOUNDS */
-
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:Main.sounds", &spec);
-	LoadSoundBank(&spec, SOUND_BANK_DEFAULT);
-
-	/*******************/
-	/* MAKE BACKGROUND */
-	/*******************/
-
-	MakeSettingsObjects();
-
-	//---------------------------------------------------------------
-
-	MakeFadeEvent(true);
+	MakeSpiderButton((TQ3Point3D) {-100, -100, 0}, "DONE", PICKID_SPIDER);
 }
 
 
@@ -549,41 +367,25 @@ static void SettingsScreenMainLoop()
 		QD3D_CalcFramesPerSecond();
 		DoSDLMaintenance();
 
-		// See if user hovered/clicked on a pickable item
-		gHoveredPick = -1;
-		{
-			Point		mouse;
-			TQ3Point2D	pt;
-
-			SetPort(GetWindowPort(gCoverWindow));
-			GetMouse(&mouse);
-			pt.x = mouse.h;
-			pt.y = mouse.v;
-
-			TQ3Int32 pickID;
-			if (PickableQuads_GetPick(gGameViewInfoPtr->viewObject, pt, &pickID))
-			{
-				gHoveredPick = pickID;
-
-				if (FlushMouseButtonPress())
-				{
-					if (pickID & PICKID_SETTING_MASK)
-					{
-						int settingID = pickID & 0xFFFF;
-						SettingEntry_Cycle(&gSettingEntries[settingID], 1);
-						MakeSettingEntryObjects(settingID, false);
-					}
-					else if (pickID == PICKID_SPIDER)
-					{
-						return;
-					}
-				}
-			}
-		}
-
 		if (GetNewKeyState(kVK_Escape))
 		{
 			return;
+		}
+
+		// See if user hovered/clicked on a pickable item
+		int pickID = UpdateHoveredPickID();
+		if (pickID >= 0 && FlushMouseButtonPress())
+		{
+			if (pickID & PICKID_SETTING_MASK)
+			{
+				int settingID = pickID & 0xFFFF;
+				SettingEntry_Cycle(&gSettingEntries[settingID], 1);
+				MakeSettingEntryObjects(settingID, false);
+			}
+			else if (pickID == PICKID_SPIDER)
+			{
+				return;
+			}
 		}
 	}
 }
