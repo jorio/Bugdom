@@ -334,6 +334,7 @@ static void SetupSettingsScreen(void)
 	TextMeshDef tmd;
 	TextMesh_FillDef(&tmd);
 	tmd.coord.y += 110;
+	tmd.color = gValueTextColor;
 	TextMesh_Create(&tmd, "Bugdom Settings");
 
 	for (int i = 0; gSettingEntries[i].ptr; i++)
@@ -381,9 +382,12 @@ static void SettingsScreenMainLoop()
 				int settingID = pickID & 0xFFFF;
 				SettingEntry_Cycle(&gSettingEntries[settingID], 1);
 				MakeSettingEntryObjects(settingID, false);
+
+				PlayEffect(EFFECT_BONUSCLICK);
 			}
 			else if (pickID == PICKID_SPIDER)
 			{
+				PlayEffect_Parms(EFFECT_BONUSCLICK, FULL_CHANNEL_VOLUME, FULL_CHANNEL_VOLUME, kMiddleC-12);
 				return;
 			}
 		}
