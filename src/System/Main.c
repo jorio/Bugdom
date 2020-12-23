@@ -828,6 +828,12 @@ static void CheckDebugShortcutKeysOnBoot(void)
 		return;
 	}
 
+	if (GetKeyState(kVK_F4))
+	{
+		DoSettingsScreen();
+		return;
+	}
+
 	for (int i = 0; i < 10; i++)
 	{
 		if (GetKeyState(levelKeys[i]))

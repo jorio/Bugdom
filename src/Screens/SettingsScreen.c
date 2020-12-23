@@ -21,7 +21,7 @@ extern 	ObjNode 					*gFirstNodePtr;
 /****************************/
 
 static void SetupSettingsScreen(void);
-static int SettingsScreenMainLoop(void);
+static void SettingsScreenMainLoop(void);
 
 
 /****************************/
@@ -37,7 +37,13 @@ static const TQ3ColorRGB gDeleteColor		= { 0.9f, 0.3f, 0.1f };
 static const TQ3ColorRGB gBackColor			= { 1,1,1 };
 static const TQ3ColorRGB gValueTextColor	= { 190/255.0f,224/255.0f,0 };
 
-static char textBuffer[512];
+enum
+{
+	PICKID_SETTING_MASK		=	0x10000000,
+	PICKID_SPIDER			=	0x20000000,
+	SLOTID_CAPTION_MASK		=	0x1000,
+	SLOTID_VALUE_MASK		=	0x2000,
+};
 
 /*********************/
 /*    VARIABLES      */
@@ -110,7 +116,7 @@ static SettingEntry gSettingEntries[] =
 		"MOUSE SENSITIVITY",
 		0, NULL,
 		NULL,
-		NUM_MOUSE_SENSITIVITY_LEVELS, true, NULL,
+		NUM_MOUSE_SENSITIVITY_LEVELS, true, { NULL },
 		0,
 	},
 	{
@@ -121,6 +127,7 @@ static SettingEntry gSettingEntries[] =
 		0, false, CHOICES_NO_YES,
 		0,
 	},
+#if _DEBUG
 	{
 		&gGamePrefs.vsync,
 		"V-SYNC",
@@ -192,6 +199,7 @@ static SettingEntry gSettingEntries[] =
 		CHOICES_NO_YES
 	},
 	 */
+#endif
 	{
 		NULL,
 		NULL,
@@ -252,7 +260,7 @@ static void MoveBonusBackground(ObjNode *theNode)
 	UpdateObjectTransforms(theNode);
 }
 
-static void NukeObjectsInSlot(int objNodeSlotID)
+static void NukeObjectsInSlot(long objNodeSlotID)
 {
 	ObjNode* node = gFirstNodePtr;
 	while (node)
@@ -267,13 +275,64 @@ static void NukeObjectsInSlot(int objNodeSlotID)
 	}
 }
 
+static void MoveSpider(ObjNode* objNode)
+{
+	long* isWalking = &objNode->SpecialL[5];
+	bool isHovered = gHoveredPick == PICKID_SPIDER;
+
+	if (*isWalking && !isHovered)
+	{
+		*isWalking = false;
+		MorphToSkeletonAnim(objNode->Skeleton, 0 /*SPIDER_ANIM_WAIT*/, 10);
+	}
+	else if (!*isWalking && isHovered)
+	{
+		*isWalking = true;
+		MorphToSkeletonAnim(objNode->Skeleton, 2 /*SPIDER_ANIM_WALK*/, 10);
+		objNode->Skeleton->AnimSpeed = 1.25f;
+	}
+}
+
+static void MakeSpiderButton(
+		TQ3Point3D coord,
+		const char* caption)
+{
+
+	// Create pickable quad
+	PickableQuads_NewQuad(coord, 38, 38, PICKID_SPIDER);
+
+	// Create spider blade
+	gNewObjectDefinition.group 		= MODEL_GROUP_LEVELSPECIFIC;
+	gNewObjectDefinition.type 		= SKELETON_TYPE_SPIDER;
+	gNewObjectDefinition.animNum	= 0;
+	gNewObjectDefinition.slot		= SLOT_OF_DUMB;
+	gNewObjectDefinition.coord		= (TQ3Point3D){coord.x, coord.y-1, coord.z-1};
+	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER;
+	gNewObjectDefinition.moveCall 	= MoveSpider;
+	gNewObjectDefinition.rot 		= 0;
+	gNewObjectDefinition.scale 		= .2f;
+	ObjNode* spider = MakeNewSkeletonObject(&gNewObjectDefinition);
+	spider->Rot.y = 1.25f * PI / 2.0f;
+	UpdateObjectTransforms(spider);
+
+	// Create caption text
+	TextMeshDef tmd;
+	TextMesh_FillDef(&tmd);
+	tmd.slot  = SLOT_OF_DUMB;
+	tmd.coord = (TQ3Point3D){coord.x, coord.y-16, coord.z};
+	tmd.align = TEXTMESH_ALIGN_CENTER;
+	tmd.scale = 0.3f;
+	tmd.color = gValueTextColor;
+	TextMesh_Create(&tmd, caption);
+}
+
 static void MakeSettingEntryObjects(int settingID, bool firstTime)
 {
 	static const float XSPREAD = 120;
 	static const float LH = 28;
 
 	const float x = 0;
-	const float y = 80 - LH * settingID;
+	const float y = 60 - LH * settingID;
 	const float z = 0;
 
 	SettingEntry* entry = &gSettingEntries[settingID];
@@ -281,7 +340,7 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 	// If it's not the first time we're setting up the screen, nuke old value objects
 	if (!firstTime)
 	{
-		NukeObjectsInSlot(20000 + settingID);
+		NukeObjectsInSlot(SLOTID_VALUE_MASK | settingID);
 	}
 
 	bool hasSubtitle = entry->subtitle && *entry->ptr == entry->subtitleShownForValue;
@@ -292,7 +351,7 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 	tmd.coord = (TQ3Point3D) {x,y,z};
 	tmd.align = TEXTMESH_ALIGN_LEFT;
 	tmd.scale = 0.3f;
-	tmd.slot = 10000 + settingID;
+	tmd.slot = SLOTID_CAPTION_MASK | settingID;
 
 	if (firstTime)
 	{
@@ -300,13 +359,13 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 		PickableQuads_NewQuad(
 				(TQ3Point3D) {x+XSPREAD/2, y, z},
 				XSPREAD*1.0f, LH*0.75f,
-				settingID);
+				PICKID_SETTING_MASK | settingID);
 
 		// Create grass blade
 		gNewObjectDefinition.group 		= MODEL_GROUP_LEVELSPECIFIC2;
 		gNewObjectDefinition.type 		= LAWN2_MObjType_Grass2;
 		gNewObjectDefinition.coord		= (TQ3Point3D){x+XSPREAD, y-1, z-1};
-		gNewObjectDefinition.slot 		= 10000 + settingID;
+		gNewObjectDefinition.slot 		= SLOTID_CAPTION_MASK | settingID;
 		gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER;
 		gNewObjectDefinition.moveCall 	= nil;
 		gNewObjectDefinition.rot 		= 0;//PI+PI/2;
@@ -325,6 +384,7 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 	// Create value text
 	tmd.color = gValueTextColor;
 	tmd.coord.x = XSPREAD/2.0f;
+	tmd.slot = SLOTID_VALUE_MASK | settingID;
 	if (hasSubtitle)
 		tmd.coord.y += LH * 0.15f;
 	if (entry->useClovers)
@@ -336,7 +396,7 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 			gNewObjectDefinition.group 		= MODEL_GROUP_BONUS;
 			gNewObjectDefinition.type 		= BONUS_MObjType_GoldClover;
 			gNewObjectDefinition.coord		= coord;
-			gNewObjectDefinition.slot 		= 20000 + settingID;
+			gNewObjectDefinition.slot 		= SLOTID_VALUE_MASK | settingID;
 			gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER;
 			gNewObjectDefinition.moveCall 	= nil;
 			gNewObjectDefinition.rot 		= PI+PI/2;
@@ -348,7 +408,7 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 	}
 	else
 	{
-		tmd.slot = 20000 + settingID;
+		tmd.slot = SLOTID_VALUE_MASK | settingID;
 		tmd.align = TEXTMESH_ALIGN_CENTER;
 		TextMesh_Create(&tmd, entry->choices[*entry->ptr]);
 	}
@@ -389,6 +449,8 @@ static void MakeSettingsObjects(void)
 	{
 		MakeSettingEntryObjects(i, true);
 	}
+
+	MakeSpiderButton((TQ3Point3D) {-100, -100, 0}, "BACK");
 }
 
 static void SetupSettingsScreen(void)
@@ -446,6 +508,8 @@ static void SetupSettingsScreen(void)
 
 	TextMesh_Load();
 
+	LoadASkeleton(SKELETON_TYPE_SPIDER);
+
 	/* LOAD SOUNDS */
 
 	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:Main.sounds", &spec);
@@ -474,7 +538,7 @@ static void SettingsScreenDrawStuff(const QD3DSetupOutputType *setupInfo)
 #endif
 }
 
-static int SettingsScreenMainLoop()
+static void SettingsScreenMainLoop()
 {
 	while (1)
 	{
@@ -503,15 +567,23 @@ static int SettingsScreenMainLoop()
 
 				if (FlushMouseButtonPress())
 				{
-					SettingEntry_Cycle(&gSettingEntries[pickID], 1);
-					MakeSettingEntryObjects(pickID, false);
+					if (pickID & PICKID_SETTING_MASK)
+					{
+						int settingID = pickID & 0xFFFF;
+						SettingEntry_Cycle(&gSettingEntries[settingID], 1);
+						MakeSettingEntryObjects(settingID, false);
+					}
+					else if (pickID == PICKID_SPIDER)
+					{
+						return;
+					}
 				}
 			}
 		}
 
 		if (GetNewKeyState(kVK_Escape))
 		{
-			return -1;
+			return;
 		}
 	}
 }
