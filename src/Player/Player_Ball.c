@@ -362,7 +362,7 @@ float	dx, dy;
 	float vl = FastVectorLength2D(gDelta.x, gDelta.z);
 	if (vl > PLAYER_MAX_SPEED_BALL)
 	{
-		printf("Regulate overkill gDelta x=%.0f z=%.0f\n", gDelta.x, gDelta.z);
+//		printf("Regulate overkill gDelta x=%.0f z=%.0f\n", gDelta.x, gDelta.z);
 		TQ3Vector2D gd2;
 		FastNormalizeVector2D(gDelta.x, gDelta.z, &gd2);
 		gDelta.x = gd2.x * PLAYER_MAX_SPEED_BALL;

@@ -1069,7 +1069,7 @@ u_long	maxLeft,maxRight;
 		
 		if (volF > 256.0f)
 		{
-			printf("Sfx %d volume %f clipped\n", effectNum, volF);
+//			printf("Sfx %d volume %f clipped\n", effectNum, volF);
 			volF = 256.0f;
 		}
 		
