@@ -92,9 +92,9 @@ static inline void AngleToVector(float angle, TQ3Vector2D *theVector)
 
 /***************** FAST VECTOR LENGTH 3D/2D *********************/
 
-#define FastVectorLength3D(_inX, _inY, _inZ)	sqrtf((_inY*_inY) + (_inX*_inX) + (_inZ*_inZ))
+#define FastVectorLength3D(_inX, _inY, _inZ)	sqrtf(((_inY)*(_inY)) + ((_inX)*(_inX)) + ((_inZ)*(_inZ)))
 
-#define FastVectorLength2D(_inX, _inY)			sqrtf((_inY*_inY) + (_inX*_inX))
+#define FastVectorLength2D(_inX, _inY)			sqrtf(((_inY)*(_inY)) + ((_inX)*(_inX)))
 
 
 
