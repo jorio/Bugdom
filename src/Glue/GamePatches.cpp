@@ -222,7 +222,7 @@ void DoSDLMaintenance()
 	if (gEatMouse)
 	{
 		gEatMouse--;
-		MouseSmoothing_ResetState(true);
+		MouseSmoothing_ResetState();
 		gMouseButtonPressed = false;
 		gMouseButtonState[0] = false;
 		gMouseButtonState[1] = false;

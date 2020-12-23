@@ -1,6 +1,8 @@
 #pragma once
 
-void MouseSmoothing_ResetState(bool newFrame);
+#include <SDL.h>
+
+void MouseSmoothing_ResetState(void);
 
 void MouseSmoothing_StartFrame(void);
 
