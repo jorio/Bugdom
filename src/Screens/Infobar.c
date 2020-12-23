@@ -342,7 +342,7 @@ static void LoadNitroGaugeTemplate(void)
 	TGAHeader tga;
 	OSErr err;
 	
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Sprites:NitroGauge.tga", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Images:NitroGauge.tga", &spec);
 	err = ReadTGA(&spec, &gNitroGaugeData, &tga);
 	GAME_ASSERT(err == noErr);
 	GAME_ASSERT(tga.imageType == TGA_IMAGETYPE_RAW_GRAYSCALE);
@@ -400,7 +400,7 @@ FSSpec	spec;
 		
 			/* READ MISC SPRITES */
 						
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Sprites:Infobar", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Images:Infobar", &spec);
 	LoadSpriteResources(&spec);
 	
 	

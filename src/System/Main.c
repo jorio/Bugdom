@@ -240,6 +240,7 @@ static const TQ3ColorARGB	gLevelClearColorWithCyc[NUM_LEVELS] =
 void ToolBoxInit(void)
 {
 FSSpec		spec;
+OSErr		err;
 	
 	gMainAppRezFile = CurResFile();
 
@@ -256,11 +257,12 @@ FSSpec		spec;
 
 		/* OPEN TEXTURES RESOURCE FILE */
 				
-	if (FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Sprites:Textures", &spec) != noErr)
-		DoFatalAlert("ToolBoxInit: cannot find Sprites:Textures file");
+	err = FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Images:Textures", &spec) != noErr;
+	GAME_ASSERT(err == noErr);
+
 	gTextureRezfile = FSpOpenResFile(&spec, fsRdPerm);
-	if (gTextureRezfile == -1)
-		DoFatalAlert("ToolBoxInit: Cannot locate Textures resource file!");
+	GAME_ASSERT(gTextureRezfile != -1);
+
 	UseResFile(gTextureRezfile);
 
 

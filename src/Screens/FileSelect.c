@@ -303,10 +303,7 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 	floppies[fileNumber] = newFloppy;
 
 	// Get path to floppy label image
-	if (saveDataValid)
-		snprintf(textBuffer, sizeof(textBuffer), ":Floppy:%d.tga", saveData.realLevel);
-	else
-		snprintf(textBuffer, sizeof(textBuffer), ":Floppy:NewGame.tga");
+	snprintf(textBuffer, sizeof(textBuffer), ":Images:Floppy%d.tga", saveDataValid? saveData.realLevel: 0);
 
 	// Set floppy label texture
 	FSSpec floppyLabelPictSpec;
