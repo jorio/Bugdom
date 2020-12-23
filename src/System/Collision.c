@@ -1144,9 +1144,13 @@ both:
 				
 				dy = newCoord->y - oldCoord->y;						// calc actual dy
 				newDelta->y = dy / fps;				 				// calc motion dy 
-				
-				scale = speed / Q3Vector3D_Length(newDelta);		// calc velocity change
-				
+
+				float newDeltaLength = Q3Vector3D_Length(newDelta);
+				if (newDeltaLength < EPS)
+					scale = 0;
+				else
+					scale = speed / newDeltaLength;					// calc velocity change
+
 				newDelta->x *= scale;								// scale new delta down to match old velocity
 				newDelta->y *= scale;
 				newDelta->z *= scale;
