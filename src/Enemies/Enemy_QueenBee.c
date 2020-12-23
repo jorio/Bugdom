@@ -749,6 +749,7 @@ static const TQ3Point3D off = {0,-25,-55};
 	spit->CBits = CBITS_TOUCHABLE;	
 	SetObjectCollisionBounds(spit,300,0,-200,200,200,-200);
 
+	spit->BoundingSphere.radius = 250;		// Source port fix: Give it a generous culling sphere
 
 			/* SET DELTAS */
 			
