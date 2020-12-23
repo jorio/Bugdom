@@ -1180,7 +1180,7 @@ void QD3D_SetTextureAlphaThreshold_TriMesh(TQ3TriMeshData triMeshData, void* use
 // Then you can render letters in any color you like using the attribute
 // kQ3AttributeTypeDiffuseColor.
 
-void QD3D_ClearDiffuseColor_TriMesh(TQ3TriMeshData triMeshData)
+void QD3D_ClearDiffuseColor_TriMesh(TQ3TriMeshData triMeshData, void* userData)
 {
 	Q3AttributeSet_Clear(triMeshData.triMeshAttributeSet, kQ3AttributeTypeDiffuseColor);
 }
@@ -1188,8 +1188,11 @@ void QD3D_ClearDiffuseColor_TriMesh(TQ3TriMeshData triMeshData)
 
 
 
-void QD3D_SetUVClamp_TriMesh(TQ3TriMeshData triMeshData, Boolean uClamp, Boolean vClamp)
+void QD3D_SetUVClamp_TriMesh(TQ3TriMeshData triMeshData, void* userData)
 {
+	bool uClamp = ((uintptr_t)userData) & 1;
+	bool vClamp = ((uintptr_t)userData) & 2;
+
 	if (!Q3AttributeSet_Contains(triMeshData.triMeshAttributeSet, kQ3AttributeTypeSurfaceShader))
 		return;
 

@@ -51,5 +51,14 @@ void QD3D_CalcObjectBoundingSphere(QD3DSetupOutputType *setupInfo, TQ3Object the
 void ForEachTriMesh(TQ3Object root, void (*callback)(TQ3TriMeshData triMeshData, void* userData), void* userData);
 
 void QD3D_SetTextureAlphaThreshold_TriMesh(TQ3TriMeshData root, void* userData_thresholdFloatPtr);
-void QD3D_ClearDiffuseColor_TriMesh(TQ3TriMeshData triMeshData);
-void QD3D_SetUVClamp_TriMesh(TQ3TriMeshData triMeshData, Boolean uClamp, Boolean vClamp);
+void QD3D_ClearDiffuseColor_TriMesh(TQ3TriMeshData triMeshData, void* userData_unused);
+
+enum
+{
+	SETUVCLAMP_WRAP_BOTH	= 0,
+	SETUVCLAMP_CLAMPU_WRAPV	= 1,
+	SETUVCLAMP_WRAPU_CLAMPV	= 2,
+	SETUVCLAMP_CLAMP_BOTH	= 3,
+};
+
+void QD3D_SetUVClamp_TriMesh(TQ3TriMeshData triMeshData, void* userData);

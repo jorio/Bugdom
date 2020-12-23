@@ -104,11 +104,6 @@ void InitItemsManager(void)
 
 /************************* CREATE CYCLORAMA *********************************/
 
-static void SetCycloramaClampingParams_Callback(TQ3TriMeshData triMeshData)
-{
-	QD3D_SetUVClamp_TriMesh(triMeshData, false, true);
-}
-
 void CreateCyclorama(void)
 {
 ObjNode *newObj;
@@ -125,7 +120,7 @@ ObjNode *newObj;
 	if (newObj == nil)
 		return;
 
-	ForEachTriMesh(newObj->BaseGroup, SetCycloramaClampingParams_Callback, NULL);
+	ForEachTriMesh(newObj->BaseGroup, QD3D_SetUVClamp_TriMesh, (void *) SETUVCLAMP_WRAPU_CLAMPV);
 		
 #ifdef FORMAC
     newObj->Scale.y *= 1.5f;
