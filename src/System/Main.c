@@ -669,8 +669,6 @@ QD3DSetupInputType	viewDef;
 			
 	if (gUseCyclorama)
 		CreateCyclorama();
-		
-	HideCursor();								// do this again to be sure!
  }
 
 
