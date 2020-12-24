@@ -756,10 +756,12 @@ static void CheckForCheats(void)
 		if (GetNewKeyState(kVK_F1))			// win the level!
 			gAreaCompleted = true;
 			
-		if (GetNewKeyState(kVK_F2))			// win the game!
+		if (GetNewKeyState(kVK_F2))			// Show player position
 		{
-			gGameOverFlag = true;
-			gWonGameFlag = true;
+			char msgbuf[128];
+			sprintf(msgbuf, "%.0f   %.0f   %.0f    ", gPlayerObj->Coord.x, gPlayerObj->Coord.y, gPlayerObj->Coord.z);
+			MoveTo(0, 12);
+			DrawStringC(msgbuf);
 		}
 		
 		if (GetNewKeyState(kVK_F3))			// get full health
