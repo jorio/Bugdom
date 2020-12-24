@@ -70,7 +70,6 @@ static const TQ3ColorRGB gTextShadowColor	= { 0.0f, 0.0f, 0.3f };
 static const TQ3ColorRGB gTextColor			= { 1.0f, 0.9f, 0.0f };
 static const TQ3ColorRGB gTitleTextColor	= { 1.0f, 0.9f, 0.0f };
 static const TQ3ColorRGB gDeleteColor		= { 0.9f, 0.3f, 0.1f };
-static const TQ3ColorRGB gBackColor			= { 1,1,1 };
 
 
 static char textBuffer[512];

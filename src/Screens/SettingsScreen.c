@@ -193,9 +193,9 @@ static SettingEntry gSettingEntries[] =
 	{
 		NULL,
 		NULL,
+		0, NULL,
 		NULL,
-		NULL,
-		0, false, NULL,
+		0, false, {NULL},
 		0,
 	}
 };
