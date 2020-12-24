@@ -214,6 +214,16 @@ static void MakeAboutScreenObjects(int slideNumber)
 			MakeCreditPart(0, y-LH*0, "The Makers of Bugdom:", "www.pangeasoft.net", "");
 			MakeCreditPart(0, y-LH*4, "Get Updates at:", "github.com/jorio/bugdom", "");
 
+			char sdlVersionString[256];
+			SDL_version compiled;
+			SDL_version linked;
+			SDL_VERSION(&compiled);
+			SDL_GetVersion(&linked);
+			snprintf(sdlVersionString, sizeof(sdlVersionString), "C:%d.%d.%d, L:%d.%d.%d, %s",
+					 compiled.major, compiled.minor, compiled.patch,
+					 linked.major, linked.minor, linked.patch,
+					 SDL_GetPlatform());
+
 			tmd.scale = 0.2f;
 			tmd.coord.x = -100;
 			tmd.coord.y = -75;
@@ -223,6 +233,7 @@ static void MakeAboutScreenObjects(int slideNumber)
 			tmd.coord.y -= 10; tmd.coord.x = -80; TextMesh_Create(&tmd, "Renderer:");	tmd.coord.x = -30; TextMesh_Create(&tmd, (const char*)glGetString(GL_RENDERER));
 			tmd.coord.y -= 10; tmd.coord.x = -80; TextMesh_Create(&tmd, "OpenGL:");		tmd.coord.x = -30; TextMesh_Create(&tmd, (const char*)glGetString(GL_VERSION));
 			tmd.coord.y -= 10; tmd.coord.x = -80; TextMesh_Create(&tmd, "GLSL:");		tmd.coord.x = -30; TextMesh_Create(&tmd, (const char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
+			tmd.coord.y -= 10; tmd.coord.x = -80; TextMesh_Create(&tmd, "SDL:");		tmd.coord.x = -30; TextMesh_Create(&tmd, sdlVersionString);
 
 			break;
 		}
