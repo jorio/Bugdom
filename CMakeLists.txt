@@ -4,6 +4,8 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 set(CMAKE_CXX_STANDARD 20)
 
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.11" CACHE STRING "Minimum OS X deployment version")
+
 project(Bugdom
 	VERSION 1.3.0
 	LANGUAGES C CXX
@@ -302,14 +304,7 @@ endif()
 #------------------------------------------------------------------------------
 
 if(APPLE)
-	# Set macOS target version for all subprojects
-	set(MACOS_TARGET_VERSION "10.11")
-	set_target_properties(Quesa_SDL       PROPERTIES XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET ${MACOS_TARGET_VERSION})
-	set_target_properties(Pomme           PROPERTIES XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET ${MACOS_TARGET_VERSION})
-
 	set_target_properties(${GAME_TARGET} PROPERTIES
-		XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET ${MACOS_TARGET_VERSION}
-
 		# Set framework search path to (App bundle)/Contents/Frameworks so the game can use its embedded SDL2.framework
 		XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../Frameworks"
 
