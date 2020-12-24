@@ -1,6 +1,9 @@
 # External libraries
 extern/SDL*
 
+# External library cache
+/cache
+
 # Automatically-generated headers
 src/Headers/version.h
 
