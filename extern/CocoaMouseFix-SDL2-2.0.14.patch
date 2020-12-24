@@ -1,0 +1,562 @@
+diff --git a/Xcode/SDL/SDL.xcodeproj/project.pbxproj b/Xcode/SDL/SDL.xcodeproj/project.pbxproj
+index 3ec037324..4c1700729 100644
+--- a/Xcode/SDL/SDL.xcodeproj/project.pbxproj
++++ b/Xcode/SDL/SDL.xcodeproj/project.pbxproj
+@@ -12,9 +12,10 @@
+ 		00CFA89D106B4BA100758660 /* ForceFeedback.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00CFA89C106B4BA100758660 /* ForceFeedback.framework */; };
+ 		00D0D08410675DD9004B05EF /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00D0D08310675DD9004B05EF /* CoreFoundation.framework */; };
+ 		00D0D0D810675E46004B05EF /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 007317C10858E15000B2BC32 /* Carbon.framework */; };
++		14C67A0E258FCB1D0056238B /* SDL_cocoamouseraw.m in Sources */ = {isa = PBXBuildFile; fileRef = 14C67A0C258FCB1C0056238B /* SDL_cocoamouseraw.m */; };
++		14C67A0F258FCB1D0056238B /* SDL_cocoamouseraw.h in Headers */ = {isa = PBXBuildFile; fileRef = 14C67A0D258FCB1D0056238B /* SDL_cocoamouseraw.h */; };
+ 		552673EB2546054600085751 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A75FDABD23E28B6200529352 /* GameController.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+ 		552673EC2546055000085751 /* CoreHaptics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F37DC5F225350EBC0002E6F7 /* CoreHaptics.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+-		557D0CFA254586CA003913E3 /* CoreHaptics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F37DC5F225350EBC0002E6F7 /* CoreHaptics.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+ 		557D0CFB254586D7003913E3 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A75FDABD23E28B6200529352 /* GameController.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+ 		560572062473687700B46B66 /* SDL_syslocale.m in Sources */ = {isa = PBXBuildFile; fileRef = 566E26CC246274CB00718109 /* SDL_syslocale.m */; };
+ 		560572072473687800B46B66 /* SDL_syslocale.m in Sources */ = {isa = PBXBuildFile; fileRef = 566E26CC246274CB00718109 /* SDL_syslocale.m */; };
+@@ -3892,6 +3893,8 @@
+ 		00794D3F09D0C461003FC8A1 /* License.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = License.txt; sourceTree = "<group>"; };
+ 		00CFA89C106B4BA100758660 /* ForceFeedback.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ForceFeedback.framework; path = System/Library/Frameworks/ForceFeedback.framework; sourceTree = SDKROOT; };
+ 		00D0D08310675DD9004B05EF /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
++		14C67A0C258FCB1C0056238B /* SDL_cocoamouseraw.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDL_cocoamouseraw.m; sourceTree = "<group>"; };
++		14C67A0D258FCB1D0056238B /* SDL_cocoamouseraw.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL_cocoamouseraw.h; sourceTree = "<group>"; };
+ 		4D4820431F0F10B400EDC31C /* SDL_vulkan.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SDL_vulkan.h; sourceTree = "<group>"; };
+ 		5616CA49252BB2A5005D5928 /* SDL_url.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SDL_url.c; sourceTree = "<group>"; };
+ 		5616CA4A252BB2A6005D5928 /* SDL_sysurl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDL_sysurl.h; sourceTree = "<group>"; };
+@@ -4516,7 +4519,6 @@
+ 			buildActionMask = 2147483647;
+ 			files = (
+ 				557D0CFB254586D7003913E3 /* GameController.framework in Frameworks */,
+-				557D0CFA254586CA003913E3 /* CoreHaptics.framework in Frameworks */,
+ 				564624381FF821DA0074AC87 /* Metal.framework in Frameworks */,
+ 				564624361FF821C20074AC87 /* QuartzCore.framework in Frameworks */,
+ 				A7381E971D8B6A0300B177DD /* AudioToolbox.framework in Frameworks */,
+@@ -5058,6 +5060,8 @@
+ 		A7D8A67D23E2513E00DCD162 /* cocoa */ = {
+ 			isa = PBXGroup;
+ 			children = (
++				14C67A0D258FCB1D0056238B /* SDL_cocoamouseraw.h */,
++				14C67A0C258FCB1C0056238B /* SDL_cocoamouseraw.m */,
+ 				A7D8A68A23E2513E00DCD162 /* SDL_cocoaclipboard.h */,
+ 				A7D8A69523E2513E00DCD162 /* SDL_cocoaclipboard.m */,
+ 				A7D8A69623E2513E00DCD162 /* SDL_cocoaevents.h */,
+@@ -7153,6 +7157,7 @@
+ 				AA7558361595D4D800BBD41B /* SDL_pixels.h in Headers */,
+ 				A7D8B2C023E2514200DCD162 /* SDL_pixels_c.h in Headers */,
+ 				AA7558381595D4D800BBD41B /* SDL_platform.h in Headers */,
++				14C67A0F258FCB1D0056238B /* SDL_cocoamouseraw.h in Headers */,
+ 				AA75583A1595D4D800BBD41B /* SDL_power.h in Headers */,
+ 				AA75583C1595D4D800BBD41B /* SDL_quit.h in Headers */,
+ 				AA75583E1595D4D800BBD41B /* SDL_rect.h in Headers */,
+@@ -9418,6 +9423,7 @@
+ 				A7D8BA1323E2514400DCD162 /* SDL_render_sw.c in Sources */,
+ 				A7D8B18E23E2514200DCD162 /* SDL_x11video.c in Sources */,
+ 				A7D8B42223E2514300DCD162 /* SDL_syssem.c in Sources */,
++				14C67A0E258FCB1D0056238B /* SDL_cocoamouseraw.m in Sources */,
+ 				A7D8B53923E2514300DCD162 /* SDL_hidapi_xbox360.c in Sources */,
+ 				A7D8B8D223E2514400DCD162 /* SDL_coreaudio.m in Sources */,
+ 				A7D8BA1F23E2514400DCD162 /* SDL_blendline.c in Sources */,
+diff --git a/src/SDL.c b/src/SDL.c
+index 02e131bb0..2d5125b05 100644
+--- a/src/SDL.c
++++ b/src/SDL.c
+@@ -500,7 +500,7 @@ SDL_GetPlatform()
+ #elif __MACOS__
+     return "MacOS Classic";
+ #elif __MACOSX__
+-    return "Mac OS X";
++    return "Mac OS X w/CocoaMouseFix";
+ #elif __NACL__
+     return "NaCl";
+ #elif __NETBSD__
+diff --git a/src/video/cocoa/SDL_cocoamouse.h b/src/video/cocoa/SDL_cocoamouse.h
+index cde24c8d6..f0ea76e81 100644
+--- a/src/video/cocoa/SDL_cocoamouse.h
++++ b/src/video/cocoa/SDL_cocoamouse.h
+@@ -30,6 +30,7 @@ extern void Cocoa_HandleMouseEvent(_THIS, NSEvent * event);
+ extern void Cocoa_HandleMouseWheel(SDL_Window *window, NSEvent * event);
+ extern void Cocoa_HandleMouseWarp(CGFloat x, CGFloat y);
+ extern void Cocoa_QuitMouse(_THIS);
++extern void Cocoa_HandleRawMouseEvent(int deltaX, int deltaY);
+ 
+ typedef struct {
+     /* Wether we've seen a cursor warp since the last move event. */
+@@ -41,6 +42,8 @@ typedef struct {
+     CGFloat lastMoveX;
+     CGFloat lastMoveY;
+     void *tapdata;
++    /* For raw motion */
++    void *rawMouseListener;
+ } SDL_MouseData;
+ 
+ @interface NSCursor (InvisibleCursor)
+diff --git a/src/video/cocoa/SDL_cocoamouse.m b/src/video/cocoa/SDL_cocoamouse.m
+index 4ce2c61e9..d404dc00a 100644
+--- a/src/video/cocoa/SDL_cocoamouse.m
++++ b/src/video/cocoa/SDL_cocoamouse.m
+@@ -26,6 +26,7 @@
+ #include "SDL_cocoamouse.h"
+ #include "SDL_cocoamousetap.h"
+ #include "SDL_cocoavideo.h"
++#include "SDL_cocoamouseraw.h"
+ 
+ #include "../../events/SDL_mouse_c.h"
+ 
+@@ -296,6 +297,19 @@ Cocoa_SetRelativeMouseMode(SDL_bool enabled)
+     } else {
+         [NSCursor unhide];
+     }
++    
++    SDL_Mouse *mouse = SDL_GetMouse();
++    if (!mouse) {
++        return SDL_FALSE;
++    }
++
++    SDL_MouseData *driverdata = (SDL_MouseData *)mouse->driverdata;
++    if (!mouse->driverdata) {
++        return SDL_FALSE;
++    }
++    
++    Cocoa_SetRawMouseCallbackEnabled(driverdata, enabled);
++    
+     return 0;
+ }
+ 
+@@ -388,6 +402,8 @@ Cocoa_HandleMouseEvent(_THIS, NSEvent *event)
+     driverdata->lastMoveY = location.y;
+     DLog("Last seen mouse: (%g, %g)", location.x, location.y);
+ 
++    /* The following is now handled by SDL_cocoamouseraw.m */
++#if 0
+     /* Non-relative movement is handled in -[Cocoa_WindowListener mouseMoved:] */
+     if (!mouse->relative_mode) {
+         return;
+@@ -412,6 +428,24 @@ Cocoa_HandleMouseEvent(_THIS, NSEvent *event)
+     }
+ 
+     SDL_SendMouseMotion(mouse->focus, mouseID, 1, (int)deltaX, (int)deltaY);
++#endif
++}
++
++void
++Cocoa_HandleRawMouseEvent(int deltaX, int deltaY)
++{
++    SDL_Mouse *mouse = SDL_GetMouse();
++    SDL_MouseData *driverdata = (SDL_MouseData*)mouse->driverdata;
++    if (!driverdata) {
++        return;  /* can happen when returning from fullscreen Space on shutdown */
++    }
++    
++    /* Non-relative movement is handled in -[Cocoa_WindowListener mouseMoved:] */
++    if (!mouse->relative_mode) {
++        return;
++    }
++    
++    SDL_SendMouseMotion(mouse->focus, mouse->mouseID, 1, deltaX, deltaY);
+ }
+ 
+ void
+@@ -466,8 +500,10 @@ Cocoa_QuitMouse(_THIS)
+ {
+     SDL_Mouse *mouse = SDL_GetMouse();
+     if (mouse) {
+-        if (mouse->driverdata) {
+-            Cocoa_QuitMouseEventTap(((SDL_MouseData*)mouse->driverdata));
++        SDL_MouseData *driverdata = (SDL_MouseData*)mouse->driverdata;
++        if (driverdata) {
++            Cocoa_QuitRawMouseCallback(driverdata);
++            Cocoa_QuitMouseEventTap(driverdata);
+ 
+             SDL_free(mouse->driverdata);
+             mouse->driverdata = NULL;
+diff --git a/src/video/cocoa/SDL_cocoamouseraw.h b/src/video/cocoa/SDL_cocoamouseraw.h
+new file mode 100644
+index 000000000..613723193
+--- /dev/null
++++ b/src/video/cocoa/SDL_cocoamouseraw.h
+@@ -0,0 +1,33 @@
++/*
++ Simple DirectMedia Layer
++ Copyright (C) 1997-2016 Sam Lantinga <slouken@libsdl.org>
++ 
++ This software is provided 'as-is', without any express or implied
++ warranty.  In no event will the authors be held liable for any damages
++ arising from the use of this software.
++ 
++ Permission is granted to anyone to use this software for any purpose,
++ including commercial applications, and to alter it and redistribute it
++ freely, subject to the following restrictions:
++ 
++ 1. The origin of this software must not be misrepresented; you must not
++ claim that you wrote the original software. If you use this software
++ in a product, an acknowledgment in the product documentation would be
++ appreciated but is not required.
++ 2. Altered source versions must be plainly marked as such, and must not be
++ misrepresented as being the original software.
++ 3. This notice may not be removed or altered from any source distribution.
++ */
++#include "../../SDL_internal.h"
++
++#ifndef _SDL_cocoamouseraw_h
++#define _SDL_cocoamouseraw_h
++
++#include "SDL_cocoamouse.h"
++
++extern void Cocoa_SetRawMouseCallbackEnabled(SDL_MouseData *driverdata, SDL_bool enable);
++extern void Cocoa_QuitRawMouseCallback(SDL_MouseData *driverdata);
++
++#endif /* _SDL_cocoamouseraw_h */
++
++/* vi: set ts=4 sw=4 expandtab: */
+diff --git a/src/video/cocoa/SDL_cocoamouseraw.m b/src/video/cocoa/SDL_cocoamouseraw.m
+new file mode 100644
+index 000000000..85a07f126
+--- /dev/null
++++ b/src/video/cocoa/SDL_cocoamouseraw.m
+@@ -0,0 +1,306 @@
++/*
++  Simple DirectMedia Layer
++  Copyright (C) 1997-2016 Sam Lantinga <slouken@libsdl.org>
++
++  This software is provided 'as-is', without any express or implied
++  warranty.  In no event will the authors be held liable for any damages
++  arising from the use of this software.
++
++  Permission is granted to anyone to use this software for any purpose,
++  including commercial applications, and to alter it and redistribute it
++  freely, subject to the following restrictions:
++
++  1. The origin of this software must not be misrepresented; you must not
++     claim that you wrote the original software. If you use this software
++     in a product, an acknowledgment in the product documentation would be
++     appreciated but is not required.
++  2. Altered source versions must be plainly marked as such, and must not be
++     misrepresented as being the original software.
++  3. This notice may not be removed or altered from any source distribution.
++*/
++#include "../../SDL_internal.h"
++
++#if SDL_VIDEO_DRIVER_COCOA
++
++#include <IOKit/hid/IOHIDLib.h>
++
++#include "SDL_cocoamouseraw.h"
++
++#include "../../events/SDL_mouse_c.h"
++
++#define DEBUG_COCOAMOUSERAW
++
++#ifdef DEBUG_COCOAMOUSERAW
++#define DLog(fmt, ...) printf("%s: " fmt "\n", __func__, ##__VA_ARGS__)
++#else
++#define DLog(...) do { } while (0)
++#endif
++
++#define COCOAMOUSERAW_QUEUE_SIZE 2000
++
++typedef struct {
++    IOHIDManagerRef hidman;
++    CFMutableArrayRef queues;
++    SDL_bool started;
++} SDL_RawMouseData;
++
++static void
++Cocoa_RawMouseQueueCallback(void *context, IOReturn result, void *sender)
++{
++    
++    IOHIDQueueRef queue = SDL_static_cast(IOHIDQueueRef, sender);
++    IOHIDValueRef val;
++    int x = 0, y = 0;
++    
++    // empty the IOHIDQueue, adding up the X and Y deltas
++    while ((val = IOHIDQueueCopyNextValueWithTimeout(queue, 0.0)) != NULL) {
++        IOHIDElementRef elem = IOHIDValueGetElement(val);
++        
++        const CFIndex intval = IOHIDValueGetIntegerValue(val);
++        const uint32_t page = IOHIDElementGetUsagePage(elem);
++        const uint32_t usage = IOHIDElementGetUsage(elem);
++        
++        if (page == kHIDPage_GenericDesktop && usage == kHIDUsage_GD_X) {
++            x += intval;
++        } else if (page == kHIDPage_GenericDesktop && usage == kHIDUsage_GD_Y) {
++            y += intval;
++        } else {
++            DLog("unexpected page 0x%x usage 0x%x\n", (int)page, (int)usage);
++        }
++        
++        // release the copy returned by IOHIDQueueCopyNextValueWithTimeout
++        CFRelease(val);
++    }
++    
++    // dispatch an SDL event if there was some motion
++    if (x != 0 || y != 0) {
++        Cocoa_HandleRawMouseEvent(x, y);
++    }
++}
++
++static void
++Cocoa_EnableQueue(IOHIDQueueRef q)
++{
++    DLog("Enabling queue: %p", q);
++    
++    IOHIDQueueStart(q);
++    IOHIDQueueRegisterValueAvailableCallback(q, Cocoa_RawMouseQueueCallback, NULL);
++    IOHIDQueueScheduleWithRunLoop(q, CFRunLoopGetMain(), kCFRunLoopDefaultMode);
++}
++
++static void
++Cocoa_DisableQueue(IOHIDQueueRef q)
++{
++    DLog("Disabling queue: %p", q);
++    
++    IOHIDQueueStop(q);
++    //IOHIDQueueRegisterValueAvailableCallback(q, NULL, NULL);
++    IOHIDQueueUnscheduleFromRunLoop(q, CFRunLoopGetMain(), kCFRunLoopDefaultMode);
++}
++
++static void
++Cocoa_EnableQueue_Func( const void *value, void *context )
++{
++    Cocoa_EnableQueue(SDL_static_cast(IOHIDQueueRef, value));
++}
++
++static void
++Cocoa_DisableQueue_Func( const void *value, void *context )
++{
++    Cocoa_DisableQueue(SDL_static_cast(IOHIDQueueRef, value));
++}
++
++static NSArray *
++ElementMatchingDictionaries()
++{
++    NSDictionary *matchingDictX = [NSDictionary dictionaryWithObjectsAndKeys:
++                                   [NSNumber numberWithInt: kHIDPage_GenericDesktop], CFSTR(kIOHIDElementUsagePageKey),
++                                   [NSNumber numberWithInt: kHIDUsage_GD_X], CFSTR(kIOHIDElementUsageKey),
++                                   nil];
++    
++    NSDictionary *matchingDictY = [NSDictionary dictionaryWithObjectsAndKeys:
++                                   [NSNumber numberWithInt: kHIDPage_GenericDesktop], CFSTR(kIOHIDElementUsagePageKey),
++                                   [NSNumber numberWithInt: kHIDUsage_GD_Y], CFSTR(kIOHIDElementUsageKey),
++                                   nil];
++    
++    NSArray *matchingDicts = [NSArray arrayWithObjects: matchingDictX, matchingDictY, nil];
++    return matchingDicts;
++}
++
++static void
++Cocoa_RawMouseAddedCallback(void *context, IOReturn res, void *sender, IOHIDDeviceRef device)
++{ @autoreleasepool
++{
++    SDL_RawMouseData *rawdata = SDL_static_cast(SDL_RawMouseData *, context);
++    
++    if (NULL == rawdata) {
++        return;
++    }
++    
++    NSArray *matchingDicts = ElementMatchingDictionaries();
++    
++    DLog("Mouse added: %s", [(NSString *)IOHIDDeviceGetProperty(device, CFSTR(kIOHIDProductKey)) UTF8String]);
++    
++    // create the queue
++    IOHIDQueueRef queue = IOHIDQueueCreate(kCFAllocatorDefault, device, COCOAMOUSERAW_QUEUE_SIZE, kIOHIDOptionsTypeNone);
++    CFArrayAppendValue(rawdata->queues, queue);
++    CFRelease(queue);
++    
++    // make the queue subscribe to updates for X and Y changes
++    for (NSDictionary *matchingDict in matchingDicts) {
++        CFArrayRef elems = IOHIDDeviceCopyMatchingElements(device, SDL_static_cast(CFDictionaryRef, matchingDict), kIOHIDOptionsTypeNone);
++        for (id elem in SDL_static_cast(NSArray *, elems)) {
++            IOHIDQueueAddElement(queue, SDL_static_cast(IOHIDElementRef, elem));
++        }
++        CFRelease(elems);
++    }        
++    
++    // start it now if we are in relative mouse mode.
++    // otherwise, it gets started in Cocoa_StartRawMouseCallback
++    if (rawdata->started) {
++        Cocoa_EnableQueue(queue);
++    }
++}}
++
++static void
++Cocoa_RawMouseRemovedCallback(void *context, IOReturn res, void *sender, IOHIDDeviceRef device)
++{ @autoreleasepool
++{
++    CFIndex i;
++    SDL_RawMouseData *rawdata = SDL_static_cast(SDL_RawMouseData *, context);
++    
++    if (NULL == rawdata) {
++        return;
++    }
++    
++    DLog("Mouse removed: %s", [(NSString *)IOHIDDeviceGetProperty(device, CFSTR(kIOHIDProductKey)) UTF8String]);
++    
++    // remove any queues from the rawdata->queues CFArray that belonged to `device`
++    for (i = 0; i < CFArrayGetCount(rawdata->queues); ) {
++        IOHIDQueueRef queue = SDL_static_cast(IOHIDQueueRef, CFArrayGetValueAtIndex(rawdata->queues, i));
++        if (IOHIDQueueGetDevice(queue) == device) {
++            // remove it, don't increment i
++            CFArrayRemoveValueAtIndex(rawdata->queues, i);
++        } else {
++            i++;
++        }
++    }
++}}
++
++static NSDictionary *
++DeviceMatchDictionary()
++{
++    return [NSDictionary dictionaryWithObjectsAndKeys:
++            [NSNumber numberWithInt: kHIDPage_GenericDesktop], CFSTR(kIOHIDDeviceUsagePageKey),
++            [NSNumber numberWithInt: kHIDUsage_GD_Mouse], CFSTR(kIOHIDDeviceUsageKey),
++            nil];
++}
++
++static IOHIDManagerRef
++CreateHIDManager(SDL_RawMouseData *rawdata)
++{ @autoreleasepool
++{
++    IOHIDManagerRef hidman = IOHIDManagerCreate(kCFAllocatorDefault, kIOHIDOptionsTypeNone);
++ 
++    NSDictionary *matchingDict = DeviceMatchDictionary();
++    if (!matchingDict) {
++        SDL_OutOfMemory();
++        return NULL;
++    }
++    
++    IOHIDManagerSetDeviceMatching(hidman, SDL_static_cast(CFDictionaryRef, matchingDict));
++
++    if (IOHIDManagerOpen(hidman, kIOHIDOptionsTypeNone) != kIOReturnSuccess) {
++        return NULL;
++    }
++    
++    // it would be simpler to use IOHIDManagerRegisterInputValueCallback, but
++    // it's broken on OS X 10.6, an internal buffer seems to be filling up
++    // and events are dropped. so, instead, use the IOHIDQueue* API.
++    
++    IOHIDManagerRegisterDeviceMatchingCallback(hidman, Cocoa_RawMouseAddedCallback, rawdata);
++    IOHIDManagerRegisterDeviceRemovalCallback(hidman, Cocoa_RawMouseRemovedCallback, rawdata);
++    IOHIDManagerScheduleWithRunLoop(hidman, CFRunLoopGetMain(), kCFRunLoopDefaultMode);
++    return hidman;
++}}
++
++static void
++Cocoa_InitRawMouseCallback(SDL_MouseData *driverdata)
++{ @autoreleasepool
++{
++    SDL_RawMouseData *rawdata;
++    
++    if (driverdata->rawMouseListener != NULL) {
++        // already initialized
++        return;
++    }
++    
++    DLog("init");
++    
++    rawdata = SDL_calloc(1, sizeof(SDL_RawMouseData));
++    if (NULL == rawdata) {
++        SDL_OutOfMemory();
++        return;
++    }
++    
++    rawdata->queues = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
++    rawdata->hidman = CreateHIDManager(rawdata);
++        
++    driverdata->rawMouseListener = rawdata;
++}}
++
++void
++Cocoa_SetRawMouseCallbackEnabled(SDL_MouseData *driverdata, SDL_bool enable)
++{ @autoreleasepool
++{
++    SDL_RawMouseData *rawdata;
++    
++    // init if needed.
++    if (NULL == driverdata->rawMouseListener) {
++        Cocoa_InitRawMouseCallback(driverdata);
++    }
++    
++    rawdata = SDL_static_cast(SDL_RawMouseData *, driverdata->rawMouseListener);
++    if (rawdata) {
++        if (enable) {
++            DLog("starting");
++            rawdata->started = SDL_TRUE;
++        
++            CFArrayApplyFunction(rawdata->queues, CFRangeMake(0, CFArrayGetCount(rawdata->queues)), Cocoa_EnableQueue_Func, NULL);
++        } else {
++            DLog("stopping");
++            rawdata->started = SDL_FALSE;
++            
++            CFArrayApplyFunction(rawdata->queues, CFRangeMake(0, CFArrayGetCount(rawdata->queues)), Cocoa_DisableQueue_Func, NULL);
++        }
++    } else {
++        // failed
++    }
++}}
++
++void
++Cocoa_QuitRawMouseCallback(SDL_MouseData *driverdata)
++{ @autoreleasepool
++{
++    DLog("quitting");
++    
++    SDL_RawMouseData *rawdata = SDL_static_cast(SDL_RawMouseData *, driverdata->rawMouseListener);
++    if (rawdata != NULL) {
++        Cocoa_SetRawMouseCallbackEnabled(driverdata, SDL_FALSE);
++        
++        // release rawdata->queues
++        CFRelease(rawdata->queues);
++        
++        // release rawdata->hidman
++        IOHIDManagerUnscheduleFromRunLoop(rawdata->hidman, CFRunLoopGetMain(), kCFRunLoopDefaultMode);
++        IOHIDManagerClose(rawdata->hidman, kIOHIDOptionsTypeNone);
++        CFRelease(rawdata->hidman);
++        
++        SDL_free(rawdata);
++        driverdata->rawMouseListener = NULL;
++    }
++}}
++
++#endif /* SDL_VIDEO_DRIVER_COCOA */
++
++/* vi: set ts=4 sw=4 expandtab: */
+diff --git a/test/testrelative.c b/test/testrelative.c
+index 52566f7b1..60f9c7363 100644
+--- a/test/testrelative.c
++++ b/test/testrelative.c
+@@ -27,6 +27,10 @@ int i, done;
+ SDL_Rect rect;
+ SDL_Event event;
+ 
++int motioncount;
++Uint32 motion_last_log_time;
++#define RATE_LOG_INTERVAL 1000
++
+ static void
+ DrawRects(SDL_Renderer * renderer, SDL_Rect * rect)
+ {
+@@ -44,10 +48,24 @@ loop(){
+             {
+                 rect.x += event.motion.xrel;
+                 rect.y += event.motion.yrel;
++                motioncount++;
+             }
+             break;
+         }
+     }
++    /* Log SDL_MOUSEMOTION event rate every RATE_LOG_INTERVAL milliseconds */
++    {
++        const Uint32 currtime = SDL_GetTicks();
++        if (currtime >= (motion_last_log_time + RATE_LOG_INTERVAL)) {
++            float seconds_elapsed = (float)(currtime - motion_last_log_time) / 1000.0f;
++            float rate = motioncount / seconds_elapsed;
++            
++            SDL_Log("SDL_MOUSEMOTION rate: %f Hz\n", rate);
++            
++            motioncount = 0;
++            motion_last_log_time = currtime;
++        }
++    }
+     for (i = 0; i < state->num_windows; ++i) {
+         SDL_Rect viewport;
+         SDL_Renderer *renderer = state->renderers[i];
