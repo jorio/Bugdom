@@ -31,7 +31,6 @@ static void CreateView(QD3DSetupInputType *setupDefPtr);
 static void DrawPICTIntoMipmap(PicHandle pict,long width, long height, TQ3Mipmap *mipmap, Boolean blackIsAlpha);
 static void Data16ToMipmap(Ptr data, short width, short height, TQ3Mipmap *mipmap);
 static void DrawNormal(TQ3ViewObject view);
-static void QASetInt(TQ3DrawContextObject, int, int);
 
 
 /****************************/
@@ -330,8 +329,19 @@ TQ3Status	status;
 	Q3Object_SetProperty(gQD3D_RendererObject, kQ3RendererPropertyAngleAffectsAlpha,
 						 sizeof(gQD3D_AngleAffectsAlpha), &gQD3D_AngleAffectsAlpha);
 
+	// Source port addition: we draw overlays in straight OpenGL, so we want control over when the buffers are swapped.
 	Q3Object_SetProperty(gQD3D_DrawContext, kQ3DrawContextPropertySwapBufferInEndPass,
 						sizeof(gQD3D_SwapBufferInEndPass), &gQD3D_SwapBufferInEndPass);
+
+	// Source port addition: Enable writing transparent stuff into the z-buffer.
+	// (This makes auto-fading stuff look better)
+	static const TQ3Float32 depthAlphaThreshold = 0.99f;
+	Q3Object_SetProperty(gQD3D_RendererObject, kQ3RendererPropertyDepthAlphaThreshold,
+					  sizeof(depthAlphaThreshold), &depthAlphaThreshold);
+
+	// Uncomment to apply an alpha threshold to EVERYTHING in the game
+//	static const TQ3Float32 gQD3D_AlphaThreshold = 0.501337;
+//	Q3Object_SetProperty(gQD3D_RendererObject, kQ3RendererPropertyAlphaThreshold, sizeof(gQD3D_AlphaThreshold), &gQD3D_AlphaThreshold);
 }
 
 
@@ -1425,14 +1435,18 @@ void QD3D_ReEnableFog(const QD3DSetupOutputType *setupInfo)
 
 void QD3D_SetTriangleCacheMode(Boolean isOn)
 {
+#if 0	// Source port removal. We'd need to extend Quesa for this.
 	GAME_ASSERT(gQD3D_DrawContext);
 
 		QASetInt(gQD3D_DrawContext, kQATag_ZSortedHint, isOn);
+#endif
 }	
 				
 /************************ SET Z WRITE *****************************/
 //
 // For ATI driver, turns on/off z-buffer writes
+// QASetInt(gQD3D_DrawContext, kQATag_ZBufferMask, isOn)
+// (Source port note: added Quesa extension for this)
 //
 
 void QD3D_SetZWrite(Boolean isOn)
@@ -1440,7 +1454,8 @@ void QD3D_SetZWrite(Boolean isOn)
 	if (!gQD3D_DrawContext)
 		return;
 
-	QASetInt(gQD3D_DrawContext, kQATag_ZBufferMask, isOn);
+	TQ3Status status = Q3ZWriteTransparencyStyle_Submit(isOn ? kQ3On : kQ3Off, gQD3D_ViewObject);
+	GAME_ASSERT(status);
 }	
 
 
@@ -1486,19 +1501,4 @@ TQ3LineData	line;
 
 	Q3Line_Submit(&line, view);
 }
-
-
-#pragma mark -
-
-static void QASetInt(TQ3DrawContextObject	a, int b, int c)
-{
-#pragma unused (a,b,c)
-
-}
-
-
-
-
-
-
 
