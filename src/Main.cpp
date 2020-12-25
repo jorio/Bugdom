@@ -39,7 +39,7 @@ extern "C"
 	int GameMain(void);
 }
 
-static void FindGameData()
+static fs::path FindGameData()
 {
 	fs::path dataPath;
 
@@ -65,9 +65,11 @@ static void FindGameData()
 	gDataSpec = Pomme::Files::HostPathToFSSpec(dataPath / "Skeletons");
 
 	// Use application resource file
-	auto applicationSpec = Pomme::Files::HostPathToFSSpec(dataPath / "Application");
+	auto applicationSpec = Pomme::Files::HostPathToFSSpec(dataPath / "System" / "Application");
 	short resFileRefNum = FSpOpenResFile(&applicationSpec, fsRdPerm);
 	UseResFile(resFileRefNum);
+
+	return dataPath;
 }
 
 static const char* GetWindowTitle()
