@@ -11,6 +11,7 @@
 
 extern	float	gFramesPerSecondFrac;
 extern	PrefsType	gGamePrefs;
+extern	SDL_Window* gSDLWindow;
 
 /**********************/
 /*     PROTOTYPES     */
@@ -242,25 +243,7 @@ UInt32		modifiers;
 
 static Boolean WeAreFrontProcess(void)
 {
-#if 1
-	static Boolean once = false;
-	if (!once)
-	{
-		SOURCE_PORT_MINOR_PLACEHOLDER();
-		once = true;
-	}
-	return true;
-#else
-ProcessSerialNumber	frontProcess, myProcess;
-Boolean				same;
-
-	GetFrontProcess(&frontProcess); 					// get the front process
-	MacGetCurrentProcess(&myProcess);					// get the current process
-
-	SameProcess(&frontProcess, &myProcess, &same);		// if they're the same then we're in front
-
-	return(same);
-#endif
+	return 0 != (SDL_GetWindowFlags(gSDLWindow) & SDL_WINDOW_INPUT_FOCUS);
 }
 
 
