@@ -23,6 +23,8 @@ if(MSVC)
 	# (See: https://docs.microsoft.com/en-us/cpp/build/reference/zc-cplusplus)
 	add_compile_options(/Zc:__cplusplus)
 	add_compile_definitions(UNICODE _UNICODE)
+
+	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Bugdom)
 endif()
 
 #------------------------------------------------------------------------------
@@ -347,4 +349,6 @@ if(WIN32)
 	# Write readme file containing version info
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ReadMeWin32.txt.in ${CMAKE_BINARY_DIR}/ReadMeWin32.txt)
 	add_custom_command(TARGET ${GAME_TARGET} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/ReadMeWin32.txt $<TARGET_FILE_DIR:${GAME_TARGET}>/ReadMe.txt)
+
+	set_target_properties(${GAME_TARGET} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 endif()
