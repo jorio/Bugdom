@@ -1,6 +1,8 @@
-#include <string.h>
 #include "tween.h"
-#include "math.h"
+
+#define _USE_MATH_DEFINES  // For MSVC/Win32
+#include <math.h>
+#include <string.h>
 
 void TweenFloats(
 		float(*easingFunction)(float),
