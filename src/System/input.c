@@ -36,6 +36,8 @@ static const float kMouseSensitivityTable[NUM_MOUSE_SENSITIVITY_LEVELS] =
 	100 * 0.001f,
 };
 
+static const int kMouseDeltaMax = 250;
+
 
 
 /**********************/
@@ -417,6 +419,23 @@ void GetMouseDelta(float *dx, float *dy)
 	const float mouseSensitivity = 1600.0f * kMouseSensitivityTable[gGamePrefs.mouseSensitivityLevel];
 	int mdx, mdy;
 	MouseSmoothing_GetDelta(&mdx, &mdy);
+
+	if (mdx != 0 && mdy != 0)
+	{
+		int mouseDeltaMagnitudeSquared = mdx*mdx + mdy*mdy;
+		if (mouseDeltaMagnitudeSquared > kMouseDeltaMax*kMouseDeltaMax)
+		{
+#if _DEBUG
+			printf("Capping mouse delta %f\n", sqrtf(mouseDeltaMagnitudeSquared));
+#endif
+			TQ3Vector2D mouseDeltaVector = { mdx, mdy };
+			Q3Vector2D_Normalize(&mouseDeltaVector, &mouseDeltaVector);
+			Q3Vector2D_Scale(&mouseDeltaVector, kMouseDeltaMax, &mouseDeltaVector);
+			mdx = mouseDeltaVector.x;
+			mdy = mouseDeltaVector.y;
+		}
+	}
+
 	*dx = gFramesPerSecondFrac * mdx * mouseSensitivity;
 	*dy = gFramesPerSecondFrac * mdy * mouseSensitivity;
 }
