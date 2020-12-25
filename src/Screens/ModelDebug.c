@@ -314,13 +314,13 @@ void DoModelDebug(void)
 
 		DoSDLMaintenance();
 
-		Boolean keyModelFile		= GetNewKeyState(kVK_ANSI_F);
-		Boolean keyNextPrimary		= GetNewKeyState(kVK_Tab);
-		Boolean keyNextSecondary	= GetNewKeyState(kVK_Return);
-		Boolean keyShift			= GetKeyState(kVK_Shift) || GetKeyState(kVK_RightShift);
-		Boolean keyToggleCull		= GetNewKeyState(kVK_Space);
-		Boolean keyZoom				= GetNewKeyState(kVK_ANSI_Z);
-		Boolean keyToggleGlow		= GetNewKeyState(kVK_ANSI_G);
+		Boolean keyModelFile		= GetNewKeyState_SDL(SDL_SCANCODE_F);
+		Boolean keyNextPrimary		= GetNewKeyState_SDL(SDL_SCANCODE_TAB);
+		Boolean keyNextSecondary	= GetNewKeyState_SDL(SDL_SCANCODE_RETURN);
+		Boolean keyShift			= GetKeyState_SDL(SDL_SCANCODE_LSHIFT) || GetKeyState_SDL(SDL_SCANCODE_RSHIFT);
+		Boolean keyToggleCull		= GetNewKeyState_SDL(SDL_SCANCODE_SPACE);
+		Boolean keyZoom				= GetNewKeyState_SDL(SDL_SCANCODE_Z);
+		Boolean keyToggleGlow		= GetNewKeyState_SDL(SDL_SCANCODE_G);
 
 		if (keyToggleCull)
 		{
@@ -410,7 +410,7 @@ void DoModelDebug(void)
 			SDL_SetWindowTitle(gSDLWindow, titlebuf);
 		}
 		
-	} while (!GetKeyState(kVK_Escape));
+	} while (!GetKeyState(kKey_UI_Cancel));
 
 	
 

@@ -77,14 +77,8 @@ void DoAboutScreens(void)
 			QD3D_CalcFramesPerSecond();
 			DoSDLMaintenance();
 
-			if (GetNewKeyState(kVK_Escape)
-				|| GetNewKeyState(kVK_Return)
-				|| GetNewKeyState(kVK_Space)
-				|| GetNewKeyState(kVK_ANSI_KeypadEnter)
-				|| FlushMouseButtonPress())
-			{
+			if (GetSkipScreenInput())
 				break;
-			}
 		}
 	}
 

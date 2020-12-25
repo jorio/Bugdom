@@ -23,12 +23,20 @@ static Boolean WeAreFrontProcess(void);
 
 static void ClearMouseState(void);
 
+typedef struct KeyBinding
+{
+	const char* name;
+	int key1;
+	int key2;
+	int mouseButton;
+} KeyBinding;
+
 
 /****************************/
 /*    CONSTANTS             */
 /****************************/
 
-#define NUM_MOUSE_BUTTONS 5
+#define NUM_MOUSE_BUTTONS 6
 
 static const float kMouseSensitivityTable[NUM_MOUSE_SENSITIVITY_LEVELS] =
 {
@@ -55,16 +63,52 @@ enum
 /**********************/
 
 long				gEatMouse = 0;
-static Byte			gMouseButtonState[NUM_MOUSE_BUTTONS] = {KEY_OFF, KEY_OFF, KEY_OFF, KEY_OFF, KEY_OFF};
-
-
-static KeyMapByteArray gKeyMap,gNewKeys,gOldKeys;
-
+static Byte			gMouseButtonState[NUM_MOUSE_BUTTONS] = {KEY_OFF, KEY_OFF, KEY_OFF, KEY_OFF, KEY_OFF, KEY_OFF};
 
 Boolean	gPlayerUsingKeyControl 	= false;
 
+Byte gKeyStates[kKey_MAX];
 
+#define SDLKEYSTATEBUF_SIZE SDL_NUM_SCANCODES
+Byte gRawKeyboardState[SDLKEYSTATEBUF_SIZE];
 
+#if __APPLE__
+	#define DEFAULT_JUMP_SCANCODE1 SDL_SCANCODE_LGUI
+	#define DEFAULT_JUMP_SCANCODE2 SDL_SCANCODE_RGUI
+	#define DEFAULT_KICK_SCANCODE1 SDL_SCANCODE_LALT
+	#define DEFAULT_KICK_SCANCODE2 SDL_SCANCODE_RALT
+#else
+	#define DEFAULT_JUMP_SCANCODE1 SDL_SCANCODE_LALT
+	#define DEFAULT_JUMP_SCANCODE2 SDL_SCANCODE_RALT
+	#define DEFAULT_KICK_SCANCODE1 SDL_SCANCODE_LCTRL
+	#define DEFAULT_KICK_SCANCODE2 SDL_SCANCODE_RCTRL
+#endif
+
+KeyBinding gKeyBindings[kKey_MAX] =
+{
+[kKey_Pause				] = { "Pause",				SDL_SCANCODE_ESCAPE,	0,						0,					},
+[kKey_ToggleMusic		] = { "Toggle Music",		SDL_SCANCODE_M,			0,						0,					},
+[kKey_ToggleFullscreen	] = { "Toggle Fullscreen",	SDL_SCANCODE_F11,		0,						0,					},
+[kKey_RaiseVolume		] = { "Raise Volume",		SDL_SCANCODE_EQUALS,	0,						0,					},
+[kKey_LowerVolume		] = { "Lower Volume",		SDL_SCANCODE_MINUS,		0,						0,					},
+[kKey_SwivelCameraLeft	] = { "Swivel Camera Left",	SDL_SCANCODE_COMMA,		0,						0,					},
+[kKey_SwivelCameraRight	] = { "Swivel Camera Right",SDL_SCANCODE_PERIOD,	0,						0,					},
+[kKey_ZoomIn			] = { "Zoom In",			SDL_SCANCODE_2,			0,						0,					},
+[kKey_ZoomOut			] = { "Zoom Out",			SDL_SCANCODE_1,			0,						0,					},
+[kKey_MorphPlayer		] = { "Morph Into Ball",	SDL_SCANCODE_SPACE,		0,						SDL_BUTTON_MIDDLE,	},
+[kKey_BuddyAttack		] = { "Buddy Attack",		SDL_SCANCODE_TAB,		0,						0,					},
+[kKey_Jump				] = { "Jump",				DEFAULT_JUMP_SCANCODE1,	DEFAULT_JUMP_SCANCODE2,	SDL_BUTTON_RIGHT,	},
+[kKey_KickBoost			] = { "Kick / Boost",		DEFAULT_KICK_SCANCODE1,	DEFAULT_KICK_SCANCODE2,	SDL_BUTTON_LEFT,	},
+[kKey_AutoWalk			] = { "Auto-Walk",			SDL_SCANCODE_LSHIFT,	SDL_SCANCODE_RSHIFT,	0,					},
+[kKey_Forward			] = { "Forward",			SDL_SCANCODE_UP,		SDL_SCANCODE_W,			0,					},
+[kKey_Backward			] = { "Backward",			SDL_SCANCODE_DOWN,		SDL_SCANCODE_S,			0,					},
+[kKey_Left				] = { "Left",				SDL_SCANCODE_LEFT,		SDL_SCANCODE_A,			0,					},
+[kKey_Right				] = { "Right",				SDL_SCANCODE_RIGHT,		SDL_SCANCODE_D,			0,					},
+
+[kKey_UI_Confirm		] = { "DO_NOT_REBIND",		SDL_SCANCODE_RETURN,	SDL_SCANCODE_KP_ENTER,	0,					},
+[kKey_UI_Cancel			] = { "DO_NOT_REBIND",		SDL_SCANCODE_ESCAPE,	0,						0,					},
+[kKey_UI_Skip			] = { "DO_NOT_REBIND",		SDL_SCANCODE_SPACE,		0,						0,					},
+};
 
 
 
@@ -78,6 +122,22 @@ static Boolean WeAreFrontProcess(void)
 	return 0 != (SDL_GetWindowFlags(gSDLWindow) & SDL_WINDOW_INPUT_FOCUS);
 }
 
+
+static inline void UpdateKeyState(Byte* state, bool downNow)
+{
+	switch (*state)	// look at prev state
+	{
+	case KEY_HELD:
+	case KEY_DOWN:
+		*state = downNow ? KEY_HELD : KEY_UP;
+		break;
+	case KEY_OFF:
+	case KEY_UP:
+	default:
+		*state = downNow ? KEY_DOWN : KEY_OFF;
+		break;
+	}
+}
 
 /********************** UPDATE INPUT ******************************/
 
@@ -96,24 +156,14 @@ void UpdateInput(void)
 	else
 	{
 		MouseSmoothing_StartFrame();
+
 		uint32_t mouseButtons = SDL_GetMouseState(NULL, NULL);
 
-		for (int i = 0; i < NUM_MOUSE_BUTTONS; i++)
+		for (int i = 1; i < NUM_MOUSE_BUTTONS; i++)
 		{
 			Byte prevState = gMouseButtonState[i];
-			bool downNow = mouseButtons & SDL_BUTTON(i+1);
-			switch (prevState)
-			{
-			case KEY_HELD:
-			case KEY_DOWN:
-				gMouseButtonState[i] = downNow ? KEY_HELD : KEY_UP;
-				break;
-			case KEY_OFF:
-			case KEY_UP:
-			default:
-				gMouseButtonState[i] = downNow ? KEY_DOWN : KEY_OFF;
-				break;
-			}
+			bool downNow = mouseButtons & SDL_BUTTON(i);
+			UpdateKeyState(&gMouseButtonState[i], downNow);
 		}
 	}
 
@@ -145,8 +195,7 @@ static void ClearMouseState(void)
 
 void ResetInputState(void)
 {
-	memset(gKeyMap, 0, sizeof(gKeyMap));
-	memset(gNewKeys, 0, sizeof(gNewKeys));
+	memset(gKeyStates, KEY_OFF, sizeof(gKeyStates));
 	ClearMouseState();
 	EatMouseEvents();
 }
@@ -159,22 +208,37 @@ void ResetInputState(void)
 
 void UpdateKeyMap(void)
 {
-int	i;
+	SDL_PumpEvents();
+	int numkeys = 0;
+	const UInt8* keystate = SDL_GetKeyboardState(&numkeys);
+	uint32_t mouseButtons = SDL_GetMouseState(NULL, NULL);
 
-	GetKeys((void *)gKeyMap);										
+	{
+		int minNumKeys = numkeys < SDLKEYSTATEBUF_SIZE ? numkeys : SDLKEYSTATEBUF_SIZE;
+		for (int i = 0; i < minNumKeys; i++)
+			UpdateKeyState(&gRawKeyboardState[i], keystate[i]);
+		for (int i = minNumKeys; i < SDLKEYSTATEBUF_SIZE; i++)
+			UpdateKeyState(&gRawKeyboardState[i], false);
+	}
 
-			/* CALC WHICH KEYS ARE NEW THIS TIME */
+	for (int i = 0; i < kKey_MAX; i++)
+	{
+		const KeyBinding* kb = &gKeyBindings[i];
 		
-	for (i = 0; i <  16; i++)
-		gNewKeys[i] = (gOldKeys[i] ^ gKeyMap[i]) & gKeyMap[i];
+		bool downNow = false;
 
+		if (kb->key1 && kb->key1 < numkeys)
+			downNow |= 0 != keystate[kb->key1];
+		
+		if (kb->key2 && kb->key2 < numkeys)
+			downNow |= 0 != keystate[kb->key2];
 
-			/* REMEMBER AS OLD MAP */
-	
-	memcpy(gOldKeys, gKeyMap, sizeof(gKeyMap));
-	
-	
-	
+		if (kb->mouseButton)
+			downNow |= 0 != (mouseButtons & SDL_BUTTON(kb->mouseButton));
+
+		UpdateKeyState(&gKeyStates[i], downNow);
+	}
+
 
 		/*****************************************************/
 		/* WHILE WE'RE HERE LET'S DO SOME SPECIAL KEY CHECKS */
@@ -187,13 +251,6 @@ int	i;
 		SetFullscreenMode();
 	}
 
-#if 0
-				/* SEE IF QUIT GAME */
-				
-	if (GetKeyState(KEY_Q) && GetKeyState(KEY_APPLE))			// see if real key quit
-		CleanQuit();	
-#endif
-
 }
 
 
@@ -201,7 +258,14 @@ int	i;
 
 Boolean GetKeyState(unsigned short key)
 {
-	return ( ( gKeyMap[key>>3] >> (key & 7) ) & 1);
+	return gKeyStates[key] == KEY_HELD || gKeyStates[key] == KEY_DOWN;
+}
+
+Boolean GetKeyState_SDL(unsigned short key)
+{
+	if (key >= SDLKEYSTATEBUF_SIZE)
+		return false;
+	return gRawKeyboardState[key] == KEY_HELD || gRawKeyboardState[key] == KEY_DOWN;
 }
 
 
@@ -209,25 +273,31 @@ Boolean GetKeyState(unsigned short key)
 
 Boolean GetNewKeyState(unsigned short key)
 {
-	if (key == kKey_KickBoost   && KEY_DOWN == gMouseButtonState[SDL_BUTTON_LEFT-1]) return true;
-	if (key == kKey_Jump        && KEY_DOWN == gMouseButtonState[SDL_BUTTON_RIGHT-1]) return true;
-	if (key == kKey_MorphPlayer && KEY_DOWN == gMouseButtonState[SDL_BUTTON_MIDDLE-1]) return true;
+	return gKeyStates[key] == KEY_DOWN;
+}
 
-	return ( ( gNewKeys[key>>3] >> (key & 7) ) & 1);
+Boolean GetNewKeyState_SDL(unsigned short key)
+{
+	if (key >= SDLKEYSTATEBUF_SIZE)
+		return false;
+	return gRawKeyboardState[key] == KEY_DOWN;
+}
+
+Boolean GetSkipScreenInput(void)
+{
+	return GetNewKeyState(kKey_UI_Confirm)
+		|| GetNewKeyState(kKey_UI_Cancel)
+		|| GetNewKeyState(kKey_UI_Skip)
+		|| FlushMouseButtonPress();
 }
 
 /***************** ARE ANY NEW KEYS PRESSED ****************/
 
 Boolean AreAnyNewKeysPressed(void)
 {
-int		i;
-
-	for (i = 0; i < 16; i++)
-	{
-		if (gNewKeys[i])
-			return(true);
-	}
-
+	for (int i = 0; i < kKey_MAX; i++)
+		if (gKeyStates[i] == KEY_DOWN)
+			return true;
 	return(false);
 }
 
@@ -237,9 +307,9 @@ int		i;
 
 Boolean FlushMouseButtonPress()
 {
-	Boolean gotPress = KEY_DOWN == gMouseButtonState[SDL_BUTTON_LEFT - 1];
+	Boolean gotPress = KEY_DOWN == gMouseButtonState[SDL_BUTTON_LEFT];
 	if (gotPress)
-		gMouseButtonState[SDL_BUTTON_LEFT - 1] = KEY_HELD;
+		gMouseButtonState[SDL_BUTTON_LEFT] = KEY_HELD;
 	return gotPress;
 }
 

@@ -22,37 +22,36 @@
 
 
 	/* KEYBOARD EQUATE */
-		
+
 enum
 {
-	kKey_Pause				= kVK_Escape,
-	
-	kKey_SwivelCameraLeft	= kVK_ANSI_Comma,
-	kKey_SwivelCameraRight	= kVK_ANSI_Period,
-	kKey_ZoomIn				= kVK_ANSI_2,
-	kKey_ZoomOut			= kVK_ANSI_1,
-		
-	kKey_ToggleMusic 		= kVK_ANSI_M,
-	kKey_RaiseVolume 		= kVK_ANSI_Equal,
-	kKey_LowerVolume 		= kVK_ANSI_Minus,
-	
-	kKey_MorphPlayer		= kVK_Space,
-	kKey_BuddyAttack		= kVK_Tab,
-#if __APPLE__
-	kKey_Jump				= kVK_Command,
-	kKey_KickBoost			= kVK_Option,
-#else
-	kKey_Jump				= kVK_Option,
-	kKey_KickBoost			= kVK_Control,
-#endif
-	
-	kKey_AutoWalk			= kVK_Shift,
-	kKey_Forward			= kVK_UpArrow,
-	kKey_Backward			= kVK_DownArrow,
-	kKey_Left				= kVK_LeftArrow,
-	kKey_Right				= kVK_RightArrow,
-	
-	kKey_ToggleFullscreen	= kVK_F11,
+	kKey_Pause,
+	kKey_ToggleMusic,
+	kKey_RaiseVolume,
+	kKey_LowerVolume,
+	kKey_ToggleFullscreen,
+
+	kKey_SwivelCameraLeft,
+	kKey_SwivelCameraRight,
+	kKey_ZoomIn,
+	kKey_ZoomOut,
+
+	kKey_MorphPlayer,
+	kKey_BuddyAttack,
+	kKey_Jump,
+	kKey_KickBoost,
+
+	kKey_AutoWalk,
+	kKey_Forward,
+	kKey_Backward,
+	kKey_Left,
+	kKey_Right,
+
+	kKey_UI_Confirm,
+	kKey_UI_Skip,
+	kKey_UI_Cancel,
+
+	kKey_MAX
 };
 
 
@@ -62,7 +61,10 @@ enum
 
 void UpdateInput(void);
 Boolean GetNewKeyState(unsigned short key);
+Boolean GetKeyState_SDL(unsigned short sdlScanCode);
 Boolean GetKeyState(unsigned short key);
+Boolean GetNewKeyState_SDL(unsigned short sdlScanCode);
+Boolean GetSkipScreenInput(void);
 Boolean AreAnyNewKeysPressed(void);
 void ResetInputState(void);
 void UpdateKeyMap(void);

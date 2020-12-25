@@ -492,10 +492,8 @@ static int FileScreenMainLoop()
 
 		if (gFileScreenAwaitingInput)
 		{
-			if (GetNewKeyState(kVK_Escape))
-			{
+			if (GetNewKeyState(kKey_UI_Cancel))
 				return -1;
-			}
 
 			int pickID = UpdateHoveredPickID();
 			if (pickID >= 0 && FlushMouseButtonPress())

@@ -310,7 +310,7 @@ static void PlayGame(void)
 
 	UpdateInput();
 	
-	if (GetKeyState(kVK_F10))						// see if do level cheat
+	if (GetKeyState_SDL(SDL_SCANCODE_F10))				// see if do level cheat
 		DoLevelCheatDialog();
 	else
 	if (!gRestoringSavedGame)							// otherwise start @ 0 if not restoring
@@ -746,18 +746,14 @@ static void DoDeathReset(void)
 
 static void CheckForCheats(void)
 {
-#if _DEBUG
-											// in debug builds, expose cheats without needing command/control key
-#elif __APPLE__
-	if (GetKeyState(kVK_Command))			// must hold down the help key
-#else
-	if (GetKeyState(kVK_Control))			// must hold down the help key
+#if !(_DEBUG)	// in debug builds, expose cheats without needing command/control key
+	if (GetKeyState_SDL(SDL_SCANCODE_GRAVE))	// must hold down the help key
 #endif
 	{
-		if (GetNewKeyState(kVK_F1))			// win the level!
+		if (GetNewKeyState_SDL(SDL_SCANCODE_F1))	// win the level!
 			gAreaCompleted = true;
 			
-		if (GetNewKeyState(kVK_F2))			// Show player position
+		if (GetKeyState_SDL(SDL_SCANCODE_F2))	// Show player position
 		{
 			char msgbuf[128];
 			sprintf(msgbuf, "%.0f   %.0f   %.0f    ", gPlayerObj->Coord.x, gPlayerObj->Coord.y, gPlayerObj->Coord.z);
@@ -765,16 +761,16 @@ static void CheckForCheats(void)
 			DrawStringC(msgbuf);
 		}
 		
-		if (GetNewKeyState(kVK_F3))			// get full health
+		if (GetKeyState_SDL(SDL_SCANCODE_F3))	// get full health
 			GetHealth(1.0);							
 			
-		if (GetNewKeyState(kVK_F4))			// get full ball-time
+		if (GetKeyState_SDL(SDL_SCANCODE_F4))	// get full ball-time
 		{
 			gBallTimer = 1.0f;
 			gInfobarUpdateBits |= UPDATE_TIMER;	
 		}	
 		
-		if (GetNewKeyState(kVK_F5))			// get full inventory
+		if (GetKeyState_SDL(SDL_SCANCODE_F5))	// get full inventory
 		{
 			GetMoney();
 			GetKey(0);
@@ -784,17 +780,17 @@ static void CheckForCheats(void)
 			GetKey(4);
 		}
 
-		if (GetNewKeyState(kVK_F6))			// see if liquid invincible
+		if (GetNewKeyState_SDL(SDL_SCANCODE_F6))	// see if liquid invincible
 		{
 			gLiquidCheat = !gLiquidCheat;
 			MoveTo(0, 12);
 			DrawStringC(gLiquidCheat ? "Liquid cheat ON   " : "Liquid cheat OFF   ");
 		}
 
-		if (GetNewKeyState(kVK_F9))
+		if (GetNewKeyState_SDL(SDL_SCANCODE_F9))
 			gShowDebug = !gShowDebug;
 
-		if (GetNewKeyState(kVK_F10))
+		if (GetNewKeyState_SDL(SDL_SCANCODE_F10))
 			CaptureMouse(false);
 	}
 }
@@ -813,31 +809,31 @@ static void CheckDebugShortcutKeysOnBoot(void)
 {
 	static const int levelKeys[10] =
 	{
-		kVK_ANSI_1, kVK_ANSI_2, kVK_ANSI_3, kVK_ANSI_4, kVK_ANSI_5,
-		kVK_ANSI_6, kVK_ANSI_7, kVK_ANSI_8, kVK_ANSI_9, kVK_ANSI_0,
+		SDL_SCANCODE_1, SDL_SCANCODE_2, SDL_SCANCODE_3, SDL_SCANCODE_4, SDL_SCANCODE_5,
+		SDL_SCANCODE_6, SDL_SCANCODE_7, SDL_SCANCODE_8, SDL_SCANCODE_9, SDL_SCANCODE_0,
 	};
 
-	if (GetKeyState(kVK_F1))
+	if (GetKeyState_SDL(SDL_SCANCODE_F1))
 	{
 		DoModelDebug();
 		return;
 	}
 
-	if (GetKeyState(kVK_F2))
+	if (GetKeyState_SDL(SDL_SCANCODE_F2))
 	{
 		DoFileSelectScreen(FILE_SELECT_SCREEN_TYPE_SAVE);
 		DoFileSelectScreen(FILE_SELECT_SCREEN_TYPE_LOAD);
 		return;
 	}
 
-	if (GetKeyState(kVK_F3))
+	if (GetKeyState_SDL(SDL_SCANCODE_F3))
 	{
 		DoLoseScreen();
 		DoWinScreen();
 		return;
 	}
 
-	if (GetKeyState(kVK_F4))
+	if (GetKeyState_SDL(SDL_SCANCODE_F4))
 	{
 		DoSettingsScreen();
 		return;
@@ -845,7 +841,7 @@ static void CheckDebugShortcutKeysOnBoot(void)
 
 	for (int i = 0; i < 10; i++)
 	{
-		if (GetKeyState(levelKeys[i]))
+		if (GetKeyState_SDL(levelKeys[i]))
 		{
 			printf("Starting level %i\n", i);
 			InitInventoryForGame();

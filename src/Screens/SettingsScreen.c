@@ -368,10 +368,8 @@ static void SettingsScreenMainLoop()
 		QD3D_CalcFramesPerSecond();
 		DoSDLMaintenance();
 
-		if (GetNewKeyState(kVK_Escape))
-		{
+		if (GetNewKeyState(kKey_UI_Cancel))
 			return;
-		}
 
 		// See if user hovered/clicked on a pickable item
 		int pickID = UpdateHoveredPickID();

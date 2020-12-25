@@ -414,13 +414,13 @@ EventRecord	theEvent;
 		UpdateInput();
 
 		char newKey = '\0';
-		if (GetNewKeyState(kVK_LeftArrow))
+		if (GetNewKeyState_SDL(SDL_SCANCODE_LEFT))
 			newKey = CHAR_LEFT;
-		else if (GetNewKeyState(kVK_RightArrow))
+		else if (GetNewKeyState_SDL(SDL_SCANCODE_RIGHT))
 			newKey = CHAR_RIGHT;
-		else if (GetNewKeyState(kVK_Delete))
+		else if (GetNewKeyState_SDL(SDL_SCANCODE_BACKSPACE))
 			newKey = CHAR_DELETE;
-		else if (GetNewKeyState(kVK_ForwardDelete))
+		else if (GetNewKeyState_SDL(SDL_SCANCODE_DELETE))
 			newKey = CHAR_FORWARD_DELETE;
 		else
 			newKey = gTypedAsciiKey;
@@ -441,7 +441,7 @@ EventRecord	theEvent;
 				
 		QD3D_DrawScene(gGameViewInfoPtr,DrawObjects);	
 		DoSDLMaintenance();
-	} while (!GetNewKeyState(kVK_Return));
+	} while (!GetNewKeyState(kKey_UI_Confirm));
 
 			/* CLEANUP */
 
