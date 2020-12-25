@@ -117,9 +117,9 @@ set(GAME_SOURCES
 )
 
 set(GAME_HEADERS
+	${GAME_SRCDIR}/Headers/bugdom.h
 	${GAME_SRCDIR}/Headers/3dmath.h
 	${GAME_SRCDIR}/Headers/3dmf.h
-	${GAME_SRCDIR}/Headers/MyPCH_Normal.pch
 	${GAME_SRCDIR}/Headers/bones.h
 	${GAME_SRCDIR}/Headers/bonusscreen.h
 	${GAME_SRCDIR}/Headers/camera.h
@@ -207,9 +207,9 @@ source_group(TREE ${GAME_SRCDIR} PREFIX "" FILES ${GAME_ALL_SOURCES})
 #------------------------------------------------------------------------------
 
 if(NOT MSVC)
-	set_source_files_properties(${GAME_SOURCES} PROPERTIES COMPILE_FLAGS "-include MyPCH_Normal.pch")
+	set_source_files_properties(${GAME_SOURCES} PROPERTIES COMPILE_FLAGS "-include bugdom.h")
 else()
-	set_source_files_properties(${GAME_SOURCES} PROPERTIES COMPILE_FLAGS /FIMyPCH_Normal.pch)
+	set_source_files_properties(${GAME_SOURCES} PROPERTIES COMPILE_FLAGS /FIbugdom.h)
 endif()
 
 #------------------------------------------------------------------------------

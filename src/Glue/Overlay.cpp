@@ -1,7 +1,7 @@
 #include <SDL.h>
 #include "Pomme.h"
 #include "PommeGraphics.h"
-#include "MyPCH_Normal.pch"
+#include "bugdom.h"
 #include "GLOverlay.h"
 #include "GLOverlayFade.h"
 

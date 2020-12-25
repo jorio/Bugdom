@@ -1,4 +1,4 @@
-#include "Headers/MyPCH_Normal.pch"
+#include "bugdom.h"
 
 static void DecompressRLE(short refNum, TGAHeader* header, Handle handle)
 {

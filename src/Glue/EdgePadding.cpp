@@ -1,4 +1,4 @@
-#include "MyPCH_Normal.pch"
+#include "bugdom.h"
 
 #define EDGE_PADDING_REPEAT 8
 

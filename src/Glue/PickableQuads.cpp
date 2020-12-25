@@ -3,7 +3,7 @@
 #include <QuesaGeometry.h>
 #include <QuesaGroup.h>
 #include <QuesaStyle.h>
-#include <Headers/MyPCH_Normal.pch>
+#include "bugdom.h"
 
 struct PickableQuad
 {
