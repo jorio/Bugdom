@@ -59,12 +59,6 @@ void DoSDLMaintenance()
 	debugText.frameAccumulator++;
 #endif
 
-	if (GetNewKeyState(kKey_ToggleFullscreen))
-	{
-		gGamePrefs.fullscreen = gGamePrefs.fullscreen ? 0 : 1;
-		SetFullscreenMode();
-	}
-
 	// Reset these on every new frame
 	gTypedAsciiKey = '\0';
 	gMouseButtonPressed = false;

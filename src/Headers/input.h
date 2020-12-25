@@ -64,6 +64,7 @@ void UpdateInput(void);
 Boolean GetNewKeyState(unsigned short key);
 Boolean GetKeyState(unsigned short key);
 Boolean AreAnyNewKeysPressed(void);
+void ClearKeyState(void);
 void UpdateKeyMap(void);
 
 void GetMouseCoord(Point *point);

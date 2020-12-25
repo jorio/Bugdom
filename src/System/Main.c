@@ -391,6 +391,7 @@ float fps;
 	QD3D_DrawScene(gGameViewInfoPtr,DrawTerrain);
 	MakeFadeEvent(true);
 
+	ClearKeyState();
 
 		/******************/
 		/* MAIN GAME LOOP */
@@ -483,6 +484,7 @@ float fps;
 				if (gGameOverFlag)				// see if that's all folks
 					break;
 			}
+			ClearKeyState();
 		}	
 	}
 	

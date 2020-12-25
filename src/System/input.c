@@ -9,6 +9,8 @@
 /* EXTERNALS   */
 /***************/
 
+#include <string.h>
+
 extern	float	gFramesPerSecondFrac;
 extern	PrefsType	gGamePrefs;
 extern	SDL_Window* gSDLWindow;
@@ -268,11 +270,7 @@ short   i;
 	if (WeAreFrontProcess())								// only read keys if we're the front process
 		UpdateKeyMap();
 	else													// otherwise, just clear it out
-	{
-		for (i = 0; i < 16; i++)
-			gKeyMap[i] = 0;
-	}
-
+		ClearKeyState();
 
 	// Assume player using key control if any arrow keys are pressed,
 	// otherwise assume mouse movement 
@@ -281,6 +279,17 @@ short   i;
 			|| GetKeyState(kKey_Backward)
 			|| GetKeyState(kKey_Left)
 			|| GetKeyState(kKey_Right);
+}
+
+
+/**************** CLEAR KEY MAP *************/
+
+void ClearKeyState(void)
+{
+	memset(gKeyMap, 0, sizeof(gKeyMap));
+	memset(gNewKeys, 0, sizeof(gNewKeys));
+	memset(gMouseButtonState, 0, sizeof(gMouseButtonState));
+	memset(gNewMouseButtonState, 0, sizeof(gNewMouseButtonState));
 }
 
 
@@ -302,24 +311,30 @@ int	i;
 
 
 			/* REMEMBER AS OLD MAP */
+	
+	memcpy(gOldKeys, gKeyMap, sizeof(gKeyMap));
+	
+	
+	
 
-	for (i = 0; i <  16; i++)
-		gOldKeys[i] = gKeyMap[i];
-	
-	
-	
-#if 0
 		/*****************************************************/
 		/* WHILE WE'RE HERE LET'S DO SOME SPECIAL KEY CHECKS */
 		/*****************************************************/
-	
+
+	if (GetNewKeyState(kKey_ToggleFullscreen))
+	{
+		ClearKeyState();
+		gGamePrefs.fullscreen = gGamePrefs.fullscreen ? 0 : 1;
+		SetFullscreenMode();
+	}
+
+#if 0
 				/* SEE IF QUIT GAME */
 				
 	if (GetKeyState(KEY_Q) && GetKeyState(KEY_APPLE))			// see if real key quit
 		CleanQuit();	
-
-	
 #endif
+
 }
 
 
