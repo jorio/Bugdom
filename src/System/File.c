@@ -10,6 +10,7 @@
 /***************/
 
 #include <time.h>
+#include <string.h>
 
 
 extern	short			gMainAppRezFile,gTextureRezfile;
@@ -59,7 +60,7 @@ static void ReadDataFromPlayfieldFile(FSSpec *specPtr);
 
 #define PREFS_HEADER_LENGTH 16
 #define PREFS_FILE_NAME ":Bugdom:Prefs"
-const char PREFS_HEADER_STRING[PREFS_HEADER_LENGTH] = "NewBugdomPrefs01";		// Bump this every time prefs struct changes
+const char PREFS_HEADER_STRING[PREFS_HEADER_LENGTH+1] = "NewBugdomPrefs01";		// Bump this every time prefs struct changes
 
 
 		/* PLAYFIELD HEADER */

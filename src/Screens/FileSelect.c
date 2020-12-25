@@ -15,6 +15,7 @@
 /****************************/
 
 #include <time.h>
+#include <ctype.h>
 
 extern	float				gFramesPerSecondFrac,gFramesPerSecond;
 extern	WindowPtr			gCoverWindow;
@@ -131,7 +132,7 @@ int DoFileSelectScreen(int type)
 
 /****************** SETUP FILE SCREEN **************************/
 
-static float UpdateFloppyState(ObjNode* theNode, uint32_t currentStateID)
+static float UpdateFloppyState(ObjNode* theNode, long currentStateID)
 {
 	long*	stateID		= &theNode->SpecialL[5];
 	float*	stateTimer	= &theNode->SpecialF[5];

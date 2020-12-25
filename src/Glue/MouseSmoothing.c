@@ -68,7 +68,7 @@ void MouseSmoothing_OnMouseMotion(const SDL_MouseMotionEvent* motion)
 {
 	if (gState.ringLength == DELTA_MOUSE_MAX_SNAPSHOTS)
 	{
-		printf("%s: buffer full!!\n", __func__);
+//		printf("%s: buffer full!!\n", __func__);
 		PopOldestSnapshot();				// make room at start of ring buffer
 	}
 

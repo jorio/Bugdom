@@ -283,7 +283,7 @@ TQ3GroupPosition	position;
 
 			/* FIND OUT WHICH OBJECTS NEED ALPHA TEST */
 
-	uint64_t alphaTestObjectMask = ~0;								// by default, apply alpha test to all objects
+	uint64_t alphaTestObjectMask = ~0u;								// by default, apply alpha test to all objects
 
 	for (i = 0; gAlphaTestBlacklist[i].filename; i++)				// see if blacklist says any objects should NOT have alpha test
 	{
@@ -333,7 +333,7 @@ TQ3GroupPosition	position;
 
 	for (i = 0; i < nObjects; i++)
 	{
-		if (alphaTestObjectMask & (1uL << i))						// should we apply the alpha test to this object?
+		if (alphaTestObjectMask & (1uLL << i))						// should we apply the alpha test to this object?
 		{
 			ForEachTriMesh(gObjectGroupList[groupNum][i], QD3D_SetTextureAlphaThreshold_TriMesh, NULL);
 		}

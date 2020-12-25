@@ -9,6 +9,7 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include <string.h>
 
 extern	Boolean			gAbortDemoFlag,gGameIsDemoFlag,gSongPlayingFlag,gDisableHiccupTimer;
 extern	NewObjectDefinitionType	gNewObjectDefinition;
