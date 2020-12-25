@@ -69,6 +69,9 @@ void Overlay_Alloc()
 
 void Overlay_Clear(UInt32 argb)
 {
+	if (!ALLOW_OVERLAY)
+		return;
+
 	PortGuard portGuard;
 
 	UInt32 bgra = ByteswapScalar(argb);
@@ -134,6 +137,9 @@ bool Overlay_Begin()
 
 void Overlay_End()
 {
+	if (!ALLOW_OVERLAY)
+		return;
+
 	// Restore scissor test & viewport because Quesa doesn't reset it
 	glEnable(GL_SCISSOR_TEST);
 	glViewport(viewportBackup[0], viewportBackup[1], (GLsizei) viewportBackup[2], (GLsizei) viewportBackup[3]);
@@ -143,6 +149,9 @@ void Overlay_SubmitQuad(
 		int srcX, int srcY, int srcW, int srcH,
 		float dstX, float dstY, float dstW, float dstH)
 {
+	if (!ALLOW_OVERLAY)
+		return;
+
 	glOverlay->SubmitQuad(
 			srcX, srcY, srcW, srcH,
 			dstX, dstY, dstW, dstH);
@@ -193,6 +202,9 @@ void Overlay_EndExclusive()
 
 void Overlay_FadeOutFrozenFrame(float duration)
 {
+	if (!ALLOW_OVERLAY)
+		return;
+
 	SDL_GLContext currentContext = SDL_GL_GetCurrentContext();
 	if (!currentContext)
 	{

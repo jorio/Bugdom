@@ -5,16 +5,6 @@
 #define GAME_VIEW_WIDTH		(640)
 #define GAME_VIEW_HEIGHT	(480)
 
-
-
-
-#if 0  // Source port removal
-extern	DSpContextReference 	gDisplayContext;
-#endif
-
-
-
-
 extern void	InitWindowStuff(void);
 extern void	DoLockPixels(GWorldPtr);
 extern	void MakeFadeEvent(Boolean	fadeIn);

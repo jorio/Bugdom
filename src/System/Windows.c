@@ -9,13 +9,9 @@
 /* EXTERNALS   */
 /***************/
 
-
-
 extern	NewObjectDefinitionType	gNewObjectDefinition;
 extern	ObjNode	*gCurrentNode,*gFirstNodePtr;
-extern	float	gFramesPerSecondFrac,gAdditionalClipping;
-extern	short	gPrefsFolderVRefNum;
-extern	long	gPrefsFolderDirID;
+extern	float	gFramesPerSecondFrac;
 extern	SDL_Window*				gSDLWindow;
 extern	PrefsType				gGamePrefs;
 extern	QD3DSetupOutputType*	gGameViewInfoPtr;
@@ -65,25 +61,15 @@ void GammaFadeOut(void)
 	Overlay_FadeOutFrozenFrame(.3f);
 	gGammaFadePercent = 0;
 #endif
+	FlushMouseButtonPress();
 }
 
 /********************** GAMMA ON *********************/
 
 void GammaOn(void)
 {
+	// Note: the game used to fade gamma in smoothly if it wasn't at 100% already. Changed to instant 100%.
 	gGammaFadePercent = 100;
-	SOURCE_PORT_MINOR_PLACEHOLDER();
-#if 0 //ALLOW_FADE
-
-	if (gDisplayContext)
-	{
-		if (gGammaFadePercent != 100)
-		{
-			DSpContext_FadeGamma(MONITORS_TO_FADE,100,nil);
-			gGammaFadePercent = 100;
-		}
-	}
-#endif		
 }
 
 
@@ -92,34 +78,7 @@ void GammaOn(void)
 
 void CleanupDisplay(void)
 {
-#if 1
-	SOURCE_PORT_MINOR_PLACEHOLDER();
-#else
-OSStatus 		theError;
-	
-	if(gDisplayContext != nil)
-	{	
-#if ALLOW_FADE		
-		DSpContext_FadeGammaOut(gDisplayContext,nil);						// fade out	ours
-#endif		
-		DSpContext_SetState( gDisplayContext, kDSpContextState_Inactive );	// deactivate
-#if ALLOW_FADE			
-		DSpContext_FadeGamma(MONITORS_TO_FADE,100,nil);						// gamme on all
-#endif		
-		DSpContext_Release( gDisplayContext );								// release
-	
-		gDisplayContext = nil;
-	}
-	
-	
-	/* shutdown draw sprocket */
-	
-	if (gLoadedDrawSprocket)
-	{
-		theError = DSpShutdown();
-		gLoadedDrawSprocket = false;
-	}
-#endif
+	GammaFadeOut();
 }
 
 
@@ -213,6 +172,8 @@ void GameScreenToBlack(void)
 		GetPortBounds(GetWindowPort(gCoverWindow), &r);
 		EraseRect(&r);
 	}
+
+	FlushMouseButtonPress();
 }
 
 #pragma mark -
