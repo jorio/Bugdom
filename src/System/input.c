@@ -41,15 +41,21 @@ static const float kMouseSensitivityTable[NUM_MOUSE_SENSITIVITY_LEVELS] =
 
 static const int kMouseDeltaMax = 250;
 
+enum
+{
+	KEY_OFF,
+	KEY_DOWN,
+	KEY_HELD,
+	KEY_UP,
+};
 
 
 /**********************/
 /*     VARIABLES      */
 /**********************/
 
-long					gEatMouse = 0;
-static Boolean			gMouseButtonState[NUM_MOUSE_BUTTONS] = {0,0,0};
-static Boolean			gNewMouseButtonState[NUM_MOUSE_BUTTONS] = {0,0,0};
+long				gEatMouse = 0;
+static Byte			gMouseButtonState[NUM_MOUSE_BUTTONS] = {KEY_OFF, KEY_OFF, KEY_OFF, KEY_OFF, KEY_OFF};
 
 
 static KeyMapByteArray gKeyMap,gNewKeys,gOldKeys;
@@ -94,9 +100,20 @@ void UpdateInput(void)
 
 		for (int i = 0; i < NUM_MOUSE_BUTTONS; i++)
 		{
-			Boolean wasPressedBefore = gMouseButtonState[i];
-			gMouseButtonState[i] = mouseButtons & SDL_BUTTON(i+1);
-			gNewMouseButtonState[i] = gMouseButtonState[i] && !wasPressedBefore;
+			Byte prevState = gMouseButtonState[i];
+			bool downNow = mouseButtons & SDL_BUTTON(i+1);
+			switch (prevState)
+			{
+			case KEY_HELD:
+			case KEY_DOWN:
+				gMouseButtonState[i] = downNow ? KEY_HELD : KEY_UP;
+				break;
+			case KEY_OFF:
+			case KEY_UP:
+			default:
+				gMouseButtonState[i] = downNow ? KEY_DOWN : KEY_OFF;
+				break;
+			}
 		}
 	}
 
@@ -123,8 +140,7 @@ void UpdateInput(void)
 static void ClearMouseState(void)
 {
 	MouseSmoothing_ResetState();
-	memset(gMouseButtonState, 0, sizeof(gMouseButtonState));
-	memset(gNewMouseButtonState, 0, sizeof(gNewMouseButtonState));
+	memset(gMouseButtonState, KEY_OFF, sizeof(gMouseButtonState));
 }
 
 void ResetInputState(void)
@@ -193,9 +209,9 @@ Boolean GetKeyState(unsigned short key)
 
 Boolean GetNewKeyState(unsigned short key)
 {
-	if (key == kKey_KickBoost   && gNewMouseButtonState[SDL_BUTTON_LEFT-1]) return true;
-	if (key == kKey_Jump        && gNewMouseButtonState[SDL_BUTTON_RIGHT-1]) return true;
-	if (key == kKey_MorphPlayer && gNewMouseButtonState[SDL_BUTTON_MIDDLE-1]) return true;
+	if (key == kKey_KickBoost   && KEY_DOWN == gMouseButtonState[SDL_BUTTON_LEFT-1]) return true;
+	if (key == kKey_Jump        && KEY_DOWN == gMouseButtonState[SDL_BUTTON_RIGHT-1]) return true;
+	if (key == kKey_MorphPlayer && KEY_DOWN == gMouseButtonState[SDL_BUTTON_MIDDLE-1]) return true;
 
 	return ( ( gNewKeys[key>>3] >> (key & 7) ) & 1);
 }
@@ -221,12 +237,9 @@ int		i;
 
 Boolean FlushMouseButtonPress()
 {
-	Boolean gotPress = false;
-
-	for (int i = 0; !gotPress && i < NUM_MOUSE_BUTTONS; i++)
-		gotPress |= gNewMouseButtonState[i];
-
-	memset(gNewMouseButtonState, 0, sizeof(gNewMouseButtonState));
+	Boolean gotPress = KEY_DOWN == gMouseButtonState[SDL_BUTTON_LEFT - 1];
+	if (gotPress)
+		gMouseButtonState[SDL_BUTTON_LEFT - 1] = KEY_HELD;
 	return gotPress;
 }
 
