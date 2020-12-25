@@ -50,7 +50,6 @@ void DoPaused(void)
 {
 PicHandle	pict;
 Rect		r = { 0, 0, 0, 0 };
-int			i,n;
 int			windowW = -1;
 int			windowH = -1;
 int			pictW = -1;
@@ -66,52 +65,61 @@ float		dummy;
 	FlushEvents (everyEvent, REMOVE_ALL_EVENTS);	
 	InitCursor();
 	
+	pict = GetPicture(1500);
+	GAME_ASSERT(pict);
+	HLock((Handle)pict);
+	r = (*pict)->picFrame;							// get size of pict
+	pictW = r.right - r.left;
+	pictH = r.bottom - r.top;
+	OffsetRect(&r, (GAME_VIEW_WIDTH - pictW) / 2, (GAME_VIEW_HEIGHT - pictH) / 2);
+	DrawPicture(pict, &r);							// draw pict
+
 			/*******************/
 			/* LET USER SELECT */
 			/*******************/
 			
-	i = -1;
-	do
+	int curState = 0;
+	bool forceDraw = false;
+	while (1)
 	{
 		SDL_GetWindowSize(gSDLWindow, &windowW, &windowH);
 
 		Point	where;
 		GetMouse(&where);
 		
-		if (where.v < (r.top + 94)*(windowH/480.0f))		// see if resume
-			n = 0;
-		else
-		if (where.v < (r.top + 110)*(windowH/480.0f))		// see if end game
-			n = 1;
-		else												// quit app
-			n = 2;
-		
-		if (n != i)
+		int scaledMouseX = GAME_VIEW_WIDTH * where.h / windowW;
+		int scaledMouseY = GAME_VIEW_HEIGHT * where.v / windowH;
+
+		int newState = -1;
+		if      (scaledMouseX < r.left     ) newState = -1;
+		else if (scaledMouseX > r.right    ) newState = -1;
+		else if (scaledMouseY < r.top +  64) newState = -1;
+		else if (scaledMouseY < r.top +  88) newState = 0;	// Resume
+		else if (scaledMouseY < r.top + 111) newState = 1;	// End Game
+		else if (scaledMouseY < r.top + 135) newState = 2;	// Quit
+		else newState = -1;
+
+		if (newState != -1 && curState != newState)
 		{
-			i = n;
-			pict = GetPicture(1500+i);						// load this pict
-			if (pict == nil)
-			{
-			    OSErr   iErr = ResError();
-				DoAlert("DoPaused: GetPicture failed!  Probably ran out of memory.");
-				ShowSystemErr_NonFatal(iErr);
-				goto bail;
-			}
+			curState = newState;
+			forceDraw = true;
+		}
+
+		if (forceDraw)
+		{
+			pict = GetPicture(1500+curState);				// load this pict
+			GAME_ASSERT(pict);
 			HLock((Handle)pict);
-			r = (*pict)->picFrame;							// get size of pict
-			pictW = r.right-r.left;
-			pictH = r.bottom-r.top;
-			OffsetRect(&r, (640-pictW)/2, (480-pictH)/2);
 			DrawPicture(pict, &r);							// draw pict
 			ReleaseResource((Handle)pict);					// nuke pict
 			PlayEffect(EFFECT_SELECT);				
+			forceDraw = false;
 		}
-	
-	
+
 		UpdateInput();
 		if (GetNewKeyState(kKey_Pause))						// see if ESC out
 		{
-			n = 0;
+			curState = 0;
 			break;
 		}
 
@@ -119,20 +127,25 @@ float		dummy;
 		SubmitInfobarOverlay();
 		Overlay_SubmitQuad(
 				r.left, r.top, r.right-r.left, r.bottom-r.top,
-				(640.0f-pictW)/2.0f/640.0f,
-				(480.0f-pictH)/2.0f/480.0f,
+				(GAME_VIEW_WIDTH -pictW) / 2.0f / GAME_VIEW_WIDTH,
+				(GAME_VIEW_HEIGHT-pictH) / 2.0f / GAME_VIEW_HEIGHT,
 				pictW/640.0f,
 				pictH/480.0f
 		);
 		DoSDLMaintenance();
-	
-	}while(!FlushMouseButtonPress());
+		SDL_Delay(10);
+
+		if (FlushMouseButtonPress() && newState != -1)		// ensure mouse is within frame to proceed
+		{
+			break;
+		}
+	}
 	while(FlushMouseButtonPress());							// wait for button up
 	
 
 			/* HANDLE RESULT */
 			
-	switch(n)
+	switch (curState)
 	{
 		case	1:
 				gGameOverFlag = gAbortedFlag = true;
@@ -145,9 +158,6 @@ float		dummy;
 
 			/* CLEANUP */
 			
-bail:			
-	HideCursor();
-	
 	QD3D_CalcFramesPerSecond();
 	QD3D_CalcFramesPerSecond();
 	
