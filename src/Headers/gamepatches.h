@@ -21,8 +21,6 @@ OSErr DrawPictureToScreen(FSSpec* spec, short x, short y);
 
 void FlushQuesaErrors(void);
 
-Boolean FlushMouseButtonPress(void);
-
 //-----------------------------------------------------------------------------
 // Texture edge padding
 

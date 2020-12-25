@@ -4,8 +4,6 @@ extern SDL_Window*			gSDLWindow;
 extern float				gFramesPerSecond;
 extern PrefsType			gGamePrefs;
 extern long					gEatMouse;
-Boolean						gMouseButtonPressed = false;
-extern Boolean				gMouseButtonState[3];
 char						gTypedAsciiKey = '\0';
 
 #if _DEBUG
@@ -18,13 +16,6 @@ static struct
 
 static const int kDebugTextUpdateInterval = 250;
 #endif
-
-Boolean FlushMouseButtonPress()
-{
-	Boolean rc = gMouseButtonPressed;
-	gMouseButtonPressed = false;
-	return rc;
-}
 
 void DoSDLMaintenance()
 {
@@ -61,13 +52,6 @@ void DoSDLMaintenance()
 
 	// Reset these on every new frame
 	gTypedAsciiKey = '\0';
-	gMouseButtonPressed = false;
-	MouseSmoothing_StartFrame();
-
-	uint32_t mouseButtons = SDL_GetMouseState(NULL, NULL);
-	gMouseButtonState[0] = mouseButtons & SDL_BUTTON(SDL_BUTTON_LEFT);
-	gMouseButtonState[1] = mouseButtons & SDL_BUTTON(SDL_BUTTON_RIGHT);
-	gMouseButtonState[2] = mouseButtons & SDL_BUTTON(SDL_BUTTON_MIDDLE);
 
 	SDL_Event event;
 	while (SDL_PollEvent(&event))
@@ -99,23 +83,12 @@ void DoSDLMaintenance()
 				}
 				break;
 
-			case SDL_MOUSEBUTTONDOWN:
-				gMouseButtonPressed = true;
-				break;
-
 			case SDL_MOUSEMOTION:
-				MouseSmoothing_OnMouseMotion(&event.motion);
+				if (!gEatMouse)
+				{
+					MouseSmoothing_OnMouseMotion(&event.motion);
+				}
 				break;
 		}
-	}
-	
-	if (gEatMouse)
-	{
-		gEatMouse--;
-		MouseSmoothing_ResetState();
-		gMouseButtonPressed = false;
-		gMouseButtonState[0] = false;
-		gMouseButtonState[1] = false;
-		gMouseButtonState[2] = false;
 	}
 }

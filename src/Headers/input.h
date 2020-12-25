@@ -64,11 +64,11 @@ void UpdateInput(void);
 Boolean GetNewKeyState(unsigned short key);
 Boolean GetKeyState(unsigned short key);
 Boolean AreAnyNewKeysPressed(void);
-void ClearKeyState(void);
+void ResetInputState(void);
 void UpdateKeyMap(void);
 
-void GetMouseCoord(Point *point);
-
+Boolean FlushMouseButtonPress(void);
+void EatMouseEvents(void);
 void GetMouseDelta(float *dx, float *dy);
 
 void CaptureMouse(Boolean doCapture);

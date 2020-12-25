@@ -21,11 +21,14 @@ extern	SDL_Window* gSDLWindow;
 
 static Boolean WeAreFrontProcess(void);
 
+static void ClearMouseState(void);
 
 
 /****************************/
 /*    CONSTANTS             */
 /****************************/
+
+#define NUM_MOUSE_BUTTONS 5
 
 static const float kMouseSensitivityTable[NUM_MOUSE_SENSITIVITY_LEVELS] =
 {
@@ -45,11 +48,8 @@ static const int kMouseDeltaMax = 250;
 /**********************/
 
 long					gEatMouse = 0;
-
-
-Boolean		gMouseButtonState[3] = {0,0,0};
-Boolean		gNewMouseButtonState[3] = {0,0,0};
-static Boolean		gOldMouseButtonState[3] = {0,0,0};
+static Boolean			gMouseButtonState[NUM_MOUSE_BUTTONS] = {0,0,0};
+static Boolean			gNewMouseButtonState[NUM_MOUSE_BUTTONS] = {0,0,0};
 
 
 static KeyMapByteArray gKeyMap,gNewKeys,gOldKeys;
@@ -57,187 +57,9 @@ static KeyMapByteArray gKeyMap,gNewKeys,gOldKeys;
 
 Boolean	gPlayerUsingKeyControl 	= false;
 
-Boolean	gKeyStates[255];
 
 
 
-
-void CaptureMouse(Boolean doCapture)
-{
-	SDL_SetRelativeMouseMode(doCapture ? SDL_TRUE : SDL_FALSE);
-	SDL_ShowCursor(doCapture ? 0 : 1);
-	gEatMouse = 5; // eat mouse events for a couple frames
-}
-
-
-
-
-#if 0
-/**************** MY MOUSE EVENT HANDLER *************************/
-//
-// Every time WaitNextEvent() is called this callback will be invoked.
-//
-
-static pascal OSStatus MyMouseEventHandler(EventHandlerCallRef eventhandler, EventRef pEventRef, void *userdata)
-{
-OSStatus	result = eventNotHandledErr;
-OSStatus	theErr = noErr;
-Point		qdPoint;
-SInt32		lDelta;
-UInt16 		whichButton;
-
-#pragma unused (eventhandler, userdata)
-
-	switch (GetEventClass(pEventRef))
-	{
-						/*****************************/
-						/* HANDLE MOUSE CLASS EVENTS */
-						/*****************************/
-						
-		case	kEventClassMouse:
-				switch (GetEventKind(pEventRef))
-				{	 
-							/* MOUSE DELTA */
-							
-					case	kEventMouseMoved:
-					case	kEventMouseDragged:
-							theErr = GetEventParameter(pEventRef, kEventParamMouseDelta, typeQDPoint,
-													nil, sizeof(Point), nil, &qdPoint);
-						
-							gMouseDeltaX = qdPoint.h;
-							gMouseDeltaY = qdPoint.v;
-
-							result = noErr;
-							break;	
-							
-							
-							/* SCROLL WHEEL */
-							
-					case	kEventMouseWheelMoved:										
-							theErr = GetEventParameter(pEventRef, kEventParamMouseWheelDelta, typeSInt32, nil, sizeof(lDelta), nil, &lDelta);		// Get the delta
-
-
-							result = noErr;
-							break;
-							
-							
-							/* BUTTON DOWN */
-							
-					case	kEventMouseDown:
-							theErr = GetEventParameter(pEventRef, kEventParamMouseButton, typeMouseButton, nil ,sizeof(whichButton), nil, &whichButton); 	// see if 2nd or 3rd button was pressed
-							if (theErr == noErr)
-							{
-								switch(whichButton)
-								{
-									case	kEventMouseButtonPrimary:
-											gMouseButtonState[0] = true;						// left (default) button?
-											break;
-											
-									case	kEventMouseButtonSecondary:							// right button?
-											gMouseButtonState[1] = true;
-											break;
-											
-									case	kEventMouseButtonTertiary:							// middle button?
-											gMouseButtonState[2] = true;
-											break;
-								}								
-							}
-
-			//				result = noErr;	// NOTE:  DO *NOT* SET RESULT TO NOERR BECAUSE WE WANT THESE CLICKS TO GET PASSED TO THE SYSTEM FOR WINDOW MOVING ETC.
-							break;
-
-
-							/* BUTTON UP */
-
-					case	kEventMouseUp:
-							theErr = GetEventParameter(pEventRef, kEventParamMouseButton, typeMouseButton, nil ,sizeof(whichButton), nil, &whichButton); 	// see if 2nd or 3rd button was pressed
-							if (theErr == noErr)
-							{
-								switch(whichButton)
-								{
-									case	kEventMouseButtonPrimary:
-											gMouseButtonState[0] = false;						// left (default) button?
-											break;
-											
-									case	kEventMouseButtonSecondary:							// right button?
-											gMouseButtonState[1] = false;
-											break;
-											
-									case	kEventMouseButtonTertiary:							// middle button?
-											gMouseButtonState[2] = false;
-											break;
-								}								
-							}
-							
-			//				result = noErr;	// NOTE:  DO *NOT* SET RESULT TO NOERR BECAUSE WE WANT THESE CLICKS TO GET PASSED TO THE SYSTEM FOR WINDOW MOVING ETC.
-							break;
-				}	 
-				break;
-				
-				
-	}
-	
-	return(result);
-}
-
-
-/**************** MY KEYBOARD EVENT HANDLER *************************/
-//
-// Every time WaitNextEvent() is called this callback will be invoked.
-//
-
-static pascal OSStatus MyKeyboardEventHandler(EventHandlerCallRef eventhandler, EventRef pEventRef, void *userdata)
-{
-OSStatus	result = eventNotHandledErr;
-char		charCode;
-UInt32		modifiers;
-
-#pragma unused (eventhandler, userdata)
-
-	switch (GetEventClass(pEventRef))
-	{
-					/*******************/
-					/* KEYBOARD EVENTS */
-					/*******************/
-					
-		case	kEventClassKeyboard:
-				
-				modifiers = GetCurrentEventKeyModifiers();			// get modifier bits in case we need them
-				
-				switch (GetEventKind(pEventRef))
-				{	 
-				
-							/* KEYDOWN */
-							
-					case	kEventRawKeyDown:
-					case	kEventRawKeyRepeat:
-							GetEventParameter(pEventRef, kEventParamKeyMacCharCodes, typeChar, nil,
-											sizeof(charCode), nil, &charCode);
-											
-							gKeyStates[charCode] = true;
-	
-							gPlayerUsingKeyControl = true;									// assume player using key control
-
-							break;
-				
-						/* KEY UP */
-						
-					case	kEventRawKeyUp:
-							GetEventParameter(pEventRef, kEventParamKeyMacCharCodes, typeChar, nil,
-											sizeof(charCode), nil, &charCode);
-
-							gKeyStates[charCode] = false;
-							break;
-										
-																
-				}
-	}
-	
-	
-	return(result);
-}
-
-#endif
 
 
 #pragma mark -
@@ -255,15 +77,27 @@ static Boolean WeAreFrontProcess(void)
 
 void UpdateInput(void)
 {
-short   i;
 
+	SDL_PumpEvents();
 
 		/* CHECK FOR NEW MOUSE BUTTONS */
 
-	for (i = 0; i < 3; i++)
+	if (gEatMouse)
 	{
-		gNewMouseButtonState[i] = gMouseButtonState[i] && (!gOldMouseButtonState[i]);
-		gOldMouseButtonState[i] = gMouseButtonState[i];
+		gEatMouse--;
+		ClearMouseState();
+	}
+	else
+	{
+		MouseSmoothing_StartFrame();
+		uint32_t mouseButtons = SDL_GetMouseState(NULL, NULL);
+
+		for (int i = 0; i < NUM_MOUSE_BUTTONS; i++)
+		{
+			Boolean wasPressedBefore = gMouseButtonState[i];
+			gMouseButtonState[i] = mouseButtons & SDL_BUTTON(i+1);
+			gNewMouseButtonState[i] = gMouseButtonState[i] && !wasPressedBefore;
+		}
 	}
 
 
@@ -272,7 +106,7 @@ short   i;
 	if (WeAreFrontProcess())								// only read keys if we're the front process
 		UpdateKeyMap();
 	else													// otherwise, just clear it out
-		ClearKeyState();
+		ResetInputState();
 
 	// Assume player using key control if any arrow keys are pressed,
 	// otherwise assume mouse movement 
@@ -284,14 +118,21 @@ short   i;
 }
 
 
-/**************** CLEAR KEY MAP *************/
+/**************** CLEAR STATE *************/
 
-void ClearKeyState(void)
+static void ClearMouseState(void)
+{
+	MouseSmoothing_ResetState();
+	memset(gMouseButtonState, 0, sizeof(gMouseButtonState));
+	memset(gNewMouseButtonState, 0, sizeof(gNewMouseButtonState));
+}
+
+void ResetInputState(void)
 {
 	memset(gKeyMap, 0, sizeof(gKeyMap));
 	memset(gNewKeys, 0, sizeof(gNewKeys));
-	memset(gMouseButtonState, 0, sizeof(gMouseButtonState));
-	memset(gNewMouseButtonState, 0, sizeof(gNewMouseButtonState));
+	ClearMouseState();
+	EatMouseEvents();
 }
 
 
@@ -325,7 +166,7 @@ int	i;
 
 	if (GetNewKeyState(kKey_ToggleFullscreen))
 	{
-		ClearKeyState();
+		ResetInputState();
 		gGamePrefs.fullscreen = gGamePrefs.fullscreen ? 0 : 1;
 		SetFullscreenMode();
 	}
@@ -352,9 +193,9 @@ Boolean GetKeyState(unsigned short key)
 
 Boolean GetNewKeyState(unsigned short key)
 {
-	if (key == kKey_KickBoost   && gNewMouseButtonState[0]) return true;
-	if (key == kKey_Jump        && gNewMouseButtonState[1]) return true;
-	if (key == kKey_MorphPlayer && gNewMouseButtonState[2]) return true;
+	if (key == kKey_KickBoost   && gNewMouseButtonState[SDL_BUTTON_LEFT-1]) return true;
+	if (key == kKey_Jump        && gNewMouseButtonState[SDL_BUTTON_RIGHT-1]) return true;
+	if (key == kKey_MorphPlayer && gNewMouseButtonState[SDL_BUTTON_MIDDLE-1]) return true;
 
 	return ( ( gNewKeys[key>>3] >> (key & 7) ) & 1);
 }
@@ -378,15 +219,30 @@ int		i;
 #pragma mark -
 
 
-/***************** GET MOUSE COORD *****************/
-
-void GetMouseCoord(Point *point)
+Boolean FlushMouseButtonPress()
 {
+	Boolean gotPress = false;
 
-		GetMouse(point);
+	for (int i = 0; !gotPress && i < NUM_MOUSE_BUTTONS; i++)
+		gotPress |= gNewMouseButtonState[i];
 
+	memset(gNewMouseButtonState, 0, sizeof(gNewMouseButtonState));
+	return gotPress;
 }
 
+void EatMouseEvents(void)
+{
+	gEatMouse = 5;
+}
+
+void CaptureMouse(Boolean doCapture)
+{
+	SDL_PumpEvents();	// Prevent SDL from thinking mouse buttons are stuck as we switch into relative mode
+	SDL_SetRelativeMouseMode(doCapture ? SDL_TRUE : SDL_FALSE);
+	SDL_ShowCursor(doCapture ? 0 : 1);
+	ClearMouseState();
+	EatMouseEvents();
+}
 
 /***************** GET MOUSE DELTA *****************/
 
