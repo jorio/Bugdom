@@ -351,7 +351,7 @@ void QD3D_OnWindowResized(int windowWidth, int windowHeight)
 	if (!gGameViewInfoPtr)
 		return;
 
-	TQ3Area pane = GetAdjustedPane(windowWidth, windowHeight, gGameViewInfoPtr->paneClip);
+	TQ3Area pane = GetAdjustedPane(windowWidth, windowHeight, GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT, gGameViewInfoPtr->paneClip);
 	Q3DrawContext_SetPane(gGameViewInfoPtr->drawContext, &pane);
 
 	float aspectRatioXToY = (pane.max.x-pane.min.x)/(pane.max.y-pane.min.y);

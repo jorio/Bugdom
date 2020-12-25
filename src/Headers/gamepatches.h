@@ -6,7 +6,12 @@ extern "C" {
 
 TQ3StorageObject Q3FSSpecStorage_New(const FSSpec* spec);
 
-TQ3Area GetAdjustedPane(int windowWidth, int windowHeight, Rect paneClip);
+TQ3Area GetAdjustedPane(
+	int physicalWidth,
+	int physicalHeight,
+	int logicalWidth,
+	int logicalHeight,
+	Rect paneClip);
 
 void DoSDLMaintenance(void);
 

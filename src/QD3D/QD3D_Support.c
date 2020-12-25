@@ -368,7 +368,7 @@ extern SDL_Window*		gSDLWindow;
 		drawContexData.clearImageMethod = kQ3ClearMethodWithColor;		
 	
 	drawContexData.clearImageColor = viewDefPtr->clearColor;				// color to clear to
-	drawContexData.pane = GetAdjustedPane(ww, wh, viewDefPtr->paneClip);
+	drawContexData.pane = GetAdjustedPane(ww, wh, GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT, viewDefPtr->paneClip);
 
 #if DEBUG_WIREFRAME
 	drawContexData.clearImageColor.a = 1.0f;

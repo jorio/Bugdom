@@ -177,18 +177,19 @@ set(GAME_HEADERS
 
 set(GAME_GLUE_SOURCES
 	${GAME_SRCDIR}/Main.cpp
+	${GAME_SRCDIR}/Glue/DrawPicture.cpp
 	${GAME_SRCDIR}/Glue/EdgePadding.cpp
-	${GAME_SRCDIR}/Glue/GamePatches.cpp
 	${GAME_SRCDIR}/Glue/GLFunctions.cpp
 	${GAME_SRCDIR}/Glue/GLOverlay.cpp
 	${GAME_SRCDIR}/Glue/GLOverlayFade.cpp
+	${GAME_SRCDIR}/Glue/MouseSmoothing.c
 	${GAME_SRCDIR}/Glue/Overlay.cpp
 	${GAME_SRCDIR}/Glue/PickableQuads.cpp
-	${GAME_SRCDIR}/Glue/Q3FSSpecStorage.cpp
+	${GAME_SRCDIR}/Glue/QuesaExtras.c
+	${GAME_SRCDIR}/Glue/SDLMaintenance.c
 	${GAME_SRCDIR}/Glue/TextMesh.c
 	${GAME_SRCDIR}/Glue/TGA.c
 	${GAME_SRCDIR}/Glue/Tween.c
-	${GAME_SRCDIR}/Glue/MouseSmoothing.c
 	${GAME_SRCDIR}/Glue/UIRoutines.c
 )
 
