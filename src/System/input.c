@@ -14,6 +14,7 @@
 extern	float	gFramesPerSecondFrac;
 extern	PrefsType	gGamePrefs;
 extern	SDL_Window* gSDLWindow;
+extern 	SDL_GameController* gSDLController;
 
 /**********************/
 /*     PROTOTYPES     */
@@ -29,6 +30,7 @@ typedef struct KeyBinding
 	int key1;
 	int key2;
 	int mouseButton;
+	int gamepadButton;
 } KeyBinding;
 
 
@@ -86,28 +88,27 @@ Byte gRawKeyboardState[SDLKEYSTATEBUF_SIZE];
 
 KeyBinding gKeyBindings[kKey_MAX] =
 {
-[kKey_Pause				] = { "Pause",				SDL_SCANCODE_ESCAPE,	0,						0,					},
-[kKey_ToggleMusic		] = { "Toggle Music",		SDL_SCANCODE_M,			0,						0,					},
-[kKey_ToggleFullscreen	] = { "Toggle Fullscreen",	SDL_SCANCODE_F11,		0,						0,					},
-[kKey_RaiseVolume		] = { "Raise Volume",		SDL_SCANCODE_EQUALS,	0,						0,					},
-[kKey_LowerVolume		] = { "Lower Volume",		SDL_SCANCODE_MINUS,		0,						0,					},
-[kKey_SwivelCameraLeft	] = { "Swivel Camera Left",	SDL_SCANCODE_COMMA,		0,						0,					},
-[kKey_SwivelCameraRight	] = { "Swivel Camera Right",SDL_SCANCODE_PERIOD,	0,						0,					},
-[kKey_ZoomIn			] = { "Zoom In",			SDL_SCANCODE_2,			0,						0,					},
-[kKey_ZoomOut			] = { "Zoom Out",			SDL_SCANCODE_1,			0,						0,					},
-[kKey_MorphPlayer		] = { "Morph Into Ball",	SDL_SCANCODE_SPACE,		0,						SDL_BUTTON_MIDDLE,	},
-[kKey_BuddyAttack		] = { "Buddy Attack",		SDL_SCANCODE_TAB,		0,						0,					},
-[kKey_Jump				] = { "Jump",				DEFAULT_JUMP_SCANCODE1,	DEFAULT_JUMP_SCANCODE2,	SDL_BUTTON_RIGHT,	},
-[kKey_KickBoost			] = { "Kick / Boost",		DEFAULT_KICK_SCANCODE1,	DEFAULT_KICK_SCANCODE2,	SDL_BUTTON_LEFT,	},
-[kKey_AutoWalk			] = { "Auto-Walk",			SDL_SCANCODE_LSHIFT,	SDL_SCANCODE_RSHIFT,	0,					},
-[kKey_Forward			] = { "Forward",			SDL_SCANCODE_UP,		SDL_SCANCODE_W,			0,					},
-[kKey_Backward			] = { "Backward",			SDL_SCANCODE_DOWN,		SDL_SCANCODE_S,			0,					},
-[kKey_Left				] = { "Left",				SDL_SCANCODE_LEFT,		SDL_SCANCODE_A,			0,					},
-[kKey_Right				] = { "Right",				SDL_SCANCODE_RIGHT,		SDL_SCANCODE_D,			0,					},
-
-[kKey_UI_Confirm		] = { "DO_NOT_REBIND",		SDL_SCANCODE_RETURN,	SDL_SCANCODE_KP_ENTER,	0,					},
-[kKey_UI_Cancel			] = { "DO_NOT_REBIND",		SDL_SCANCODE_ESCAPE,	0,						0,					},
-[kKey_UI_Skip			] = { "DO_NOT_REBIND",		SDL_SCANCODE_SPACE,		0,						0,					},
+[kKey_Pause				] = { "Pause",				SDL_SCANCODE_ESCAPE,	0,						0,					SDL_CONTROLLER_BUTTON_START, },
+[kKey_ToggleMusic		] = { "Toggle Music",		SDL_SCANCODE_M,			0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
+[kKey_ToggleFullscreen	] = { "Toggle Fullscreen",	SDL_SCANCODE_F11,		0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
+[kKey_RaiseVolume		] = { "Raise Volume",		SDL_SCANCODE_EQUALS,	0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
+[kKey_LowerVolume		] = { "Lower Volume",		SDL_SCANCODE_MINUS,		0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
+[kKey_SwivelCameraLeft	] = { "Swivel Camera Left",	SDL_SCANCODE_COMMA,		0,						0,					SDL_CONTROLLER_BUTTON_LEFTSHOULDER, },
+[kKey_SwivelCameraRight	] = { "Swivel Camera Right",SDL_SCANCODE_PERIOD,	0,						0,					SDL_CONTROLLER_BUTTON_RIGHTSHOULDER, },
+[kKey_ZoomIn			] = { "Zoom In",			SDL_SCANCODE_2,			0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
+[kKey_ZoomOut			] = { "Zoom Out",			SDL_SCANCODE_1,			0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
+[kKey_MorphPlayer		] = { "Morph Into Ball",	SDL_SCANCODE_SPACE,		0,						SDL_BUTTON_MIDDLE,	SDL_CONTROLLER_BUTTON_B, },
+[kKey_BuddyAttack		] = { "Buddy Attack",		SDL_SCANCODE_TAB,		0,						0,					SDL_CONTROLLER_BUTTON_Y, },
+[kKey_Jump				] = { "Jump",				DEFAULT_JUMP_SCANCODE1,	DEFAULT_JUMP_SCANCODE2,	SDL_BUTTON_RIGHT,	SDL_CONTROLLER_BUTTON_A, },
+[kKey_KickBoost			] = { "Kick / Boost",		DEFAULT_KICK_SCANCODE1,	DEFAULT_KICK_SCANCODE2,	SDL_BUTTON_LEFT,	SDL_CONTROLLER_BUTTON_X, },
+[kKey_AutoWalk			] = { "Auto-Walk",			SDL_SCANCODE_LSHIFT,	SDL_SCANCODE_RSHIFT,	0,					SDL_CONTROLLER_BUTTON_INVALID, },
+[kKey_Forward			] = { "Forward",			SDL_SCANCODE_UP,		SDL_SCANCODE_W,			0,					SDL_CONTROLLER_BUTTON_DPAD_UP, },
+[kKey_Backward			] = { "Backward",			SDL_SCANCODE_DOWN,		SDL_SCANCODE_S,			0,					SDL_CONTROLLER_BUTTON_DPAD_DOWN, },
+[kKey_Left				] = { "Left",				SDL_SCANCODE_LEFT,		SDL_SCANCODE_A,			0,					SDL_CONTROLLER_BUTTON_DPAD_LEFT, },
+[kKey_Right				] = { "Right",				SDL_SCANCODE_RIGHT,		SDL_SCANCODE_D,			0,					SDL_CONTROLLER_BUTTON_DPAD_RIGHT, },
+[kKey_UI_Confirm		] = { "DO_NOT_REBIND",		SDL_SCANCODE_RETURN,	SDL_SCANCODE_KP_ENTER,	0,					SDL_CONTROLLER_BUTTON_INVALID, },
+[kKey_UI_Cancel			] = { "DO_NOT_REBIND",		SDL_SCANCODE_ESCAPE,	0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
+[kKey_UI_Skip			] = { "DO_NOT_REBIND",		SDL_SCANCODE_SPACE,		0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
 };
 
 
@@ -236,6 +237,9 @@ void UpdateKeyMap(void)
 		if (kb->mouseButton)
 			downNow |= 0 != (mouseButtons & SDL_BUTTON(kb->mouseButton));
 
+		if (gSDLController && kb->gamepadButton != SDL_CONTROLLER_BUTTON_INVALID)
+			downNow |= 0 != SDL_GameControllerGetButton(gSDLController, kb->gamepadButton);
+
 		UpdateKeyState(&gKeyStates[i], downNow);
 	}
 
@@ -352,6 +356,15 @@ void GetMouseDelta(float *dx, float *dy)
 		else
 			*dy = 0;
 	
+		return;
+	}
+
+	if (gSDLController)
+	{
+		Sint16 dxController = SDL_GameControllerGetAxis(gSDLController, SDL_CONTROLLER_AXIS_LEFTX);
+		Sint16 dyController = SDL_GameControllerGetAxis(gSDLController, SDL_CONTROLLER_AXIS_LEFTY);
+		*dx = gFramesPerSecondFrac * 1600.0f * dxController / 32767.0f;
+		*dy = gFramesPerSecondFrac * 1600.0f * dyController / 32767.0f;
 		return;
 	}
 

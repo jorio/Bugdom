@@ -28,6 +28,8 @@ extern "C"
 
 	extern SDL_Window* gSDLWindow;
 
+	SDL_GameController* gSDLController = nullptr;
+
 	extern int PRO_MODE;
 
 	// Tell Windows graphics driver that we prefer running on a dedicated GPU if available
@@ -79,6 +81,44 @@ static const char* GetWindowTitle()
 	return windowTitle;
 }
 
+static void InitGamepad(const fs::path& dataPath)
+{
+	gSDLController = nullptr;
+
+	SDL_Init(SDL_INIT_JOYSTICK);
+	SDL_GameControllerAddMappingsFromFile((dataPath / "System" / "gamecontrollerdb.txt").c_str());
+
+	if (SDL_NumJoysticks() == 0)
+		return;
+
+	for (int i = 0; gSDLController == nullptr && i < SDL_NumJoysticks(); ++i)
+	{
+		if (SDL_IsGameController(i))
+		{
+			gSDLController = SDL_GameControllerOpen(i);
+		}
+	}
+
+	if (gSDLController)
+	{
+		printf("Opened game controller: %s\n", SDL_GameControllerName(gSDLController));
+	}
+	else
+	{
+		char messageBuf[1024];
+		snprintf(messageBuf, sizeof(messageBuf),
+				 "The game does not support your controller yet (\"%s\").\n\n"
+				 "You can play with the keyboard and mouse instead. Sorry!",
+				 SDL_JoystickNameForIndex(0));
+		SDL_ShowSimpleMessageBox(
+				SDL_MESSAGEBOX_WARNING,
+				"Controller not supported",
+				messageBuf,
+				gSDLWindow);
+		return;
+	}
+}
+
 int CommonMain(int argc, const char** argv)
 {
 	Pomme::InitParams params
@@ -102,10 +142,13 @@ int CommonMain(int argc, const char** argv)
 	Overlay_Flush();
 	Overlay_EndExclusive();
 
-	FindGameData();
+	fs::path dataPath = FindGameData();
 #if !(__APPLE__)
 	Pomme::Graphics::SetWindowIconFromIcl8Resource(128);
 #endif
+
+	// Init joysticks
+	InitGamepad(dataPath);
 
 	// Initialize Quesa
 	auto qd3dStatus = Q3Initialize();
