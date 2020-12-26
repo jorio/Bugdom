@@ -113,7 +113,8 @@ static void MakeCreditPart(
 	tmd.color = kNameColor;
 	tmd.coord.y -= LH;
 	TextMesh_Create(&tmd, text1);
-	tmd.coord.y -= LH;
+	tmd.coord.y -= LH * .75f;
+	tmd.scale = .15f;
 	TextMesh_Create(&tmd, text2);
 
 }
@@ -154,7 +155,7 @@ static void MakeAboutScreenObjects(int slideNumber)
 			y -= LH*4;
 
 			MakeCreditPart(-XSPREAD,	y, "Musical Direction", "Mike Beckett", "Nuclear Kangaroo Music");
-			MakeCreditPart(XSPREAD,		y, "Enhanced Update", "Iliyas Jorio", "");
+			MakeCreditPart(XSPREAD,		y, "Enhanced Update", "Iliyas Jorio", "github.com/jorio/bugdom");
 
 			tmd.coord.x = 0;
 			tmd.coord.y = -110;
