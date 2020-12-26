@@ -131,7 +131,7 @@ static void MakeText(
 		TQ3BoundingBox glyphBBox;
 		glyphBBox.min.x = 0;
 		glyphBBox.max.x = 0;
-		ForEachTriMesh(glyph->BaseGroup, GetTriMeshBoundingBox, (void *) &glyphBBox);
+		ForEachTriMesh(glyph->BaseGroup, GetTriMeshBoundingBox, (void *) &glyphBBox, ~0ull);
 		float glyphWidth = glyphBBox.max.x - glyphBBox.min.x;
 
 		// Hack to create missing glyph from another with a little transform
@@ -215,7 +215,7 @@ void TextMesh_Load(void)
 	// Nuke color attribute from glyph models so we can draw them in whatever color we like later.
 	for (int i = SCORES_ObjType_0; i <= SCORES_ObjType_Colon; i++)
 	{
-		ForEachTriMesh(gObjectGroupList[MODEL_GROUP_TEXTMESH][i], QD3D_ClearDiffuseColor_TriMesh, NULL);
+		ForEachTriMesh(gObjectGroupList[MODEL_GROUP_TEXTMESH][i], QD3D_ClearDiffuseColor_TriMesh, NULL, ~0ull);
 	}
 }
 

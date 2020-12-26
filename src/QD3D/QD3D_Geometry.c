@@ -1055,12 +1055,18 @@ void QD3D_FreeCopyTriMeshData(TQ3TriMeshData *data)
 // Convenience function that traverses the object graph and runs the given callback on all trimeshes.
 //
 
-void ForEachTriMesh(TQ3Object root, void (*callback)(TQ3TriMeshData triMeshData, void* userData), void* userData)
+void ForEachTriMesh(
+		TQ3Object root,
+		void (*callback)(TQ3TriMeshData triMeshData, void* userData),
+		void* userData,
+		uint64_t triMeshMask)
 {
 	TQ3Object	frontier[OBJTREE_FRONTIER_STACK_LENGTH];
 	int			top = 0;
 
 	frontier[top] = root;
+
+	unsigned long nFoundTriMeshes = 0;
 
 	while (top >= 0)
 	{
@@ -1071,15 +1077,21 @@ void ForEachTriMesh(TQ3Object root, void (*callback)(TQ3TriMeshData triMeshData,
 		if (Q3Object_IsType(obj,kQ3ShapeTypeGeometry) &&
 			Q3Geometry_GetType(obj) == kQ3GeometryTypeTriMesh)		// must be trimesh
 		{
-			TQ3TriMeshData		triMeshData;
-			TQ3Status			status;
+			if (triMeshMask & 1)
+			{
+				TQ3TriMeshData		triMeshData;
+				TQ3Status			status;
 
-			status = Q3TriMesh_GetData(obj, &triMeshData);		// get trimesh data
-			GAME_ASSERT(status);
+				status = Q3TriMesh_GetData(obj, &triMeshData);		// get trimesh data
+				GAME_ASSERT(status);
 
-			callback(triMeshData, userData);
+				callback(triMeshData, userData);
 
-			Q3TriMesh_EmptyData(&triMeshData);
+				Q3TriMesh_EmptyData(&triMeshData);
+			}
+
+			triMeshMask >>= 1;
+			nFoundTriMeshes++;
 		}
 		else if (Q3Object_IsType(obj, kQ3ShapeTypeShader) &&
 				 Q3Shader_GetType(obj) == kQ3ShaderTypeSurface)		// must be texture surface shader
@@ -1110,64 +1122,16 @@ void ForEachTriMesh(TQ3Object root, void (*callback)(TQ3TriMeshData triMeshData,
 			Q3Object_Dispose(obj);						// dispose local ref
 		}
 	}
-}
 
-
-
-/**************************** QD3D: SET TEXTURE ALPHA THRESHOLD *******************************/
-// (SOURCE PORT ADDITION)
-//
-// Instructs Quesa to discard transparent texels so meshes don't get knocked off fast rendering path.
-//
-// The game has plenty of models with textures containing texels that are either fully-opaque
-// or fully-transparent (e.g.: the ladybug's eyelashes and wings).
-//
-// Normally, textures that are not fully-opaque would make Quesa consider the entire mesh
-// as having transparency. This would take the mesh out of the fast rendering path, because Quesa
-// needs to depth sort the triangles in transparent meshes.
-//
-// In the case of textures that are either fully-opaque or fully-transparent, though, we don't
-// need that extra depth sorting. The transparent texels can simply be discarded instead.
-
-void QD3D_SetTextureAlphaThreshold_TriMesh(TQ3TriMeshData triMeshData, void* userData_thresholdFloatPtr)
-{
-	// SEE IF HAS A TEXTURE
-	if (Q3AttributeSet_Contains(triMeshData.triMeshAttributeSet, kQ3AttributeTypeSurfaceShader))
+	if (nFoundTriMeshes > 8*sizeof(triMeshMask))
 	{
-		TQ3SurfaceShaderObject	shader;
-		TQ3TextureObject		texture;
-		TQ3Mipmap				mipmap;
-		TQ3Status				status;
-
-		status = Q3AttributeSet_Get(triMeshData.triMeshAttributeSet, kQ3AttributeTypeSurfaceShader, &shader);
-		GAME_ASSERT(status);
-
-				/* ADD ALPHA TEST ELEMENT */
-
-		status = Q3Object_AddElement(shader, kQ3ElementTypeTextureShaderAlphaTest, (void*) &gTextureAlphaThreshold);
-		GAME_ASSERT(status);
-
-				/* GET MIPMAP & APPLY EDGE PADDING TO IMAGE */
-				/* (TO AVOID BLACK SEAMS WHERE TEXELS ARE BEING DISCARDED) */
-
-		status = Q3TextureShader_GetTexture(shader, &texture);
-		GAME_ASSERT(status);
-
-		status = Q3MipmapTexture_GetMipmap(texture, &mipmap);
-		GAME_ASSERT(status);
-
-		if (mipmap.pixelType == kQ3PixelTypeARGB16 ||			// Edge padding only effective if image has alpha channel
-			mipmap.pixelType == kQ3PixelTypeARGB32)
-		{
-			ApplyEdgePadding(&mipmap);
-		}
-
-				/* DISPOSE REFS */
-
-		Q3Object_Dispose(texture);
-		Q3Object_Dispose(shader);
+		DoAlert("This group contains more trimeshes than can fit in the mask.");
 	}
 }
+
+
+
+
 
 /************** QD3D: NUKE DIFFUSE COLOR ATTRIBUTE FROM TRIMESHES ***********/
 // (SOURCE PORT ADDITION)
@@ -1185,30 +1149,6 @@ void QD3D_ClearDiffuseColor_TriMesh(TQ3TriMeshData triMeshData, void* userData)
 	Q3AttributeSet_Clear(triMeshData.triMeshAttributeSet, kQ3AttributeTypeDiffuseColor);
 }
 
-
-
-
-void QD3D_SetUVClamp_TriMesh(TQ3TriMeshData triMeshData, void* userData)
-{
-	bool uClamp = ((uintptr_t)userData) & 1;
-	bool vClamp = ((uintptr_t)userData) & 2;
-
-	if (!Q3AttributeSet_Contains(triMeshData.triMeshAttributeSet, kQ3AttributeTypeSurfaceShader))
-		return;
-
-	TQ3SurfaceShaderObject	shader;
-	TQ3Status 				status;
-
-	status = Q3AttributeSet_Get(triMeshData.triMeshAttributeSet, kQ3AttributeTypeSurfaceShader, &shader);
-	GAME_ASSERT(status);
-
-	Q3Shader_SetUBoundary(shader, uClamp ? kQ3ShaderUVBoundaryClamp : kQ3ShaderUVBoundaryWrap);
-	Q3Shader_SetVBoundary(shader, vClamp ? kQ3ShaderUVBoundaryClamp : kQ3ShaderUVBoundaryWrap);
-
-			/* DISPOSE REFS */
-
-	Q3Object_Dispose(shader);
-}
 
 
 

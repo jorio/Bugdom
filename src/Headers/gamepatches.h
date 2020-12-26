@@ -27,6 +27,13 @@ void FlushQuesaErrors(void);
 void ApplyEdgePadding(const TQ3Mipmap* mipmap);
 
 //-----------------------------------------------------------------------------
+// Patch 3DMF models
+
+void PatchSkeleton3DMF(const char* cName, TQ3Object newModel);
+
+void PatchGrouped3DMF(const char* cName, TQ3Object* objects, int nObjects);
+
+//-----------------------------------------------------------------------------
 // Overlay
 
 void Overlay_BeginExclusive(void);

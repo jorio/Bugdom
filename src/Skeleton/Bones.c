@@ -13,7 +13,6 @@
 #include "3dmath.h"
 
 extern	TQ3TriMeshData		**gLocalTriMeshesOfSkelType;
-extern	const TQ3Float32	gTextureAlphaThreshold;
 
 
 /****************************/
@@ -58,9 +57,7 @@ TQ3Object		newModel;
 	newModel = Load3DMFModel(inSpec);
 	GAME_ASSERT(newModel);
 
-
-	ForEachTriMesh(newModel, QD3D_SetTextureAlphaThreshold_TriMesh, (void*) &gTextureAlphaThreshold);	// DISCARD TRANSPARENT TEXELS (Source port addition)
-
+	PatchSkeleton3DMF(inSpec->cName, newModel);
 
 	gCurrentSkeleton = skeleton;
 	DecomposeReferenceModel(newModel);

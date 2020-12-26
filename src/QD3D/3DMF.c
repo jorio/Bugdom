@@ -30,37 +30,6 @@ static TQ3FileObject	Create3DMFFileObject(const FSSpec *myFSSpec);
 /*    CONSTANTS             */
 /****************************/
 
-// List of objects for which we do NOT want to discard transparent texels ("alpha test").
-// By default, alpha testing is applied to all objects with transparent textures.
-const struct
-{
-	const char*		filename;			// 3DMF file name, uppercase. Set to NULL to signify end of list.
-	uint64_t		exceptionMask;		// Mask of object IDs to ignore
-}
-gAlphaTestBlacklist[] =
-{
-	{
-		"GLOBAL_MODELS1.3DMF"
-		, (1 << GLOBAL1_MObjType_Shadow)
-		| (1 << GLOBAL1_MObjType_Ripple)
-		| (1 << GLOBAL1_MObjType_ShockWave)
-	},
-	{
-		"NIGHT_MODELS.3DMF"
-		, (1 << NIGHT_MObjType_GasCloud)
-		| (1 << NIGHT_MObjType_GlowShadow)
-		| (1 << NIGHT_MObjType_FireFlyGlow)
-	},
-	{
-		"ANTHILL_MODELS.3DMF"
-		, (1 << ANTHILL_MObjType_GasCloud)
-		| (1 << ANTHILL_MObjType_Staff)
-	},
-	{	// End sentinel
-		nil,
-		0
-	}
-};
 
 /*********************/
 /*    VARIABLES      */
@@ -281,19 +250,6 @@ TQ3GroupPosition	position;
 	the3DMFFile = Load3DMFModel(spec);
 	GAME_ASSERT(the3DMFFile);
 
-			/* FIND OUT WHICH OBJECTS NEED ALPHA TEST */
-
-	uint64_t alphaTestObjectMask = ~0u;								// by default, apply alpha test to all objects
-
-	for (i = 0; gAlphaTestBlacklist[i].filename; i++)				// see if blacklist says any objects should NOT have alpha test
-	{
-		if (!strcasecmp(spec->cName, gAlphaTestBlacklist[i].filename))		// model file matches entry in blacklist
-		{
-			alphaTestObjectMask &= ~gAlphaTestBlacklist[i].exceptionMask;
-			break;
-		}
-	}
-
 			/* BUILD OBJECT LIST */
 		
 	status = Q3Group_CountObjects(the3DMFFile, &nObjects);			// get # objects in group.  Assume each object is a separate linked item
@@ -326,18 +282,7 @@ TQ3GroupPosition	position;
 	Q3Object_Dispose(the3DMFFile);
 
 
-
-			/*********************************************************************/
-			/* DISCARD TRANSPARENT TEXELS (Source port addition for performance) */
-			/*********************************************************************/
-
-	for (i = 0; i < nObjects; i++)
-	{
-		if (alphaTestObjectMask & (1uLL << i))						// should we apply the alpha test to this object?
-		{
-			ForEachTriMesh(gObjectGroupList[groupNum][i], QD3D_SetTextureAlphaThreshold_TriMesh, NULL);
-		}
-	}
+	PatchGrouped3DMF(spec->cName, gObjectGroupList[groupNum], nObjects);
 }
 
 

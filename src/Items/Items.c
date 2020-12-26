@@ -120,8 +120,6 @@ ObjNode *newObj;
 	if (newObj == nil)
 		return;
 
-	ForEachTriMesh(newObj->BaseGroup, QD3D_SetUVClamp_TriMesh, (void *) SETUVCLAMP_WRAPU_CLAMPV);
-		
 #ifdef FORMAC
     newObj->Scale.y *= 1.5f;
 #endif		
