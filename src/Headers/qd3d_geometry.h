@@ -62,3 +62,5 @@ enum
 };
 
 void QD3D_SetUVClamp_TriMesh(TQ3TriMeshData triMeshData, void* userData);
+
+ObjNode* MakeNewDisplayGroupObject_TexturedQuad(TQ3SurfaceShaderObject surfaceShader, float aspectRatio);

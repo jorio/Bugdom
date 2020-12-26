@@ -1209,3 +1209,60 @@ void QD3D_SetUVClamp_TriMesh(TQ3TriMeshData triMeshData, void* userData)
 
 	Q3Object_Dispose(shader);
 }
+
+
+
+ObjNode* MakeNewDisplayGroupObject_TexturedQuad(TQ3SurfaceShaderObject surfaceShader, float aspectRatio)
+{
+	float x = 0;
+	float y = 0;
+	float halfWidth = aspectRatio;
+	float halfHeight = 1.0f;
+
+	TQ3Vertex3D verts[4] =
+	{
+		{{x-halfWidth, y-halfHeight, 0}, nil},
+		{{x+halfWidth, y-halfHeight, 0}, nil},
+		{{x+halfWidth, y+halfHeight, 0}, nil},
+		{{x-halfWidth, y+halfHeight, 0}, nil},
+	};
+
+
+	static const TQ3Param2D uvs[4] = { {0,0}, {1,0}, {1,1}, {0,1}, };
+
+	for (int i = 0; i < 4; i++)
+	{
+		TQ3AttributeSet attrib = Q3AttributeSet_New();
+		Q3AttributeSet_Add(attrib, kQ3AttributeTypeSurfaceUV, &uvs[i]);
+		verts[i].attributeSet = attrib;
+	}
+
+	TQ3BoundingSphere bSphere =
+	{
+		.origin =  {0, 0, 0},
+		.radius = halfWidth > halfHeight ? halfWidth : halfHeight,
+		.isEmpty = kQ3False,
+	};
+
+	TQ3PolygonData quad =
+	{
+		.numVertices = 4,
+		.vertices = verts,
+		.polygonAttributeSet = nil
+	};
+
+	ObjNode *newObj = MakeNewCustomDrawObject(&gNewObjectDefinition, &bSphere, nil);
+	newObj->Genre = DISPLAY_GROUP_GENRE;		// force rendering loop to submit this node
+	newObj->Group = MODEL_GROUP_ILLEGAL;		// we aren't bound to any model group
+	CreateBaseGroup(newObj);
+
+	TQ3GeometryObject geom = Q3Polygon_New(&quad);
+
+	AttachGeometryToDisplayGroupObject(newObj, surfaceShader);
+	AttachGeometryToDisplayGroupObject(newObj, geom);
+	UpdateObjectTransforms(newObj);
+
+	Q3Object_Dispose(geom);
+
+	return newObj;
+}
