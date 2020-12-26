@@ -129,7 +129,7 @@ void QD3D_SetZWrite(Boolean isOn);
 
 void ShowNormal(TQ3Point3D *where, TQ3Vector3D *normal);
 
-
+#define TQ3ColorRGB_FromInt(c) (TQ3ColorRGB){ (((c)>>16)&0xFF)/255.0f, (((c)>>8)&0xFF)/255.0f, ((c)&0xFF)/255.0f }
 
 #pragma mark -
 

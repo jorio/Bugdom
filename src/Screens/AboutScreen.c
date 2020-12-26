@@ -100,7 +100,7 @@ static void MakeCreditPart(
 	const float LH = 13;
 	TextMeshDef tmd;
 	TextMesh_FillDef(&tmd);
-	//tmd.withShadow = 0;
+	tmd.withShadow = false;
 	tmd.slot = kAboutScreenObjNodeSlot;
 	tmd.scale = .25f;
 	tmd.coord = (TQ3Point3D) {x,y,0};
@@ -124,9 +124,11 @@ static void MakeAboutScreenObjects(int slideNumber)
 	TextMesh_FillDef(&tmd);
 	tmd.slot = kAboutScreenObjNodeSlot;
 	tmd.coord.y += 110;
-	//tmd.withShadow = false;
+	tmd.withShadow = false;
 	tmd.lowercaseScale = 1;
 	tmd.characterSpacing *= 1.33f;
+	tmd.color = kHeadingColor;
+	tmd.scale = .66f;
 
 	const float LH = 13;
 
@@ -134,16 +136,15 @@ static void MakeAboutScreenObjects(int slideNumber)
 	{
 		case 0:
 		{
-			float XSPREAD = 80;
-
-			tmd.scale = 0.66f;
 			TextMesh_Create(&tmd, "CREDITS");
+
+			float XSPREAD = 80;
 
 			tmd.scale = 0.25f;
 
 			float y = tmd.coord.y - LH*4;
 
-			MakeCreditPart(0,			y, "Designed and Developed by", "Brian Greenstone and Toucan Studio, Inc.", "");
+			MakeCreditPart(0,			y, "Designed & Developed by", "Brian Greenstone & Toucan Studio, Inc.", "");
 
 			y -= LH*4;
 
@@ -168,40 +169,61 @@ static void MakeAboutScreenObjects(int slideNumber)
 
 		case 1:
 		{
-			float XLEFT = -115;
-			float XRIGHT = 25;
+			TextMesh_Create(&tmd, "CONTROLS");
 
-			tmd.color = kHeadingColor;
-			tmd.scale = 0.66f;
-			TextMesh_Create(&tmd, "Controls");
+			FSSpec diagramSpec;
+			FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Images:GamepadDiagram.tga", &diagramSpec);
+			TQ3SurfaceShaderObject diagramSurfaceShader = QD3D_TGAToTexture(&diagramSpec);
+			GAME_ASSERT(diagramSurfaceShader);
 
-			tmd.coord.y -= LH*4;
-			tmd.scale = 0.25f;
+			float y = 25;
+
+			gNewObjectDefinition.coord.x = 0;
+			gNewObjectDefinition.coord.y = y;
+			gNewObjectDefinition.coord.z = -3;
+			gNewObjectDefinition.flags 	= STATUS_BIT_NOTRICACHE|STATUS_BIT_NULLSHADER|STATUS_BIT_NOZWRITE;
+			gNewObjectDefinition.slot 	= kAboutScreenObjNodeSlot;
+			gNewObjectDefinition.moveCall = nil;
+			gNewObjectDefinition.rot 	= 0;
+			gNewObjectDefinition.scale = 50.0f;
+			MakeNewDisplayGroupObject_TexturedQuad(diagramSurfaceShader, 750.0f/400.0f);
+
+			tmd.scale = 0.2f;
 			tmd.align = TEXTMESH_ALIGN_LEFT;
+			tmd.coord.x =  95;
+			tmd.coord.y =  34+y; tmd.color = TQ3ColorRGB_FromInt(0x0599f8); TextMesh_Create(&tmd, "KICK");
+			tmd.coord.y =  22+y; tmd.color = TQ3ColorRGB_FromInt(0xfff139); TextMesh_Create(&tmd, "BUDDY");
+			tmd.coord.y =  10+y; tmd.color = TQ3ColorRGB_FromInt(0xdf2020); TextMesh_Create(&tmd, "MORPH");
+			tmd.coord.y =  -2+y; tmd.color = TQ3ColorRGB_FromInt(0x23ab23); TextMesh_Create(&tmd, "JUMP/BOOST");
+			tmd.coord.y = -24+y; tmd.color = TQ3ColorRGB_FromInt(0x7e7e7e); TextMesh_Create(&tmd, "CAMERA");
+			tmd.align = TEXTMESH_ALIGN_RIGHT;
+			tmd.coord.x = -95; tmd.coord.y = 10+y; TextMesh_Create(&tmd, "WALK/ROLL");
 
-			tmd.coord.y -= LH; tmd.coord.x = XLEFT;	tmd.color = kNameColor; TextMesh_Create(&tmd, "Mouse / Arrows");			tmd.coord.x = XRIGHT;	tmd.color = kHeadingColor; TextMesh_Create(&tmd, "Move Player");
-			tmd.coord.y -= LH; tmd.coord.x = XLEFT;	tmd.color = kNameColor; TextMesh_Create(&tmd, "Left Click / Option");		tmd.coord.x = XRIGHT;	tmd.color = kHeadingColor; TextMesh_Create(&tmd, "Kick / Speed Boost");
-			tmd.coord.y -= LH; tmd.coord.x = XLEFT;	tmd.color = kNameColor; TextMesh_Create(&tmd, "Right Click / Command");		tmd.coord.x = XRIGHT;	tmd.color = kHeadingColor; TextMesh_Create(&tmd, "Jump");
-			tmd.coord.y -= LH; tmd.coord.x = XLEFT;	tmd.color = kNameColor; TextMesh_Create(&tmd, "Middle Click / Space");		tmd.coord.x = XRIGHT;	tmd.color = kHeadingColor; TextMesh_Create(&tmd, "Morph into ball");
-			tmd.coord.y -= LH; tmd.coord.x = XLEFT;	tmd.color = kNameColor; TextMesh_Create(&tmd, "Shift");						tmd.coord.x = XRIGHT;	tmd.color = kHeadingColor; TextMesh_Create(&tmd, "Auto-Walk");
-			tmd.coord.y -= LH; tmd.coord.x = XLEFT;	tmd.color = kNameColor; TextMesh_Create(&tmd, "Tab");						tmd.coord.x = XRIGHT;	tmd.color = kHeadingColor; TextMesh_Create(&tmd, "Buddy Bug Onslaught");
-			tmd.coord.y -= LH; tmd.coord.x = XLEFT;	tmd.color = kNameColor; TextMesh_Create(&tmd, "ESC");						tmd.coord.x = XRIGHT;	tmd.color = kHeadingColor; TextMesh_Create(&tmd, "Pause");
+			tmd.scale = 0.2f;
+			tmd.align = TEXTMESH_ALIGN_LEFT;
+			tmd.coord.x = -12-60;
+			tmd.coord.y -= LH*6;
+			TextMesh_Create(&tmd, "MOUSE & KEYBOARD:");
 
-			tmd.align = TEXTMESH_ALIGN_CENTER;
-			tmd.color = kDimmedColor;
-			tmd.coord.x = 0;
-			tmd.coord.y = -110;
-			tmd.scale *= .66f;
-			TextMesh_Create(&tmd, "CONTROL REMAPPING WILL BE IMPLEMENTED IN A");
-			tmd.coord.y -= LH*.66f; TextMesh_Create(&tmd, "LATER VERSION OF THIS SOURCE PORT. STAY TUNED!");
+#define MAKE_CONTROL_TEXT(key, caption) \
+			tmd.coord.y -= 11;                   \
+			tmd.coord.x = -12;		tmd.color = kNameColor;		TextMesh_Create(&tmd, key); \
+			tmd.coord.x = -12-60;	tmd.color = kHeadingColor;	TextMesh_Create(&tmd, caption);
+
+			MAKE_CONTROL_TEXT("Mouse / Arrows"			, "WALK/ROLL");
+			MAKE_CONTROL_TEXT("Left Click / Option"		, "KICK/BOOST");
+			MAKE_CONTROL_TEXT("Right Click / Command"	, "JUMP");
+			MAKE_CONTROL_TEXT("Middle Click / Space"	, "MORPH");
+			MAKE_CONTROL_TEXT("Shift"					, "AUTO-WALK");
+			MAKE_CONTROL_TEXT("Tab"						, "BUDDY");
+			MAKE_CONTROL_TEXT("ESC"						, "PAUSE");
+#undef MAKE_CONTROL_TEXT
 			break;
 		}
 
 		case 2:
 		{
-			tmd.color = kHeadingColor;
-			tmd.scale = 0.66f;
-			TextMesh_Create(&tmd, "INFO AND UPDATES");
+			TextMesh_Create(&tmd, "INFO & UPDATES");
 
 			float y = tmd.coord.y - LH*4;
 
@@ -223,12 +245,15 @@ static void MakeAboutScreenObjects(int slideNumber)
 			tmd.coord.y = -75;
 			tmd.color = kDimmedColor;
 			tmd.align = TEXTMESH_ALIGN_LEFT;
-			tmd.coord.y -= 10; tmd.coord.x = -80; TextMesh_Create(&tmd, "Game ver:");	tmd.coord.x = -30; TextMesh_Create(&tmd, PROJECT_VERSION);
-			tmd.coord.y -= 10; tmd.coord.x = -80; TextMesh_Create(&tmd, "Renderer:");	tmd.coord.x = -30; TextMesh_Create(&tmd, (const char*)glGetString(GL_RENDERER));
-			tmd.coord.y -= 10; tmd.coord.x = -80; TextMesh_Create(&tmd, "OpenGL:");		tmd.coord.x = -30; TextMesh_Create(&tmd, (const char*)glGetString(GL_VERSION));
-			tmd.coord.y -= 10; tmd.coord.x = -80; TextMesh_Create(&tmd, "GLSL:");		tmd.coord.x = -30; TextMesh_Create(&tmd, (const char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
-			tmd.coord.y -= 10; tmd.coord.x = -80; TextMesh_Create(&tmd, "SDL:");		tmd.coord.x = -30; TextMesh_Create(&tmd, sdlVersionString);
+#define MAKE_TECH_TEXT(key, caption) \
+            tmd.coord.y -= 10; tmd.coord.x = -80; TextMesh_Create(&tmd, key);	tmd.coord.x = -30; TextMesh_Create(&tmd, caption);
 
+			MAKE_TECH_TEXT("Game ver:",	PROJECT_VERSION);
+			MAKE_TECH_TEXT("Renderer:",	(const char*)glGetString(GL_RENDERER));
+			MAKE_TECH_TEXT("OpenGL:",	(const char*)glGetString(GL_VERSION));
+			MAKE_TECH_TEXT("GLSL:",		(const char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
+			MAKE_TECH_TEXT("SDL:",		sdlVersionString);
+#undef MAKE_TECH_TEXT
 			break;
 		}
 	}
