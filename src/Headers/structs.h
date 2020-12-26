@@ -21,9 +21,6 @@
 #define	MAX_POINT_REFS			10		// max times a point can be re-used in multiple places
 #define	MAX_DECOMPOSED_TRIMESHES 10
 
-#define	MAX_MORPH_TRIMESHES		10
-#define	MAX_MORPH_POINTS		1000
-
 
 
 			/*********************/
@@ -215,23 +212,6 @@ typedef struct
 }SkeletonObjDataType;
 
 
-			/* MORPH DATA STRUCTURE */
-			
-typedef struct
-{	
-	float			percent;							// % of current morph from A to B (0 = start, 1 = end)
-	
-	long			numTriMeshesA;						// # trimeshes in A
-	long			numTriMeshesB;						//  # trimeshes in B
-	
-	TQ3TriMeshData	startTriMeshA[MAX_MORPH_TRIMESHES];					// A's starting mesh
-	TQ3Point3D		endCoordA[MAX_MORPH_TRIMESHES][MAX_MORPH_POINTS];	// A's ending points
-
-	TQ3TriMeshData	startTriMeshB[MAX_MORPH_TRIMESHES];					// B's starting mesh
-	TQ3Point3D		endCoordB[MAX_MORPH_TRIMESHES][MAX_MORPH_POINTS];	// B's ending points
-}MorphObjDataType;
-
-
 			/* TERRAIN ITEM ENTRY TYPE */
 			// (READ IN FROM FILE -- MUST BE BYTESWAPPED!)
 
@@ -252,21 +232,17 @@ typedef struct
 
 struct ObjNode
 {
-	short			NodeNum;
-	short			GroupNum;
-	
 	struct ObjNode	*PrevNode;			// address of previous node in linked list
 	struct ObjNode	*NextNode;			// address of next node in linked list
 	struct ObjNode	*ChainNode;
 	struct ObjNode	*ChainHead;			// a chain's head (link back to 1st obj in chain)
 
 	struct	ObjNode	*ShadowNode;		// ptr to node's shadow (if any)
-	
 
 	u_short			Slot;				// sort value
-	Byte			Genre;				// obj genre
-	Byte			Type;				// obj type
-	Byte			Group;				// obj group
+	Byte			Genre;				// obj genre (skeleton, display_group, custom, event)
+	Byte			Type;				// obj type (If Genre=display_group: model# in group. If Genre is skel: skel#.)
+	Byte			Group;				// obj group (If Genre=display_group: index into gObjectGroupList.)
 	void			(*MoveCall)(struct ObjNode *);			// pointer to object's move routine
 	void			(*SplineMoveCall)(struct ObjNode *);	// pointer to object's spline move routine
 	void			(*CustomDrawFunction)(struct ObjNode *, TQ3ViewObject view);// pointer to object's custom draw function
@@ -311,8 +287,7 @@ struct ObjNode
 
 
 	SkeletonObjDataType	*Skeleton;				// pointer to skeleton record data	
-	MorphObjDataType	*Morph;					// pointer to morph record data
-	
+
 	TerrainItemEntryType *TerrainItemPtr;		// if item was from terrain, then this pts to entry in array
 	SplineItemType 		*SplineItemPtr;			// if item was from spline, then this pts to entry in array
 	u_char				SplineNum;				// which spline this spline item is on
