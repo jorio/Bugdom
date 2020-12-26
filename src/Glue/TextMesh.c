@@ -26,6 +26,30 @@ static void GetTriMeshBoundingBox(TQ3TriMeshData triMeshData, void* userData_out
 	*outBBox = triMeshData.bBox;
 }
 
+static ObjNode* MakeDiacritic(
+		Byte type,
+		short slot,
+		float x,
+		float y,
+		float z,
+		float scale
+		)
+{
+	gNewObjectDefinition.group 		= MODEL_GROUP_TEXTMESH;
+	gNewObjectDefinition.type		= type;
+	gNewObjectDefinition.slot		= slot;
+	gNewObjectDefinition.coord.x 	= x;
+	gNewObjectDefinition.coord.y 	= y;
+	gNewObjectDefinition.coord.z 	= z;
+	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER;
+	gNewObjectDefinition.moveCall 	= nil;
+	gNewObjectDefinition.rot 		= 0.0f;
+	gNewObjectDefinition.scale 		= scale;
+
+	ObjNode* glyph = MakeNewDisplayGroupObject(&gNewObjectDefinition);
+	return glyph;
+}
+
 static void MakeText(
 		const TextMeshDef* def,
 		const char* text,
@@ -38,6 +62,9 @@ static void MakeText(
 
 	ObjNode*		firstTextNode	= nil;
 	ObjNode*		lastTextNode	= nil;
+
+	TQ3AttributeSet attrs = Q3AttributeSet_New();
+	Q3AttributeSet_Add(attrs, kQ3AttributeTypeDiffuseColor, isShadow? &def->shadowColor: &def->color);
 
 	for (; *text; text++)
 	{
@@ -66,6 +93,7 @@ static void MakeText(
 			case '/':	type = SCORES_ObjType_I;			break;
 			case '(':	type = SCORES_ObjType_C;			break;
 			case ')':	type = SCORES_ObjType_C;			break;
+			case '&':	type = SCORES_ObjType_3;			break;
 
 			default:
 				if (c >= 'A' && c <= 'Z')
@@ -133,13 +161,20 @@ static void MakeText(
 			glyph->Rot.z = M_PI;
 			glyphWidth *= 0.7f;
 		}
+		else if (c == '&')
+		{
+			glyph->Rot.z = M_PI;
+
+			ObjNode* diacritic1 = MakeDiacritic(SCORES_ObjType_Apostrophe, def->slot, x + scale * glyphWidth * 0.4f + scale * glyphWidth / 2.0f, y + scale * 6.0f, z, scale);
+			ObjNode* diacritic2 = MakeDiacritic(SCORES_ObjType_Apostrophe, def->slot, x + scale * glyphWidth * 0.4f + scale * glyphWidth / 2.0f, y - scale * 19.5f, z, scale);
+			AttachGeometryToDisplayGroupObject(diacritic1, attrs);
+			AttachGeometryToDisplayGroupObject(diacritic2, attrs);
+		}
 
 		lastTextNode = glyph;
 		if (!firstTextNode)
 			firstTextNode = glyph;
 
-		TQ3AttributeSet attrs = Q3AttributeSet_New();
-		Q3AttributeSet_Add(attrs, kQ3AttributeTypeDiffuseColor, isShadow? &def->shadowColor: &def->color);
 		AttachGeometryToDisplayGroupObject(glyph, attrs);
 
 		glyph->SpecialL[0] = 0;
@@ -166,6 +201,8 @@ static void MakeText(
 				break;
 		}
 	}
+
+	Q3Object_Dispose(attrs);
 }
 
 void TextMesh_Load(void)
