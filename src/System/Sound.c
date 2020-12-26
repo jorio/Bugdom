@@ -492,7 +492,8 @@ OSErr	iErr;
 				break;
 
 		default:
-				DoFatalAlert("PlaySong: unknown song #");
+				DoAlert("PlaySong: unknown song #");
+				return;
 	}
 
 	gCurrentSong = songNum;
