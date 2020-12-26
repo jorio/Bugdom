@@ -23,6 +23,7 @@ extern	u_short					gLevelType;
 extern	Byte					gPlayerMode;
 extern	CollisionRec			gCollisionList[];
 extern	SDL_Window*				gSDLWindow;
+extern	TQ3Vector2D				gCameraControlDelta;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -491,25 +492,13 @@ float		fps = gFramesPerSecondFrac;
 	/* SEE IF USER ROTATE CAMERA */
 	/*****************************/
 
-	if (GetKeyState(kKey_SwivelCameraLeft))
+	if (gCameraControlDelta.x != 0)
 	{
 		TQ3Matrix4x4	m;
-		float			r;
-		
-		r = fps * -1.5f;		
-		Q3Matrix4x4_SetRotateAboutPoint(&m, &to, 0, r, 0);	
+		float			r = gCameraControlDelta.x * fps;
+		Q3Matrix4x4_SetRotateAboutPoint(&m, &to, 0, r, 0);
 		Q3Point3D_Transform(&from, &m, &from);	
-	}	
-	else
-	if (GetKeyState(kKey_SwivelCameraRight))
-	{
-		TQ3Matrix4x4	m;
-		float			r;
-		
-		r = fps * 1.5f;		
-		Q3Matrix4x4_SetRotateAboutPoint(&m, &to, 0, r, 0);	
-		Q3Point3D_Transform(&from, &m, &from);	
-	}	
+	}
 	
 
 

@@ -69,6 +69,8 @@ static Byte			gMouseButtonState[NUM_MOUSE_BUTTONS] = {KEY_OFF, KEY_OFF, KEY_OFF,
 
 Boolean	gPlayerUsingKeyControl 	= false;
 
+TQ3Vector2D			gCameraControlDelta;
+
 Byte gKeyStates[kKey_MAX];
 
 #define SDLKEYSTATEBUF_SIZE SDL_NUM_SCANCODES
@@ -140,6 +142,18 @@ static inline void UpdateKeyState(Byte* state, bool downNow)
 	}
 }
 
+
+static TQ3Vector2D GetThumbStickVector(bool rightStick)
+{
+	Sint16 dx = SDL_GameControllerGetAxis(gSDLController, rightStick ? SDL_CONTROLLER_AXIS_RIGHTX : SDL_CONTROLLER_AXIS_LEFTX);
+	Sint16 dy = SDL_GameControllerGetAxis(gSDLController, rightStick ? SDL_CONTROLLER_AXIS_RIGHTY : SDL_CONTROLLER_AXIS_LEFTY);
+	return (TQ3Vector2D)
+	{
+		dx / 32767.0f,
+		dy / 32767.0f
+	};
+}
+
 /********************** UPDATE INPUT ******************************/
 
 void UpdateInput(void)
@@ -168,7 +182,6 @@ void UpdateInput(void)
 		}
 	}
 
-
 		/* UPDATE KEYMAP */
 		
 	if (WeAreFrontProcess())								// only read keys if we're the front process
@@ -183,6 +196,25 @@ void UpdateInput(void)
 			|| GetKeyState(kKey_Backward)
 			|| GetKeyState(kKey_Left)
 			|| GetKeyState(kKey_Right);
+
+
+		/* UPDATE SWIVEL CAMERA */
+
+	gCameraControlDelta.x = 0;
+	gCameraControlDelta.y = 0;
+
+	if (gSDLController)
+	{
+		TQ3Vector2D rsVec = GetThumbStickVector(true);
+		gCameraControlDelta.x -= rsVec.x * 3.0f;
+		gCameraControlDelta.y += rsVec.y * 3.0f;
+	}
+
+	if (GetKeyState(kKey_SwivelCameraLeft))
+		gCameraControlDelta.x -= 2.0f;
+
+	if (GetKeyState(kKey_SwivelCameraRight))
+		gCameraControlDelta.x += 2.0f;
 }
 
 
@@ -361,10 +393,9 @@ void GetMouseDelta(float *dx, float *dy)
 
 	if (gSDLController)
 	{
-		Sint16 dxController = SDL_GameControllerGetAxis(gSDLController, SDL_CONTROLLER_AXIS_LEFTX);
-		Sint16 dyController = SDL_GameControllerGetAxis(gSDLController, SDL_CONTROLLER_AXIS_LEFTY);
-		*dx = gFramesPerSecondFrac * 1600.0f * dxController / 32767.0f;
-		*dy = gFramesPerSecondFrac * 1600.0f * dyController / 32767.0f;
+		TQ3Vector2D lsVec = GetThumbStickVector(false);
+		*dx = gFramesPerSecondFrac * 1600.0f * lsVec.x;
+		*dy = gFramesPerSecondFrac * 1600.0f * lsVec.y;
 		return;
 	}
 
