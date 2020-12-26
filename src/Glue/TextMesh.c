@@ -64,6 +64,8 @@ static void MakeText(
 			case '\'':	type = SCORES_ObjType_Apostrophe;	break;
 			case ':':	type = SCORES_ObjType_Colon;		break;
 			case '/':	type = SCORES_ObjType_I;			break;
+			case '(':	type = SCORES_ObjType_C;			break;
+			case ')':	type = SCORES_ObjType_C;			break;
 
 			default:
 				if (c >= 'A' && c <= 'Z')
@@ -115,6 +117,21 @@ static void MakeText(
 			glyph->Scale.y *= 1.4f;
 			glyph->Rot.z = -0.4f;
 			glyphWidth *= 3.0f;
+		}
+		else if (c == '(')
+		{
+			glyph->Scale.x *= 0.35f;
+			glyph->Scale.y *= 1.9f;
+			glyph->Coord.y += 7 * scale;
+			glyphWidth *= 0.7f;
+		}
+		else if (c == ')')
+		{
+			glyph->Scale.x *= 0.35f;
+			glyph->Scale.y *= 1.9f;
+			glyph->Coord.y -= 7 * scale;
+			glyph->Rot.z = M_PI;
+			glyphWidth *= 0.7f;
 		}
 
 		lastTextNode = glyph;
