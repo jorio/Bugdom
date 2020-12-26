@@ -90,6 +90,9 @@ int CommonMain(int argc, const char** argv)
 	// Start our "machine"
 	Pomme::Init(params);
 
+	// Uncomment to dump the game's resources to a temporary directory.
+	//Pomme_StartDumpingResources("/tmp/BugdomRezDump");
+
 	// Set up globals that the game expects
 	gCoverWindow = Pomme::Graphics::GetScreenPort();
 	gCoverWindowPixPtr = (UInt32*) GetPixBaseAddr(GetGWorldPixMap(gCoverWindow));
