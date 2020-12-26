@@ -264,6 +264,7 @@ ObjNode					*newObj;
 	viewDef.view.clearColor.r = 
 	viewDef.view.clearColor.g = 
 	viewDef.view.clearColor.b = 1;
+	viewDef.view.dontClear = true;
 				
 	QD3D_SetupWindow(&viewDef, &gGameViewInfoPtr);
 
