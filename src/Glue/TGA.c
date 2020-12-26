@@ -91,7 +91,7 @@ static Handle ConvertColormappedToRGB(const Handle handle, const TGAHeader* head
 
 static void FlipPixelData(Handle handle, TGAHeader* header)
 {
-	int rowBytes = header->height * (header->bpp / 8);
+	int rowBytes = header->width * (header->bpp / 8);
 
 	Ptr topRow = *handle;
 	Ptr bottomRow = topRow + rowBytes * (header->height - 1);
