@@ -869,7 +869,9 @@ unsigned long	someLong;
 				/**************/
 				/* BOOT STUFF */
 				/**************/
-				
+
+	TryOpenController(true);
+
 	ToolBoxInit();
  	
 

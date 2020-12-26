@@ -46,6 +46,8 @@ typedef struct KeyBinding
 #define MOUSE_DELTA_MAX 250
 #define MOUSE_DELTA_MAX_SQUARED (MOUSE_DELTA_MAX*MOUSE_DELTA_MAX)
 
+#define SDLKEYSTATEBUF_SIZE SDL_NUM_SCANCODES
+
 static const float kMouseSensitivityTable[NUM_MOUSE_SENSITIVITY_LEVELS] =
 {
 	 12 * 0.001f,
@@ -69,16 +71,18 @@ enum
 /**********************/
 
 long				gEatMouse = 0;
-static Byte			gMouseButtonState[NUM_MOUSE_BUTTONS] = {KEY_OFF, KEY_OFF, KEY_OFF, KEY_OFF, KEY_OFF, KEY_OFF};
+static Byte			gMouseButtonState[NUM_MOUSE_BUTTONS];
 
-Boolean	gPlayerUsingKeyControl 	= false;
+Boolean				gPlayerUsingKeyControl 	= false;
 
 TQ3Vector2D			gCameraControlDelta;
 
-Byte gKeyStates[kKey_MAX];
+Byte				gKeyStates[kKey_MAX];
+Byte				gRawKeyboardState[SDLKEYSTATEBUF_SIZE];
 
-#define SDLKEYSTATEBUF_SIZE SDL_NUM_SCANCODES
-Byte gRawKeyboardState[SDLKEYSTATEBUF_SIZE];
+SDL_GameController	*gSDLController = NULL;
+SDL_JoystickID		gSDLJoystickInstanceID = -1;		// ID of the joystick bound to gSDLController
+SDL_Haptic			*gSDLHaptic = NULL;
 
 #if __APPLE__
 	#define DEFAULT_JUMP_SCANCODE1 SDL_SCANCODE_LGUI
@@ -184,7 +188,6 @@ void UpdateInput(void)
 
 		for (int i = 1; i < NUM_MOUSE_BUTTONS; i++)
 		{
-			Byte prevState = gMouseButtonState[i];
 			bool downNow = mouseButtons & SDL_BUTTON(i);
 			UpdateKeyState(&gMouseButtonState[i], downNow);
 		}
@@ -290,9 +293,11 @@ void UpdateKeyMap(void)
 
 	if (GetNewKeyState(kKey_ToggleFullscreen))
 	{
-		ResetInputState();
 		gGamePrefs.fullscreen = gGamePrefs.fullscreen ? 0 : 1;
 		SetFullscreenMode();
+
+		ResetInputState();
+		gKeyStates[kKey_ToggleFullscreen] = KEY_HELD;
 	}
 
 }
@@ -439,5 +444,75 @@ void GetMouseDelta(float *dx, float *dy)
 }
 
 
+SDL_GameController* TryOpenController(bool showMessage)
+{
+	if (gSDLController)
+	{
+		printf("Already have a valid controller.\n");
+		return gSDLController;
+	}
 
+	if (SDL_NumJoysticks() == 0)
+	{
+		printf("No joysticks found.\n");
+		return NULL;
+	}
+
+	for (int i = 0; gSDLController == NULL && i < SDL_NumJoysticks(); ++i)
+	{
+		if (SDL_IsGameController(i))
+		{
+			gSDLController = SDL_GameControllerOpen(i);
+			gSDLJoystickInstanceID = SDL_JoystickGetDeviceInstanceID(i);
+		}
+	}
+
+	if (!gSDLController)
+	{
+		printf("Joystick(s) found, but none is suitable as an SDL_GameController.\n");
+		if (showMessage)
+		{
+			char messageBuf[1024];
+			snprintf(messageBuf, sizeof(messageBuf),
+					 "The game does not support your controller yet (\"%s\").\n\n"
+					 "You can play with the keyboard and mouse instead. Sorry!",
+					 SDL_JoystickNameForIndex(0));
+			SDL_ShowSimpleMessageBox(
+					SDL_MESSAGEBOX_WARNING,
+					"Controller not supported",
+					messageBuf,
+					gSDLWindow);
+		}
+		return NULL;
+	}
+
+	printf("Opened joystick %d as controller: %s\n", gSDLJoystickInstanceID, SDL_GameControllerName(gSDLController));
+
+	gSDLHaptic = SDL_HapticOpenFromJoystick(SDL_GameControllerGetJoystick(gSDLController));
+	if (!gSDLHaptic)
+		printf("This joystick can't do haptic.\n");
+	else
+		printf("This joystick can do haptic!\n");
+
+	return gSDLController;
+}
+
+void OnJoystickRemoved(SDL_JoystickID which)
+{
+	if (NULL == gSDLController)		// don't care, I didn't open any controller
+		return;
+
+	if (which != gSDLJoystickInstanceID)	// don't care, this isn't the joystick I'm using
+		return;
+
+	printf("Current joystick was removed: %d\n", which);
+
+	// Nuke reference to this controller+joystick
+	SDL_GameControllerClose(gSDLController);
+	gSDLController = NULL;
+	gSDLJoystickInstanceID = -1;
+
+	// Try to open another joystick if any is connected.
+	TryOpenController(false);
+}
 

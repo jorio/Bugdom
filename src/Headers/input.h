@@ -75,6 +75,8 @@ void GetMouseDelta(float *dx, float *dy);
 
 void CaptureMouse(Boolean doCapture);
 
+SDL_GameController* TryOpenController(bool showMessageOnFailure);
+void OnJoystickRemoved(SDL_JoystickID which);
 
 
 #endif

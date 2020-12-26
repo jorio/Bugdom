@@ -89,6 +89,14 @@ void DoSDLMaintenance()
 					MouseSmoothing_OnMouseMotion(&event.motion);
 				}
 				break;
+
+			case SDL_JOYDEVICEADDED:	 // event.jdevice.which is the joy's INDEX (not an instance id!)
+				TryOpenController(false);
+				break;
+
+			case SDL_JOYDEVICEREMOVED:	// event.jdevice.which is the joy's UNIQUE INSTANCE ID (not an index!)
+				OnJoystickRemoved(event.jdevice.which);
+				break;
 		}
 	}
 }
