@@ -40,6 +40,12 @@ typedef struct KeyBinding
 
 #define NUM_MOUSE_BUTTONS 6
 
+#define JOYSTICK_DEAD_ZONE .1f
+#define JOYSTICK_DEAD_ZONE_SQUARED (JOYSTICK_DEAD_ZONE*JOYSTICK_DEAD_ZONE)
+
+#define MOUSE_DELTA_MAX 250
+#define MOUSE_DELTA_MAX_SQUARED (MOUSE_DELTA_MAX*MOUSE_DELTA_MAX)
+
 static const float kMouseSensitivityTable[NUM_MOUSE_SENSITIVITY_LEVELS] =
 {
 	 12 * 0.001f,
@@ -48,8 +54,6 @@ static const float kMouseSensitivityTable[NUM_MOUSE_SENSITIVITY_LEVELS] =
 	 75 * 0.001f,
 	100 * 0.001f,
 };
-
-static const int kMouseDeltaMax = 250;
 
 enum
 {
@@ -145,13 +149,17 @@ static inline void UpdateKeyState(Byte* state, bool downNow)
 
 static TQ3Vector2D GetThumbStickVector(bool rightStick)
 {
-	Sint16 dx = SDL_GameControllerGetAxis(gSDLController, rightStick ? SDL_CONTROLLER_AXIS_RIGHTX : SDL_CONTROLLER_AXIS_LEFTX);
-	Sint16 dy = SDL_GameControllerGetAxis(gSDLController, rightStick ? SDL_CONTROLLER_AXIS_RIGHTY : SDL_CONTROLLER_AXIS_LEFTY);
-	return (TQ3Vector2D)
-	{
-		dx / 32767.0f,
-		dy / 32767.0f
-	};
+	Sint16 dxRaw = SDL_GameControllerGetAxis(gSDLController, rightStick ? SDL_CONTROLLER_AXIS_RIGHTX : SDL_CONTROLLER_AXIS_LEFTX);
+	Sint16 dyRaw = SDL_GameControllerGetAxis(gSDLController, rightStick ? SDL_CONTROLLER_AXIS_RIGHTY : SDL_CONTROLLER_AXIS_LEFTY);
+
+	float dx = dxRaw / 32767.0f;
+	float dy = dyRaw / 32767.0f;
+
+	float magnitudeSquared = dx*dx + dy*dy;
+	if (magnitudeSquared < JOYSTICK_DEAD_ZONE_SQUARED)
+		return (TQ3Vector2D) { 0, 0 };
+	else
+		return (TQ3Vector2D) { dx, dy };
 }
 
 /********************** UPDATE INPUT ******************************/
@@ -391,13 +399,20 @@ void GetMouseDelta(float *dx, float *dy)
 		return;
 	}
 
+		/* SEE IF OVERRIDE MOUSE WITH JOYSTICK MOVEMENT */
+
 	if (gSDLController)
 	{
 		TQ3Vector2D lsVec = GetThumbStickVector(false);
-		*dx = gFramesPerSecondFrac * 1600.0f * lsVec.x;
-		*dy = gFramesPerSecondFrac * 1600.0f * lsVec.y;
-		return;
+		if (lsVec.x != 0 || lsVec.y != 0)
+		{
+			*dx = gFramesPerSecondFrac * 1600.0f * lsVec.x;
+			*dy = gFramesPerSecondFrac * 1600.0f * lsVec.y;
+			return;
+		}
 	}
+
+		/* GET MOUSE MOVEMENT */
 
 	const float mouseSensitivity = 1600.0f * kMouseSensitivityTable[gGamePrefs.mouseSensitivityLevel];
 	int mdx, mdy;
@@ -406,14 +421,14 @@ void GetMouseDelta(float *dx, float *dy)
 	if (mdx != 0 && mdy != 0)
 	{
 		int mouseDeltaMagnitudeSquared = mdx*mdx + mdy*mdy;
-		if (mouseDeltaMagnitudeSquared > kMouseDeltaMax*kMouseDeltaMax)
+		if (mouseDeltaMagnitudeSquared > MOUSE_DELTA_MAX_SQUARED)
 		{
 #if _DEBUG
 			printf("Capping mouse delta %f\n", sqrtf(mouseDeltaMagnitudeSquared));
 #endif
 			TQ3Vector2D mouseDeltaVector = { mdx, mdy };
 			Q3Vector2D_Normalize(&mouseDeltaVector, &mouseDeltaVector);
-			Q3Vector2D_Scale(&mouseDeltaVector, kMouseDeltaMax, &mouseDeltaVector);
+			Q3Vector2D_Scale(&mouseDeltaVector, MOUSE_DELTA_MAX, &mouseDeltaVector);
 			mdx = mouseDeltaVector.x;
 			mdy = mouseDeltaVector.y;
 		}
