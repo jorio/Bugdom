@@ -39,7 +39,7 @@ enum
 	kKey_MorphPlayer,
 	kKey_BuddyAttack,
 	kKey_Jump,
-	kKey_KickBoost,
+	kKey_Kick,
 
 	kKey_AutoWalk,
 	kKey_Forward,

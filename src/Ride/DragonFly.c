@@ -381,7 +381,7 @@ TQ3Matrix4x4	m;
 		/* SEE IF BREATH FIRE */
 		/**********************/
 
-	if (GetNewKeyState(kKey_KickBoost))
+	if (GetNewKeyState(kKey_Kick))
 		DragonFlyShootFireball(bug);
 	
 

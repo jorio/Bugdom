@@ -1098,7 +1098,7 @@ Boolean	isOnGround,isSwimming;
 	{
 		if ((anim == PLAYER_ANIM_STAND) || (anim == PLAYER_ANIM_WALK))
 		{
-			if (GetNewKeyState(kKey_KickBoost))
+			if (GetNewKeyState(kKey_Kick))
 			{
 				MorphToSkeletonAnim(gPlayerObj->Skeleton, PLAYER_ANIM_KICK, 9);	
 				gPlayerObj->KickNow = false;
