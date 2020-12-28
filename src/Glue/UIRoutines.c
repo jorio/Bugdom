@@ -168,9 +168,9 @@ void MakeSpiderButton(
 	float gs = 0.95f;
 
 	// Create pickable quad
-	PickableQuads_NewQuad(coord, 38*gs, 38*gs, pickID);
+	PickableQuads_NewQuad(coord, 45*gs, 45*gs, pickID);
 
-	// Create spider blade
+	// Create spider button
 	gNewObjectDefinition.group 		= MODEL_GROUP_LEVELSPECIFIC;
 	gNewObjectDefinition.type 		= SKELETON_TYPE_SPIDER;
 	gNewObjectDefinition.animNum	= 0;
