@@ -1,3 +1,7 @@
+// EDGE PADDING.CPP
+// (C) 2020 Iliyas Jorio
+// This file is part of Bugdom. https://github.com/jorio/bugdom
+
 #include "bugdom.h"
 
 #define EDGE_PADDING_REPEAT 8

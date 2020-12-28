@@ -1,7 +1,6 @@
-/****************************/
-/* ABOUT SCREEN             */
-/* Source port addition     */
-/****************************/
+// ABOUT SCREEN.C
+// (C) 2020 Iliyas Jorio
+// This file is part of Bugdom. https://github.com/jorio/bugdom
 
 
 /****************************/

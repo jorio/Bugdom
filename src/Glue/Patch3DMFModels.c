@@ -1,7 +1,6 @@
-/****************************/
-/* PATCH 3DMF MODELS        */
-/* Source port addition     */
-/****************************/
+// PATCH 3DMF MODELS.C
+// (C) 2020 Iliyas Jorio
+// This file is part of Bugdom. https://github.com/jorio/bugdom
 
 /*
  * These functions tweak some models from the game

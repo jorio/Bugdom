@@ -1,3 +1,7 @@
+// MODEL DEBUG.C
+// (C) 2020 Iliyas Jorio
+// This file is part of Bugdom. https://github.com/jorio/bugdom
+
 extern	float				gFramesPerSecondFrac,gFramesPerSecond;
 extern	WindowPtr			gCoverWindow;
 extern	NewObjectDefinitionType	gNewObjectDefinition;

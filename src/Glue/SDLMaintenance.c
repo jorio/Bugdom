@@ -1,3 +1,7 @@
+// SDL MAINTENANCE.C
+// (C) 2020 Iliyas Jorio
+// This file is part of Bugdom. https://github.com/jorio/bugdom
+
 #include "bugdom.h"
 
 extern SDL_Window*			gSDLWindow;

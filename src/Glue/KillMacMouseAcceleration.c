@@ -1,4 +1,5 @@
 // KILL & RESTORE MOUSE ACCELERATION ON MACOS
+// This file is part of Bugdom. https://github.com/jorio/bugdom
 //
 // On macOS, relative mouse input values from SDL_MOUSEMOTION events are
 // accelerated. This code turns off mouse acceleration so we get "raw"

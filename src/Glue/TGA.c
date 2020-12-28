@@ -1,3 +1,7 @@
+// TGA.C
+// (C) 2020 Iliyas Jorio
+// This file is part of Bugdom. https://github.com/jorio/bugdom
+
 #include "bugdom.h"
 
 static void DecompressRLE(short refNum, TGAHeader* header, Handle handle)

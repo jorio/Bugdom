@@ -1,3 +1,7 @@
+// BUGDOM ENTRY POINT
+// (C) 2020 Iliyas Jorio
+// This file is part of Bugdom. https://github.com/jorio/bugdom
+
 #include "Pomme.h"
 #include "PommeInit.h"
 #include "PommeFiles.h"

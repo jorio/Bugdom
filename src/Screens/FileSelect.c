@@ -1,7 +1,7 @@
-/****************************/
-/* FILE SELECT              */
-/* Source port addition     */
-/****************************/
+// FILE SELECT.C
+// (C) 2020 Iliyas Jorio
+// This file is part of Bugdom. https://github.com/jorio/bugdom
+
 
 /*
  * The original game used to pop up a standard file open/save dialog

@@ -1,3 +1,7 @@
+// GL OVERLAY.CPP
+// (C) 2020 Iliyas Jorio
+// This file is part of Bugdom. https://github.com/jorio/bugdom
+
 #include "GLOverlay.h"
 #include <cstring>
 #include <cstdio>
