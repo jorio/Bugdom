@@ -1482,6 +1482,7 @@ void QD3D_SetAdditiveBlending(Boolean enable)
 
 void QD3D_SetMultisampling(Boolean enable)
 {
+#if ALLOW_MSAA
 	static bool multisamplingEnabled = false;
 	
 	if (multisamplingEnabled == enable)
@@ -1501,6 +1502,7 @@ void QD3D_SetMultisampling(Boolean enable)
 			glDisable(GL_MULTISAMPLE);
 		multisamplingEnabled = enable;
 	}
+#endif
 }
 
 

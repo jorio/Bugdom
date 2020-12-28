@@ -85,8 +85,12 @@ int CommonMain(int argc, const char** argv)
 		.windowName		= GetWindowTitle(),
 		.windowWidth	= 640,
 		.windowHeight	= 480,
-		.msaaSamples	= 4
+		.msaaSamples	= 0
 	};
+	
+#if ALLOW_MSAA
+	params.msaaSamples = 4;
+#endif
 
 	// Start our "machine"
 	Pomme::Init(params);

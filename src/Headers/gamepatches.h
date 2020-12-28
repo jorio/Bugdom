@@ -4,6 +4,10 @@
 extern "C" {
 #endif
 
+#ifndef ALLOW_MSAA
+	#define ALLOW_MSAA 0
+#endif
+
 TQ3StorageObject Q3FSSpecStorage_New(const FSSpec* spec);
 
 TQ3Area GetAdjustedPane(

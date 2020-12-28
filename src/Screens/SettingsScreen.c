@@ -117,6 +117,7 @@ static SettingEntry gSettingEntries[] =
 		0, false, CHOICES_NO_YES,
 		0,
 	},
+#if ALLOW_MSAA
 	{
 		&gGamePrefs.antiAliasing,
 		"ANTI-ALIASING",
@@ -125,6 +126,7 @@ static SettingEntry gSettingEntries[] =
 		0, false, {"NO","YES",NULL},
 		0,
 	},
+#endif
 #if _DEBUG
 	{
 		&gGamePrefs.vsync,
