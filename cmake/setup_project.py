@@ -107,12 +107,15 @@ for config_dir in cmake_generated_dirs:
 #----------------------------------------------------------------
 # Build the game
 
-for config_dir in cmake_generated_dirs:
-    build_configs = cmake_generated_dirs[config_dir].build_configs
-    if build_configs:
-        for build_config in build_configs:
-            print(F"==== Building the game:", config_dir, build_config)
-            call(['cmake', '--build', config_dir, '--config', build_config] + cmake_extra_build_args)
-    else:
-        print(F"==== Building the game:", config_dir)
-        call(['cmake', '--build', config_dir] + cmake_extra_build_args)
+print("==== Ready to build.")
+
+if input("Build the game now? (Y/N) ").upper() == 'Y':
+    for config_dir in cmake_generated_dirs:
+        build_configs = cmake_generated_dirs[config_dir].build_configs
+        if build_configs:
+            for build_config in build_configs:
+                print(F"==== Building the game:", config_dir, build_config)
+                call(['cmake', '--build', config_dir, '--config', build_config] + cmake_extra_build_args)
+        else:
+            print(F"==== Building the game:", config_dir)
+            call(['cmake', '--build', config_dir] + cmake_extra_build_args)
