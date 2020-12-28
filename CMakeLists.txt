@@ -173,6 +173,7 @@ set(GAME_HEADERS
 	${GAME_SRCDIR}/Headers/pickablequads.h
 	${GAME_SRCDIR}/Headers/tween.h
 	${GAME_SRCDIR}/Headers/mousesmoothing.h
+	${GAME_SRCDIR}/Headers/killmacmouseacceleration.h
 )
 
 set(GAME_GLUE_SOURCES
@@ -182,6 +183,7 @@ set(GAME_GLUE_SOURCES
 	${GAME_SRCDIR}/Glue/GLFunctions.cpp
 	${GAME_SRCDIR}/Glue/GLOverlay.cpp
 	${GAME_SRCDIR}/Glue/GLOverlayFade.cpp
+	${GAME_SRCDIR}/Glue/KillMacMouseAcceleration.c
 	${GAME_SRCDIR}/Glue/MouseSmoothing.c
 	${GAME_SRCDIR}/Glue/Overlay.cpp
 	${GAME_SRCDIR}/Glue/Patch3DMFModels.c
@@ -248,6 +250,8 @@ target_link_libraries(${GAME_TARGET}
 	${OPENGL_LIBRARIES}
 	Quesa_SDL
 	Pomme
+	"$<$<BOOL:${APPLE}>:-framework Foundation>"		# Required for KillMacMouseAcceleration
+	"$<$<BOOL:${APPLE}>:-framework IOKit>"			# Required for KillMacMouseAcceleration
 )
 
 #------------------------------------------------------------------------------

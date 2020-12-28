@@ -13,6 +13,7 @@
 #include <cstring>
 
 #if __APPLE__
+#include "killmacmouseacceleration.h"
 #include <libproc.h>
 #include <unistd.h>
 #endif
@@ -143,28 +144,46 @@ int CommonMain(int argc, const char** argv)
 
 int main(int argc, char** argv)
 {
-#if _DEBUG
-	// In debug builds, don't show a fancy dialog in case of an uncaught exception.
-	// This way, it's easier to get a clean stack trace.
-	return CommonMain(argc, const_cast<const char**>(argv));
-#else
-	std::string uncaught;
+	int				returnCode				= 0;
+	std::string		finalErrorMessage		= "";
+	bool			showFinalErrorMessage	= false;
 
+#if _DEBUG
+	// In debug builds, if CommonMain throws, don't catch.
+	// This way, it's easier to get a clean stack trace.
+	returnCode = CommonMain(argc, const_cast<const char**>(argv));
+#else
+	// In release builds, catch anything that might be thrown by CommonMain
+	// so we can show an error dialog to the user.
 	try
 	{
-		return CommonMain(argc, const_cast<const char**>(argv));
+		returnCode = CommonMain(argc, const_cast<const char**>(argv));
 	}
-	catch (std::exception& ex)
+	catch (std::exception& ex)		// Last-resort catch
 	{
-		uncaught = ex.what();
+		returnCode = 1;
+		finalErrorMessage = ex.what();
+		showFinalErrorMessage = true;
 	}
-	catch (...)
+	catch (...)						// Last-resort catch
 	{
-		uncaught = "unknown";
+		returnCode = 1;
+		finalErrorMessage = "unknown";
+		showFinalErrorMessage = true;
+	}
+#endif
+
+#if __APPLE__
+	// Whether we failed or succeeded, always restore the user's mouse acceleration before exiting.
+	// (NOTE: in debug builds, we might not get here because we don't catch what CommonMain throws.)
+	RestoreMacMouseAcceleration();
+#endif
+
+	if (showFinalErrorMessage)
+	{
+		std::cerr << "Uncaught exception: " << finalErrorMessage << "\n";
+		SDL_ShowSimpleMessageBox(0, "Uncaught exception", finalErrorMessage.c_str(), nullptr);
 	}
 
-	std::cerr << "Uncaught exception: " << uncaught << "\n";
-	SDL_ShowSimpleMessageBox(0, "Uncaught Exception", uncaught.c_str(), nullptr);
-	return 1;
-#endif
+	return returnCode;
 }

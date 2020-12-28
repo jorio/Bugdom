@@ -11,6 +11,10 @@
 
 #include <string.h>
 
+#if __APPLE__
+#include "killmacmouseacceleration.h"
+#endif
+
 extern	float	gFramesPerSecondFrac;
 extern	PrefsType	gGamePrefs;
 extern	SDL_Window* gSDLWindow;
@@ -374,6 +378,13 @@ void CaptureMouse(Boolean doCapture)
 	SDL_ShowCursor(doCapture ? 0 : 1);
 	ClearMouseState();
 	EatMouseEvents();
+    
+#if __APPLE__
+    if (doCapture)
+        KillMacMouseAcceleration();
+    else
+        RestoreMacMouseAcceleration();
+#endif
 }
 
 /***************** GET MOUSE DELTA *****************/
