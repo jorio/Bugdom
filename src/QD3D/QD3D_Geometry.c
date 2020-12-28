@@ -603,6 +603,8 @@ Boolean	usingNull = false;
 
 	Q3Push_Submit(view);												// save this state
 
+	QD3D_SetMultisampling(false);
+	
 	Q3Object_Submit(gKeepBackfaceStyleObject,view);						// draw particles both backfaces
 
 	for (i=0; i < MAX_PARTICLES2; i++)

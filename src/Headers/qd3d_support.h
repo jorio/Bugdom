@@ -67,6 +67,7 @@ typedef struct
 	QD3DStyleDefType		styles;
 	QD3DCameraDefType		camera;
 	QD3DLightDefType		lights;
+	Boolean					enableMultisamplingByDefault;		// source port add
 }QD3DSetupInputType;
 
 
@@ -90,6 +91,7 @@ typedef struct
 	TQ3Point3D				currentCameraLookAt;
 	float					hither,yon;
 	QD3DLightDefType		lightList;			// a copy of the input light data from the SetupInputType
+	Boolean					enableMultisamplingByDefault;		// source port add
 }QD3DSetupOutputType;
 
 
@@ -126,6 +128,7 @@ void QD3D_ReEnableFog(const QD3DSetupOutputType *setupInfo);
 void QD3D_SetTriangleCacheMode(Boolean isOn);
 void QD3D_SetAdditiveBlending(Boolean isOn);
 void QD3D_SetZWrite(Boolean isOn);
+void QD3D_SetMultisampling(Boolean enable);		// source port add
 
 void ShowNormal(TQ3Point3D *where, TQ3Vector3D *normal);
 

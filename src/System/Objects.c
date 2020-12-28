@@ -400,6 +400,8 @@ short			skelType;
 	cameraX = setupInfo->currentCameraCoords.x;
 	cameraZ = setupInfo->currentCameraCoords.z;
 	
+	QD3D_SetMultisampling(true);
+	
 			/***********************/
 			/* MAIN NODE TASK LOOP */
 			/***********************/			

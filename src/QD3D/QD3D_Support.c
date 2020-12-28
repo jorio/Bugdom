@@ -177,6 +177,8 @@ TQ3Vector3D			fillDirection2 = { -.8, .8, -.2 };
 	viewDef->lights.fogMode		= kQ3FogModePlaneBasedLinear;
 	viewDef->lights.useCustomFogColor = false;
 	viewDef->lights.fogColor	= clearColor;
+	
+	viewDef->enableMultisamplingByDefault = true;
 }
 
 /************** SETUP QD3D WINDOW *******************/
@@ -222,6 +224,7 @@ QD3DSetupOutputType	*outputPtr;
 	outputPtr->hither 				= setupDefPtr->camera.hither;		// remember hither/yon
 	outputPtr->yon 					= setupDefPtr->camera.yon;
 	gYon 							= setupDefPtr->camera.yon;			// keep a quick global around for this
+	outputPtr->enableMultisamplingByDefault = setupDefPtr->enableMultisamplingByDefault;
 	
 	outputPtr->isActive = true;								// it's now an active structure
 	
@@ -644,9 +647,11 @@ TQ3ViewStatus			myViewStatus;
 
 		gQD3D_FreshDrawContext = false;
 	}
-
-	if (gGamePrefs.antiAliasing)
-		glEnable(GL_MULTISAMPLE);
+	
+	if (setupInfo->enableMultisamplingByDefault)
+	{
+		QD3D_SetMultisampling(true);
+	}
 
 
 
@@ -685,6 +690,8 @@ TQ3ViewStatus			myViewStatus;
 		GAME_ASSERT(myViewStatus != kQ3ViewStatusError);
 
 	} while ( myViewStatus == kQ3ViewStatusRetraverse );	
+	
+	QD3D_SetMultisampling(false);
 }
 
 
@@ -1469,6 +1476,31 @@ void QD3D_SetAdditiveBlending(Boolean enable)
 	GAME_ASSERT(gQD3D_ViewObject);
 
 	Q3BlendingStyle_Submit(enable ? &additiveStyle : &normalStyle, gQD3D_ViewObject);
+}
+
+/************************ SET MULTISAMPLING ************************/
+
+void QD3D_SetMultisampling(Boolean enable)
+{
+	static bool multisamplingEnabled = false;
+	
+	if (multisamplingEnabled == enable)
+	{
+		// no-op
+	}
+	else if (!enable && multisamplingEnabled)			// If we want to disable, always do it if MSAA was currently active
+	{
+		glDisable(GL_MULTISAMPLE);
+		multisamplingEnabled = false;
+	}
+	else if (gGamePrefs.antiAliasing)				// otherwise only honor request if prefs allow MSAA
+	{
+		if (enable)
+			glEnable(GL_MULTISAMPLE);
+		else
+			glDisable(GL_MULTISAMPLE);
+		multisamplingEnabled = enable;
+	}
 }
 
 

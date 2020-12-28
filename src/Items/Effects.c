@@ -613,6 +613,7 @@ TQ3ViewObject	view = setupInfo->viewObject;
 	QD3D_SetZWrite(false);
 	QD3D_SetAdditiveBlending(true);
 	QD3D_SetTriangleCacheMode(false);
+	QD3D_SetMultisampling(false);
 
 
 	camCoords = &gGameViewInfoPtr->currentCameraCoords;	

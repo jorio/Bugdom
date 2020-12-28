@@ -1498,6 +1498,7 @@ TQ3ViewObject	view = setupInfo->viewObject;
 	//QD3D_SetTextureWrapMode(kQAGL_Clamp);								// clamp textures for nicer seams -- Source port removal: now set on the supertiles' TQ3SurfaceShaderObject
 	QD3D_SetTriangleCacheMode(false);
 	Q3Shader_Submit(setupInfo->nullShaderObject, view);					// use NULL shader to draw terrain
+	QD3D_SetMultisampling(true);										// set MSAA (only honored if prefs allow it)
 	
 	
 	for (i = 0; i < MAX_SUPERTILES; i++)
@@ -1586,6 +1587,7 @@ use_1:
 		/* DRAW OBJECTS */
 		
 		
+	QD3D_SetMultisampling(false);										// disable MSAA for fences -- they use alpha testing so it wouldn't do much
 	DrawFences(setupInfo);												// draw these first
 	DrawObjects(setupInfo);												// draw objNodes
 	QD3D_DrawParticles(setupInfo);
