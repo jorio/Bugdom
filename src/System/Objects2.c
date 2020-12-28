@@ -422,7 +422,7 @@ try_cull:
 			theNode->Coord.y + theNode->BoundingSphere.origin.y,
 			theNode->Coord.z + theNode->BoundingSphere.origin.z,
 		};
-		if (!IsSphereInFrustum(&worldCoord, radius))
+		if (!IsSphereInFrustum_XZ(&worldCoord, radius))
 			goto draw_off;
 
 draw_on:

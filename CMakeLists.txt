@@ -174,12 +174,14 @@ set(GAME_HEADERS
 	${GAME_SRCDIR}/Headers/tween.h
 	${GAME_SRCDIR}/Headers/mousesmoothing.h
 	${GAME_SRCDIR}/Headers/killmacmouseacceleration.h
+	${GAME_SRCDIR}/Headers/frustumculling.h
 )
 
 set(GAME_GLUE_SOURCES
 	${GAME_SRCDIR}/Main.cpp
 	${GAME_SRCDIR}/Glue/DrawPicture.cpp
 	${GAME_SRCDIR}/Glue/EdgePadding.cpp
+	${GAME_SRCDIR}/Glue/FrustumCulling.c
 	${GAME_SRCDIR}/Glue/GLFunctions.cpp
 	${GAME_SRCDIR}/Glue/GLOverlay.cpp
 	${GAME_SRCDIR}/Glue/GLOverlayFade.cpp

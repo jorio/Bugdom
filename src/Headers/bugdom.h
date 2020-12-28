@@ -66,6 +66,7 @@ extern "C"
 #include "tga.h"
 #include "tween.h"
 #include "mousesmoothing.h"
+#include "frustumculling.h"
 
 #ifdef __cplusplus
 };

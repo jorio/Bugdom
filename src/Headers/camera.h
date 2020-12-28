@@ -11,4 +11,3 @@ extern	void CalcCameraMatrixInfo(QD3DSetupOutputType *);
 extern	void ResetCameraSettings(void);
 void DrawLensFlare(const QD3DSetupOutputType *setupInfo);
 void DisposeLensFlares(void);
-Boolean IsSphereInFrustum(const TQ3Point3D* inWorldPt, float radius);

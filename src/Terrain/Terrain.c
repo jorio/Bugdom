@@ -2262,7 +2262,7 @@ static Boolean IsSuperTileVisible(short superTileNum, Byte layer)
 		superTile->y[layer],
 		superTile->z
 	};
-	return IsSphereInFrustum(&center, radius);
+	return IsSphereInFrustum_XZ(&center, radius);
 }
 
 
