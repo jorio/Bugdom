@@ -568,7 +568,6 @@ TQ3ColorRGB		color;
 			/* SETUP ENVIRONMENT */
 			
 	Q3Push_Submit(view);
-	Q3BackfacingStyle_Submit(kQ3BackfacingStyleBoth, view);
 	Q3Attribute_Submit(kQ3AttributeTypeSurfaceShader, &gWaterShader, view);
 	
 	switch(gLevelType)
@@ -709,7 +708,6 @@ TQ3TriMeshTriangleData	*t;
 			/*********************/
 			
 	Q3Push_Submit(view);
-	Q3BackfacingStyle_Submit(kQ3BackfacingStyleBoth, view);
 	Q3Attribute_Submit(kQ3AttributeTypeSurfaceShader, &gWaterShader, view);
 	
 	switch(gLevelType)
@@ -1053,7 +1051,6 @@ TQ3TriMeshTriangleData	*t;
 			/*********************/
 			
 	Q3Push_Submit(view);
-	Q3BackfacingStyle_Submit(kQ3BackfacingStyleBoth, view);
 	Q3Attribute_Submit(kQ3AttributeTypeSurfaceShader, &gHoneyShader, view);
 
 
@@ -1386,7 +1383,6 @@ TQ3TriMeshTriangleData	*t;
 			/*********************/
 			
 	Q3Push_Submit(view);
-	Q3BackfacingStyle_Submit(kQ3BackfacingStyleBoth, view);
 	Q3Attribute_Submit(kQ3AttributeTypeSurfaceShader, &gSlimeShader, view);
 
 			/************************/
@@ -1714,7 +1710,6 @@ TQ3TriMeshTriangleData	*t;
 			/*********************/
 			
 	Q3Push_Submit(view);
-	Q3BackfacingStyle_Submit(kQ3BackfacingStyleBoth, view);
 	Q3Attribute_Submit(kQ3AttributeTypeSurfaceShader, &gLavaShader, view);
 
 
