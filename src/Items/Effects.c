@@ -641,11 +641,20 @@ TQ3ViewObject	view = setupInfo->viewObject;
 				if (!gParticleGroups[g]->isUsed[p])							// make sure this particle is used
 					continue;
 				
-					/* TRANSFORM THIS PARTICLE'S VERTICES & ADD TO TRIMESH */
+					/* TRANSFORM PARTICLE POSITION */
 					
 				coord = &gParticleGroups[g]->coord[p];
 				SetLookAtMatrixAndTranslate(&m, &up, coord, camCoords);
-	
+
+					/* CULL PARTICLE TO AVOID OVERDRAW (SOURCE PORT ADD) */
+
+				if (!IsSphereInFrustum_XYZ(coord, 0))						// radius 0: cull somewhat aggressively
+				{															// (use negative radius to cull even more)
+					continue;
+				}
+
+					/* TRANSFORM PARTICLE VERTICES & ADD TO TRIMESH */
+
 				scale = gParticleGroups[g]->scale[p];
 				
 				v[0].x = -scale*baseScale;
