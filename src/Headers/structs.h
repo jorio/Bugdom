@@ -334,8 +334,6 @@ typedef struct
 	Byte	terrainTextureDetail;
 	Boolean	hideBottomBarInNonBossLevels;
 	Boolean useCyclorama;
-	Boolean useAutoFade;
-	Byte	reserved[8];
 }PrefsType;
 
 

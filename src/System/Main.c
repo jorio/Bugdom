@@ -281,7 +281,6 @@ OSErr		err;
 	gGamePrefs.mouseSensitivityLevel= DEFAULT_MOUSE_SENSITIVITY_LEVEL;
 	gGamePrefs.hideBottomBarInNonBossLevels = true;
 	gGamePrefs.useCyclorama			= true;
-	gGamePrefs.useAutoFade			= true;
 	gGamePrefs.terrainTextureDetail = TERRAIN_TEXTURE_PREF_1_LOD_160;
 				
 	LoadPrefs(&gGamePrefs);							// attempt to read from prefs file		
@@ -507,7 +506,7 @@ QD3DSetupInputType	viewDef;
 	gPlayerObj 				= nil;
 
 	gUseCyclorama			= gGamePrefs.useCyclorama && gLevelHasCyc[gLevelType];
-	gAutoFadeStartDist		= gGamePrefs.useAutoFade ? gLevelAutoFadeStart[gLevelType] : 0;
+	gAutoFadeStartDist		= gUseCyclorama ? gLevelAutoFadeStart[gLevelType] : 0;
 	gDrawLensFlare			= gLevelHasLenseFlare[gLevelType];
 		
 	gDoCeiling				= gLevelHasCeiling[gLevelType];

@@ -144,14 +144,6 @@ static SettingEntry gSettingEntries[] =
 		0, false, CHOICES_NO_YES,
 		0,
 	},
-	{
-		&gGamePrefs.useAutoFade,
-		"FADE FARAWAY OBJS",
-		1, "EXPERIMENTAL. MAY DEGRADE PERFORMANCE.",
-		NULL,
-		0, false, CHOICES_NO_YES,
-		0,
-	},
 	/*
 	{
 		&gGamePrefs.textureFiltering,
@@ -162,8 +154,6 @@ static SettingEntry gSettingEntries[] =
 		CHOICES_NO_YES,
 		0,
 	},
-	*/
-	/*
 	{
 		&gGamePrefs.terrainTextureDetail,
 		"TERRAIN QUALITY",
@@ -172,15 +162,13 @@ static SettingEntry gSettingEntries[] =
 		0,
 		{ "LOW (VANILLA)", "MEDIUM", "HIGH" },
 	},
-	 */
-	/*
 	{
 		&gGamePrefs.hideBottomBarInNonBossLevels,
 		"BOTTOM BAR",
+		0, NULL,
 		NULL,
-		NULL,
+		0, false, {"ALWAYS SHOWN","ONLY WHEN NEEDED",NULL},
 		0,
-		{"ALWAYS SHOWN","ONLY WHEN NEEDED",NULL},
 	},
 	{
 		&gGamePrefs.playerRelativeKeys,
@@ -192,6 +180,7 @@ static SettingEntry gSettingEntries[] =
 	},
 	 */
 #endif
+	// End sentinel
 	{
 		NULL,
 		NULL,
