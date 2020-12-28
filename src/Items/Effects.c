@@ -595,7 +595,7 @@ TQ3Vector3D	*delta;
 
 void DrawParticleGroup(const QD3DSetupOutputType *setupInfo)
 {
-float			scale,baseScale;
+float			baseScale;
 long			g,p,n,i;
 TQ3ColorRGB		*faceColor;
 TQ3TriMeshData	*tm;
@@ -608,7 +608,6 @@ TQ3ViewObject	view = setupInfo->viewObject;
 				/* SETUP ENVIRONTMENT */
 				
 	QD3D_DisableFog(setupInfo);
-	Q3BackfacingStyle_Submit(kQ3BackfacingStyleBoth, view);
 	Q3Shader_Submit(setupInfo->nullShaderObject, view);							// use null shader
 	QD3D_SetZWrite(false);
 	QD3D_SetAdditiveBlending(true);
@@ -656,23 +655,11 @@ TQ3ViewObject	view = setupInfo->viewObject;
 
 					/* TRANSFORM PARTICLE VERTICES & ADD TO TRIMESH */
 
-				scale = gParticleGroups[g]->scale[p];
-				
-				v[0].x = -scale*baseScale;
-				v[0].y = scale*baseScale;
-				v[0].z = 0;
-
-				v[1].x = -scale*baseScale;
-				v[1].y = -scale*baseScale;
-				v[1].z = 0;
-
-				v[2].x = scale*baseScale;
-				v[2].y = -scale*baseScale;
-				v[2].z = 0;
-
-				v[3].x = scale*baseScale;
-				v[3].y = scale*baseScale;
-				v[3].z = 0;
+				const float S = baseScale * gParticleGroups[g]->scale[p];
+				v[0] = (TQ3Point3D) {  S, S, 0 };
+				v[1] = (TQ3Point3D) {  S,-S, 0 };
+				v[2] = (TQ3Point3D) { -S,-S, 0 };
+				v[3] = (TQ3Point3D) { -S, S, 0 };
 
 				Q3Point3D_To3DTransformArray(&v[0], &m, &tm->points[n*4], 4, sizeof(TQ3Point3D), sizeof(TQ3Point3D));
 
@@ -732,7 +719,6 @@ TQ3ViewObject	view = setupInfo->viewObject;
 	QD3D_SetTriangleCacheMode(true);
 	QD3D_SetAdditiveBlending(false);
 	QD3D_ReEnableFog(setupInfo);
-	Q3BackfacingStyle_Submit(kQ3BackfacingStyleRemove, view);
 }
 
 /**************** VERIFY PARTICLE GROUP MAGIC NUM ******************/
