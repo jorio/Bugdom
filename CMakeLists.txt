@@ -318,6 +318,9 @@ if(APPLE)
 		# Set framework search path to (App bundle)/Contents/Frameworks so the game can use its embedded SDL2.framework
 		XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../Frameworks"
 
+		# Explicitly turn off code signing, otherwise downloaded app will be quarantined forever
+		XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ""
+
 		RESOURCE ${GAME_ICNS}
 		MACOSX_BUNDLE_ICON_FILE Bugdom.icns
 		MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
