@@ -109,10 +109,14 @@ int CommonMain(int argc, const char** argv)
 #endif
 
 	// Init joystick subsystem
-	SDL_Init(SDL_INIT_JOYSTICK);
-	fs::path gamecontrollerdbPath = dataPath / "System" / "gamecontrollerdb.txt";
-	if (-1 == SDL_GameControllerAddMappingsFromFile(gamecontrollerdbPath.c_str()))
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING, "Bugdom", "Couldn't load gamecontrollerdb.txt!", gSDLWindow);
+	{
+		SDL_Init(SDL_INIT_JOYSTICK);
+		auto gamecontrollerdbPath8 = (dataPath / "System" / "gamecontrollerdb.txt").u8string();
+		if (-1 == SDL_GameControllerAddMappingsFromFile((const char*)gamecontrollerdbPath8.c_str()))
+		{
+			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING, "Bugdom", "Couldn't load gamecontrollerdb.txt!", gSDLWindow);
+		}
+	}
 
 	// Initialize Quesa
 	auto qd3dStatus = Q3Initialize();
