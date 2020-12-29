@@ -5,6 +5,7 @@ import subprocess
 import shutil
 import tempfile
 import sys
+import os
 from zipfile import ZipFile
 from pathlib import Path
 from dataclasses import dataclass
@@ -19,7 +20,8 @@ sdl_ver = "2.0.14"
 #----------------------------------------------------------------
 
 @dataclass
-class CMakeConfig:
+class Project:
+    dir_name: str
     gen_args: list
     build_configs: list
 
@@ -61,8 +63,8 @@ if not os.path.exists('src/Enemies/Enemy_WorkerBee.c'):  # some file that's like
 
 system = platform.system()
 
-cmake_generated_dirs = {}
-cmake_extra_build_args = []
+projects = []
+extra_build_args = []
 
 if system == 'Windows':
     nuke_if_exists(F'{libs_dir}/SDL2-{sdl_ver}')
@@ -72,7 +74,7 @@ if system == 'Windows':
     with ZipFile(sdl_zip_path, 'r') as zip:
         zip.extractall(path=libs_dir)
 
-    cmake_generated_dirs['build-msvc'] = CMakeConfig(['-G', 'Visual Studio 16 2019', '-A', 'x64'], ['Release', 'Debug'])
+    projects.append(Project('build-msvc', ['-G', 'Visual Studio 16 2019', '-A', 'x64'], ['Release', 'Debug']))
 
 elif system == 'Darwin':
     sdl2_framework = "SDL2.framework"
@@ -82,40 +84,41 @@ elif system == 'Darwin':
 
     print("==== Fetching SDL")
     sdl_dmg_path = get_package(F"http://libsdl.org/release/SDL2-{sdl_ver}.dmg")
+
+    # Mount the DMG and copy SDL2.framework to extern/
     with tempfile.TemporaryDirectory() as mount_point:
         call(['hdiutil', 'attach', sdl_dmg_path, '-mountpoint', mount_point, '-quiet'])
         shutil.copytree(F'{mount_point}/{sdl2_framework}', sdl2_framework_target_path, symlinks=True)
         call(['hdiutil', 'detach', mount_point, '-quiet'])
 
-    cmake_generated_dirs['build-xcode'] = CMakeConfig(['-G', 'Xcode'], ['Release', 'Debug'])
-    cmake_extra_build_args = ['--', '-quiet']
+    projects.append(Project('build-xcode', ['-G', 'Xcode'], ['Release', 'Debug']))
+    extra_build_args = ['--', '-quiet']
 
 else:
-    cmake_generated_dirs['build-release'] = CMakeConfig(['-DCMAKE_BUILD_TYPE=Release'], [])
-    cmake_generated_dirs['build-debug'] = CMakeConfig(['-DCMAKE_BUILD_TYPE=Debug'], [])
+    projects.append(Project('build-release', ['-DCMAKE_BUILD_TYPE=Release'], []))
+    projects.append(Project('build-debug', ['-DCMAKE_BUILD_TYPE=Debug'], []))
+    extra_build_args = ['--', '-j', str(len(os.sched_getaffinity(0)))]
 
 #----------------------------------------------------------------
 # Prepare config dirs
 
-for config_dir in cmake_generated_dirs:
-    nuke_if_exists(config_dir)
+for proj in projects:
+    nuke_if_exists(proj.dir_name)
 
-    print(F"==== Preparing {config_dir}")
-    args = cmake_generated_dirs[config_dir].gen_args
-    call(['cmake','-S','.','-B',config_dir] + args)
+    print(F"==== Preparing {proj.dir_name}")
+    call(['cmake', '-S', '.', '-B', proj.dir_name] + proj.gen_args)
 
 #----------------------------------------------------------------
 # Build the game
 
 print("==== Ready to build.")
 
-if input("Build the game now? (Y/N) ").upper() == 'Y':
-    for config_dir in cmake_generated_dirs:
-        build_configs = cmake_generated_dirs[config_dir].build_configs
-        if build_configs:
-            for build_config in build_configs:
-                print(F"==== Building the game:", config_dir, build_config)
-                call(['cmake', '--build', config_dir, '--config', build_config] + cmake_extra_build_args)
-        else:
-            print(F"==== Building the game:", config_dir)
-            call(['cmake', '--build', config_dir] + cmake_extra_build_args)
+proj = projects[0]
+if input(F"Build project '{proj.dir_name}' now? (Y/N) ").upper() == 'Y':
+    if proj.build_configs:
+        config = proj.build_configs[0]
+        print(F"==== Building the game:", proj.dir_name, config)
+        call(['cmake', '--build', proj.dir_name, '--config', config] + extra_build_args)
+    else:
+        print(F"==== Building the game:", proj.dir_name)
+        call(['cmake', '--build', proj.dir_name] + extra_build_args)
