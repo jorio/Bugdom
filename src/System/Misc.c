@@ -137,7 +137,6 @@ Boolean beenHere = false;
 	
 	InitCursor();
 //	SetDefaultOutputVolume((gOriginalSystemVolume<<16)|gOriginalSystemVolume); // reset system volume
-	FlushEvents ( everyEvent, REMOVE_ALL_EVENTS);
 	ExitToShell();		
 }
 

@@ -393,8 +393,6 @@ EventRecord	theEvent;
 	gNewName.score = newScore;							// set new score
 	gCursorPosition = 0;
 	
-	FlushEvents (everyEvent, REMOVE_ALL_EVENTS);		// use event manager to read keyboard, so start fresh
-	
 	
 			/*************/
 			/* MAIN LOOP */

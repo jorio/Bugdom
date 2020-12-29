@@ -62,7 +62,6 @@ float		dummy;
 
 	SetPort(GetWindowPort(gCoverWindow));
 	
-	FlushEvents (everyEvent, REMOVE_ALL_EVENTS);	
 	InitCursor();
 	
 	pict = GetPicture(1500);

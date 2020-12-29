@@ -286,9 +286,6 @@ OSErr		err;
 	LoadPrefs(&gGamePrefs);							// attempt to read from prefs file		
 	
 	SetFullscreenMode();
-	
-	FlushEvents ( everyEvent, REMOVE_ALL_EVENTS);
-
 }
 #pragma mark -
 

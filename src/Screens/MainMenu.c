@@ -98,7 +98,6 @@ start_again:
 	QD3D_CalcFramesPerSecond();
 		
 	InitCursor();
-	FlushEvents (everyEvent, REMOVE_ALL_EVENTS);	
 	while(true)	
 	{
 		MoveObjects();

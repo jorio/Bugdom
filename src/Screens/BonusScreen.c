@@ -711,7 +711,6 @@ TQ3StyleObject	pick;
 	bool captionsCreatedYet = false;
 
 	InitCursor();
-	FlushEvents (everyEvent, REMOVE_ALL_EVENTS);	
 	while(true)
 	{
 		moveTextUpwardsTween += gFramesPerSecondFrac;
