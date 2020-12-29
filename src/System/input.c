@@ -465,7 +465,6 @@ SDL_GameController* TryOpenController(bool showMessage)
 
 	if (SDL_NumJoysticks() == 0)
 	{
-		printf("No joysticks found.\n");
 		return NULL;
 	}
 

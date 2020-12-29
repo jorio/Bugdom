@@ -166,7 +166,7 @@ TQ3Object		myObject;
 			if (myGroup)
 				Q3Object_Dispose(myGroup);
 
-			printf("!!! MyRead3DMFModel: Q3File_ReadObject returned nil object!\n");
+			//printf("!!! MyRead3DMFModel: Q3File_ReadObject returned nil object!\n");   // This is fine with Quesa
 			QD3D_ShowRecentError();
 			break;
 		}
