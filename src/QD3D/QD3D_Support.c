@@ -56,8 +56,6 @@ static	TQ3StyleObject			gQD3D_InterpolationStyle;
 float	gFramesPerSecond = DEFAULT_FPS;				// this is used to maintain a constant timing velocity as frame rates differ
 float	gFramesPerSecondFrac = 1/DEFAULT_FPS;
 
-float	gAdditionalClipping = 0;
-
 static TQ3FogMode			gFogMode;
 static float		gFogStart,gFogEnd,gFogDensity;
 static TQ3ColorARGB	gFogColor;

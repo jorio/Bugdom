@@ -7,8 +7,7 @@
 #include <QuesaErrors.h>
 #include <QuesaStorage.h>  // For TQ3StorageObject
 #include "gamepatches.h"
-
-extern float gAdditionalClipping;
+#include <math.h>
 
 TQ3StorageObject Q3FSSpecStorage_New(const FSSpec* spec)
 {
@@ -42,25 +41,20 @@ TQ3Area GetAdjustedPane(
 	int logicalHeight,
 	Rect paneClip)
 {
-	TQ3Area pane;
-
-	pane.min.x = paneClip.left;								// set bounds?
-	pane.max.x = logicalWidth - paneClip.right;
-	pane.min.y = paneClip.top;
-	pane.max.y = logicalHeight - paneClip.bottom;
-
-	pane.min.x += gAdditionalClipping;						// offset bounds by user clipping
-	pane.max.x -= gAdditionalClipping;
-	pane.min.y += gAdditionalClipping*.75;
-	pane.max.y -= gAdditionalClipping*.75;
-
-	// Source port addition
-	pane.min.x *= physicalWidth / (float)(logicalWidth);	// scale clip pane to window size
-	pane.max.x *= physicalWidth / (float)(logicalWidth);
-	pane.min.y *= physicalHeight / (float)(logicalHeight);
-	pane.max.y *= physicalHeight / (float)(logicalHeight);
-
-	return pane;
+	float scaleX = physicalWidth / (float)(logicalWidth);	// scale clip pane to window size
+	float scaleY = physicalHeight / (float)(logicalHeight);
+	
+	return (TQ3Area)
+	{
+		{	// Floor min to avoid seam at edges of HUD if scale ratio is dirty
+			floorf( scaleX * paneClip.left ),	// min X
+			floorf( scaleY * paneClip.top  ),	// min Y
+		},
+		{	// Ceil max to avoid seam at edges of HUD if scale ratio is dirty
+			ceilf( scaleX * (logicalWidth  - paneClip.right ) ),	// max X
+			ceilf( scaleY * (logicalHeight - paneClip.bottom) ),	// max Y
+		}
+	};
 }
 
 void FlushQuesaErrors()
