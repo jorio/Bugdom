@@ -211,8 +211,13 @@ static void MakeAboutScreenObjects(int slideNumber)
 			tmd.coord.x = -12-60;	tmd.color = kHeadingColor;	TextMesh_Create(&tmd, caption);
 
 			MAKE_CONTROL_TEXT("Mouse / Arrows"			, "WALK/ROLL");
+#if __APPLE__
 			MAKE_CONTROL_TEXT("Left Click / Option"		, "KICK/BOOST");
 			MAKE_CONTROL_TEXT("Right Click / Command"	, "JUMP");
+#else
+			MAKE_CONTROL_TEXT("Left Click / Ctrl"		, "KICK/BOOST");
+			MAKE_CONTROL_TEXT("Right Click / Alt"		, "JUMP");
+#endif
 			MAKE_CONTROL_TEXT("Middle Click / Space"	, "MORPH");
 			MAKE_CONTROL_TEXT("Shift"					, "AUTO-WALK");
 			MAKE_CONTROL_TEXT("Tab"						, "BUDDY");
