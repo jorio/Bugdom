@@ -332,6 +332,7 @@ if(APPLE)
 	set_source_files_properties(${SDL2_LIBRARIES} PROPERTIES MACOSX_PACKAGE_LOCATION "Frameworks")
 
 	set(BUNDLE_CONTENTS_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>/..")
+	set(APP_PARENT_DIR "${BUNDLE_CONTENTS_DIR}/../..")
 
 	add_custom_command(TARGET ${GAME_TARGET} POST_BUILD
 		# Copy assets to app bundle
@@ -345,21 +346,28 @@ if(APPLE)
 #		plutil -replace NSHighResolutionCapable -bool true ${BUNDLE_CONTENTS_DIR}/Info.plist
 	)
 else()
+	set(APP_PARENT_DIR "${CMAKE_BINARY_DIR}")
+
 	# Copy assets besides executable
-	add_custom_command(TARGET ${GAME_TARGET} POST_BUILD COMMAND
-		${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Data $<TARGET_FILE_DIR:${GAME_TARGET}>/Data)
+	add_custom_command(TARGET ${GAME_TARGET} POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Data ${APP_PARENT_DIR}/Data)
 endif()
 
-# Copy SDL2 DLLs & readme file to output folder on Windows
+# Copy SDL2 DLLs to output folder on Windows
 if(WIN32)
 	foreach(DLL ${SDL2_DLLS})
-		add_custom_command(TARGET ${GAME_TARGET} POST_BUILD COMMAND
-			${CMAKE_COMMAND} -E copy_if_different ${DLL} $<TARGET_FILE_DIR:${GAME_TARGET}>)
+		add_custom_command(TARGET ${GAME_TARGET} POST_BUILD
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DLL} ${APP_PARENT_DIR})
 	endforeach()
-
-	# Write readme file containing version info
-	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ReadMeWin32.txt.in ${CMAKE_BINARY_DIR}/ReadMeWin32.txt)
-	add_custom_command(TARGET ${GAME_TARGET} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/ReadMeWin32.txt $<TARGET_FILE_DIR:${GAME_TARGET}>/ReadMe.txt)
 
 	set_target_properties(${GAME_TARGET} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 endif()
+
+# Copy documentation to output folder
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ReadMe.txt.in ${CMAKE_CURRENT_BINARY_DIR}/ReadMe.txt)
+add_custom_command(TARGET ${GAME_TARGET} POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/ReadMe.txt ${APP_PARENT_DIR}/ReadMe.txt
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.md ${APP_PARENT_DIR}/License.txt
+	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/docs ${APP_PARENT_DIR}/Documentation
+)
+

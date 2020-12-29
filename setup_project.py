@@ -6,7 +6,7 @@ import shutil
 import tempfile
 import sys
 import os
-from zipfile import ZipFile
+import zipfile
 from pathlib import Path
 from dataclasses import dataclass
 
@@ -15,6 +15,7 @@ from dataclasses import dataclass
 libs_dir = os.path.abspath('extern')
 cache_dir = os.path.abspath('cache')
 
+game_ver = "1.3.0"
 sdl_ver = "2.0.14"
 
 #----------------------------------------------------------------
@@ -54,6 +55,16 @@ def nuke_if_exists(path):
         print("==== Nuking", path)
         shutil.rmtree(path)
 
+def zipdir(zipname, topleveldir, arc_topleveldir):
+    with zipfile.ZipFile(zipname, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as zipf:
+        for root, dirs, files in os.walk(topleveldir):
+            for file in files:
+                filepath = os.path.join(root, file)
+                arcpath = os.path.join(arc_topleveldir, filepath[len(topleveldir)+1:])
+                print(filepath, "--zip-->", arcpath)
+                zipf.write(filepath, arcpath)
+
+
 #----------------------------------------------------------------
 
 # Make sure we're running from the correct directory...
@@ -71,8 +82,8 @@ if system == 'Windows':
 
     print("==== Fetching SDL")
     sdl_zip_path = get_package(F"http://libsdl.org/release/SDL2-devel-{sdl_ver}-VC.zip")
-    with ZipFile(sdl_zip_path, 'r') as zip:
-        zip.extractall(path=libs_dir)
+    with zipfile.ZipFile(sdl_zip_path, 'r') as zipf:
+        zipf.extractall(path=libs_dir)
 
     projects.append(Project('build-msvc', ['-G', 'Visual Studio 16 2019', '-A', 'x64'], ['Release', 'Debug']))
 
@@ -122,3 +133,10 @@ if input(F"Build project '{proj.dir_name}' now? (Y/N) ").upper() == 'Y':
     else:
         print(F"==== Building the game:", proj.dir_name)
         call(['cmake', '--build', proj.dir_name] + extra_build_args)
+
+    if system == 'Darwin':
+        call(['hdiutil', 'create', '-fs', 'HFS+', '-srcfolder', F'{proj.dir_name}/Release', '-volname', F'Bugdom {game_ver}', F'Bugdom-mac-{game_ver}.dmg'])
+    elif system == 'Windows':
+        call(['rcedit', F'{proj.dir_name}/Release/Bugdom.exe', '--set-icon', 'cmake/Bugdom256.ico'])
+        call(['rcedit', F'{proj.dir_name}/Release/Bugdom.exe', '--set-product-version', game_ver])
+        zipdir(F'Bugdom-{game_ver}-win64.zip', F'{proj.dir_name}/Release', F'Bugdom-{game_ver}')
