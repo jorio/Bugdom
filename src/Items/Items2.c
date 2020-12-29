@@ -83,7 +83,7 @@ static float	gRootAnimTimeIndex[MAX_ROOT_SYNCS];
 Boolean AddFirecracker(TerrainItemEntryType *itemPtr, long  x, long z)
 {
 ObjNode	*newObj;
-int		id;
+long	id				= -1;
 
 	if (!(gLevelTypeMask & ((1<<LEVEL_TYPE_HIVE) | (1<<LEVEL_TYPE_NIGHT))))
 		DoFatalAlert("AddFirecracker: not on this level!");
