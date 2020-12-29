@@ -223,7 +223,7 @@ static const TQ3ColorARGB	gLevelClearColorWithCyc[NUM_LEVELS] =
 	{ 1.000f, 0.900f, 0.900f, 0.850f },				// boat			(same)
 	{ 1.000f, 1.000f, 0.290f, 0.063f },				// dragonfly	(same)
 	{ 1.000f, 0.700f, 0.600f, 0.400f },				// hive			(same)
-	{ 1.000f, 0.000f, 0.000f, 0.000f },				// night		(DIFFERENT FROM FOG)
+	{ 1.000f, 0.020f, 0.020f, 0.080f },				// night		(same)
 	{ 1.000f, 0.150f, 0.070f, 0.150f },				// anthill		(same)
 };
 
