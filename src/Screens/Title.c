@@ -128,13 +128,7 @@ Byte					letters[] = {TITLE_MObjType_B, TITLE_MObjType_U,
 	viewDef.styles.usePhong 		= false;
 	viewDef.camera.from 			= gCameraFrom;
 	viewDef.camera.to	 			= gCameraTo;
-#ifdef FORMAC
-	viewDef.camera.fov 				= 1.3;
-	viewDef.camera.from.z           -= 180;
-	viewDef.camera.to.z             -= 180;
-#else
 	viewDef.camera.fov 				= .9;
-#endif	
 	
 	viewDef.lights.numFillLights 	= 1;
 	viewDef.lights.ambientBrightness = 0.3;

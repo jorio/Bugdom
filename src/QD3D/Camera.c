@@ -260,13 +260,7 @@ void ResetCameraSettings(void)
 	gCameraLookAtAccel 	= 9;
 	gCameraFromAccel 	= 4.5;
 	gCameraFromAccelY	= 1.5;
-	
-#ifdef FORMAC
-	gCameraDistFromMe 	= 300;
-#else	
 	gCameraDistFromMe 	= 500;
-#endif
-	
 	gCameraHeightFactor = 0.3;
 	gCameraLookAtYOff 	= 95; 
 

@@ -119,10 +119,6 @@ ObjNode *newObj;
 	newObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
 	if (newObj == nil)
 		return;
-
-#ifdef FORMAC
-    newObj->Scale.y *= 1.5f;
-#endif		
 }
 
 

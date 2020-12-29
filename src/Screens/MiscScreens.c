@@ -323,11 +323,7 @@ Boolean			fo = false;
 	gNewObjectDefinition.type 		= 1;
 	gNewObjectDefinition.coord.x 	= 0;
 	gNewObjectDefinition.coord.y 	= 0;
-#ifdef FORMAC
-	gNewObjectDefinition.coord.z 	= 150;
-#else
 	gNewObjectDefinition.coord.z 	= -180;	
-#endif	
 	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER;
 	gNewObjectDefinition.slot 		= 50;
 	gNewObjectDefinition.moveCall 	= MoveLogoBG;
@@ -342,11 +338,7 @@ Boolean			fo = false;
 	gNewObjectDefinition.type 		= 0;
 	gNewObjectDefinition.coord.x 	= 0;
 	gNewObjectDefinition.coord.y 	= 0;
-#ifdef FORMAC
-	gNewObjectDefinition.coord.z 	= -20;	
-#else
 	gNewObjectDefinition.coord.z 	= -100;	
-#endif	
 	gNewObjectDefinition.flags 		= STATUS_BIT_REFLECTIONMAP;
 	gNewObjectDefinition.slot 		= 50;
 	gNewObjectDefinition.moveCall 	= MovePangeaLogoPart;
