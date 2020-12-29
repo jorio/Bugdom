@@ -142,7 +142,7 @@ static const TQ3Point2D po[4] =
 	QD3D_NewViewDef(&viewDef, gCoverWindow);
 	
 	viewDef.camera.hither 			= 20;
-	viewDef.camera.yon 				= 2000;
+	viewDef.camera.yon 				= 3000;		// Source port mod (was 2000) so fog doesn't kick in
 	viewDef.camera.fov 				= 1.1;
 	viewDef.styles.usePhong 		= false;
 	viewDef.camera.from				= cameraFrom;
@@ -366,7 +366,7 @@ static const TQ3Point2D po[4] =
 	QD3D_NewViewDef(&viewDef, gCoverWindow);
 	
 	viewDef.camera.hither 			= 20;
-	viewDef.camera.yon 				= 2000;
+	viewDef.camera.yon 				= 3000;		// Source port mod (was 2000) so fog doesn't kick in
 	viewDef.camera.fov 				= 1.1;
 	viewDef.styles.usePhong 		= false;
 	viewDef.camera.from				= cameraFrom;
