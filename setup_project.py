@@ -42,13 +42,11 @@ def get_package(url):
 
 def call(cmd, **kwargs):
     print(">", ' '.join(cmd))
-    #print(kwargs)
     try:
-        result = subprocess.run(cmd, **kwargs)
-        return result
+        return subprocess.run(cmd, check=True, **kwargs)
     except subprocess.CalledProcessError as e:
-        print("\x1b[1;31mSubprocess failed!\x1b[0m")
-        raise e
+        print(F"\x1b[1;31mAborting setup because: {e}\x1b[0m")
+        sys.exit(1)
 
 def nuke_if_exists(path):
     if os.path.exists(path):

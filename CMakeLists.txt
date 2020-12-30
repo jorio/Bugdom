@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.13)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
@@ -248,10 +248,10 @@ target_include_directories(${GAME_TARGET} PRIVATE
 )
 
 target_link_libraries(${GAME_TARGET}
-	${SDL2_LIBRARIES}
-	${OPENGL_LIBRARIES}
 	Quesa_SDL
 	Pomme
+	${SDL2_LIBRARIES}
+	${OPENGL_LIBRARIES}
 	"$<$<BOOL:${APPLE}>:-framework Foundation>"		# Required for KillMacMouseAcceleration
 	"$<$<BOOL:${APPLE}>:-framework IOKit>"			# Required for KillMacMouseAcceleration
 )
@@ -346,7 +346,7 @@ if(APPLE)
 #		plutil -replace NSHighResolutionCapable -bool true ${BUNDLE_CONTENTS_DIR}/Info.plist
 	)
 else()
-	set(APP_PARENT_DIR "${CMAKE_BINARY_DIR}")
+	set(APP_PARENT_DIR "$<TARGET_FILE_DIR:${GAME_TARGET}>")
 
 	# Copy assets besides executable
 	add_custom_command(TARGET ${GAME_TARGET} POST_BUILD
