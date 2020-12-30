@@ -68,7 +68,7 @@ If you don't want to run setup_project.py, here's what you need to do:
     - the game gets built as "build-msvc/Release/Bugdom.exe"
 
 ## On Linux:
-- `cmake -S . -B build -DCMAKE_BUILD_TYPE=Release`
+- `cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release`
 - `cmake --build build-release`
     - the game gets built as "build/Release/Bugdom"
 

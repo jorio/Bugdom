@@ -42,13 +42,11 @@ def get_package(url):
 
 def call(cmd, **kwargs):
     print(">", ' '.join(cmd))
-    #print(kwargs)
     try:
-        result = subprocess.run(cmd, **kwargs)
-        return result
+        return subprocess.run(cmd, check=True, **kwargs)
     except subprocess.CalledProcessError as e:
-        print("\x1b[1;31mSubprocess failed!\x1b[0m")
-        raise e
+        print(F"\x1b[1;31mAborting setup because: {e}\x1b[0m")
+        sys.exit(1)
 
 def nuke_if_exists(path):
     if os.path.exists(path):
@@ -135,7 +133,7 @@ if input(F"Build project '{proj.dir_name}' now? (Y/N) ").upper() == 'Y':
         call(['cmake', '--build', proj.dir_name] + extra_build_args)
 
     if system == 'Darwin':
-        call(['hdiutil', 'create', '-fs', 'HFS+', '-srcfolder', F'{proj.dir_name}/Release', '-volname', F'Bugdom {game_ver}', F'Bugdom-mac-{game_ver}.dmg'])
+        call(['hdiutil', 'create', '-fs', 'HFS+', '-srcfolder', F'{proj.dir_name}/Release', '-volname', F'Bugdom {game_ver}', F'Bugdom-{game_ver}-mac.dmg'])
     elif system == 'Windows':
         call(['rcedit', F'{proj.dir_name}/Release/Bugdom.exe', '--set-icon', 'cmake/Bugdom256.ico'])
         call(['rcedit', F'{proj.dir_name}/Release/Bugdom.exe', '--set-product-version', game_ver])
