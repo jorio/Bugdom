@@ -236,7 +236,10 @@ set(GAME_LIBRARIES
 
 if(WIN32)
 	# "WIN32" here is equivalent to /SUBSYSTEM:WINDOWS for MSVC
-	add_executable(${GAME_TARGET} WIN32 ${GAME_ALL_SOURCES})
+	add_executable(${GAME_TARGET} WIN32
+        ${GAME_ALL_SOURCES}
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/WindowsResources.rc"
+    )
 elseif(APPLE)
 	# Add required frameworks for KillMacMouseAcceleration
 	list(APPEND GAME_LIBRARIES -framework Foundation -framework IOKit)
