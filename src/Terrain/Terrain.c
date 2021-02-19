@@ -174,7 +174,7 @@ void InitTerrainManager(void)
 			
 	if (gTempTextureBuffer == nil)
 	{
-		gTempTextureBuffer = (u_short *)AllocPtr(TEMP_TEXTURE_BUFF_SIZE * TEMP_TEXTURE_BUFF_SIZE * sizeof(u_short *));
+		gTempTextureBuffer = (u_short *)AllocPtr(TEMP_TEXTURE_BUFF_SIZE * TEMP_TEXTURE_BUFF_SIZE * sizeof(u_short));
 		GAME_ASSERT(gTempTextureBuffer);
 	}
 }
