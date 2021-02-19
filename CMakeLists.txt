@@ -242,7 +242,7 @@ endif()
 
 target_include_directories(${GAME_TARGET} PRIVATE
 	${SDL2_INCLUDE_DIRS}
-	${OPENGL_INCLUDE_DIRS}
+	${OPENGL_INCLUDE_DIR}
 	extern/Pomme/src
 	${GAME_SRCDIR}
 	${GAME_SRCDIR}/Headers
