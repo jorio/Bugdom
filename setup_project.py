@@ -135,6 +135,4 @@ if input(F"Build project '{proj.dir_name}' now? (Y/N) ").upper() == 'Y':
     if system == 'Darwin':
         call(['hdiutil', 'create', '-fs', 'HFS+', '-srcfolder', F'{proj.dir_name}/Release', '-volname', F'Bugdom {game_ver}', F'Bugdom-mac-{game_ver}.dmg'])
     elif system == 'Windows':
-        call(['rcedit', F'{proj.dir_name}/Release/Bugdom.exe', '--set-icon', 'cmake/Bugdom256.ico'])
-        call(['rcedit', F'{proj.dir_name}/Release/Bugdom.exe', '--set-product-version', game_ver])
         zipdir(F'Bugdom-{game_ver}-win64.zip', F'{proj.dir_name}/Release', F'Bugdom-{game_ver}')
