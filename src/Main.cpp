@@ -31,7 +31,7 @@ extern "C"
 	// Lets the game know where to find its asset files
 	extern FSSpec gDataSpec;
 
-	extern SDL_Window* gSDLWindow;
+	SDL_Window* gSDLWindow;
 
 	// Tell Windows graphics driver that we prefer running on a dedicated GPU if available
 #if _WIN32
@@ -84,20 +84,30 @@ static const char* GetWindowTitle()
 
 int CommonMain(int argc, const char** argv)
 {
-	Pomme::InitParams params
-	{
-		.windowName		= GetWindowTitle(),
-		.windowWidth	= 640,
-		.windowHeight	= 480,
-		.msaaSamples	= 0
-	};
-	
-#if ALLOW_MSAA
-	params.msaaSamples = 4;
-#endif
-
 	// Start our "machine"
-	Pomme::Init(params);
+	Pomme::Init();
+
+	// Initialize SDL video subsystem
+	if (0 != SDL_Init(SDL_INIT_VIDEO))
+		throw std::runtime_error("Couldn't initialize SDL video subsystem.");
+
+	// Create window
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+#if ALLOW_MSAA
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+#endif
+	gSDLWindow = SDL_CreateWindow(
+			GetWindowTitle(),
+			SDL_WINDOWPOS_UNDEFINED,
+			SDL_WINDOWPOS_UNDEFINED,
+			640,
+			480,
+			SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
+	if (!gSDLWindow)
+		throw std::runtime_error("Couldn't create SDL window.");
 
 	// Uncomment to dump the game's resources to a temporary directory.
 	//Pomme_StartDumpingResources("/tmp/BugdomRezDump");
@@ -114,7 +124,7 @@ int CommonMain(int argc, const char** argv)
 
 	fs::path dataPath = FindGameData();
 #if !(__APPLE__)
-	Pomme::Graphics::SetWindowIconFromIcl8Resource(128);
+	Pomme::Graphics::SetWindowIconFromIcl8Resource(gSDLWindow, 128);
 #endif
 
 	// Init joystick subsystem
