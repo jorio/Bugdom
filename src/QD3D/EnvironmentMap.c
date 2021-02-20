@@ -47,13 +47,7 @@ void EnvironmentMapTriMesh(
 		return;
 
 	TQ3Matrix4x4		invTranspose;
-#if 1
-	printf("TODO NOQUESA: EnvMapTriMesh camPlacement\n");
-	TQ3Point3D bogus = (TQ3Point3D){0,0,0};
-	const TQ3Point3D*	camCoord = &bogus;
-#else
-	const TQ3Point3D*	camCoord = &gGameViewInfoPtr->cameraPlacement.cameraLocation;
-#endif
+	const TQ3Point3D*	camCoord = &gGameViewInfoPtr->currentCameraCoords;
 
 	GAME_ASSERT(transform);
 	GAME_ASSERT(mesh->numPoints <= ENVMAP_MAX_VERTICES_PER_MESH);

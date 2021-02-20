@@ -235,8 +235,13 @@ QD3DSetupOutputType	*outputPtr;
 									|| setupDefPtr->view.paneClip.bottom != 0 || setupDefPtr->view.paneClip.top != 0;
 	outputPtr->hither 				= setupDefPtr->camera.hither;		// remember hither/yon
 	outputPtr->yon 					= setupDefPtr->camera.yon;
+	outputPtr->fov					= setupDefPtr->camera.fov;
 	outputPtr->enableMultisamplingByDefault = setupDefPtr->enableMultisamplingByDefault;
-	
+
+	outputPtr->currentCameraUpVector	= setupDefPtr->camera.up;
+	outputPtr->currentCameraLookAt		= setupDefPtr->camera.to;
+	outputPtr->currentCameraCoords		= setupDefPtr->camera.from;
+
 	outputPtr->isActive = true;								// it's now an active structure
 	
 	outputPtr->lightList = setupDefPtr->lights;				// copy light list
@@ -706,24 +711,45 @@ void QD3D_DrawScene(QD3DSetupOutputType *setupInfo, void (*drawRoutine)(const QD
 
 	Render_StartFrame();
 
+	// Clip pane
+	if (setupInfo->needScissorTest)
+	{
+		DoFatalAlert("NOQUESA: need scissor test!");
+		/*
+		// Render backdrop
+		Render_Draw2DCover(setupInfo->backdropFit);
+
+		// Set scissor
+		TQ3Area pane	= GetAdjustedPane(setupInfo->paneClip);
+		int paneWidth	= pane.max.x-pane.min.x;
+		int paneHeight	= pane.max.y-pane.min.y;
+		Render_SetViewport(true, pane.min.x, pane.min.y, paneWidth, paneHeight);
+		 */
+	}
+	else
+	{
+		gWindowWidth = 640;		gWindowHeight = 480;		// TODO NOQUESA: TEMP -- GET ACTUAL WINDOW SIZE OR IMPLEMENT QD3D_ONRESIZEWINDOW
+		Render_SetViewport(false, 0, 0, gWindowWidth, gWindowHeight);
+	}
+
 	CalcCameraMatrixInfo(setupInfo);						// update camera matrix
 
 
 			/* SOURCE PORT STUFF */
 
-	if (gQD3D_FreshDrawContext)
-	{
-		SDL_GL_SetSwapInterval(gGamePrefs.vsync ? 1 : 0);
+//if (gQD3D_FreshDrawContext)
+//{
+//	SDL_GL_SetSwapInterval(gGamePrefs.vsync ? 1 : 0);
 
-		Overlay_Alloc();									// source port addition (must be after StartRendering so we have a valid GL context)
+//	Overlay_Alloc();									// source port addition (must be after StartRendering so we have a valid GL context)
 
-		gQD3D_FreshDrawContext = false;
-	}
-	
-	if (setupInfo->enableMultisamplingByDefault)
-	{
-		QD3D_SetMultisampling(true);
-	}
+//	gQD3D_FreshDrawContext = false;
+//}
+//
+//if (setupInfo->enableMultisamplingByDefault)
+//{
+//	QD3D_SetMultisampling(true);
+//}
 
 
 
@@ -791,7 +817,8 @@ void QD3D_DrawScene(QD3DSetupOutputType *setupInfo, void (*drawRoutine)(const QD
 
 void QD3D_UpdateCameraFromTo(QD3DSetupOutputType *setupInfo, TQ3Point3D *from, TQ3Point3D *to)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
+	setupInfo->currentCameraCoords = *from;					// set camera coords
+	setupInfo->currentCameraLookAt = *to;					// set camera look at
 #if 0	// NOQUESA
 TQ3Status	status;
 TQ3CameraPlacement	placement;
@@ -822,8 +849,8 @@ TQ3CameraObject		camera;
 	status = Q3Camera_SetPlacement(camera, &placement);
 	GAME_ASSERT(status);
 		
-	UpdateListenerLocation();
 #endif
+	UpdateListenerLocation();
 }
 
 
@@ -831,7 +858,7 @@ TQ3CameraObject		camera;
 
 void QD3D_UpdateCameraFrom(QD3DSetupOutputType *setupInfo, TQ3Point3D *from)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
+	setupInfo->currentCameraCoords = *from;					// set camera coords
 #if 0	// NOQUESA
 TQ3Status	status;
 TQ3CameraPlacement	placement;
@@ -852,9 +879,8 @@ TQ3CameraPlacement	placement;
 			
 	status = Q3Camera_SetPlacement(setupInfo->cameraObject, &placement);
 	GAME_ASSERT(status);
-
-	UpdateListenerLocation();
 #endif
+	UpdateListenerLocation();
 }
 
 
@@ -862,7 +888,13 @@ TQ3CameraPlacement	placement;
 
 void QD3D_MoveCameraFromTo(QD3DSetupOutputType *setupInfo, TQ3Vector3D *moveVector, TQ3Vector3D *lookAtVector)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
+	setupInfo->currentCameraCoords.x += moveVector->x;		// set camera coords
+	setupInfo->currentCameraCoords.y += moveVector->y;
+	setupInfo->currentCameraCoords.z += moveVector->z;
+
+	setupInfo->currentCameraLookAt.x += lookAtVector->x;	// set camera look at
+	setupInfo->currentCameraLookAt.y += lookAtVector->y;
+	setupInfo->currentCameraLookAt.z += lookAtVector->z;
 #if 0	// NOQUESA
 TQ3Status	status;
 TQ3CameraPlacement	placement;
@@ -891,9 +923,8 @@ TQ3CameraPlacement	placement;
 			
 	status = Q3Camera_SetPlacement(setupInfo->cameraObject, &placement);
 	GAME_ASSERT(status);
-
-	UpdateListenerLocation();
 #endif
+	UpdateListenerLocation();
 }
 
 

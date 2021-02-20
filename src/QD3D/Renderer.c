@@ -412,6 +412,8 @@ void Render_StartFrame(void)
 	// Clear color & depth buffers.
 	EnableFlag(glDepthMask);	// The depth mask must be re-enabled so we can clear the depth buffer.
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
 void Render_SetViewport(bool scissor, int x, int y, int w, int h)
@@ -622,7 +624,9 @@ static void DrawMeshList(int renderPass, const MeshQueueEntry* entry)
 		}
 		else
 		{
-			EnableState(GL_LIGHTING);
+//			EnableState(GL_LIGHTING);
+printf("TODO NOQUESA: LIGHTING!!\n");
+DisableState(GL_LIGHTING);
 		}
 
 		// Write geometry to depth buffer or not
@@ -687,6 +691,14 @@ static void DrawMeshList(int renderPass, const MeshQueueEntry* entry)
 		// Draw the mesh
 		__glDrawRangeElements(GL_TRIANGLES, 0, mesh->numPoints-1, mesh->numTriangles*3, GL_UNSIGNED_SHORT, mesh->triangles);
 		CHECK_GL_ERROR();
+
+		// Axis lines for debugging
+		glColor4f(1, 1, 1, 1);
+		glBegin(GL_LINES);
+		glVertex3i(0,0,0);glVertex3i(0,1,0);
+		glVertex3i(0,0,0);glVertex3i(1,0,0);
+		glVertex3i(0,0,0);glVertex3i(0,0,1);
+		glEnd();
 
 		// Pass 2 to draw transparent meshes without face culling (see above for an explanation)
 		if (meshIsTransparent && entry->mods->statusBits & STATUS_BIT_KEEPBACKFACES)

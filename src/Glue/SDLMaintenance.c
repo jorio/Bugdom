@@ -23,9 +23,9 @@ static char				gDebugTextBuffer[1024];
 
 void DoSDLMaintenance()
 {
-	Overlay_Flush();
+//	Overlay_Flush();
 
-	SDL_GL_SwapWindow(gSDLWindow);
+//	SDL_GL_SwapWindow(gSDLWindow);
 
 	static int holdFramerateCap = 0;
 

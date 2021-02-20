@@ -11,7 +11,7 @@
 
 extern	ObjNode		*gFirstNodePtr;
 extern	TerrainItemEntryType	**gTerrainItemLookupTableX;
-extern	TQ3Matrix4x4		gCameraWorldToViewMatrix, gCameraViewToFrustumMatrix;
+extern	TQ3Matrix4x4		gCameraWorldToViewMatrix;
 extern	NewObjectDefinitionType	gNewObjectDefinition;
 extern	TQ3Point3D		gMyCoord;
 extern	TerrainYCoordType		**gMapYCoords;

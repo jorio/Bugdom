@@ -52,9 +52,11 @@ static void InitLensFlares(void);
 
 Boolean				gDrawLensFlare;
 
-TQ3Matrix4x4		gCameraWorldToFrustumMatrix,gCameraFrustumToWindowMatrix,
-					gCameraWorldToWindowMatrix,gCameraWindowToWorldMatrix;
-TQ3Matrix4x4		gCameraWorldToViewMatrix, gCameraViewToFrustumMatrix;
+TQ3Matrix4x4		gCameraWorldToFrustumMatrix;
+TQ3Matrix4x4		gCameraWorldToWindowMatrix;
+TQ3Matrix4x4		gCameraWindowToWorldMatrix;
+TQ3Matrix4x4		gCameraWorldToViewMatrix;
+TQ3Matrix4x4		gCameraViewToFrustumMatrix;
 
 static float		gCameraLookAtAccel,gCameraFromAccelY,gCameraFromAccel;
 static float		gCameraDistFromMe, gCameraHeightFactor,gCameraLookAtYOff;
@@ -238,11 +240,11 @@ int	i;
 		dx = sin(gPlayerObj->Rot.y) * 10.0f;
 		dz = cos(gPlayerObj->Rot.y) * 10.0f;
 		
-		gGameViewInfoPtr->currentCameraCoords.x = gPlayerObj->Coord.x + dx;
+		gGameViewInfoPtr->currentCameraCoords.x = gPlayerObj->Coord.x + dx;			// camera coords
 		gGameViewInfoPtr->currentCameraCoords.z = gPlayerObj->Coord.z + dz;
 		gGameViewInfoPtr->currentCameraCoords.y = gPlayerObj->Coord.y + 300.0f;
 
-		gGameViewInfoPtr->currentCameraLookAt.x = gPlayerObj->Coord.x;
+		gGameViewInfoPtr->currentCameraLookAt.x = gPlayerObj->Coord.x;				// camera lookAt
 		gGameViewInfoPtr->currentCameraLookAt.y = gPlayerObj->Coord.y + 100.0f;
 		gGameViewInfoPtr->currentCameraLookAt.z = gPlayerObj->Coord.z;
 	}
@@ -309,32 +311,66 @@ float	fps = gFramesPerSecondFrac;
 // Must be called inside render start/end loop!!!
 //
 
-void CalcCameraMatrixInfo(QD3DSetupOutputType *viewPtr)
+void CalcCameraMatrixInfo(QD3DSetupOutputType *setupInfo)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
+			/* INIT PROJECTION MATRIX */
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+
+	gluPerspective(
+			Q3Math_RadiansToDegrees(setupInfo->fov),	// fov
+			1,//QD3D_GetCurrentViewportAspectRatio(setupInfo),		// aspect --TODO
+			setupInfo->hither,		// hither
+			setupInfo->yon);		// yon
+
+
+
+			/* INIT MODELVIEW MATRIX */
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	gluLookAt(
+			setupInfo->currentCameraCoords.x,	setupInfo->currentCameraCoords.y,	setupInfo->currentCameraCoords.z,
+			setupInfo->currentCameraLookAt.x,	setupInfo->currentCameraLookAt.y,	setupInfo->currentCameraLookAt.z,
+			setupInfo->currentCameraUpVector.x,	setupInfo->currentCameraUpVector.y,	setupInfo->currentCameraUpVector.z);
+
+
+
 			/* GET CAMERA VIEW MATRIX INFO */
-			
+
+	/*
 	Q3View_GetWorldToFrustumMatrixState(viewPtr->viewObject, &gCameraWorldToFrustumMatrix);
 	Q3View_GetFrustumToWindowMatrixState(viewPtr->viewObject, &gCameraFrustumToWindowMatrix);
 	MatrixMultiplyFast(&gCameraWorldToFrustumMatrix, &gCameraFrustumToWindowMatrix, &gCameraWorldToWindowMatrix);
 	
 	Q3Camera_GetWorldToView(viewPtr->cameraObject, &gCameraWorldToViewMatrix);	
-	Q3Camera_GetViewToFrustum(viewPtr->cameraObject, &gCameraViewToFrustumMatrix);	
-	
+	Q3Camera_GetViewToFrustum(viewPtr->cameraObject, &gCameraViewToFrustumMatrix);
+	*/
+
+
+	glGetFloatv(GL_MODELVIEW_MATRIX, (GLfloat *)&gCameraWorldToViewMatrix);				// get camera's world to view matrix
+	glGetFloatv(GL_PROJECTION_MATRIX, (GLfloat *)&gCameraViewToFrustumMatrix);			// get camera's view to frustrum matrix (to calc screen coords)
+	Q3Matrix4x4_Multiply(&gCameraWorldToViewMatrix, &gCameraViewToFrustumMatrix, &gCameraWorldToFrustumMatrix);		// calc world to frustum matrix
+
+
 			/* CALCULATE THE ADJUSTMENT MATRIX */
 			//
 			// this gets a view->world matrix for putting stuff in the infobar.
 			//
 				
-	Q3Matrix4x4_Invert(&gCameraWorldToWindowMatrix,&gCameraWindowToWorldMatrix);
+	//Q3Matrix4x4_Invert(&gCameraWorldToWindowMatrix,&gCameraWindowToWorldMatrix);
+	Q3Matrix4x4_Invert(&gCameraWorldToViewMatrix,&gCameraWindowToWorldMatrix);
 
 
 			/* PREPARE FRUSTUM PLANES FOR SPHERE VISIBILITY CHECKS */
 			// (Source port addition)
 
 	UpdateFrustumPlanes(&gCameraWorldToFrustumMatrix);
-#endif
+
+
+
+	CHECK_GL_ERROR();
 }
 
 /**************** MOVE CAMERA: MANUAL ********************/

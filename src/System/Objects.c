@@ -13,7 +13,7 @@
 
 extern	TQ3TriMeshFlatGroup		gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
 extern	TQ3BoundingSphere		gObjectGroupRadiusList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
-extern	TQ3Matrix4x4	gCameraWorldToViewMatrix,gCameraViewToFrustumMatrix;
+extern	TQ3Matrix4x4	gCameraWorldToViewMatrix;
 extern	short		gNumObjectsInGroupList[MAX_3DMF_GROUPS];
 extern	float		gFramesPerSecondFrac;
 extern	ObjNode		*gPlayerObj;
@@ -127,6 +127,9 @@ ObjNode	*newNodePtr;
 	newNodePtr->EffectChannel = -1;						// no streaming sound effect
 	newNodePtr->ParticleGroup = -1;						// no particle group
 	newNodePtr->SplineObjectIndex = -1;					// no index yet
+
+	newNodePtr->RenderModifiers.statusBits = 0;
+	newNodePtr->RenderModifiers.diffuseColor = (TQ3ColorRGBA) { 1,1,1,1 };	// default diffuse color is opaque white
 
 	if (newObjDef->flags & STATUS_BIT_ONSPLINE)
 		newNodePtr->SplineMoveCall = newObjDef->moveCall;	// save spline move routine

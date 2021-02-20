@@ -93,7 +93,8 @@ typedef struct
 	int						backdropFit;
 	TQ3Point3D				currentCameraCoords;
 	TQ3Point3D				currentCameraLookAt;
-//	TQ3CameraPlacement		cameraPlacement;
+	TQ3Vector3D				currentCameraUpVector;
+	float					fov;
 	float					hither,yon;
 	QD3DLightDefType		lightList;			// a copy of the input light data from the SetupInputType
 	Boolean					enableMultisamplingByDefault;		// source port add
