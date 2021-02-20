@@ -370,13 +370,10 @@ ObjNode		*thisNodePtr;
 
 void DrawObjects(const QD3DSetupOutputType *setupInfo)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
 ObjNode		*theNode;
 TQ3Status	myStatus;
 short		i,numTriMeshes;
 unsigned long	statusBits;
-TQ3ViewObject	view = setupInfo->viewObject;
 Boolean			autoFade = false;
 Boolean			noCache = false;
 Boolean			useNullShader = false;
@@ -411,17 +408,20 @@ short			skelType;
 	{
 		statusBits = theNode->StatusBits;						// get obj's status bits
 
+		printf("TODO NOQUESA: Restore objnode culling!!!\n");
+#if 0	// NOQUESA
 		if (statusBits & STATUS_BIT_ISCULLED)					// see if is culled
 			goto next;		
 		
 		if (statusBits & STATUS_BIT_HIDDEN)						// see if is hidden
 			goto next;		
+#endif
 
 		if (theNode->CType == INVALID_NODE_FLAG)				// see if already deleted
 			goto next;		
 
-		if (statusBits & STATUS_BIT_REFLECTIONMAP)				// dont draw here if this is reflection mapped
-			goto next;
+//		if (statusBits & STATUS_BIT_REFLECTIONMAP)				// dont draw here if this is reflection mapped
+//			goto next;
 
 			
 				/**************************/
@@ -450,6 +450,8 @@ short			skelType;
 			
 		if (gAutoFadeStartDist != 0.0f)							// see if this level has autofade
 		{
+			printf("TODO NOQUESA: submit autofade xparency\n");
+#if 0	// NOQUESA
 			if (statusBits & STATUS_BIT_AUTOFADE)
 			{
 				TQ3ColorRGB	xcolor;			
@@ -477,14 +479,16 @@ short			skelType;
 					Q3Attribute_Submit(kQ3AttributeTypeTransparencyColor, &white, view);			
 					autoFade = false;
 				}
-			}		
+			}
+#endif
 		}
 					
 		
 			/*********************/
 			/* CHECK NULL SHADER */
 			/*********************/
-			
+
+/* NOQUESA: rendermods should be enough
 		if (statusBits & STATUS_BIT_NULLSHADER)
 		{
 			if (!useNullShader)
@@ -499,11 +503,13 @@ short			skelType;
 			useNullShader = false;
 			Q3Shader_Submit(setupInfo->shaderObject, view);
 		}
+*/
 		
 			/*********************/
 			/* CHECK NO Z-WRITES */
 			/*********************/
-			
+
+/* NOQUESA: rendermods should be enough
 		if (statusBits & STATUS_BIT_NOZWRITE)
 		{
 			if (!noZWrites)
@@ -518,11 +524,13 @@ short			skelType;
 			noZWrites = false;
 			QD3D_SetZWrite(true);
 		}
+*/
 	
 			/****************/
 			/* CHECK NO FOG */
 			/****************/
-	
+
+/* NOQUESA: rendermods should be enough
 		if (statusBits & STATUS_BIT_NOFOG)
 		{
 			if (!noFog)
@@ -537,11 +545,14 @@ short			skelType;
 			noFog = false;
 			QD3D_ReEnableFog(setupInfo);
 		}
+*/
 				
 			/********************/
 			/* CHECK GLOW BLEND */
 			/********************/
-	
+
+		if (statusBits & STATUS_BIT_GLOW) printf("TODO NOQUESA: additive blending!\n");
+/* NOQUESA: rendermods should be enough
 		if (statusBits & STATUS_BIT_GLOW)
 		{
 			if (!glow)
@@ -556,6 +567,7 @@ short			skelType;
 			glow = false;
 			QD3D_SetAdditiveBlending(false);
 		}
+*/
 	
 		
 			/************************/
@@ -564,8 +576,11 @@ short			skelType;
 			
 		if (gShowDebug)
 		{
+			printf("TODO NOQUESA: gShowDebug\n");
+			/*
 			DrawCollisionBoxes(theNode,view);
 			DrawBoundingSphere(theNode, view);
+			 */
 		}
 
 				
@@ -575,27 +590,38 @@ short			skelType;
 						
 		switch(theNode->Genre)
 		{
-			case	SKELETON_GENRE:	
+			case	SKELETON_GENRE:
 					UpdateSkinnedGeometry(theNode);													// update skeleton geometry
+					printf("TODO NOQUESA: submit skeleton geometry\n");
+#if 0	// NOQUESA
 					numTriMeshes = theNode->Skeleton->skeletonDefinition->numDecomposedTriMeshes;
 					skelType = theNode->Type;
 					for (i = 0; i < numTriMeshes; i++)												// submit each trimesh of it
 						Q3TriMesh_Submit(&gLocalTriMeshesOfSkelType[skelType][i], view);
-
+#endif
 					break;
 			
 			case	DISPLAY_GROUP_GENRE:
+					Render_SubmitMeshList(
+							theNode->NumMeshes,
+							theNode->MeshList,
+							&theNode->BaseTransformMatrix,
+							&theNode->RenderModifiers,
+							&theNode->Coord);
+					/*
 					if (theNode->BaseGroup)
 					{
 						myStatus = Q3Object_Submit(theNode->BaseGroup, view);
 						GAME_ASSERT(myStatus);
 					}
+					*/
 					break;
 					
 			case	CUSTOM_GENRE:
 					if (theNode->CustomDrawFunction)
 					{
-						theNode->CustomDrawFunction(theNode, view);					
+						printf("TODO NOQUESA: CustomDrawFunction!\n");
+						//theNode->CustomDrawFunction(theNode, view);
 					}
 					break;
 		}
@@ -610,7 +636,8 @@ next:
 				/*****************************/
 				/* RESET SETTINGS TO DEFAULT */
 				/*****************************/
-		
+
+#if 0	// TODO NOQUESA
 	if (autoFade)
 		Q3Attribute_Submit(kQ3AttributeTypeTransparencyColor, &white, view);			
 
@@ -630,7 +657,6 @@ next:
 		QD3D_SetAdditiveBlending(false);
 
 	SubmitReflectionMapQueue(setupInfo);						// draw anything in the reflection map queue
-
 #endif
 }
 

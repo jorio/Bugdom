@@ -484,6 +484,9 @@ void Render_SubmitMeshList(
 		const RenderModifiers*	mods,
 		const TQ3Point3D*		centerCoord)
 {
+	if (numMeshes <= 0)
+		printf("not drawing this!\n");
+
 	TQ3Point3D coordInFrustum;
 	Q3Point3D_Transform(centerCoord, &gCameraWorldToFrustumMatrix, &coordInFrustum);
 
