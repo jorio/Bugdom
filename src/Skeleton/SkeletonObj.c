@@ -80,7 +80,7 @@ short	i,numDecomp;
 	numDecomp = gLoadedSkeletonsList[num]->numDecomposedTriMeshes;
 	gNumDecomposedTriMeshesInSkeleton[num] = numDecomp;
 	for (i=0; i < numDecomp; i++)
-		QD3D_DuplicateTriMeshData(&gLoadedSkeletonsList[num]->decomposedTriMeshes[i],&gLocalTriMeshesOfSkelType[num][i]);
+		QD3D_DuplicateTriMeshData(gLoadedSkeletonsList[num]->decomposedTriMeshPtrs[i], &gLocalTriMeshesOfSkelType[num][i]);
 	
 }
 
@@ -250,8 +250,8 @@ long	numAnims,numJoints;
 
 		/* ALLOC DECOMPOSED DATA */
 			
-	skeleton->decomposedTriMeshes = (TQ3TriMeshData *)AllocPtr(sizeof(TQ3TriMeshData)*MAX_DECOMPOSED_TRIMESHES);		
-	GAME_ASSERT(skeleton->decomposedTriMeshes);
+	skeleton->decomposedTriMeshPtrs = (TQ3TriMeshData *)AllocPtr(sizeof(TQ3TriMeshData)*MAX_DECOMPOSED_TRIMESHES);
+	GAME_ASSERT(skeleton->decomposedTriMeshPtrs);
 
 	skeleton->decomposedPointList = (DecomposedPointType *)AllocPtr(sizeof(DecomposedPointType)*MAX_DECOMPOSED_POINTS);		
 	GAME_ASSERT(skeleton->decomposedPointList);

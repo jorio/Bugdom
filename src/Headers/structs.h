@@ -166,7 +166,7 @@ typedef struct
 	BoneDefinitionType	*Bones;							// data which describes bone heirarachy
 	
 	long				numDecomposedTriMeshes;			// # trimeshes in skeleton
-	TQ3TriMeshData		*decomposedTriMeshes;			// array of triMeshData
+	TQ3TriMeshData		**decomposedTriMeshPtrs;		// array of triMeshData
 
 	long				numDecomposedPoints;			// # shared points in skeleton
 	DecomposedPointType	*decomposedPointList;			// array of shared points
@@ -174,7 +174,7 @@ typedef struct
 	short				numDecomposedNormals ;			// # shared normal vectors
 	TQ3Vector3D			*decomposedNormalsList;			// array of shared normals
 
-
+	TQ3MetaFile			*associated3DMF;				// associated 3DMF file
 }SkeletonDefType;
 
 
@@ -208,7 +208,6 @@ typedef struct
 	TQ3Matrix4x4	jointTransformMatrix[MAX_JOINTS];	// holds matrix xform for each joint
 
 	SkeletonDefType	*skeletonDefinition;						// point to skeleton's common/shared data	
-//	TQ3TriMeshData	localTriMeshes[MAX_DECOMPOSED_TRIMESHES];	// the triMeshes to submit for this ObjNode
 }SkeletonObjDataType;
 
 

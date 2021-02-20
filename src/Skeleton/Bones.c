@@ -19,7 +19,7 @@ extern	TQ3TriMeshData		**gLocalTriMeshesOfSkelType;
 /*    PROTOTYPES            */
 /****************************/
 
-static void DecomposeATriMesh(TQ3Object theTriMesh);
+static void DecomposeATriMesh(SkeletonDefType* gCurrentSkeleton, TQ3TriMeshData* triMeshData);
 static void DecompRefMo_Recurse(TQ3Object inObj);
 static void DecomposeReferenceModel(TQ3Object theModel);
 static void UpdateSkinnedGeometry_Recurse(short joint, short skelType);
@@ -52,21 +52,35 @@ static	TQ3Vector3D			gTransformedNormals[MAX_DECOMPOSED_NORMALS];	// temporary b
 
 void LoadBonesReferenceModel(const FSSpec	*inSpec, SkeletonDefType *skeleton)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
+			/* LOAD 3DMF */
 
-TQ3Object		newModel;
+	TQ3MetaFile* the3DMFFile = Q3MetaFile_Load3DMF(inSpec);
+	GAME_ASSERT(the3DMFFile);
 
-	newModel = Load3DMFModel(inSpec);
-	GAME_ASSERT(newModel);
+	PatchSkeleton3DMF(inSpec->cName, the3DMFFile);
 
-	PatchSkeleton3DMF(inSpec->cName, newModel);
+			/* UPLOAD TEXTURES TO GPU */
+
+	Render_Load3DMFTextures(the3DMFFile);
+
+			/* DECOMPOSE REFERENCE MODEL */
 
 	gCurrentSkeleton = skeleton;
+
+	skeleton->numDecomposedTriMeshes	= 0;
+	skeleton->numDecomposedPoints		= 0;
+	skeleton->numDecomposedNormals		= 0;
+
+	for (int i = 0; i < the3DMFFile->numMeshes; i++)
+	{
+		DecomposeATriMesh(skeleton, the3DMFFile->meshes[i]);
+	}
+
+	/*  NOQUESA
 	DecomposeReferenceModel(newModel);
 	
 	Q3Object_Dispose(newModel);				// we dont need the original model anymore
-#endif
+	 */
 }
 
 
@@ -132,39 +146,31 @@ TQ3ObjectType		oType;
 
 /******************* DECOMPOSE A TRIMESH ***********************/
 
-static void DecomposeATriMesh(TQ3Object theTriMesh)
+static void DecomposeATriMesh(SkeletonDefType* gCurrentSkeleton, TQ3TriMeshData* triMeshData)
 {
-
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-
-TQ3Status			status;
-unsigned long		numVertecies,vertNum;
+long				numVertices;
 TQ3Point3D			*vertexList;
 long				i,n,refNum,pointNum;
 TQ3Vector3D			*normalPtr;
-TQ3TriMeshData		*triMeshData;
 DecomposedPointType	*decomposedPoint;
 
 	n = gCurrentSkeleton->numDecomposedTriMeshes;												// get index into list of trimeshes
 	GAME_ASSERT(n < MAX_DECOMPOSED_TRIMESHES);
 
 			/* GET TRIMESH DATA */
-			
-	status = Q3TriMesh_GetData(theTriMesh, &gCurrentSkeleton->decomposedTriMeshes[n]);			// get trimesh data
-	GAME_ASSERT(status);
 
-	triMeshData = &gCurrentSkeleton->decomposedTriMeshes[n];
-		
-	numVertecies = triMeshData->numPoints;														// get # verts in trimesh
+	gCurrentSkeleton->decomposedTriMeshPtrs[n] = triMeshData;									// get trimesh data
+	GAME_ASSERT(triMeshData);
+
+	numVertices = triMeshData->numPoints;														// get # verts in trimesh
 	vertexList = triMeshData->points;															// point to vert list
-	normalPtr  = (TQ3Vector3D *)(triMeshData->vertexAttributeTypes[0].data); 					// point to normals
+	normalPtr  = triMeshData->vertexNormals;													// point to normals
 
 				/*******************************/
 				/* EXTRACT VERTECIES & NORMALS */
 				/*******************************/
-				
-	for (vertNum = 0; vertNum < numVertecies; vertNum++)
+
+	for (long vertNum = 0; vertNum < numVertices; vertNum++)
 	{				
 			/* SEE IF THIS POINT IS ALREADY IN DECOMPOSED LIST */
 				
@@ -231,8 +237,6 @@ added_norm:
 	}
 
 	gCurrentSkeleton->numDecomposedTriMeshes++;											// inc # of trimeshes in decomp list
-
-#endif
 }
 
 
