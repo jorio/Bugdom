@@ -310,7 +310,7 @@ void DoModelDebug(void)
 		MoveObjects();
 		MoveCamera_ModelDebug();
 
-		CalcEnvironmentMappingCoords(&gGameViewInfoPtr->currentCameraCoords);
+//		CalcEnvironmentMappingCoords(&gGameViewInfoPtr->currentCameraCoords);
 
 //		Overlay_RenderQuad(OVERLAY_FILL);
 		

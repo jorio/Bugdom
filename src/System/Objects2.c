@@ -17,7 +17,6 @@ extern	float		gFramesPerSecondFrac;
 extern	ObjNode		*gPlayerObj,*gFirstNodePtr;
 extern	QD3DSetupOutputType		*gGameViewInfoPtr;
 extern	TQ3Point3D	gCoord;
-extern	TQ3Object	gKeepBackfaceStyleObject;
 extern	NewObjectDefinitionType	gNewObjectDefinition;
 extern	u_long		gAutoFadeStatusBits;
 extern	PrefsType	gGamePrefs;

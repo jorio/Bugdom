@@ -85,6 +85,7 @@ set(GAME_SOURCES
 	${GAME_SRCDIR}/QD3D/Pick.c
 	${GAME_SRCDIR}/QD3D/QD3D_Geometry.c
 	${GAME_SRCDIR}/QD3D/QD3D_Support.c
+	${GAME_SRCDIR}/QD3D/Renderer.c
 	${GAME_SRCDIR}/Ride/DragonFly.c
 	${GAME_SRCDIR}/Ride/WaterBug.c
 	${GAME_SRCDIR}/Screens/AboutScreen.c
@@ -153,6 +154,7 @@ set(GAME_HEADERS
 	${GAME_SRCDIR}/Headers/player_control.h
 	${GAME_SRCDIR}/Headers/qd3d_geometry.h
 	${GAME_SRCDIR}/Headers/qd3d_support.h
+	${GAME_SRCDIR}/Headers/renderer.h
 	${GAME_SRCDIR}/Headers/selfrundemo.h
 	${GAME_SRCDIR}/Headers/skeletonanim.h
 	${GAME_SRCDIR}/Headers/skeletonjoints.h

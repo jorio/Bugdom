@@ -52,8 +52,6 @@ NewObjectDefinitionType	gNewObjectDefinition;
 TQ3Point3D	gCoord;
 TQ3Vector3D	gDelta;
 
-TQ3Object	gKeepBackfaceStyleObject = nil;
-
 long		gNumObjsInDeleteQueue = 0;
 ObjNode		*gObjectDeleteQueue[OBJ_DEL_Q_SIZE];
 
@@ -79,16 +77,6 @@ void InitObjectManager(void)
 					/* CLEAR ENTIRE OBJECT LIST */
 		
 	gFirstNodePtr = nil;									// no node yet
-
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-			/* MAKE BACKFACE STYLE OBJECT */
-
-	GAME_ASSERT(gKeepBackfaceStyleObject == nil);
-
-	gKeepBackfaceStyleObject = Q3BackfacingStyle_New(kQ3BackfacingStyleBoth);
-	GAME_ASSERT(gKeepBackfaceStyleObject);
-#endif
 }
 
 
@@ -677,7 +665,11 @@ void DeleteAllObjects(void)
 		DeleteObject(gFirstNodePtr);
 		
 	FlushObjectDeleteQueue();
+#if 1	//NOQUESA
+	printf("TODO NOQUESA: InitReflectionMapQueue?\n");
+#else
 	InitReflectionMapQueue();						// also purge data from here
+#endif
 }
 
 

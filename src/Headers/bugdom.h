@@ -63,6 +63,7 @@ extern "C"
 #include "tween.h"
 #include "mousesmoothing.h"
 #include "frustumculling.h"
+#include "renderer.h"
 
 #ifdef __cplusplus
 };

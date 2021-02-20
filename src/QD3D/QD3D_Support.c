@@ -43,6 +43,15 @@ static void DrawNormal(TQ3ViewObject view);
 /*    VARIABLES      */
 /*********************/
 
+
+SDL_GLContext					gGLContext;
+RenderStats						gRenderStats;
+
+GLuint 							gShadowGLTextureName		= 0;
+
+int								gWindowWidth				= GAME_VIEW_WIDTH;
+int								gWindowHeight				= GAME_VIEW_HEIGHT;
+
 static TQ3CameraObject			gQD3D_CameraObject;
 TQ3GroupObject					gQD3D_LightGroup;
 static TQ3ViewObject			gQD3D_ViewObject;

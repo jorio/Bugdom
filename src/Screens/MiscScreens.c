@@ -371,8 +371,12 @@ Boolean			fo = false;
 		}
 
 		MoveObjects();
-		
+
+#if 1	//NOQUESA
+		printf("TODO NOQUESA: CalcEnvMapCoords\n");
+#else
 		CalcEnvironmentMappingCoords(&gGameViewInfoPtr->currentCameraCoords);
+#endif
 		QD3D_DrawScene(gGameViewInfoPtr,DrawObjects);	
 		
 		fotime += gFramesPerSecondFrac;

@@ -15,7 +15,6 @@ extern	NewObjectDefinitionType	gNewObjectDefinition;
 extern	ObjNode				*gCurrentNode;
 extern	float				gFramesPerSecondFrac;
 extern	TQ3Point3D			gCoord;
-extern	TQ3Object	gKeepBackfaceStyleObject;
 extern	TQ3TriMeshData	**gLocalTriMeshesOfSkelType;
 extern	u_short			**gFloorMap;
 
