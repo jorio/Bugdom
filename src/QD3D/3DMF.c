@@ -296,24 +296,16 @@ void LoadGrouped3DMF(FSSpec *spec, Byte groupNum)
 
 void Free3DMFGroup(Byte groupNum)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-short	i;
-
-	for (i = 0; i < gNumObjectsInGroupList[groupNum]; i++)			// dispose of old objects (or at least this reference)
+	if (gObjectGroupFile[groupNum] != nil)
 	{
-		if (gObjectGroupList[groupNum][i] != nil)
-		{
-			Q3Object_Dispose(gObjectGroupList[groupNum][i]);
-			gObjectGroupList[groupNum][i] = nil;
-		}
+		Render_Dispose3DMFTextures(gObjectGroupFile[groupNum]);
+		Q3MetaFile_Dispose(gObjectGroupFile[groupNum]);
+		gObjectGroupFile[groupNum] = nil;
 	}
-	
-	for (i = 0; i < MAX_OBJECTS_IN_GROUP; i++)						// make sure to init the entire list to be safe
-		gObjectGroupList[groupNum][i] = nil;
+
+	memset(gObjectGroupList[groupNum], 0, sizeof(gObjectGroupList[groupNum]));	// make sure to init the entire list to be safe
 
 	gNumObjectsInGroupList[groupNum] = 0;
-#endif
 }
 
 
