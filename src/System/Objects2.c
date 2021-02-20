@@ -404,9 +404,9 @@ ObjNode				*theNode;
 			
 		if (theNode->StatusBits & STATUS_BIT_HIDDEN)			// if hidden then treat as OFF
 			goto draw_off;
-		
-		if (theNode->BaseGroup == nil)							// quick check if any geometry at all
-			if (theNode->Genre != SKELETON_GENRE)
+
+		if (0 == theNode->NumMeshes)							// quick check if any geometry at all
+			if (theNode->Genre != SKELETON_GENRE)				// TODO NOQUESA: i don't think this condition still matters with new renderer
 				goto next;
 
 		if (theNode->StatusBits & STATUS_BIT_DONTCULL)			// see if dont want to use our culling

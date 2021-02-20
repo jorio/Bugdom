@@ -265,16 +265,11 @@ void AttachGeometryToDisplayGroupObject(ObjNode* theNode, int numMeshes, TQ3TriM
 
 void CreateBaseGroup(ObjNode *theNode)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-TQ3GroupPosition		myGroupPosition;
 TQ3Matrix4x4			transMatrix,scaleMatrix,rotMatrix;
-TQ3TransformObject		transObject;
 
 				/* CREATE THE GROUP OBJECT */
-				
-	theNode->BaseGroup = (TQ3Object)Q3OrderedDisplayGroup_New();
-	GAME_ASSERT(theNode->BaseGroup);
+
+	theNode->NumMeshes = 0;
 
 					/* SETUP BASE MATRIX */
 			
@@ -299,7 +294,7 @@ TQ3TransformObject		transObject;
 						 &transMatrix,
 						 &theNode->BaseTransformMatrix);
 
-
+#if 0	// NOQUESA
 					/* CREATE A MATRIX XFORM */
 
 	transObject = (TQ3TransformObject)Q3MatrixTransform_New(&theNode->BaseTransformMatrix);			// make matrix xform object

@@ -545,13 +545,13 @@ float	fps;
 			UpdateLoseFire();
 			gU += fps * .1f;
 			gV += fps * .05f;
-			QD3D_ScrollUVs(gThrone->BaseGroup, gU, gV, 6);
+			QD3D_ScrollUVs(gThrone/*->BaseGroup*/, gU, gV, 6);
 		}
 		else
 		{
 			gU += fps * .1f;
 			gV += fps * .05f;
-			QD3D_ScrollUVs(gThrone->BaseGroup, gU, gV, 6);
+			QD3D_ScrollUVs(gThrone/*->BaseGroup*/, gU, gV, 6);
 		}
 		
 	}while(duration > 0.0f);

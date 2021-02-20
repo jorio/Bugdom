@@ -312,7 +312,7 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, textBuffer, &floppyLabelPictSpec);
 	TQ3ShaderObject shaderObject = QD3D_TGAToTexture(&floppyLabelPictSpec);
 	GAME_ASSERT(shaderObject);
-	QD3D_ReplaceGeometryTexture(newFloppy->BaseGroup, shaderObject);
+	QD3D_ReplaceGeometryTexture(newFloppy/*->BaseGroup*/, shaderObject);
 
 //	gPickables[gNumPickables++] = newFloppy->BaseGroup;
 

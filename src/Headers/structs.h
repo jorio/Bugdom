@@ -281,8 +281,8 @@ struct ObjNode
 	
 		
 	TQ3Matrix4x4		BaseTransformMatrix;	// matrix which contains all of the transforms for the object as a whole
-	TQ3TransformObject	BaseTransformObject;	// extra LEGAL object ref to BaseTransformMatrix (other legal ref is kept in BaseGroup)
-	TQ3Object			BaseGroup;				// group containing all geometry,etc. for this object (for drawing)
+//	TQ3TransformObject	BaseTransformObject;	// extra LEGAL object ref to BaseTransformMatrix (other legal ref is kept in BaseGroup)
+//	TQ3Object			BaseGroup;				// group containing all geometry,etc. for this object (for drawing)
 	TQ3BoundingSphere	BoundingSphere;			// radius use for object culling calculation
 
 	int						NumMeshes;
