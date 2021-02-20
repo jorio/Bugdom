@@ -48,20 +48,8 @@ static void DrawNormal(TQ3ViewObject view);
 SDL_GLContext					gGLContext;
 RenderStats						gRenderStats;
 
-GLuint 							gShadowGLTextureName		= 0;
-
 int								gWindowWidth				= GAME_VIEW_WIDTH;
 int								gWindowHeight				= GAME_VIEW_HEIGHT;
-
-static TQ3CameraObject			gQD3D_CameraObject;
-TQ3GroupObject					gQD3D_LightGroup;
-static TQ3ViewObject			gQD3D_ViewObject;
-static TQ3DrawContextObject		gQD3D_DrawContext;
-static TQ3RendererObject		gQD3D_RendererObject;
-static TQ3ShaderObject			gQD3D_ShaderObject,gQD3D_NullShaderObject;
-static	TQ3StyleObject			gQD3D_BackfacingStyle;
-static	TQ3StyleObject			gQD3D_FillStyle;
-static	TQ3StyleObject			gQD3D_InterpolationStyle;
 
 float	gFramesPerSecond = DEFAULT_FPS;				// this is used to maintain a constant timing velocity as frame rates differ
 float	gFramesPerSecondFrac = 1/DEFAULT_FPS;
@@ -318,34 +306,22 @@ QD3DSetupOutputType	*outputPtr;
 
 void QD3D_DisposeWindowSetup(QD3DSetupOutputType **dataHandle)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
 QD3DSetupOutputType	*data;
 
-	gQD3D_DrawContext = nil;										// this is no longer valid
-
 	data = *dataHandle;
-	GAME_ASSERT(data);												// see if this setup exists
+	GAME_ASSERT(data);										// see if this setup exists
 
-	Overlay_Dispose();												// source port addition
+	Render_Dispose2DCover(); // Source port addition - release backdrop GL texture
 
-	Q3Object_Dispose(data->viewObject);
-	Q3Object_Dispose(data->interpolationStyle);
-	Q3Object_Dispose(data->backfacingStyle);
-	Q3Object_Dispose(data->fillStyle);
-	Q3Object_Dispose(data->cameraObject);
-	Q3Object_Dispose(data->lightGroup);
-	Q3Object_Dispose(data->drawContext);
-	Q3Object_Dispose(data->shaderObject);
-	Q3Object_Dispose(data->nullShaderObject);
-		
+	SDL_GL_DeleteContext(gGLContext);						// dispose GL context
+	gGLContext = nil;
+
 	data->isActive = false;									// now inactive
 	
 		/* FREE MEMORY & NIL POINTER */
 		
 	DisposePtr((Ptr)data);
 	*dataHandle = nil;
-#endif
 }
 
 
