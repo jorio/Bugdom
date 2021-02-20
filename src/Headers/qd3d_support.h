@@ -76,6 +76,7 @@ typedef struct
 typedef struct
 {
 	Boolean					isActive;
+#if 0	// NOQUESA
 	TQ3ViewObject			viewObject;
 	TQ3ShaderObject			shaderObject;
 	TQ3ShaderObject			nullShaderObject;
@@ -85,10 +86,14 @@ typedef struct
 	TQ3CameraObject			cameraObject;	// another ref is in viewObject, this one's just for convenience!
 	TQ3GroupObject			lightGroup;		// another ref is in viewObject, this one's just for convenience!
 	TQ3DrawContextObject	drawContext;	// another ref is in viewObject, this one's just for convenience!
+#endif
 	WindowPtr				window;
 	Rect					paneClip;			// not pane size, but clip:  left = amount to clip off left
+	bool					needScissorTest;
+	int						backdropFit;
 	TQ3Point3D				currentCameraCoords;
 	TQ3Point3D				currentCameraLookAt;
+//	TQ3CameraPlacement		cameraPlacement;
 	float					hither,yon;
 	QD3DLightDefType		lightList;			// a copy of the input light data from the SetupInputType
 	Boolean					enableMultisamplingByDefault;		// source port add

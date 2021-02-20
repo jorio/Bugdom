@@ -18,7 +18,6 @@ extern	TerrainYCoordType		**gMapYCoords;
 extern	TerrainInfoMatrixType	**gMapInfoMatrix;
 extern	TerrainItemEntryType 	**gMasterItemList;
 extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	float					gYon;
 extern	long					gNumSplines;
 extern	SplineDefType			**gSplineList;
 extern	FenceDefType	*gFenceList;

@@ -290,6 +290,7 @@ Boolean			fo = false;
 	viewDef.view.clearColor.r 		= 0;
 	viewDef.view.clearColor.g 		= 0;
 	viewDef.view.clearColor.b		= 0;
+	viewDef.view.clearColor.b		= 1;	// NOQUESA: FOR TESTING
 	viewDef.styles.usePhong 		= false;
 
 	viewDef.lights.numFillLights 	= 2;

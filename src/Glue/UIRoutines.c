@@ -204,6 +204,9 @@ void MakeSpiderButton(
 
 int UpdateHoveredPickID(void)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+	return -1;
+#if 0	// NOQUESA
 	gHoveredPick = -1;
 
 	Point		mouse;
@@ -221,6 +224,7 @@ int UpdateHoveredPickID(void)
 	}
 
 	return gHoveredPick;
+#endif
 }
 
 void NukeObjectsInSlot(u_short objNodeSlotID)

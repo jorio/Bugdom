@@ -13,6 +13,7 @@
 
 #include "3dmath.h"
 
+extern	SDL_Window	*gSDLWindow;
 extern	WindowPtr			gCoverWindow;
 extern	Boolean		gShowDebug;
 extern	Byte		gDemoMode;
@@ -68,8 +69,6 @@ float	gFramesPerSecondFrac = 1/DEFAULT_FPS;
 static TQ3FogMode			gFogMode;
 static float		gFogStart,gFogEnd,gFogDensity;
 static TQ3ColorARGB	gFogColor;
-
-float			gYon;
 
 Boolean		gQD3DInitialized = false;
 
@@ -195,10 +194,7 @@ TQ3Vector3D			fillDirection2 = { -.8, .8, -.2 };
 
 void QD3D_SetupWindow(QD3DSetupInputType *setupDefPtr, QD3DSetupOutputType **outputHandle)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
 TQ3Vector3D	v = {0,0,0};
-TQ3Status	status;
 QD3DSetupOutputType	*outputPtr;
 
 			/* ALLOC MEMORY FOR OUTPUT DATA */
@@ -206,6 +202,11 @@ QD3DSetupOutputType	*outputPtr;
 	*outputHandle = (QD3DSetupOutputType *)AllocPtr(sizeof(QD3DSetupOutputType));
 	outputPtr = *outputHandle;
 	GAME_ASSERT(outputPtr);
+
+				/* CREATE & SET DRAW CONTEXT */
+
+	gGLContext = SDL_GL_CreateContext(gSDLWindow);									// also makes it current
+	GAME_ASSERT(gGLContext);
 
 				/* SETUP */
 
@@ -215,13 +216,9 @@ QD3DSetupOutputType	*outputPtr;
 	CreateLights(&setupDefPtr->lights);
 	SetStyles(&setupDefPtr->styles);	
 
-				/* DISPOSE OF EXTRA REFERENCES */
-				
-	status = Q3Object_Dispose(gQD3D_RendererObject);				// (is contained w/in gQD3D_ViewObject)
-	GAME_ASSERT(status);
-
 				/* PASS BACK INFO */
-				
+
+#if 0	// NOQUESA
 	outputPtr->viewObject 			= gQD3D_ViewObject;
 	outputPtr->interpolationStyle 	= gQD3D_InterpolationStyle;
 	outputPtr->fillStyle 			= gQD3D_FillStyle;
@@ -231,11 +228,13 @@ QD3DSetupOutputType	*outputPtr;
 	outputPtr->cameraObject 		= gQD3D_CameraObject;
 	outputPtr->lightGroup 			= gQD3D_LightGroup;
 	outputPtr->drawContext 			= gQD3D_DrawContext;
+#endif
 	outputPtr->window 				= setupDefPtr->view.displayWindow;	// remember which window
 	outputPtr->paneClip 			= setupDefPtr->view.paneClip;
+	outputPtr->needScissorTest 		= setupDefPtr->view.paneClip.left != 0 || setupDefPtr->view.paneClip.right != 0
+									|| setupDefPtr->view.paneClip.bottom != 0 || setupDefPtr->view.paneClip.top != 0;
 	outputPtr->hither 				= setupDefPtr->camera.hither;		// remember hither/yon
 	outputPtr->yon 					= setupDefPtr->camera.yon;
-	gYon 							= setupDefPtr->camera.yon;			// keep a quick global around for this
 	outputPtr->enableMultisamplingByDefault = setupDefPtr->enableMultisamplingByDefault;
 	
 	outputPtr->isActive = true;								// it's now an active structure
@@ -255,7 +254,55 @@ QD3DSetupOutputType	*outputPtr;
 		gFogDensity = setupDefPtr->lights.fogDensity;
 		gFogColor	= setupDefPtr->lights.useCustomFogColor ? setupDefPtr->lights.fogColor : setupDefPtr->view.clearColor;
 	}
-#endif
+
+
+
+				/* SET UP OPENGL RENDERER PROPERTIES NOW THAT WE HAVE A CONTEXT */
+
+	SDL_GL_SetSwapInterval(gGamePrefs.vsync ? 1 : 0);
+
+	CreateLights(&setupDefPtr->lights);
+
+	if (setupDefPtr->lights.useFog) //&& gGamePrefs.canDoFog)
+	{
+		printf("TODO NOQUESA: implement useFog\n");
+		/*
+		float camHither = setupDefPtr->camera.hither;
+		float camYon	= setupDefPtr->camera.yon;
+		float fogHither	= setupDefPtr->lights.fogHither;
+		float fogYon	= setupDefPtr->lights.fogYon;
+		glEnable(GL_FOG);
+		glHint(GL_FOG_HINT,		GL_NICEST);
+		glFogi(GL_FOG_MODE,		GL_LINEAR);
+		glFogf(GL_FOG_START,	camHither + fogHither * (camYon - camHither));
+		glFogf(GL_FOG_END,		camHither + fogYon    * (camYon - camHither));
+		glFogfv(GL_FOG_COLOR,	(float *)&setupDefPtr->view.clearColor);
+		//glFogf(GL_FOG_DENSITY,	0.5f);
+		 */
+	}
+	else
+		glDisable(GL_FOG);
+
+	glAlphaFunc(GL_GREATER, 0.4999f);
+
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	// Normalize normal vectors. Required so lighting looks correct on scaled meshes.
+	glEnable(GL_NORMALIZE);
+
+	glCullFace(GL_BACK);
+	glFrontFace(GL_CCW);									// CCW is front face
+
+	glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+
+	Render_InitState();
+	Render_Alloc2DCover(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
+
+	glClearColor(setupDefPtr->view.clearColor.r, setupDefPtr->view.clearColor.g, setupDefPtr->view.clearColor.b, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	CHECK_GL_ERROR();
+
 }
 
 
