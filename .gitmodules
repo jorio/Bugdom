@@ -1,6 +1,3 @@
-[submodule "extern/Quesa"]
-	path = extern/Quesa
-	url = https://github.com/jorio/Quesa
 [submodule "extern/Pomme"]
 	path = extern/Pomme
 	url = https://github.com/jorio/Pomme
