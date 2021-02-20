@@ -695,25 +695,16 @@ TQ3Status		status;
 
 void QD3D_DrawScene(QD3DSetupOutputType *setupInfo, void (*drawRoutine)(const QD3DSetupOutputType *))
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-TQ3Status				myStatus;
-TQ3ViewStatus			myViewStatus;
-
 	GAME_ASSERT(setupInfo);
-
 	GAME_ASSERT(setupInfo->isActive);									// make sure it's legit
 
 
 			/* START RENDERING */
 
-			
-	myStatus = Q3View_StartRendering(setupInfo->viewObject);			
-	if ( myStatus == kQ3Failure )
-	{
-		DoAlert("ERROR: Q3View_StartRendering Failed!");
-		QD3D_ShowRecentError();
-	}
+	int mkc = SDL_GL_MakeCurrent(gSDLWindow, gGLContext);
+	GAME_ASSERT_MESSAGE(mkc == 0, SDL_GetError());
+
+	Render_StartFrame();
 
 	CalcCameraMatrixInfo(setupInfo);						// update camera matrix
 
@@ -739,6 +730,7 @@ TQ3ViewStatus			myViewStatus;
 			/***************/
 			/* RENDER LOOP */
 			/***************/
+#if 0	// NOQUESA
 	do
 	{
 				/* DRAW STYLES */
@@ -771,9 +763,21 @@ TQ3ViewStatus			myViewStatus;
 		GAME_ASSERT(myViewStatus != kQ3ViewStatusError);
 
 	} while ( myViewStatus == kQ3ViewStatusRetraverse );	
+#endif
+
+	if (drawRoutine)
+		drawRoutine(setupInfo);
 	
 	QD3D_SetMultisampling(false);
-#endif
+
+
+			/******************/
+			/* DONE RENDERING */
+			/*****************/
+
+	Render_EndFrame();
+
+	SDL_GL_SwapWindow(gSDLWindow);
 }
 
 

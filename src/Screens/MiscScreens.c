@@ -311,6 +311,7 @@ Boolean			fo = false;
 			/* LOAD ART */
 			
 	err = FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:Pangea.3dmf", &spec);		// load other models
+	GAME_ASSERT(err == noErr);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_TITLE);	
 
 
