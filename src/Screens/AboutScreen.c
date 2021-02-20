@@ -271,8 +271,14 @@ static void AboutScreenDrawStuff(const QD3DSetupOutputType *setupInfo)
 {
 	DrawObjects(setupInfo);
 	QD3D_DrawParticles(setupInfo);
+
+
+
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 #if _DEBUG
 	PickableQuads_Draw(setupInfo->viewObject);
+#endif
 #endif
 }
 
