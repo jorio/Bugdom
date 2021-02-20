@@ -11,7 +11,7 @@
 
 #include "3dmath.h"
 
-extern	TQ3Object	gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
+extern	TQ3TriMeshFlatGroup		gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
 extern	TQ3BoundingSphere		gObjectGroupRadiusList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
 extern	TQ3Matrix4x4	gCameraWorldToViewMatrix,gCameraViewToFrustumMatrix;
 extern	short		gNumObjectsInGroupList[MAX_3DMF_GROUPS];
@@ -220,12 +220,15 @@ ObjNode	*newObj;
 
 void ResetDisplayGroupObject(ObjNode *theNode)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	DisposeObjectBaseGroup(theNode);									// dispose of old group
 	CreateBaseGroup(theNode);											// create new group object
 
 	GAME_ASSERT(theNode->Type < gNumObjectsInGroupList[theNode->Group]);	// see if illegal
 
 	AttachGeometryToDisplayGroupObject(theNode,gObjectGroupList[theNode->Group][theNode->Type]);	// attach geometry to group
+#endif
 }
 
 

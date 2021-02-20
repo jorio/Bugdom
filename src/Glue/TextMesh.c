@@ -6,7 +6,7 @@
 
 extern	NewObjectDefinitionType		gNewObjectDefinition;
 extern	FSSpec						gDataSpec;
-extern	TQ3Object					gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
+extern	TQ3TriMeshFlatGroup			gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
 
 static const TextMeshDef gDefaultTextMeshDef =
 {
@@ -214,6 +214,8 @@ static void MakeText(
 
 void TextMesh_Load(void)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0
 	FSSpec spec;
 
 	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:HighScores.3dmf", &spec);
@@ -224,6 +226,7 @@ void TextMesh_Load(void)
 	{
 		ForEachTriMesh(gObjectGroupList[MODEL_GROUP_TEXTMESH][i], QD3D_ClearDiffuseColor_TriMesh, NULL, ~0ull);
 	}
+#endif
 }
 
 void TextMesh_FillDef(TextMeshDef* def)

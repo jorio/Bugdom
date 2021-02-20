@@ -16,7 +16,6 @@ extern	float				gFramesPerSecondFrac,gFramesPerSecond;
 extern	TQ3Point3D			gCoord,gMyCoord;
 extern	TQ3Vector3D			gDelta;
 extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	TQ3Object			gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
 extern	TQ3BoundingBox 		gObjectGroupBBoxList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
 extern	QD3DSetupOutputType	*gGameViewInfoPtr;
 extern	u_short				gLevelTypeMask;

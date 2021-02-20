@@ -37,7 +37,9 @@ static TQ3FileObject	Create3DMFFileObject(const FSSpec *myFSSpec);
 
 FSSpec	gLast3DMF_FSSpec;
 
-TQ3Object			gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
+
+TQ3MetaFile*				gObjectGroupFile[MAX_3DMF_GROUPS];
+TQ3TriMeshFlatGroup			gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
 TQ3BoundingSphere	gObjectGroupRadiusList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
 TQ3BoundingBox 		gObjectGroupBBoxList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
 short				gNumObjectsInGroupList[MAX_3DMF_GROUPS];
@@ -241,14 +243,6 @@ TQ3Object		myObject;
 
 void LoadGrouped3DMF(FSSpec *spec, Byte groupNum)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-TQ3Object		the3DMFFile;
-TQ3Uns32		nObjects;
-TQ3Status 		status;
-TQ3Uns32		i;
-TQ3GroupPosition	position;
-
 	GAME_ASSERT(groupNum < MAX_3DMF_GROUPS);
 
 			/* DISPOSE OF ANY OLD OBJECTS */
@@ -260,44 +254,41 @@ TQ3GroupPosition	position;
 #endif
 
 			/* LOAD NEW GEOMETRY */
-			
-	the3DMFFile = Load3DMFModel(spec);
+
+	TQ3MetaFile* the3DMFFile = Q3MetaFile_Load3DMF(spec);
 	GAME_ASSERT(the3DMFFile);
 
-			/* BUILD OBJECT LIST */
-		
-	status = Q3Group_CountObjects(the3DMFFile, &nObjects);			// get # objects in group.  Assume each object is a separate linked item
-	GAME_ASSERT(status);
-	GAME_ASSERT(nObjects <= MAX_OBJECTS_IN_GROUP);					// see if overflow
+	gObjectGroupFile[groupNum] = the3DMFFile;
 
-	status = Q3Group_GetFirstPosition(the3DMFFile, &position);		// get 1st object in list
-	GAME_ASSERT(status);
+			/* UPLOAD TEXTURES TO GPU */
+
+	Render_Load3DMFTextures(the3DMFFile);
+
+			/* BUILD OBJECT LIST */
+
+	int nObjects = the3DMFFile->numTopLevelGroups;
+	GAME_ASSERT(nObjects > 0);
+	GAME_ASSERT(nObjects <= MAX_OBJECTS_IN_GROUP);
 
 			/*********************/
 			/* SCAN THRU OBJECTS */
 			/*********************/
-			
-	for (i = 0; i < nObjects; i++)
-	{
-		status = Q3Group_GetPositionObject(the3DMFFile, position, &gObjectGroupList[groupNum][i]);	// get ref to object
-		GAME_ASSERT(status);
 
-		QD3D_CalcObjectBoundingSphere(gGameViewInfoPtr, gObjectGroupList[groupNum][i], &gObjectGroupRadiusList[groupNum][i]); 	
-		QD3D_CalcObjectBoundingBox(gGameViewInfoPtr,gObjectGroupList[groupNum][i],&gObjectGroupBBoxList[groupNum][i]); // save bbox
-		
-		
-		Q3Group_GetNextPosition(the3DMFFile, &position);			// get position of next object
+	for (int i = 0; i < nObjects; i++)
+	{
+		TQ3TriMeshFlatGroup meshList = the3DMFFile->topLevelGroups[i];
+		gObjectGroupList[groupNum][i] = meshList;
+		GAME_ASSERT(0 != meshList.numMeshes);
+		GAME_ASSERT(nil != meshList.meshes);
+
+		QD3D_CalcObjectBoundingSphere(gGameViewInfoPtr, &gObjectGroupList[groupNum][i], &gObjectGroupRadiusList[groupNum][i]);
+		QD3D_CalcObjectBoundingBox(meshList.numMeshes, meshList.meshes, &gObjectGroupBBoxList[groupNum][i]); // save bbox
 	}
 
 	gNumObjectsInGroupList[groupNum] = nObjects;					// set # objects.
-	
-			/* NUKE ORIGINAL FILE */
-			
-	Q3Object_Dispose(the3DMFFile);
 
 
 	PatchGrouped3DMF(spec->cName, gObjectGroupList[groupNum], nObjects);
-#endif
 }
 
 

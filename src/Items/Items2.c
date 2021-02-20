@@ -15,7 +15,7 @@ extern	float				gFramesPerSecondFrac,gFramesPerSecond;
 extern	TQ3Point3D			gCoord,gMyCoord;
 extern	TQ3Vector3D			gDelta;
 extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	TQ3Object			gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
+extern	TQ3TriMeshFlatGroup	gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
 extern	TQ3BoundingBox 		gObjectGroupBBoxList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
 extern	QD3DSetupOutputType	*gGameViewInfoPtr;
 extern	u_short				gLevelTypeMask;
@@ -847,6 +847,8 @@ static void MoveHoneyTube(ObjNode *theNode)
 
 void UpdateHoneyTubeTextureAnimation(void)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	if (gLevelType == LEVEL_TYPE_HIVE)
 	{
 					/* MOVE UVS */
@@ -860,7 +862,7 @@ void UpdateHoneyTubeTextureAnimation(void)
 		
 		gHoneyTubeV -= .6f*gFramesPerSecondFrac;
 	}
-			
+#endif
 }
 
 #pragma mark -

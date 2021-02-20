@@ -17,7 +17,6 @@ extern	float					gFramesPerSecond,gFramesPerSecondFrac;
 extern	ObjNode					*gPlayerObj;
 extern	TQ3Point3D				gMyCoord;
 extern	Boolean					gPlayerGotKilledFlag,gDoCeiling;
-extern	TQ3Object				gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
 extern	TQ3Vector3D				gLightDirection1;
 extern	u_short					gLevelType;
 extern	Byte					gPlayerMode;

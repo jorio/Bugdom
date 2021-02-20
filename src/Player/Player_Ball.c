@@ -18,7 +18,6 @@ extern	Byte					gPlayerMode;
 extern	NewObjectDefinitionType	gNewObjectDefinition;
 extern	QD3DSetupOutputType		*gGameViewInfoPtr;
 extern	float					gPlayerMaxSpeed,gMyDistToFloor,gBallTimer;
-extern	TQ3Object				gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
 extern	unsigned long 			gInfobarUpdateBits;
 extern	Boolean					gPlayerCanMove,gPlayerUsingKeyControl;
 extern	TQ3TriMeshData			**gLocalTriMeshesOfSkelType;
