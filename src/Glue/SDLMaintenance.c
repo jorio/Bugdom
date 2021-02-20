@@ -4,22 +4,21 @@
 
 #include "bugdom.h"
 #include "killmacmouseacceleration.h"
+#include "version.h"
 
 extern SDL_Window*			gSDLWindow;
 extern float				gFramesPerSecond;
 extern PrefsType			gGamePrefs;
 extern long					gEatMouse;
 char						gTypedAsciiKey = '\0';
+extern RenderStats			gRenderStats;
+extern TQ3Point3D			gMyCoord;
 
 #if _DEBUG
-static struct
-{
-	UInt32 lastUpdateAt;
-	UInt32 frameAccumulator;
-	char titleBuffer[1024];
-} debugText;
-
-static const int kDebugTextUpdateInterval = 250;
+static const uint32_t	kDebugTextUpdateInterval = 50;
+static uint32_t			gDebugTextFrameAccumulator = 0;
+static uint32_t			gDebugTextLastUpdatedAt = 0;
+static char				gDebugTextBuffer[1024];
 #endif
 
 void DoSDLMaintenance()
@@ -43,16 +42,29 @@ void DoSDLMaintenance()
 	}
 
 #if _DEBUG
-	UInt32 now = SDL_GetTicks();
-	UInt32 ticksElapsed = now - debugText.lastUpdateAt;
-	if (ticksElapsed >= kDebugTextUpdateInterval) {
-		float fps = 1000 * debugText.frameAccumulator / (float)ticksElapsed;
-		snprintf(debugText.titleBuffer, 1024, "Bugdom - %d fps", (int)round(fps));
-		SDL_SetWindowTitle(gSDLWindow, debugText.titleBuffer);
-		debugText.frameAccumulator = 0;
-		debugText.lastUpdateAt = now;
+	//if (gGamePrefs.debugInfoInTitleBar)
+	{
+		uint32_t ticksNow = SDL_GetTicks();
+		uint32_t ticksElapsed = ticksNow - gDebugTextLastUpdatedAt;
+		if (ticksElapsed >= kDebugTextUpdateInterval)
+		{
+			float fps = 1000 * gDebugTextFrameAccumulator / (float)ticksElapsed;
+			snprintf(
+					gDebugTextBuffer, sizeof(gDebugTextBuffer),
+					"Bugdom %s - fps:%d tris:%d meshq:%d - x:%.0f z:%.0f",
+					PROJECT_VERSION,
+					(int)round(fps),
+					gRenderStats.trianglesDrawn,
+					gRenderStats.meshQueueSize,
+					gMyCoord.x,
+					gMyCoord.z
+			);
+			SDL_SetWindowTitle(gSDLWindow, gDebugTextBuffer);
+			gDebugTextFrameAccumulator = 0;
+			gDebugTextLastUpdatedAt = ticksNow;
+		}
+		gDebugTextFrameAccumulator++;
 	}
-	debugText.frameAccumulator++;
 #endif
 
 	// Reset these on every new frame
