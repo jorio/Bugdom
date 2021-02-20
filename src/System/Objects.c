@@ -590,7 +590,9 @@ short			skelType;
 			/***********************/
 			/* SUBMIT THE GEOMETRY */
 			/***********************/
-						
+
+		theNode->RenderModifiers.statusBits = statusBits;
+
 		switch(theNode->Genre)
 		{
 			case	SKELETON_GENRE:
