@@ -42,6 +42,9 @@ extern	ObjNode				*gSaveYes,*gSaveNo;
 
 Boolean	PickMainMenuIcon(TQ3Point2D point, TQ3Int32 *pickID)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+	return false;
+#if 0	// NOQUESA
 TQ3PickObject			myPickObject;
 TQ3Uns32			myNumHits;
 TQ3Status				myErr;
@@ -85,6 +88,7 @@ int						i;
 
 	Q3Object_Dispose(myPickObject);	
 	return(false);
+#endif
 }
 
 
@@ -93,6 +97,9 @@ int						i;
 
 TQ3PickObject CreateDefaultPickObject(TQ3Point2D *point)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+	return nil;
+#if 0	// NOQUESA
 TQ3WindowPointPickData	myWPPickData;
 TQ3PickObject			myPickObject;
 
@@ -117,6 +124,7 @@ TQ3PickObject			myPickObject;
 	GAME_ASSERT(myPickObject);
 
 	return(myPickObject);
+#endif
 }
 
 
@@ -132,6 +140,9 @@ TQ3PickObject			myPickObject;
 
 Boolean	PickSaveGameIcon(TQ3Point2D point, TQ3Int32 *pickID)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+	return false;
+#if 0	// NOQUESA
 TQ3PickObject			myPickObject;
 TQ3Uns32			myNumHits;
 TQ3Status				myErr;
@@ -174,6 +185,7 @@ TQ3Status				myErr;
 
 	Q3Object_Dispose(myPickObject);	
 	return(false);
+#endif
 }
 
 

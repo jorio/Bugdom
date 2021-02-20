@@ -850,8 +850,8 @@ long		i;
 
 				/* CALC COORD OF MOUTH AND CENTER OF HEAD */
 				
-	FindJointFullMatrix(theNode, FIREANT_HEAD_LIMB, &m);		
-	Q3Point3D_To3DTransformArray(&off[0], &m, &p[0], 2, sizeof(TQ3Point3D), sizeof(TQ3Point3D));	
+	FindJointFullMatrix(theNode, FIREANT_HEAD_LIMB, &m);
+	Q3Point3D_To3DTransformArray(&off[0], &m, &p[0], 2);//, sizeof(TQ3Point3D), sizeof(TQ3Point3D));
 
 
 					/* CALC FIRE VECTOR */

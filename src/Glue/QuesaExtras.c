@@ -3,14 +3,18 @@
 // This file is part of Bugdom. https://github.com/jorio/bugdom
 
 #include "Pomme.h"
-#include <Quesa.h>
-#include <QuesaErrors.h>
-#include <QuesaStorage.h>  // For TQ3StorageObject
+#include <QD3D.h>
+//#include <QuesaErrors.h>
+//#include <QuesaStorage.h>  // For TQ3StorageObject
+#include <stdio.h>
 #include "gamepatches.h"
 #include <math.h>
 
 TQ3StorageObject Q3FSSpecStorage_New(const FSSpec* spec)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+	return nil;
+#if 0	// NOQUESA
 	short refNum;
 	long fileLength;
 	
@@ -32,6 +36,7 @@ TQ3StorageObject Q3FSSpecStorage_New(const FSSpec* spec)
 	DisposePtr(buffer);
 
 	return storageObject;
+#endif
 }
 
 TQ3Area GetAdjustedPane(
@@ -59,9 +64,12 @@ TQ3Area GetAdjustedPane(
 
 void FlushQuesaErrors()
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	TQ3Error err = Q3Error_Get(nil);
 	if (err != kQ3ErrorNone)
 	{
 		printf("%s: %d\n", __func__, err);
 	}
+#endif
 }

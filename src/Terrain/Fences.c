@@ -140,6 +140,8 @@ int	i;
 
 void DisposeFenceShaders(void)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 int	i;
 			/* DISPOSE OLD SHADER ATTRIBS */
 			
@@ -151,7 +153,7 @@ int	i;
 			gFenceShaderAttribs[i] = nil;
 		}
 	}
-
+#endif
 }
 
 
@@ -222,7 +224,10 @@ FencePointType			*nubs;
 			/***********************************************************/
 			/* LOAD FENCE SHADER TEXTURES & CONVERT INTO ATTRIBUTE SET */
 			/***********************************************************/
-					
+
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
+
 	for (i = 0; i < NUM_FENCE_SHADERS; i++)
 	{
 		TQ3ShaderObject	shader;
@@ -290,7 +295,8 @@ FencePointType			*nubs;
 		gFenceTriangles[j+1].pointIndices[1] = 0 + j;
 		gFenceTriangles[j+1].pointIndices[2] = 2 + j;	
 	}
-	
+
+#endif
 }
 
 
@@ -298,6 +304,9 @@ FencePointType			*nubs;
 
 void DrawFences(const QD3DSetupOutputType *setupInfo)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
+
 long			f,n,row,col,numNubs,type;
 FencePointType	*nubs;
 TQ3ViewObject 	view = setupInfo->viewObject;
@@ -382,6 +391,8 @@ drawit:
 	if (isNullShader)
 		Q3Shader_Submit(setupInfo->shaderObject, view);			// restore lambert shader
 	Q3BackfacingStyle_Submit(kQ3BackfacingStyleRemove, view);
+
+#endif
 }
 
 
@@ -593,6 +604,9 @@ next_fence:;
 
 static void SubmitFence(int f, TQ3ViewObject viewObj, float camX, float camZ)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
+
 u_short					type;
 float					u,height;
 long					i,numNubs,j;
@@ -733,10 +747,6 @@ FencePointType			*nubs;
 		/*******************/
 						
 	Q3TriMesh_Submit(&gFenceTriMeshData, viewObj);
-}	
-
-
-
-
-
+#endif
+}
 

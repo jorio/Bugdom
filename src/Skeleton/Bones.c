@@ -52,6 +52,9 @@ static	TQ3Vector3D			gTransformedNormals[MAX_DECOMPOSED_NORMALS];	// temporary b
 
 void LoadBonesReferenceModel(const FSSpec	*inSpec, SkeletonDefType *skeleton)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
+
 TQ3Object		newModel;
 
 	newModel = Load3DMFModel(inSpec);
@@ -63,6 +66,7 @@ TQ3Object		newModel;
 	DecomposeReferenceModel(newModel);
 	
 	Q3Object_Dispose(newModel);				// we dont need the original model anymore
+#endif
 }
 
 
@@ -86,6 +90,9 @@ static void DecomposeReferenceModel(TQ3Object theModel)
 
 static void DecompRefMo_Recurse(TQ3Object inObj)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
+
 TQ3GroupPosition	position;
 TQ3Object   		newObj;
 TQ3ObjectType		oType;
@@ -119,6 +126,7 @@ TQ3ObjectType		oType;
    			}
   		}
 	}
+#endif
 }
 
 
@@ -126,6 +134,10 @@ TQ3ObjectType		oType;
 
 static void DecomposeATriMesh(TQ3Object theTriMesh)
 {
+
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
+
 TQ3Status			status;
 unsigned long		numVertecies,vertNum;
 TQ3Point3D			*vertexList;
@@ -220,6 +232,7 @@ added_norm:
 
 	gCurrentSkeleton->numDecomposedTriMeshes++;											// inc # of trimeshes in decomp list
 
+#endif
 }
 
 
@@ -283,6 +296,9 @@ SkeletonObjDataType	*currentSkelObjData;
 
 static void UpdateSkinnedGeometry_Recurse(short joint, short skelType)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
+
 long					numChildren,numPoints,p,i,numRefs,r,triMeshNum,p2,c,numNormals,n;
 TQ3Matrix4x4			oldM;
 TQ3Vector3D				*normalAttribs;
@@ -483,6 +499,7 @@ TQ3TriMeshData			*localTriMeshes = &gLocalTriMeshesOfSkelType[skelType][0];
 		gMatrix = oldM;																	// pop matrix
 	}
 
+#endif
 }
 
 

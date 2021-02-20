@@ -8,7 +8,7 @@
 #include "PommeGraphics.h"
 #include "version.h"
 
-#include <Quesa.h>
+#include <QD3D.h>
 #include <SDL.h>
 
 #include "gamepatches.h"
@@ -117,10 +117,13 @@ int CommonMain(int argc, const char** argv)
 	gCoverWindowPixPtr = (UInt32*) GetPixBaseAddr(GetGWorldPixMap(gCoverWindow));
 
 	// Clear window
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	Overlay_BeginExclusive();
 	Overlay_Clear(0xFFA5A5A5);
 	Overlay_Flush();
 	Overlay_EndExclusive();
+#endif
 
 	fs::path dataPath = FindGameData();
 #if !(__APPLE__)
@@ -137,12 +140,15 @@ int CommonMain(int argc, const char** argv)
 		}
 	}
 
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	// Initialize Quesa
 	auto qd3dStatus = Q3Initialize();
 	if (qd3dStatus != kQ3Success)
 	{
 		throw std::runtime_error("Couldn't initialize Quesa.");
 	}
+#endif
 
 	// Start the game
 	try

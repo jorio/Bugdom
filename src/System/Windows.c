@@ -309,6 +309,8 @@ PixMapHandle pm;
 // Adjusts the clipping pane and camera aspect ratio.
 void QD3D_OnWindowResized(int windowWidth, int windowHeight)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	if (!gGameViewInfoPtr)
 		return;
 
@@ -318,6 +320,7 @@ void QD3D_OnWindowResized(int windowWidth, int windowHeight)
 	float aspectRatioXToY = (pane.max.x-pane.min.x)/(pane.max.y-pane.min.y);
 
 	Q3ViewAngleAspectCamera_SetAspectRatio(gGameViewInfoPtr->cameraObject, aspectRatioXToY);
+#endif
 }
 
 

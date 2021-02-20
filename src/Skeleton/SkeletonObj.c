@@ -89,6 +89,9 @@ short	i,numDecomp;
 
 static void CalcSkeletonBoundingSphere(long n)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
+
 long	i;
 TQ3Status status;
 
@@ -105,6 +108,8 @@ TQ3Status status;
 			GAME_ASSERT(status);
 		}
 	}while(Q3View_EndBoundingSphere(gGameViewInfoPtr->viewObject, &gSkeletonBoundingSpheres[n]) == kQ3ViewStatusRetraverse);
+
+#endif
 }
 
 
@@ -262,7 +267,10 @@ long	numAnims,numJoints;
 //
 
 static void DisposeSkeletonDefinitionMemory(SkeletonDefType *skeleton)
-{	
+{
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
+
 short	j,numAnims,numJoints;
 
 	if (skeleton == nil)
@@ -329,6 +337,7 @@ short	j,numAnims,numJoints;
 			/* DISPOSE OF MASTER DEFINITION BLOCK */
 			
 	DisposePtr((Ptr)skeleton);
+#endif
 }
 
 #pragma mark -

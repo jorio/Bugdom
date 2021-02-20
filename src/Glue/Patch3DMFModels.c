@@ -46,6 +46,8 @@ enum
 
 static void SetUVClamp(TQ3TriMeshData triMeshData, void* userData)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	bool uClamp = ((uintptr_t)userData) & 1;
 	bool vClamp = ((uintptr_t)userData) & 2;
 
@@ -64,6 +66,7 @@ static void SetUVClamp(TQ3TriMeshData triMeshData, void* userData)
 	/* DISPOSE REFS */
 
 	Q3Object_Dispose(shader);
+#endif
 }
 
 /**************************** QD3D: SET TEXTURE ALPHA THRESHOLD *******************************/
@@ -82,6 +85,8 @@ static void SetUVClamp(TQ3TriMeshData triMeshData, void* userData)
 
 static void SetAlphaTest(TQ3TriMeshData triMeshData, void* userData_thresholdFloatPtr)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	// SEE IF HAS A TEXTURE
 	if (Q3AttributeSet_Contains(triMeshData.triMeshAttributeSet, kQ3AttributeTypeSurfaceShader))
 	{
@@ -118,6 +123,7 @@ static void SetAlphaTest(TQ3TriMeshData triMeshData, void* userData_thresholdFlo
 		Q3Object_Dispose(texture);
 		Q3Object_Dispose(shader);
 	}
+#endif
 }
 
 /****************************/
@@ -139,6 +145,8 @@ void PatchSkeleton3DMF(const char* cName, TQ3Object newModel)
 
 void PatchGrouped3DMF(const char* cName, TQ3Object* objects, int nObjects)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	/************************************************************/
 	/* ADD UV CLAMPING IN SOME SURFACE SHADERS TO PREVENT SEAMS */
 	/* AND DETERMINE WHICH MESHES NEED TRUE ALPHA BLENDING      */
@@ -223,4 +231,5 @@ void PatchGrouped3DMF(const char* cName, TQ3Object* objects, int nObjects)
 			ForEachTriMesh(objects[i], SetAlphaTest, (void *) &gTextureAlphaThreshold, ~0ull);
 		}
 	}
+#endif
 }

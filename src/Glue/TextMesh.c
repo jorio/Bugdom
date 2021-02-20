@@ -59,6 +59,8 @@ static void MakeText(
 		const char* text,
 		bool isShadow)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	float			x				= def->coord.x + (isShadow ? def->shadowOffset.x*def->scale : 0);
 	float 			y				= def->coord.y + (isShadow ? def->shadowOffset.y*def->scale : 0);
 	float 			z				= def->coord.z + (isShadow? -0.1f: 0);
@@ -207,6 +209,7 @@ static void MakeText(
 	}
 
 	Q3Object_Dispose(attrs);
+#endif
 }
 
 void TextMesh_Load(void)

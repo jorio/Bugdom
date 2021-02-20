@@ -513,6 +513,9 @@ char		header[PREFS_HEADER_LENGTH + 1];
 		prefBlock->mouseSensitivityLevel = DEFAULT_MOUSE_SENSITIVITY_LEVEL;
 	}
 
+#if _DEBUG
+	prefBlock->fullscreen = false;
+#endif
 	
 	return(noErr);
 }

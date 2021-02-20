@@ -139,6 +139,8 @@ float	fps = gFramesPerSecondFrac;
 
 void InitParticleSystem(void)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 short	i;
 
 			/* INIT GROUP ARRAY */
@@ -168,6 +170,7 @@ short	i;
 		
 		gParticleShadersLoaded = true;
 	}
+#endif
 }
 
 
@@ -188,7 +191,9 @@ long	i;
 
 static void DeleteParticleGroup(long groupNum)
 {
-TQ3TriMeshData	*tm;
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
+	TQ3TriMeshData	*tm;
 
 	if (gParticleGroups[groupNum])
 	{
@@ -208,6 +213,7 @@ TQ3TriMeshData	*tm;
 		DisposePtr((Ptr)gParticleGroups[groupNum]);
 		gParticleGroups[groupNum] = nil;
 	}
+#endif
 }
 
 
@@ -221,6 +227,9 @@ TQ3TriMeshData	*tm;
 short NewParticleGroup(u_long magicNum, Byte type, Byte flags, float gravity, float magnetism,
 					 float baseScale, float decayRate, float fadeRate, Byte particleTextureNum)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+	return -1;
+#if 0	// NOQUESA
 short					p,i,j,k;
 TQ3TriMeshData			*tm;
 TQ3TriMeshTriangleData	*t;
@@ -322,7 +331,8 @@ TQ3Param2D				*uv;
 			/* NOTHING FREE */
 			
 //	DoFatalAlert("NewParticleGroup: no free groups!");
-	return(-1);	
+	return(-1);
+#endif
 }
 
 
@@ -595,6 +605,8 @@ TQ3Vector3D	*delta;
 
 void DrawParticleGroup(const QD3DSetupOutputType *setupInfo)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 float			baseScale;
 long			g,p,n,i;
 TQ3ColorRGB		*faceColor;
@@ -661,7 +673,7 @@ TQ3ViewObject	view = setupInfo->viewObject;
 				v[2] = (TQ3Point3D) { -S,-S, 0 };
 				v[3] = (TQ3Point3D) { -S, S, 0 };
 
-				Q3Point3D_To3DTransformArray(&v[0], &m, &tm->points[n*4], 4, sizeof(TQ3Point3D), sizeof(TQ3Point3D));
+				Q3Point3D_To3DTransformArray(&v[0], &m, &tm->points[n*4], 4);//, sizeof(TQ3Point3D), sizeof(TQ3Point3D));
 
 					/* UPDATE BBOX */
 						
@@ -719,6 +731,7 @@ TQ3ViewObject	view = setupInfo->viewObject;
 	QD3D_SetTriangleCacheMode(true);
 	QD3D_SetAdditiveBlending(false);
 	QD3D_ReEnableFog(setupInfo);
+#endif
 }
 
 /**************** VERIFY PARTICLE GROUP MAGIC NUM ******************/

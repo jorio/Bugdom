@@ -232,6 +232,8 @@ TerrainItemEntryType	*itemPtr;
 
 void InitInfobar(void)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 FSSpec		spec;
 Rect		r;
 
@@ -271,7 +273,8 @@ Rect		r;
 	gBallIconIsDisplayed = false;
 
 	gInfobarUpdateBits = 0xffffffff;
-	UpdateInfobar();	
+	UpdateInfobar();
+#endif
 }
 
 

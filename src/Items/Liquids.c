@@ -162,6 +162,8 @@ void InitLiquids(void)
 
 void DisposeLiquids(void)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	if (gWaterShader)
 	{
 		Q3Object_Dispose(gWaterShader);
@@ -185,6 +187,7 @@ void DisposeLiquids(void)
 		Q3Object_Dispose(gLavaShader);
 		gLavaShader = nil;
 	}
+#endif
 }
 
 /*************** UPDATE LIQUID ANIMATION ****************/
@@ -258,6 +261,8 @@ next:
 
 static void InitWaterPatch(void)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	gWaterU = gWaterV = 0.0f;
 	gWaterU2 = gWaterV2 = 0.0f;
 	gNumWaterPatches = 0;
@@ -346,6 +351,7 @@ static void InitWaterPatch(void)
 		gWaterMeshTess.vertexAttributeTypes			= &gWaterVertexAttribTypes[0];
 		gWaterMeshTess.bBox.isEmpty 				= kQ3False;				
 	}
+#endif
 }
 
 /************************* ADD WATER PATCH *********************************/
@@ -560,6 +566,8 @@ static void UpdateWaterTextureAnimation(void)
 
 static void DrawWaterPatch(ObjNode *theNode, TQ3ViewObject view)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 float			patchW,patchD;
 float			x,y,z,left,back, right, front, width, depth;
 TQ3Point3D		*p;
@@ -687,6 +695,7 @@ TQ3ColorRGB		color;
 			/* CLEANUP */
 			
 	Q3Pop_Submit(view);
+#endif
 }
 
 /********************* DRAW WATER PATCH TESSELATED **********************/
@@ -696,6 +705,8 @@ TQ3ColorRGB		color;
 
 static void DrawWaterPatchTesselated(ObjNode *theNode, TQ3ViewObject view)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 float			x,y,z,left,back, right, front, width, depth;
 float			u,v;
 TQ3Point3D		*p;
@@ -846,6 +857,7 @@ TQ3TriMeshTriangleData	*t;
 			/* CLEANUP */
 			
 	Q3Pop_Submit(view);
+#endif
 }
 
 
@@ -860,6 +872,8 @@ TQ3TriMeshTriangleData	*t;
 
 static void InitHoneyPatch(void)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	gHoneyU = gHoneyV = 0.0f;
 	
 			/**********************/
@@ -907,6 +921,7 @@ static void InitHoneyPatch(void)
 		gHoneyMesh.vertexAttributeTypes			= &gHoneyVertexAttribTypes[0];
 		gHoneyMesh.bBox.isEmpty 				= kQ3False;				
 	}
+#endif
 }
 
 
@@ -1040,6 +1055,8 @@ static void UpdateHoneyTextureAnimation(void)
 
 static void DrawHoneyPatchTesselated(ObjNode *theNode, TQ3ViewObject view)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 float			x,y,z,left,back, right, front, width, depth;
 float			u,v;
 TQ3Point3D		*p;
@@ -1174,6 +1191,7 @@ TQ3TriMeshTriangleData	*t;
 			/* CLEANUP */
 			
 	Q3Pop_Submit(view);
+#endif
 }
 
 
@@ -1188,6 +1206,8 @@ TQ3TriMeshTriangleData	*t;
 
 static void InitSlimePatch(void)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	gSlimeU = gSlimeV = 0.0f;
 	
 			/**********************/
@@ -1237,6 +1257,7 @@ static void InitSlimePatch(void)
 		gSlimeMesh.vertexAttributeTypes			= &gSlimeVertexAttribTypes[0];
 		gSlimeMesh.bBox.isEmpty 				= kQ3False;				
 	}
+#endif
 }
 
 
@@ -1372,6 +1393,8 @@ static void UpdateSlimeTextureAnimation(void)
 
 static void DrawSlimePatchTesselated(ObjNode *theNode, TQ3ViewObject view)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 float			x,y,z,left,back, right, front, width, depth;
 float			u,v;
 TQ3Point3D		*p;
@@ -1505,6 +1528,7 @@ TQ3TriMeshTriangleData	*t;
 			/* CLEANUP */
 			
 	Q3Pop_Submit(view);
+#endif
 }
 
 #pragma mark -
@@ -1518,6 +1542,8 @@ TQ3TriMeshTriangleData	*t;
 
 static void InitLavaPatch(void)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	gLavaU = gLavaV = 0.0f;
 	
 			/**********************/
@@ -1567,6 +1593,7 @@ static void InitLavaPatch(void)
 		gLavaMesh.vertexAttributeTypes			= &gLavaVertexAttribTypes[0];
 		gLavaMesh.bBox.isEmpty 				= kQ3False;				
 	}
+#endif
 }
 
 
@@ -1699,6 +1726,8 @@ static void UpdateLavaTextureAnimation(void)
 
 static void DrawLavaPatchTesselated(ObjNode *theNode, TQ3ViewObject view)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 float			x,y,z,left,back, right, front, width, depth;
 float			u,v;
 TQ3Point3D		*p;
@@ -1833,10 +1862,5 @@ TQ3TriMeshTriangleData	*t;
 			/* CLEANUP */
 			
 	Q3Pop_Submit(view);
+#endif
 }
-
-
-
-
-
-

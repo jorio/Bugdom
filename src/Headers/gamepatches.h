@@ -26,11 +26,6 @@ OSErr DrawPictureToScreen(FSSpec* spec, short x, short y);
 void FlushQuesaErrors(void);
 
 //-----------------------------------------------------------------------------
-// Texture edge padding
-
-void ApplyEdgePadding(const TQ3Mipmap* mipmap);
-
-//-----------------------------------------------------------------------------
 // Patch 3DMF models
 
 void PatchSkeleton3DMF(const char* cName, TQ3Object newModel);

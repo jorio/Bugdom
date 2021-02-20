@@ -28,13 +28,11 @@ if(MSVC)
 endif()
 
 set(POMME_NO_VIDEO true)
-set(POMME_NO_QD3D true)  # We're using Quesa for now
 
 #------------------------------------------------------------------------------
 # DEPENDENCIES
 #------------------------------------------------------------------------------
 
-add_subdirectory(extern/Quesa)
 add_subdirectory(extern/Pomme)
 
 find_package(SDL2 REQUIRED COMPONENTS main)
@@ -182,8 +180,6 @@ set(GAME_HEADERS
 
 set(GAME_GLUE_SOURCES
 	${GAME_SRCDIR}/Main.cpp
-	${GAME_SRCDIR}/Glue/DrawPicture.cpp
-	${GAME_SRCDIR}/Glue/EdgePadding.cpp
 	${GAME_SRCDIR}/Glue/FrustumCulling.c
 	${GAME_SRCDIR}/Glue/GLFunctions.cpp
 	${GAME_SRCDIR}/Glue/GLOverlay.cpp
@@ -247,6 +243,7 @@ target_include_directories(${GAME_TARGET} PRIVATE
 	${SDL2_INCLUDE_DIRS}
 	${OPENGL_INCLUDE_DIR}
 	extern/Pomme/src
+	extern/Pomme/src/QD3D
 	${GAME_SRCDIR}
 	${GAME_SRCDIR}/Headers
 	${GAME_SRCDIR}/Headers/Glue
@@ -254,7 +251,6 @@ target_include_directories(${GAME_TARGET} PRIVATE
 )
 
 target_link_libraries(${GAME_TARGET}
-	Quesa_SDL
 	Pomme
 	${SDL2_LIBRARIES}
 	${OPENGL_LIBRARIES}
@@ -268,18 +264,6 @@ target_link_libraries(${GAME_TARGET}
 
 add_compile_definitions(
 	"$<$<CONFIG:DEBUG>:_DEBUG>"
-)
-
-target_compile_definitions(Quesa_SDL PUBLIC
-	QUESA_OS_SDL
-	QUESA_APPLY_FOG_COLOR_IN_ALL_PASSES
-	QUESA_NO_TRANSPARENCY_SORT
-	#"$<$<CONFIG:DEBUG>:Q3_DEBUG>"
-	"$<$<CONFIG:DEBUG>:QUESA_DUMP_SHADERS>"
-)
-
-target_compile_definitions(${GAME_TARGET} PRIVATE
-	QUESA_OS_SDL
 )
 
 if(WIN32)
@@ -301,7 +285,10 @@ if(NOT MSVC)
 		-Wno-multichar
 		-Wno-unknown-pragmas
 		-Wno-unused-parameter
-		"$<$<CXX_COMPILER_ID:GNU>:-Wno-unused-but-set-variable>"
+		$<$<CXX_COMPILER_ID:GNU>:-Wno-unused-but-set-variable>
+
+		-Werror=implicit-function-declaration
+		-Werror=return-type
 	)
 else()
 	target_compile_options(${GAME_TARGET} PRIVATE

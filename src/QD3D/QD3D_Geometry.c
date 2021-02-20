@@ -65,6 +65,9 @@ static short	gShaderNum;
 
 void QD3D_CalcObjectBoundingBox(QD3DSetupOutputType *setupInfo, TQ3Object theObject, TQ3BoundingBox	*boundingBox)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
+
 	GAME_ASSERT(setupInfo);
 	GAME_ASSERT(theObject);
 	GAME_ASSERT(boundingBox);
@@ -74,6 +77,7 @@ void QD3D_CalcObjectBoundingBox(QD3DSetupOutputType *setupInfo, TQ3Object theObj
 	{
 		Q3Object_Submit(theObject,setupInfo->viewObject);
 	}while(Q3View_EndBoundingBox(setupInfo->viewObject, boundingBox) == kQ3ViewStatusRetraverse);
+#endif
 }
 
 
@@ -81,6 +85,9 @@ void QD3D_CalcObjectBoundingBox(QD3DSetupOutputType *setupInfo, TQ3Object theObj
 
 void QD3D_CalcObjectBoundingSphere(QD3DSetupOutputType *setupInfo, TQ3Object theObject, TQ3BoundingSphere *sphere)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
+
 	GAME_ASSERT(setupInfo);
 	GAME_ASSERT(theObject);
 	GAME_ASSERT(sphere);
@@ -90,6 +97,7 @@ void QD3D_CalcObjectBoundingSphere(QD3DSetupOutputType *setupInfo, TQ3Object the
 	{
 		Q3Object_Submit(theObject,setupInfo->viewObject);
 	}while(Q3View_EndBoundingSphere(setupInfo->viewObject, sphere) == kQ3ViewStatusRetraverse);
+#endif
 }
 
 
@@ -113,6 +121,9 @@ float QD3D_CalcObjectRadius(TQ3Object theObject)
 
 static void CalcRadius_Recurse(TQ3Object obj)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
+
 TQ3GroupPosition	position;
 TQ3Object   		object,baseGroup;
 TQ3ObjectType		oType;
@@ -185,6 +196,8 @@ TQ3Matrix4x4  		stashMatrix;
   		}
   		gWorkMatrix = stashMatrix;										// pop matrix  		
 	}
+
+#endif
 }
 
 //===================================================================================================
@@ -198,6 +211,8 @@ TQ3Matrix4x4  		stashMatrix;
 
 void QD3D_InitParticles(void)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 long	i;
 
 	gNumParticles = 0;
@@ -238,6 +253,7 @@ long	i;
 		gParticles[i].vertAttribs[1].data = &gParticles[i].uvs[0];
 		gParticles[i].vertAttribs[1].attributeUseArray = nil;
 	}
+#endif
 }
 
 
@@ -270,6 +286,8 @@ long	i;
 
 void QD3D_ExplodeGeometry(ObjNode *theNode, float boomForce, Byte particleMode, long particleDensity, float particleDecaySpeed)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3Object theObject;
 
 	gBoomForce = boomForce;
@@ -302,6 +320,7 @@ TQ3Object theObject;
 		theObject = theNode->BaseGroup;						// get TQ3Object from ObjNode
 		ExplodeGeometry_Recurse(theObject);	
 	}
+#endif
 }
 
 
@@ -309,6 +328,8 @@ TQ3Object theObject;
 
 static void ExplodeGeometry_Recurse(TQ3Object obj)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3GroupPosition	position;
 TQ3Object   		object,baseGroup;
 TQ3ObjectType		oType;
@@ -362,6 +383,7 @@ TQ3Matrix4x4  		stashMatrix;
   		}
   		gWorkMatrix = stashMatrix;										// pop matrix  		
 	}
+#endif
 }
 
 
@@ -373,6 +395,8 @@ TQ3Matrix4x4  		stashMatrix;
 
 static void ExplodeTriMesh(TQ3Object theTriMesh, TQ3TriMeshData *inData)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3TriMeshData		triMeshData;
 TQ3Point3D			centerPt = {0,0,0};
 TQ3Vector3D			vertNormals[3],*normalPtr;
@@ -498,6 +522,7 @@ long				i;
 
 	if (theTriMesh)
 		Q3TriMesh_EmptyData(&triMeshData);
+#endif
 }
 
 
@@ -594,6 +619,8 @@ TQ3Matrix4x4	matrix,matrix2;
 
 void QD3D_DrawParticles(const QD3DSetupOutputType *setupInfo)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 long	i;
 TQ3ViewObject	view = setupInfo->viewObject;
 Boolean	usingNull = false;
@@ -640,6 +667,7 @@ Boolean	usingNull = false;
 	Q3Pop_Submit(view);													// restore state
 	if (usingNull)
 		Q3Shader_Submit(setupInfo->shaderObject, view);
+#endif
 }
 
 
@@ -672,6 +700,8 @@ void QD3D_ScrollUVs(TQ3Object theObject, float du, float dv, short whichShader)
 
 static void ScrollUVs_Recurse(TQ3Object obj, short whichShader)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3GroupPosition	position;
 TQ3Object   		object,baseGroup;
 TQ3ObjectType		oType;
@@ -739,6 +769,7 @@ TQ3Matrix4x4  		stashMatrix;
   		}
   		gWorkMatrix = stashMatrix;										// pop matrix  		
 	}
+#endif
 }
 
 
@@ -749,6 +780,8 @@ TQ3Matrix4x4  		stashMatrix;
 
 static void ScrollUVs_TriMesh(TQ3Object theTriMesh, short whichShader)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3TriMeshData		triMeshData;
 TQ3SurfaceShaderObject	shader;
 
@@ -771,6 +804,7 @@ TQ3SurfaceShaderObject	shader;
 		
 
 	Q3TriMesh_EmptyData(&triMeshData);
+#endif
 }
 
 
@@ -787,6 +821,8 @@ TQ3SurfaceShaderObject	shader;
 
 void QD3D_ReplaceGeometryTexture(TQ3Object obj, TQ3SurfaceShaderObject theShader)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3GroupPosition	position;
 TQ3Object   		object,baseGroup;
 TQ3ObjectType		oType;
@@ -838,6 +874,7 @@ TQ3TriMeshData		triMeshData;
    			}
   		}
 	}
+#endif
 }
 
 
@@ -852,6 +889,8 @@ TQ3TriMeshData		triMeshData;
 
 void QD3D_DuplicateTriMeshData(TQ3TriMeshData *inData, TQ3TriMeshData *outData)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3Uns32	numPoints,numVertexAttributeTypes;
 TQ3Uns32 	i;
 
@@ -905,6 +944,7 @@ TQ3Uns32 	i;
 		BlockMove(inData->vertexAttributeTypes[1].data, outData->vertexAttributeTypes[1].data,
 				 sizeof(TQ3Param2D) * numPoints);															// copy uv values into new array
 	}
+#endif
 }
 
 
@@ -916,6 +956,8 @@ TQ3Uns32 	i;
 
 void QD3D_FreeDuplicateTriMeshData(TQ3TriMeshData *inData)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	DisposePtr((Ptr)inData->points);
 	inData->points = nil;
 
@@ -930,7 +972,7 @@ void QD3D_FreeDuplicateTriMeshData(TQ3TriMeshData *inData)
 
 	DisposePtr((Ptr)inData->vertexAttributeTypes);
 	inData->vertexAttributeTypes = nil;
-	
+#endif
 }
 
         
@@ -945,6 +987,8 @@ void QD3D_FreeDuplicateTriMeshData(TQ3TriMeshData *inData)
 
 void QD3D_CopyTriMeshData(const TQ3TriMeshData *inData, TQ3TriMeshData *outData)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3Uns32	i, numPoints;
 
 			/* CLEAR UNWANTED FIELDS */
@@ -1023,6 +1067,7 @@ TQ3Uns32	i, numPoints;
 			/* COPY BBOX */
 			
 	outData->bBox = inData->bBox;
+#endif
 }
 
 
@@ -1033,6 +1078,8 @@ TQ3Uns32	i, numPoints;
 
 void QD3D_FreeCopyTriMeshData(TQ3TriMeshData *data)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	if (data->triMeshAttributeSet)
 		Q3Object_Dispose(data->triMeshAttributeSet);
 		
@@ -1047,7 +1094,7 @@ void QD3D_FreeCopyTriMeshData(TQ3TriMeshData *data)
 	DisposePtr((Ptr)data->vertexAttributeTypes);
 	
 
-
+#endif
 }
 
 
@@ -1063,6 +1110,8 @@ void ForEachTriMesh(
 		void* userData,
 		uint64_t triMeshMask)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	TQ3Object	frontier[OBJTREE_FRONTIER_STACK_LENGTH];
 	int			top = 0;
 
@@ -1129,6 +1178,7 @@ void ForEachTriMesh(
 	{
 		DoAlert("This group contains more trimeshes than can fit in the mask.");
 	}
+#endif
 }
 
 
@@ -1148,7 +1198,10 @@ void ForEachTriMesh(
 
 void QD3D_ClearDiffuseColor_TriMesh(TQ3TriMeshData triMeshData, void* userData)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	Q3AttributeSet_Clear(triMeshData.triMeshAttributeSet, kQ3AttributeTypeDiffuseColor);
+#endif
 }
 
 
@@ -1156,6 +1209,9 @@ void QD3D_ClearDiffuseColor_TriMesh(TQ3TriMeshData triMeshData, void* userData)
 
 ObjNode* MakeNewDisplayGroupObject_TexturedQuad(TQ3SurfaceShaderObject surfaceShader, float aspectRatio)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+	return nil;
+#if 0	// NOQUESA
 	float x = 0;
 	float y = 0;
 	float halfWidth = aspectRatio;
@@ -1207,4 +1263,5 @@ ObjNode* MakeNewDisplayGroupObject_TexturedQuad(TQ3SurfaceShaderObject surfaceSh
 	Q3Object_Dispose(geom);
 
 	return newObj;
+#endif
 }

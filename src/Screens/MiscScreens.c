@@ -48,6 +48,8 @@ static void MoveLogoBG(ObjNode *theNode);
 
 void DoPaused(void)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 PicHandle	pict;
 Rect		r = { 0, 0, 0, 0 };
 int			windowW = -1;
@@ -166,6 +168,7 @@ float		dummy;
 	GetMouseDelta(&dummy,&dummy);				// read this once to prevent mouse boom
 
 	Pomme_PauseAllChannels(false);
+#endif
 }
 
 

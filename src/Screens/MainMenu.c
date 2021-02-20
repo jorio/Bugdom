@@ -154,8 +154,11 @@ start_again:
 		/********************/
 		/* HANDLE SELECTION */
 		/********************/
-	
+
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	Q3View_Sync(gGameViewInfoPtr->viewObject);					// make sure rendering is done before we do anything
+#endif
 
 	if (gMenuSelection == 3)	// QUIT
 	{
@@ -336,7 +339,8 @@ ObjNode					*newObj;
 
 
 
-
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 			/**************/
 			/* MAKE ICONS */
 			/**************/
@@ -375,7 +379,7 @@ ObjNode					*newObj;
 	}
 	
 	MakeFadeEvent(true);
-	
+#endif
 }
 
 

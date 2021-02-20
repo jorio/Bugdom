@@ -1,21 +1,17 @@
 #include "Pomme.h"
 
-#include <Quesa.h>
-#include <QuesaErrors.h>
-#include <QuesaMath.h>
-#include <QuesaGeometry.h>
-#include <QuesaCamera.h>
-#include <QuesaGroup.h>
-#include <QuesaIO.h>
-#include <QuesaDrawContext.h>
-#include <QuesaRenderer.h>
-#include <QuesaShader.h>
-#include <QuesaStorage.h>
-#include <QuesaStyle.h>
-#include <QuesaView.h>
-#include <QuesaPick.h>
-#include <QuesaLight.h>
-#include <QuesaTransform.h>
+#include <QD3D.h>
+
+// bogus types to ease noquesa transition
+typedef void* TQ3StyleObject;
+typedef void* TQ3GroupObject;
+typedef void* TQ3CameraObject;
+typedef void* TQ3DrawContextObject;
+typedef void* TQ3AttributeSet;
+typedef void* TQ3Mipmap;
+typedef void* TQ3PickObject;
+typedef void* TQ3RendererObject;
+typedef void* TQ3DisplayGroupObject;
 
 #ifdef __cplusplus
 extern "C"

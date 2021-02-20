@@ -78,6 +78,8 @@ TQ3Vector3D		gPlayerKnockOnButtDelta;
 
 void InitPlayer_Ball(ObjNode *oldObj, TQ3Point3D *where)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 ObjNode	*newObj;
 long	numTriMeshes,i;
 float	rotY;
@@ -223,7 +225,8 @@ float	rotY;
 	gNitroTimer		= 0;
 	gNitroParticleGroup = -1;
 
-	gInfobarUpdateBits |= UPDATE_HANDS;	
+	gInfobarUpdateBits |= UPDATE_HANDS;
+#endif
 }
 
 

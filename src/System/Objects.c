@@ -80,12 +80,15 @@ void InitObjectManager(void)
 		
 	gFirstNodePtr = nil;									// no node yet
 
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 			/* MAKE BACKFACE STYLE OBJECT */
 
 	GAME_ASSERT(gKeepBackfaceStyleObject == nil);
 
 	gKeepBackfaceStyleObject = Q3BackfacingStyle_New(kQ3BackfacingStyleBoth);
 	GAME_ASSERT(gKeepBackfaceStyleObject);
+#endif
 }
 
 
@@ -164,7 +167,8 @@ ObjNode *MakeNewDisplayGroupObject(NewObjectDefinitionType *newObjDef)
 ObjNode	*newObj;
 Byte	group,type;
 
-
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	newObjDef->genre = DISPLAY_GROUP_GENRE;
 	
 	newObj = MakeNewObject(newObjDef);		
@@ -193,8 +197,9 @@ Byte	group,type;
 	newObj->BoundingSphere.origin.x = gObjectGroupRadiusList[group][type].origin.x * newObj->Scale.x;	
 	newObj->BoundingSphere.origin.y = gObjectGroupRadiusList[group][type].origin.y * newObj->Scale.y;	
 	newObj->BoundingSphere.origin.z = gObjectGroupRadiusList[group][type].origin.z * newObj->Scale.z;	
-	newObj->BoundingSphere.radius = gObjectGroupRadiusList[group][type].radius * newObj->Scale.x;	
-	
+	newObj->BoundingSphere.radius = gObjectGroupRadiusList[group][type].radius * newObj->Scale.x;
+
+#endif
 	return(newObj);
 }
 
@@ -245,10 +250,13 @@ void ResetDisplayGroupObject(ObjNode *theNode)
 
 void AttachGeometryToDisplayGroupObject(ObjNode *theNode, TQ3Object geometry)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3GroupPosition	groupPosition;
 
 	groupPosition = (TQ3GroupPosition)Q3Group_AddObject(theNode->BaseGroup,geometry);
 	GAME_ASSERT(groupPosition);
+#endif
 }
 
 
@@ -263,6 +271,8 @@ TQ3GroupPosition	groupPosition;
 
 void CreateBaseGroup(ObjNode *theNode)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3GroupPosition		myGroupPosition;
 TQ3Matrix4x4			transMatrix,scaleMatrix,rotMatrix;
 TQ3TransformObject		transObject;
@@ -305,6 +315,7 @@ TQ3TransformObject		transObject;
 	GAME_ASSERT(myGroupPosition);
 
 	theNode->BaseTransformObject = transObject;									// keep extra LEGAL ref (remember to dispose later)
+#endif
 }
 
 
@@ -370,6 +381,8 @@ ObjNode		*thisNodePtr;
 
 void DrawObjects(const QD3DSetupOutputType *setupInfo)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 ObjNode		*theNode;
 TQ3Status	myStatus;
 short		i,numTriMeshes;
@@ -628,6 +641,8 @@ next:
 		QD3D_SetAdditiveBlending(false);
 
 	SubmitReflectionMapQueue(setupInfo);						// draw anything in the reflection map queue
+
+#endif
 }
 
 
@@ -874,6 +889,8 @@ long	i,num;
 
 void DisposeObjectBaseGroup(ObjNode *theNode)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3Status	status;
 
 	if (theNode->BaseGroup != nil)
@@ -889,6 +906,7 @@ TQ3Status	status;
 		Q3Object_Dispose(theNode->BaseTransformObject);
 		theNode->BaseTransformObject = nil;
 	}
+#endif
 }
 
 
@@ -994,6 +1012,8 @@ TQ3Matrix4x4	m,m2;
 
 void SetObjectTransformMatrix(ObjNode *theNode)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3Status 				error;
 
 	if (theNode->CType == INVALID_NODE_FLAG)		// see if invalid
@@ -1004,6 +1024,7 @@ TQ3Status 				error;
 		error = Q3MatrixTransform_Set(theNode->BaseTransformObject,&theNode->BaseTransformMatrix);
 		GAME_ASSERT(error);
 	}
+#endif
 }
 
 /********************* MAKE OBJECT KEEP BACKFACES ***********************/
@@ -1013,6 +1034,8 @@ TQ3Status 				error;
 
 void MakeObjectKeepBackfaces(ObjNode *theNode)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 //TQ3Status			status;
 
 	GAME_ASSERT(theNode->BaseGroup);
@@ -1023,6 +1046,7 @@ void MakeObjectKeepBackfaces(ObjNode *theNode)
 	
 	TQ3GroupPosition pos = Q3Group_AddObject(theNode->BaseGroup, gKeepBackfaceStyleObject);
 	GAME_ASSERT(pos);
+#endif
 }
 
 
@@ -1036,6 +1060,8 @@ void MakeObjectKeepBackfaces(ObjNode *theNode)
 
 void MakeObjectTransparent(ObjNode *theNode, float transPercent)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3GroupPosition	position;
 TQ3Status			status;
 //TQ3ObjectType		oType;
@@ -1099,6 +1125,7 @@ TQ3AttributeType	attribType;
 
 bye:
 	Q3Object_Dispose(attrib);								// dispose of extra ref
+#endif
 }
 
 
@@ -1109,6 +1136,8 @@ bye:
 
 static void DrawCollisionBoxes(ObjNode *theNode, TQ3ViewObject view)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 int	n,i;
 CollisionBoxType	*c;
 TQ3PolyLineData	line;
@@ -1214,12 +1243,15 @@ float			left,right,top,bottom,front,back;
 		v[1].point.z = front;
 		Q3PolyLine_Submit(&line, view);
 	}
+#endif
 }
 
 /************************ DRAW BOUNDING SPHERE (FOR CULLING) ****************************/
 
 static void DrawBoundingSphere(ObjNode* theNode, TQ3ViewObject view)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	static TQ3SubdivisionStyleData sub;
 	sub.method = kQ3SubdivisionMethodConstant;
 	sub.c1 = 64;
@@ -1251,6 +1283,7 @@ static void DrawBoundingSphere(ObjNode* theNode, TQ3ViewObject view)
 	ellipseData.majorRadius = majorV;
 	ellipseData.minorRadius = minorV;
 	Q3Ellipse_Submit(&ellipseData, view);
+#endif
 }
 
 

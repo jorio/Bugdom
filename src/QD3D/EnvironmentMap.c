@@ -48,7 +48,10 @@ static TQ3Point3D	gCamCoord = {0,0,0};
 
 void InitReflectionMapQueue(void)
 {
-short	i;
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
+
+	short	i;
 
 	for (i=0; i < gReflectionMapQueueSize; i++)								// free the data
 	{
@@ -57,6 +60,7 @@ short	i;
 	}
 
 	gReflectionMapQueueSize = 0;
+#endif
 }
 
 
@@ -64,6 +68,8 @@ short	i;
 
 void SubmitReflectionMapQueue(const QD3DSetupOutputType *viewInfo)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 short	i;
 TQ3Status	status;
 
@@ -75,7 +81,7 @@ TQ3Status	status;
 			status = Q3TriMesh_Submit(&gReflectionMapQueue[i], viewInfo->viewObject);	
 		GAME_ASSERT(status);
 	}
-		
+#endif
 }
 
 
@@ -84,6 +90,8 @@ TQ3Status	status;
 
 void CalcEnvironmentMappingCoords(TQ3Point3D *camCoord)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 ObjNode	*thisNodePtr;
 
 	gCamCoord = *camCoord;
@@ -121,7 +129,7 @@ ObjNode	*thisNodePtr;
 		thisNodePtr = thisNodePtr->NextNode;									// next node
 	}
 	while (thisNodePtr != nil);
-
+#endif
 
 }
 
@@ -131,6 +139,9 @@ ObjNode	*thisNodePtr;
 
 static void CalcEnvMap_Recurse(TQ3Object obj)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
+
 TQ3Matrix4x4		transform;
 TQ3GroupPosition	position;
 TQ3Object   		object,baseGroup;
@@ -183,6 +194,7 @@ TQ3Matrix4x4  		stashMatrix;
   		}
   		gWorkMatrix = stashMatrix;										// pop matrix
 	}
+#endif
 }
 
 
@@ -196,6 +208,9 @@ TQ3Matrix4x4  		stashMatrix;
 
 static void EnvironmentMapTriMesh(TQ3Object theTriMesh, TQ3TriMeshData *inData)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
+
 TQ3Status			status;
 long				numVertecies,vertNum,numFaceAttribTypes,faceNum,numFaces;
 TQ3Point3D			*vertexList = nil;
@@ -375,7 +390,9 @@ got_uv:
 		}
 	}
 	
-	gReflectionMapQueueSize++;		
+	gReflectionMapQueueSize++;
+
+#endif
 }
 
 

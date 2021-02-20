@@ -71,7 +71,7 @@ static TQ3Point3D	gSunCoord;
 static TQ3SurfaceShaderObject	gLensFlareShader[NUM_FLARE_TYPES] = {nil,nil,nil,nil};
 static TQ3SurfaceShaderObject	gMoonFlareShader = nil;
 
-static TQ3PolygonData		gLensQuad;
+//NOQUESA static TQ3PolygonData		gLensQuad;
 static TQ3Vertex3D			gLensVerts[4] = { {{0,0,0},nil}, {{0,0,0},nil}, {{0,0,0},nil}, {{0,0,0},nil} };
 
 static float	gFlareOffsetTable[]=
@@ -110,6 +110,8 @@ static Byte	gFlareImageTable[]=
 
 static void InitLensFlares(void)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3AttributeSet	attrib;
 long			i;
 static const TQ3Param2D uvs[4] = { {0,1}, {1,1}, {1,0}, {0,0} };
@@ -161,6 +163,7 @@ static const TQ3Param2D uvs[4] = { {0,1}, {1,1}, {1,0}, {0,0} };
 			}
 		}
 	}
+#endif
 }
 
 
@@ -171,7 +174,9 @@ static const TQ3Param2D uvs[4] = { {0,1}, {1,1}, {1,0}, {0,0} };
 
 void DisposeLensFlares(void)
 {
-int	i;
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
+	int	i;
 
 		/* NUKE MOON */
 		
@@ -201,7 +206,8 @@ int	i;
 			Q3Object_Dispose(gLensVerts[i].attributeSet);
 			gLensVerts[i].attributeSet = nil;
 		}
-	}	
+	}
+#endif
 }
 
 
@@ -306,6 +312,8 @@ float	fps = gFramesPerSecondFrac;
 
 void CalcCameraMatrixInfo(QD3DSetupOutputType *viewPtr)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 			/* GET CAMERA VIEW MATRIX INFO */
 			
 	Q3View_GetWorldToFrustumMatrixState(viewPtr->viewObject, &gCameraWorldToFrustumMatrix);
@@ -327,12 +335,15 @@ void CalcCameraMatrixInfo(QD3DSetupOutputType *viewPtr)
 			// (Source port addition)
 
 	UpdateFrustumPlanes(&gCameraWorldToFrustumMatrix);
+#endif
 }
 
 /**************** MOVE CAMERA: MANUAL ********************/
 
 static void MoveCamera_Manual(void)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3Point3D	from,to,target;
 float		distX,distZ,distY,dist;
 TQ3Vector2D	pToC;
@@ -522,6 +533,7 @@ float		fps = gFramesPerSecondFrac;
 				/**********************/
 
 	QD3D_UpdateCameraFromTo(gGameViewInfoPtr,&from,&to);
+#endif
 }
 
 
@@ -531,6 +543,8 @@ float		fps = gFramesPerSecondFrac;
 
 void DrawLensFlare(const QD3DSetupOutputType *setupInfo)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3ViewObject	view = setupInfo->viewObject;
 short			i;
 float			x,y,dot;
@@ -676,19 +690,6 @@ TQ3ColorRGB		transColor;
 	QD3D_SetAdditiveBlending(false);
 	QD3D_ReEnableFog(setupInfo);
 	Q3Pop_Submit(view);
+#endif
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

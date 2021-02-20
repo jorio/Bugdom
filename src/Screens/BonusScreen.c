@@ -664,6 +664,9 @@ static void TallyTotalScore(void)
 
 static Boolean AskSaveGame(void)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+	return false;
+#if 0	// NOQUESA
 TQ3Int32		id;
 TQ3StyleObject	pick;
 
@@ -768,6 +771,7 @@ TQ3StyleObject	pick;
 		/* SEE IF SAVE GAME */
 		
 	return id == 0;
+#endif
 }
 
 

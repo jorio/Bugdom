@@ -213,7 +213,7 @@ float		l,r,f,b;
 	m.value[3][1] = theNode->Coord.y;
 	m.value[3][2] = theNode->Coord.z;
 	
-	Q3Point3D_To3DTransformArray(&pts[0], &m, &pts2[0], 12, sizeof(TQ3Point3D), sizeof(TQ3Point3D));
+	Q3Point3D_To3DTransformArray(&pts[0], &m, &pts2[0], 12);//, sizeof(TQ3Point3D), sizeof(TQ3Point3D));
 
 
 		/***************/

@@ -7,6 +7,7 @@
 #ifndef MYGLOBALS_H
 #define MYGLOBALS_H
 
+#include <QD3DMath.h>
 
 			/* SOME FLOATING POINT HELPERS */
 			

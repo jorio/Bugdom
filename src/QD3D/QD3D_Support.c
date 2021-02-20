@@ -97,6 +97,8 @@ static TQ3Vector3D		gNormal;
 
 void QD3D_Boot(void)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3Status	status;
 
 
@@ -106,6 +108,7 @@ TQ3Status	status;
 	GAME_ASSERT(status);
 
 	gQD3DInitialized = true;
+#endif
 }
 
 
@@ -138,7 +141,7 @@ TQ3Vector3D			fillDirection2 = { -.8, .8, -.2 };
 	else
 		viewDef->view.useWindow 	=	true;							// assume going to window
 	viewDef->view.displayWindow 	= theWindow;
-	viewDef->view.rendererType 		= kQ3RendererTypeOpenGL;
+//	viewDef->view.rendererType 		= kQ3RendererTypeOpenGL;
 	viewDef->view.clearColor 		= clearColor;
 	viewDef->view.paneClip.left 	= 0;
 	viewDef->view.paneClip.right 	= 0;
@@ -183,6 +186,8 @@ TQ3Vector3D			fillDirection2 = { -.8, .8, -.2 };
 
 void QD3D_SetupWindow(QD3DSetupInputType *setupDefPtr, QD3DSetupOutputType **outputHandle)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3Vector3D	v = {0,0,0};
 TQ3Status	status;
 QD3DSetupOutputType	*outputPtr;
@@ -241,6 +246,7 @@ QD3DSetupOutputType	*outputPtr;
 		gFogDensity = setupDefPtr->lights.fogDensity;
 		gFogColor	= setupDefPtr->lights.useCustomFogColor ? setupDefPtr->lights.fogColor : setupDefPtr->view.clearColor;
 	}
+#endif
 }
 
 
@@ -251,6 +257,8 @@ QD3DSetupOutputType	*outputPtr;
 
 void QD3D_DisposeWindowSetup(QD3DSetupOutputType **dataHandle)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 QD3DSetupOutputType	*data;
 
 	gQD3D_DrawContext = nil;										// this is no longer valid
@@ -276,6 +284,7 @@ QD3DSetupOutputType	*data;
 		
 	DisposePtr((Ptr)data);
 	*dataHandle = nil;
+#endif
 }
 
 
@@ -283,6 +292,8 @@ QD3DSetupOutputType	*data;
 
 static void CreateView(QD3DSetupInputType *setupDefPtr)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3Status	status;
 
 				/* CREATE NEW VIEW OBJECT */
@@ -343,6 +354,7 @@ TQ3Status	status;
 	// Uncomment to apply an alpha threshold to EVERYTHING in the game
 //	static const TQ3Float32 gQD3D_AlphaThreshold = 0.501337;
 //	Q3Object_SetProperty(gQD3D_RendererObject, kQ3RendererPropertyAlphaThreshold, sizeof(gQD3D_AlphaThreshold), &gQD3D_AlphaThreshold);
+#endif
 }
 
 
@@ -350,6 +362,8 @@ TQ3Status	status;
 
 static void CreateDrawContext(QD3DViewDefType *viewDefPtr)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3DrawContextData		drawContexData;
 TQ3SDLDrawContextData	myMacDrawContextData;
 extern SDL_Window*		gSDLWindow;
@@ -393,6 +407,7 @@ extern SDL_Window*		gSDLWindow;
 
 
 	gQD3D_FreshDrawContext = true;
+#endif
 }
 
 
@@ -404,7 +419,8 @@ extern SDL_Window*		gSDLWindow;
 
 static void SetStyles(QD3DStyleDefType *styleDefPtr)
 {
-
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 				/* SET INTERPOLATION (FOR SHADING) */
 					
 	gQD3D_InterpolationStyle = Q3InterpolationStyle_New(styleDefPtr->interpolation);
@@ -442,7 +458,7 @@ static void SetStyles(QD3DStyleDefType *styleDefPtr)
 			/* ALSO MAKE NULL SHADER FOR SPECIAL PURPOSES */
 			
 	gQD3D_NullShaderObject = Q3NULLIllumination_New();
-
+#endif
 }
 
 
@@ -451,6 +467,8 @@ static void SetStyles(QD3DStyleDefType *styleDefPtr)
 
 static void CreateCamera(QD3DSetupInputType *setupDefPtr)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3CameraData					myCameraData;
 TQ3ViewAngleAspectCameraData	myViewAngleCameraData;
 TQ3Area							pane;
@@ -503,6 +521,7 @@ QD3DCameraDefType 				*cameraDefPtr;
 
 	status = Q3View_SetCamera(gQD3D_ViewObject, gQD3D_CameraObject);		// assign camera to view
 	GAME_ASSERT(status);
+#endif
 }
 
 
@@ -510,6 +529,8 @@ QD3DCameraDefType 				*cameraDefPtr;
 
 static void CreateLights(QD3DLightDefType *lightDefPtr)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3GroupPosition		myGroupPosition;
 TQ3LightData			myLightData;
 TQ3DirectionalLightData	myDirectionalLightData;
@@ -569,6 +590,7 @@ TQ3Status	myErr;
 			
 	myErr = Q3View_SetLightGroup(gQD3D_ViewObject, gQD3D_LightGroup);		// assign light group to view
 	GAME_ASSERT(myErr);
+#endif
 }
 
 
@@ -580,6 +602,8 @@ TQ3Status	myErr;
 
 void QD3D_ChangeDrawSize(QD3DSetupOutputType *setupInfo)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 Rect			r;
 TQ3Area			pane;
 TQ3ViewAngleAspectCameraData	cameraData;
@@ -607,6 +631,7 @@ TQ3Status		status;
 	cameraData.aspectRatioXToY = (pane.max.x-pane.min.x)/(pane.max.y-pane.min.y);			// set new aspect ratio
 	status = Q3ViewAngleAspectCamera_SetData(setupInfo->cameraObject,&cameraData);			// set new camera data
 	GAME_ASSERT(status);
+#endif
 }
 
 
@@ -614,6 +639,8 @@ TQ3Status		status;
 
 void QD3D_DrawScene(QD3DSetupOutputType *setupInfo, void (*drawRoutine)(const QD3DSetupOutputType *))
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3Status				myStatus;
 TQ3ViewStatus			myViewStatus;
 
@@ -690,6 +717,7 @@ TQ3ViewStatus			myViewStatus;
 	} while ( myViewStatus == kQ3ViewStatusRetraverse );	
 	
 	QD3D_SetMultisampling(false);
+#endif
 }
 
 
@@ -703,6 +731,8 @@ TQ3ViewStatus			myViewStatus;
 
 void QD3D_UpdateCameraFromTo(QD3DSetupOutputType *setupInfo, TQ3Point3D *from, TQ3Point3D *to)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3Status	status;
 TQ3CameraPlacement	placement;
 TQ3CameraObject		camera;
@@ -733,6 +763,7 @@ TQ3CameraObject		camera;
 	GAME_ASSERT(status);
 		
 	UpdateListenerLocation();
+#endif
 }
 
 
@@ -740,6 +771,8 @@ TQ3CameraObject		camera;
 
 void QD3D_UpdateCameraFrom(QD3DSetupOutputType *setupInfo, TQ3Point3D *from)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3Status	status;
 TQ3CameraPlacement	placement;
 
@@ -761,6 +794,7 @@ TQ3CameraPlacement	placement;
 	GAME_ASSERT(status);
 
 	UpdateListenerLocation();
+#endif
 }
 
 
@@ -768,6 +802,8 @@ TQ3CameraPlacement	placement;
 
 void QD3D_MoveCameraFromTo(QD3DSetupOutputType *setupInfo, TQ3Vector3D *moveVector, TQ3Vector3D *lookAtVector)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3Status	status;
 TQ3CameraPlacement	placement;
 
@@ -797,6 +833,7 @@ TQ3CameraPlacement	placement;
 	GAME_ASSERT(status);
 
 	UpdateListenerLocation();
+#endif
 }
 
 
@@ -811,6 +848,9 @@ TQ3CameraPlacement	placement;
 
 TQ3GroupPosition QD3D_AddPointLight(QD3DSetupOutputType *setupInfo,TQ3Point3D *point, TQ3ColorRGB *color, float brightness)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+	return 0;
+#if 0	// NOQUESA
 TQ3GroupPosition		myGroupPosition;
 TQ3LightData			myLightData;
 TQ3PointLightData		myPointLightData;
@@ -834,6 +874,7 @@ TQ3LightObject			myLight;
 
 	Q3Object_Dispose(myLight);											// dispose of light
 	return(myGroupPosition);
+#endif
 }
 
 
@@ -841,6 +882,8 @@ TQ3LightObject			myLight;
 
 void QD3D_SetPointLightCoords(QD3DSetupOutputType *setupInfo, TQ3GroupPosition lightPosition, TQ3Point3D *point)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3PointLightData	pointLightData;
 TQ3LightObject		light;
 TQ3Status			status;
@@ -857,6 +900,7 @@ TQ3Status			status;
 	GAME_ASSERT(status);
 		
 	Q3Object_Dispose(light);
+#endif
 }
 
 
@@ -864,6 +908,8 @@ TQ3Status			status;
 
 void QD3D_SetPointLightBrightness(QD3DSetupOutputType *setupInfo, TQ3GroupPosition lightPosition, float bright)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3LightObject		light;
 TQ3Status			status;
 
@@ -874,6 +920,7 @@ TQ3Status			status;
 	GAME_ASSERT(status);
 
 	Q3Object_Dispose(light);
+#endif
 }
 
 
@@ -882,6 +929,9 @@ TQ3Status			status;
 
 TQ3GroupPosition QD3D_AddFillLight(QD3DSetupOutputType *setupInfo,TQ3Vector3D *fillVector, TQ3ColorRGB *color, float brightness)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+	return nil;
+#if 0	// NOQUESA
 TQ3GroupPosition		myGroupPosition;
 TQ3LightData			myLightData;
 TQ3LightObject			myLight;
@@ -904,12 +954,16 @@ TQ3DirectionalLightData	myDirectionalLightData;
 
 	Q3Object_Dispose(myLight);												// dispose of light
 	return(myGroupPosition);
+#endif
 }
 
 /********************* QD3D ADD AMBIENT LIGHT ************************/
 
 TQ3GroupPosition QD3D_AddAmbientLight(QD3DSetupOutputType *setupInfo, TQ3ColorRGB *color, float brightness)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+	return nil;
+#if 0	// NOQUESA
 TQ3GroupPosition		myGroupPosition;
 TQ3LightData			myLightData;
 TQ3LightObject			myLight;
@@ -929,6 +983,7 @@ TQ3LightObject			myLight;
 	Q3Object_Dispose(myLight);									// dispose of light
 	
 	return(myGroupPosition);
+#endif
 }
 
 
@@ -938,12 +993,15 @@ TQ3LightObject			myLight;
 
 void QD3D_DeleteLight(QD3DSetupOutputType *setupInfo, TQ3GroupPosition lightPosition)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3LightObject		light;
 
 	light = (TQ3LightObject)Q3Group_RemovePosition(setupInfo->lightGroup, lightPosition);
 	GAME_ASSERT(light);
 
 	Q3Object_Dispose(light);
+#endif
 }
 
 
@@ -954,10 +1012,13 @@ TQ3LightObject		light;
 
 void QD3D_DeleteAllLights(QD3DSetupOutputType *setupInfo)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3Status				status;
 
 	status = Q3Group_EmptyObjects(setupInfo->lightGroup);
 	GAME_ASSERT(status);
+#endif
 }
 
 
@@ -1006,6 +1067,9 @@ TQ3SurfaceShaderObject		shader;
 
 TQ3SurfaceShaderObject	QD3D_PICTToTexture(PicHandle picture, Boolean blackIsAlpha)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+	return nil;
+#if 0	// NOQUESA
 TQ3Mipmap 				mipmap;
 TQ3TextureObject		texture;
 TQ3SurfaceShaderObject	shader;
@@ -1031,12 +1095,16 @@ long					width,height;
 	Q3Object_Dispose (texture);
 	Q3Object_Dispose (mipmap.image);			// disposes of extra reference to storage obj
 
-	return(shader);	
+	return(shader);
+#endif
 }
 
 
 TQ3SurfaceShaderObject	QD3D_TGAToTexture(FSSpec* spec)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+	return nil;
+#if 0	// NOQUESA
 TQ3Mipmap 				mipmap;
 TQ3TextureObject		texture;
 TQ3SurfaceShaderObject	shader;
@@ -1081,6 +1149,7 @@ OSErr					err;
 	DisposeHandle(tgaHandle);
 
 	return shader;
+#endif
 }
 
 /******************** DRAW PICT INTO MIPMAP ********************/
@@ -1090,6 +1159,8 @@ OSErr					err;
 
 static void DrawPICTIntoMipmap(PicHandle pict,long width, long height, TQ3Mipmap *mipmap, Boolean blackIsAlpha)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	GAME_ASSERT(width  == (**pict).picFrame.right  - (**pict).picFrame.left);
 	GAME_ASSERT(height == (**pict).picFrame.bottom - (**pict).picFrame.top);
 	
@@ -1133,6 +1204,7 @@ static void DrawPICTIntoMipmap(PicHandle pict,long width, long height, TQ3Mipmap
 	{															// where texels are being discarded
 		ApplyEdgePadding(mipmap);
 	}
+#endif
 }
 
 
@@ -1147,6 +1219,9 @@ static void DrawPICTIntoMipmap(PicHandle pict,long width, long height, TQ3Mipmap
 
 TQ3SurfaceShaderObject	QD3D_Data16ToTexture_NoMip(Ptr data, short width, short height)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+	return nil;
+#if 0	// NOQUESA
 TQ3Mipmap 					mipmap;
 TQ3TextureObject			texture;
 TQ3SurfaceShaderObject		shader;
@@ -1167,7 +1242,8 @@ TQ3SurfaceShaderObject		shader;
 	Q3Object_Dispose (texture);
 	Q3Object_Dispose (mipmap.image);					// dispose of extra ref to storage object
 
-	return(shader);	
+	return(shader);
+#endif
 }
 
 
@@ -1180,6 +1256,8 @@ TQ3SurfaceShaderObject		shader;
 
 static void Data16ToMipmap(Ptr data, short width, short height, TQ3Mipmap *mipmap)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 long	size = width * height * 2;
 
 			/* MAKE 16bit MIPMAP */
@@ -1204,6 +1282,7 @@ long	size = width * height * 2;
 	mipmap->mipmaps[0].height 	= height;
 	mipmap->mipmaps[0].rowBytes = width*2;
 	mipmap->mipmaps[0].offset 	= 0;
+#endif
 }
 
 
@@ -1218,6 +1297,9 @@ long	size = width * height * 2;
 
 TQ3StorageObject QD3D_GetMipmapStorageObjectFromAttrib(TQ3AttributeSet attribSet)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+	return nil;
+#if 0	// NOQUESA
 TQ3Status	status;
 
 TQ3TextureObject		texture;
@@ -1249,6 +1331,7 @@ TQ3SurfaceShaderObject	surfaceShader;
 	Q3Object_Dispose(texture);	
 	Q3Object_Dispose(surfaceShader);
 	return(storage);
+#endif
 }
 
 
@@ -1263,6 +1346,8 @@ TQ3SurfaceShaderObject	surfaceShader;
 
 void SetBackFaceStyle(QD3DSetupOutputType *setupInfo, TQ3BackfacingStyle style)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3Status status;
 TQ3BackfacingStyle	backfacingStyle;
 
@@ -1274,6 +1359,7 @@ TQ3BackfacingStyle	backfacingStyle;
 		
 	status = Q3BackfacingStyle_Set(setupInfo->backfacingStyle, style);
 	GAME_ASSERT(status);
+#endif
 
 }
 
@@ -1282,6 +1368,8 @@ TQ3BackfacingStyle	backfacingStyle;
 
 void SetFillStyle(QD3DSetupOutputType *setupInfo, TQ3FillStyle style)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3Status 		status;
 TQ3FillStyle	fillStyle;
 
@@ -1293,6 +1381,7 @@ TQ3FillStyle	fillStyle;
 		
 	status = Q3FillStyle_Set(setupInfo->fillStyle, style);
 	GAME_ASSERT(status);
+#endif
 
 }
 
@@ -1372,6 +1461,8 @@ static	unsigned long then = 0;
 
 void QD3D_ShowRecentError(void)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3Error	q3Err;
 Str255		s;
 	
@@ -1396,6 +1487,7 @@ Str255		s;
 		snprintf(s, sizeof(s), "QD3D Error %d\nLook up error code in QuesaErrors.h", q3Err);
 		DoFatalAlert(s);
 	}
+#endif
 }
 
 
@@ -1407,11 +1499,13 @@ Str255		s;
 
 void QD3D_DisableFog(const QD3DSetupOutputType *setupInfo)
 {
-
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	TQ3FogStyleData	fogData;
 	
 	fogData.state		= kQ3Off;
 	Q3FogStyle_Submit(&fogData, setupInfo->viewObject);
+#endif
 }
 
 
@@ -1419,6 +1513,8 @@ void QD3D_DisableFog(const QD3DSetupOutputType *setupInfo)
 
 void QD3D_ReEnableFog(const QD3DSetupOutputType *setupInfo)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 		TQ3FogStyleData	fogData;
 		
 		fogData.state		= kQ3On;
@@ -1429,6 +1525,7 @@ void QD3D_ReEnableFog(const QD3DSetupOutputType *setupInfo)
 		fogData.color		= gFogColor;
 		
 		Q3FogStyle_Submit(&fogData, setupInfo->viewObject);
+#endif
 }
 
 
@@ -1456,11 +1553,14 @@ void QD3D_SetTriangleCacheMode(Boolean isOn)
 
 void QD3D_SetZWrite(Boolean isOn)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	if (!gQD3D_DrawContext)
 		return;
 
 	TQ3Status status = Q3ZWriteTransparencyStyle_Submit(isOn ? kQ3On : kQ3Off, gQD3D_ViewObject);
 	GAME_ASSERT(status);
+#endif
 }	
 
 
@@ -1468,12 +1568,15 @@ void QD3D_SetZWrite(Boolean isOn)
 
 void QD3D_SetAdditiveBlending(Boolean enable)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	static const TQ3BlendingStyleData normalStyle	= { kQ3Off, GL_ONE, GL_ONE_MINUS_SRC_ALPHA };
 	static const TQ3BlendingStyleData additiveStyle	= { kQ3On, GL_ONE, GL_ONE };
 
 	GAME_ASSERT(gQD3D_ViewObject);
 
 	Q3BlendingStyle_Submit(enable ? &additiveStyle : &normalStyle, gQD3D_ViewObject);
+#endif
 }
 
 /************************ SET MULTISAMPLING ************************/
@@ -1519,6 +1622,8 @@ void ShowNormal(TQ3Point3D *where, TQ3Vector3D *normal)
 
 static void DrawNormal(TQ3ViewObject view)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3LineData	line;
 
 	line.lineAttributeSet = nil;
@@ -1532,5 +1637,6 @@ TQ3LineData	line;
 	line.vertices[1].point.z = gNormalWhere.z + gNormal.z * 400.0f;
 
 	Q3Line_Submit(&line, view);
+#endif
 }
 

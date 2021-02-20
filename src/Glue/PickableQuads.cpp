@@ -3,10 +3,10 @@
 // This file is part of Bugdom. https://github.com/jorio/bugdom
 
 #include <vector>
-#include <Quesa.h>
-#include <QuesaGeometry.h>
-#include <QuesaGroup.h>
-#include <QuesaStyle.h>
+#include <QD3D.h>
+//#include <QuesaGeometry.h>
+//#include <QuesaGroup.h>
+//#include <QuesaStyle.h>
 #include "bugdom.h"
 
 struct PickableQuad
@@ -22,11 +22,14 @@ struct PickableQuad
 
 	~PickableQuad()
 	{
+		printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 		if (object)
 		{
 			Q3Object_Dispose(object);
 			object = nullptr;
 		}
+#endif
 	}
 };
 
@@ -46,6 +49,8 @@ PickableQuad::PickableQuad(
 		TQ3Int32	pickID
 		)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	float left		= coord.x - width/2.0f;
 	float right		= coord.x + width/2.0f;
 	float top		= coord.y + height/2.0f;
@@ -72,6 +77,7 @@ PickableQuad::PickableQuad(
 	Q3Object_Dispose(poly);
 
 	this->object = dgo;
+#endif
 }
 
 void PickableQuads_NewQuad(
@@ -91,6 +97,9 @@ void PickableQuads_DisposeAll()
 
 bool PickableQuads_GetPick(TQ3ViewObject view, TQ3Point2D point, TQ3Int32 *pickID)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+	return false;
+#if 0	// NOQUESA
 	TQ3PickObject			pickObject;
 	TQ3WindowPointPickData	pickSpec;
 	TQ3Uns32				numHits;
@@ -138,10 +147,13 @@ bool PickableQuads_GetPick(TQ3ViewObject view, TQ3Point2D point, TQ3Int32 *pickI
 
 	Q3Object_Dispose(pickObject);
 	return hitAnything;
+#endif
 }
 
 void PickableQuads_Draw(TQ3ViewObject view)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	for (const auto& pickable : gPickableObjects)
 	{
 		std::vector vertices = pickable.vertices;
@@ -154,5 +166,5 @@ void PickableQuads_Draw(TQ3ViewObject view)
 		pld.segmentAttributeSet = nullptr;
 		Q3PolyLine_Submit(&pld, view);
 	}
+#endif
 }
-

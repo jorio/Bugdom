@@ -63,6 +63,9 @@ short	i;
 
 TQ3Object	Load3DMFModel(const FSSpec *inFile)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+	return nil;
+#if 0	// NOQUESA
 TQ3FileObject		fileObj;
 TQ3Object			theModel;
 
@@ -89,6 +92,7 @@ TQ3Object			theModel;
 
 
 	return(theModel);
+#endif
 }
 
 
@@ -101,6 +105,9 @@ TQ3Object			theModel;
 
 static TQ3FileObject	Create3DMFFileObject(const FSSpec *myFSSpec)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+	return nil;
+#if 0	// NOQUESA
 TQ3FileObject		myFileObj;
 TQ3StorageObject	myStorageObj;
 		
@@ -123,6 +130,7 @@ TQ3StorageObject	myStorageObj;
 	Q3Object_Dispose(myStorageObj);
 			
 	return(myFileObj);
+#endif
 }
 
 
@@ -139,6 +147,9 @@ TQ3StorageObject	myStorageObj;
 
 static TQ3Status MyRead3DMFModel(TQ3FileObject file, TQ3Object *model)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+	return kQ3Failure;
+#if 0	// NOQUESA
 TQ3GroupObject	myGroup;
 TQ3Object		myObject;
 
@@ -214,6 +225,7 @@ TQ3Object		myObject;
 	}
 	
 	return(kQ3Success);
+#endif
 }
 	
 	
@@ -229,6 +241,8 @@ TQ3Object		myObject;
 
 void LoadGrouped3DMF(FSSpec *spec, Byte groupNum)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 TQ3Object		the3DMFFile;
 TQ3Uns32		nObjects;
 TQ3Status 		status;
@@ -283,6 +297,7 @@ TQ3GroupPosition	position;
 
 
 	PatchGrouped3DMF(spec->cName, gObjectGroupList[groupNum], nObjects);
+#endif
 }
 
 
@@ -290,6 +305,8 @@ TQ3GroupPosition	position;
 
 void Free3DMFGroup(Byte groupNum)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 short	i;
 
 	for (i = 0; i < gNumObjectsInGroupList[groupNum]; i++)			// dispose of old objects (or at least this reference)
@@ -305,6 +322,7 @@ short	i;
 		gObjectGroupList[groupNum][i] = nil;
 
 	gNumObjectsInGroupList[groupNum] = 0;
+#endif
 }
 
 

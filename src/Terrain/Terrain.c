@@ -395,6 +395,9 @@ retryParseLODPref:
 					
 				/* SET DATA */
 
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
+
 	triangleAttribs.attributeType 		= kQ3AttributeTypeNormal;			// set attribute Type
 	triangleAttribs.data 				= &faceNormals[0];					// point to attribute data
 	triangleAttribs.attributeUseArray 	= nil;								// (not used)
@@ -535,6 +538,8 @@ retryParseLODPref:
 	}	// i
 	
 	gSuperTileMemoryListExists = true;
+
+#endif
 }
 
 
@@ -561,6 +566,8 @@ int		numSuperTiles,i,j,lod,numLayers;
 				
 	for (i = 0; i < numSuperTiles; i++)
 	{
+		printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 
 				
 		for (j = 0; j < numLayers; j++)
@@ -589,6 +596,7 @@ int		numSuperTiles,i,j,lod,numLayers;
 			Q3TriMesh_EmptyData(&gSuperTileMemoryList[i].triMeshData[j]);
 
 		}
+#endif
 	}
 	
 	gSuperTileMemoryListExists = false;
@@ -638,6 +646,10 @@ short	i;
 
 static short	BuildTerrainSuperTile(long	startCol, long startRow)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+	return 0;
+#if 0	// NOQUESA
+
 TQ3Status			status;
 long	 			row,col,row2,col2,i;
 Byte				j;
@@ -1029,6 +1041,8 @@ static  TQ3Vector3D	tempVertexNormalList[NUM_VERTICES_IN_SUPERTILE];
 	}	// j (layer)
 									
 	return(superTileNum);
+
+#endif
 }
 
 
@@ -1039,6 +1053,8 @@ static  TQ3Vector3D	tempVertexNormalList[NUM_VERTICES_IN_SUPERTILE];
 
 static void BuildSuperTileLOD(SuperTileMemoryType *superTilePtr, short lod)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 short				j,x,y;
 TQ3AttributeSet		baseData,newData;
 u_short				*baseBuffer, *newBuffer, *nextLine, *newBufferPtr;
@@ -1200,6 +1216,7 @@ int					size,numLayers;
 		Q3MemoryStorage_SetBuffer(newTexture, (u_char *)newBufferPtr, validSize, bufferSize);
 		Q3Object_Dispose(newTexture);			
 	}
+#endif
 }
 
 
@@ -1476,6 +1493,8 @@ long	i;
 
 void DrawTerrain(const QD3DSetupOutputType *setupInfo)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 short	i, numLayers;
 Byte	j;
 TQ3Status	myStatus;
@@ -1592,7 +1611,8 @@ use_1:
 	DrawObjects(setupInfo);												// draw objNodes
 	QD3D_DrawParticles(setupInfo);
 	DrawParticleGroup(setupInfo);
-	DrawLensFlare(setupInfo);										
+	DrawLensFlare(setupInfo);
+#endif
 }
 
 
