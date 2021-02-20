@@ -45,7 +45,7 @@ extern	void DetachObject(ObjNode *theNode);
 extern	void GetObjectInfo(ObjNode *theNode);
 extern	void UpdateObject(ObjNode *theNode);
 extern	ObjNode *MakeNewDisplayGroupObject(NewObjectDefinitionType *newObjDef);
-extern	void AttachGeometryToDisplayGroupObject(ObjNode *theNode, TQ3Object geometry);
+void AttachGeometryToDisplayGroupObject(ObjNode* theNode, int numMeshes, TQ3TriMeshData** meshList);
 extern	void CreateBaseGroup(ObjNode *theNode);
 extern	void UpdateObjectTransforms(ObjNode *theNode);
 extern	void SetObjectTransformMatrix(ObjNode *theNode);

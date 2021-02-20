@@ -19,6 +19,7 @@ extern "C"
 #endif
 
 #include "globals.h"
+#include "renderer.h"
 #include "structs.h"
 #include "mobjtypes.h"
 #include "objects.h"
@@ -63,7 +64,6 @@ extern "C"
 #include "tween.h"
 #include "mousesmoothing.h"
 #include "frustumculling.h"
-#include "renderer.h"
 
 #ifdef __cplusplus
 };

@@ -155,8 +155,6 @@ ObjNode *MakeNewDisplayGroupObject(NewObjectDefinitionType *newObjDef)
 ObjNode	*newObj;
 Byte	group,type;
 
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
 	newObjDef->genre = DISPLAY_GROUP_GENRE;
 	
 	newObj = MakeNewObject(newObjDef);		
@@ -173,11 +171,13 @@ Byte	group,type;
 
 	if (newObjDef->flags & STATUS_BIT_CLONE)
 	{
-		AttachGeometryToDisplayGroupObject(newObj, Q3Object_Duplicate(gObjectGroupList[group][type]));
+		DoFatalAlert("TODO NOQUESA: clone DGO\n");
+		//AttachGeometryToDisplayGroupObject(newObj, Q3Object_Duplicate(gObjectGroupList[group][type]));
 	}
 	else
 	{
-		AttachGeometryToDisplayGroupObject(newObj, gObjectGroupList[group][type]);
+		TQ3TriMeshFlatGroup* meshList = &gObjectGroupList[group][type];
+		AttachGeometryToDisplayGroupObject(newObj, meshList->numMeshes, meshList->meshes);
 	}
 
 			/* CALC RADIUS */
@@ -187,7 +187,6 @@ Byte	group,type;
 	newObj->BoundingSphere.origin.z = gObjectGroupRadiusList[group][type].origin.z * newObj->Scale.z;	
 	newObj->BoundingSphere.radius = gObjectGroupRadiusList[group][type].radius * newObj->Scale.x;
 
-#endif
 	return(newObj);
 }
 
@@ -239,15 +238,19 @@ void ResetDisplayGroupObject(ObjNode *theNode)
 // called which made the group & transforms.
 //
 
-void AttachGeometryToDisplayGroupObject(ObjNode *theNode, TQ3Object geometry)
+void AttachGeometryToDisplayGroupObject(ObjNode* theNode, int numMeshes, TQ3TriMeshData** meshList)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-TQ3GroupPosition	groupPosition;
+	for (int i = 0; i < numMeshes; i++)
+	{
+		int nodeMeshIndex = theNode->NumMeshes;
 
-	groupPosition = (TQ3GroupPosition)Q3Group_AddObject(theNode->BaseGroup,geometry);
-	GAME_ASSERT(groupPosition);
-#endif
+		theNode->NumMeshes++;
+		GAME_ASSERT(theNode->NumMeshes <= MAX_DECOMPOSED_TRIMESHES);
+
+		theNode->MeshList[nodeMeshIndex] = meshList[i];
+		theNode->OwnsMeshMemory[nodeMeshIndex] = false;
+		theNode->OwnsMeshTexture[nodeMeshIndex] = false;
+	}
 }
 
 
