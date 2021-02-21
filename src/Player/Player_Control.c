@@ -71,9 +71,6 @@ static const TQ3Vector2D	gZeroAccel = {0,0};
 
 Boolean DoPlayerMovementAndCollision(Boolean noControl)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-	return false;
-#if 0	// NOQUESA
 float				fps = gFramesPerSecondFrac,oldFPS,oldFPSFrac;
 TQ3Point3D			oldCoord;
 TQ3Vector3D			oldDelta;
@@ -371,7 +368,6 @@ Boolean				killed = false;
 	gMyDistToFloor = gCoord.y + gPlayerObj->BottomOff - GetTerrainHeightAtCoord(gCoord.x, gCoord.z, FLOOR);
 	
 	return(killed);
-#endif
 }
 
 
