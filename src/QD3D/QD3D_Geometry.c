@@ -61,21 +61,41 @@ static short	gShaderNum;
 
 /*************** QD3D: CALC OBJECT BOUNDING BOX ************************/
 
-void QD3D_CalcObjectBoundingBox(QD3DSetupOutputType *setupInfo, TQ3Object theObject, TQ3BoundingBox	*boundingBox)
+void QD3D_CalcObjectBoundingBox(int numMeshes, TQ3TriMeshData** meshList, TQ3BoundingBox* boundingBox)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-
-	GAME_ASSERT(setupInfo);
-	GAME_ASSERT(theObject);
+	GAME_ASSERT(numMeshes);
+	GAME_ASSERT(meshList);
 	GAME_ASSERT(boundingBox);
 
-	Q3View_StartBoundingBox(setupInfo->viewObject, kQ3ComputeBoundsExact);
-	do
+	boundingBox->isEmpty = true;
+	boundingBox->min = (TQ3Point3D) { 0, 0, 0 };
+	boundingBox->max = (TQ3Point3D) { 0, 0, 0 };
+
+	for (int i = 0; i < numMeshes; i++)
 	{
-		Q3Object_Submit(theObject,setupInfo->viewObject);
-	}while(Q3View_EndBoundingBox(setupInfo->viewObject, boundingBox) == kQ3ViewStatusRetraverse);
-#endif
+		TQ3TriMeshData* mesh = meshList[i];
+		for (int v = 0; v < mesh->numPoints; v++)
+		{
+			TQ3Point3D p = mesh->points[v];
+
+			if (boundingBox->isEmpty)
+			{
+				boundingBox->isEmpty = false;
+				boundingBox->min = p;
+				boundingBox->max = p;
+			}
+			else
+			{
+				if (p.x < boundingBox->min.x) boundingBox->min.x = p.x;
+				if (p.y < boundingBox->min.y) boundingBox->min.y = p.y;
+				if (p.z < boundingBox->min.z) boundingBox->min.z = p.z;
+
+				if (p.x > boundingBox->max.x) boundingBox->max.x = p.x;
+				if (p.y > boundingBox->max.y) boundingBox->max.y = p.y;
+				if (p.z > boundingBox->max.z) boundingBox->max.z = p.z;
+			}
+		}
+	}
 }
 
 
