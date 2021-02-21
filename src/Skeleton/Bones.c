@@ -12,17 +12,13 @@
 
 #include "3dmath.h"
 
-extern	TQ3TriMeshData		*gLocalTriMeshesOfSkelType[MAX_SKELETON_TYPES][MAX_DECOMPOSED_TRIMESHES];
-
 
 /****************************/
 /*    PROTOTYPES            */
 /****************************/
 
 static void DecomposeATriMesh(SkeletonDefType* gCurrentSkeleton, TQ3TriMeshData* triMeshData);
-static void DecompRefMo_Recurse(TQ3Object inObj);
-static void DecomposeReferenceModel(TQ3Object theModel);
-static void UpdateSkinnedGeometry_Recurse(short joint, short skelType);
+static void UpdateSkinnedGeometry_Recurse(ObjNode* skelNode, short joint);
 
 
 /****************************/
@@ -34,9 +30,6 @@ static void UpdateSkinnedGeometry_Recurse(short joint, short skelType);
 /*    VARIABLES      */
 /*********************/
 
-
-SkeletonDefType		*gCurrentSkeleton;
-SkeletonObjDataType	*gCurrentSkelObjData;
 
 static	TQ3Matrix4x4		gMatrix;
 
@@ -54,93 +47,25 @@ void LoadBonesReferenceModel(const FSSpec	*inSpec, SkeletonDefType *skeleton)
 {
 			/* LOAD 3DMF */
 
-	TQ3MetaFile* the3DMFFile = Q3MetaFile_Load3DMF(inSpec);
-	GAME_ASSERT(the3DMFFile);
+	skeleton->associated3DMF = Q3MetaFile_Load3DMF(inSpec);
+	GAME_ASSERT(skeleton->associated3DMF);
 
-	PatchSkeleton3DMF(inSpec->cName, the3DMFFile);
+	PatchSkeleton3DMF(inSpec->cName, skeleton->associated3DMF);
 
 			/* UPLOAD TEXTURES TO GPU */
 
-	Render_Load3DMFTextures(the3DMFFile);
+	Render_Load3DMFTextures(skeleton->associated3DMF);
 
 			/* DECOMPOSE REFERENCE MODEL */
-
-	gCurrentSkeleton = skeleton;
 
 	skeleton->numDecomposedTriMeshes	= 0;
 	skeleton->numDecomposedPoints		= 0;
 	skeleton->numDecomposedNormals		= 0;
 
-	for (int i = 0; i < the3DMFFile->numMeshes; i++)
+	for (int i = 0; i < skeleton->associated3DMF->numMeshes; i++)
 	{
-		DecomposeATriMesh(skeleton, the3DMFFile->meshes[i]);
+		DecomposeATriMesh(skeleton, skeleton->associated3DMF->meshes[i]);
 	}
-
-	/*  NOQUESA
-	DecomposeReferenceModel(newModel);
-	
-	Q3Object_Dispose(newModel);				// we dont need the original model anymore
-	 */
-}
-
-
-/****************** DECOMPOSE REFERENCE MODEL ************************/
-
-static void DecomposeReferenceModel(TQ3Object theModel)
-{
-	gCurrentSkeleton->numDecomposedTriMeshes = 0;
-	gCurrentSkeleton->numDecomposedPoints = 0;
-	gCurrentSkeleton->numDecomposedNormals = 0;
-
-
-		/* DO SUBRECURSIVE SCAN */
-		
-	DecompRefMo_Recurse(theModel);
-
-}
-
-
-/***************** DECOM REF MO: RECURSE ***************************/
-
-static void DecompRefMo_Recurse(TQ3Object inObj)
-{
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-
-TQ3GroupPosition	position;
-TQ3Object   		newObj;
-TQ3ObjectType		oType;
-
-				/* SEE IF FOUND GEOMETRY */
-
-	if (Q3Object_IsType(inObj,kQ3ShapeTypeGeometry))
-	{
-		oType = Q3Geometry_GetType(inObj);									// get geometry type
-		switch(oType)
-		{
-			case	kQ3GeometryTypeTriMesh:
-					DecomposeATriMesh(inObj);
-					break;
-		}
-	}
-	else
-	
-			/* SEE IF RECURSE SUB-GROUP */
-
-	if (Q3Object_IsType(inObj,kQ3ShapeTypeGroup))
- 	{
-  		for (Q3Group_GetFirstPosition(inObj, &position); position != nil;	// scan all objects in group
-  			 Q3Group_GetNextPosition(inObj, &position))	
- 		{
-   			Q3Group_GetPositionObject (inObj, position, &newObj);			// get object from group
-			if (newObj != NULL)
-   			{
-    			DecompRefMo_Recurse(newObj);								// sub-recurse this object
-    			Q3Object_Dispose(newObj);									// dispose local ref
-   			}
-  		}
-	}
-#endif
 }
 
 
@@ -248,10 +173,7 @@ added_norm:
 //
 
 void UpdateSkinnedGeometry(ObjNode *theNode)
-{	
-long	numTriMeshes,i,skelType;
-SkeletonObjDataType	*currentSkelObjData;
-
+{
 			/* MAKE SURE OBJNODE IS STILL VALID */
 			//
 			// It's possible that Deleting a Skeleton and then creating a new
@@ -263,17 +185,13 @@ SkeletonObjDataType	*currentSkelObjData;
 			
 	if (theNode->CType == INVALID_NODE_FLAG)
 		return;
-	gCurrentSkelObjData = currentSkelObjData = theNode->Skeleton;
-	if (gCurrentSkelObjData == nil)
-		return;
 
-	gCurrentSkeleton = currentSkelObjData->skeletonDefinition;
-	GAME_ASSERT(gCurrentSkeleton);
+	GAME_ASSERT(theNode->Skeleton);
 
 	const SkeletonDefType* skeletonDef = theNode->Skeleton->skeletonDefinition;
 	GAME_ASSERT(skeletonDef);
 
-	if (currentSkelObjData->JointsAreGlobal)
+	if (theNode->Skeleton->JointsAreGlobal)
 		Q3Matrix4x4_SetIdentity(&gMatrix);
 	else
 		gMatrix = theNode->BaseTransformMatrix;	
@@ -283,24 +201,21 @@ SkeletonObjDataType	*currentSkelObjData;
 
 	GAME_ASSERT_MESSAGE(skeletonDef->Bones[0].parentBone == NO_PREVIOUS_JOINT, "joint 0 isnt base - fix code Brian!");
 
-	skelType = theNode->Type;
-		
-	UpdateSkinnedGeometry_Recurse(0, skelType);											// start @ base
-	
+	UpdateSkinnedGeometry_Recurse(theNode, 0);								// start @ base
+
 			/* UPDATE ALL TRIMESH BBOXES */
-			
-	numTriMeshes = currentSkelObjData->skeletonDefinition->numDecomposedTriMeshes;
-	
-	for (i = 0; i < numTriMeshes; i++)
+
+	GAME_ASSERT(theNode->NumMeshes == skeletonDef->numDecomposedTriMeshes);
+	for (int i = 0; i < theNode->NumMeshes; i++)
 	{
-		gLocalTriMeshesOfSkelType[skelType][i]->bBox = gBBox;				// apply to local copy of trimesh
+		theNode->MeshList[i]->bBox = gBBox;				// apply to local copy of trimesh
 	}
 }
 
 
 /******************** UPDATE SKINNED GEOMETRY: RECURSE ************************/
 
-static void UpdateSkinnedGeometry_Recurse(short joint, short skelType)
+static void UpdateSkinnedGeometry_Recurse(ObjNode* skelNode, short joint)
 {
 long					numChildren,numPoints,p,i,numRefs,r,triMeshNum,p2,c,numNormals,n;
 TQ3Matrix4x4			oldM;
@@ -310,12 +225,12 @@ float					minX,maxX,maxY,minY,maxZ,minZ;
 long					numDecomposedPoints,numDecomposedNormals;
 float					m00,m01,m02,m10,m11,m12,m20,m21,m22,m30,m31,m32;
 float					newX,newY,newZ;
-SkeletonObjDataType		*currentSkelObjData = gCurrentSkelObjData;
-const SkeletonDefType	*currentSkeleton = gCurrentSkeleton;
+SkeletonObjDataType		*currentSkelObjData = skelNode->Skeleton;
+const SkeletonDefType	*currentSkeleton = skelNode->Skeleton->skeletonDefinition;
 const float				*jointMat;
 float					*matPtr;
 DecomposedPointType		*decomposedPointList = currentSkeleton->decomposedPointList;
-TQ3TriMeshData			**localTriMeshes = gLocalTriMeshesOfSkelType[skelType];
+TQ3TriMeshData			**localTriMeshes = skelNode->MeshList;
 
 	minX = minY = minZ = 10000000;
 	maxX = maxY = maxZ = -minX;									// calc local bbox with registers for speed
@@ -330,7 +245,7 @@ TQ3TriMeshData			**localTriMeshes = gLocalTriMeshesOfSkelType[skelType];
 	jointMat = &currentSkelObjData->jointTransformMatrix[joint].value[0][0];
 	matPtr = &gMatrix.value[0][0];
 	
-	if (!gCurrentSkelObjData->JointsAreGlobal)
+	if (!currentSkelObjData->JointsAreGlobal)
 	{
 		MatrixMultiply((TQ3Matrix4x4 *)jointMat, (TQ3Matrix4x4 *)matPtr, (TQ3Matrix4x4 *)matPtr);				
 
@@ -410,7 +325,7 @@ TQ3TriMeshData			**localTriMeshes = gLocalTriMeshesOfSkelType[skelType];
 			/* TRANSFORM THE POINTS */
 			/************************/
 
-	if (!gCurrentSkelObjData->JointsAreGlobal)
+	if (!currentSkelObjData->JointsAreGlobal)
 	{
 		m00 = matPtr[0];	m01 = matPtr[1];	m02 = matPtr[2];
 		m10 = matPtr[4];	m11 = matPtr[5];	m12 = matPtr[6];
@@ -498,7 +413,7 @@ TQ3TriMeshData			**localTriMeshes = gLocalTriMeshesOfSkelType[skelType];
 	for (c = 0; c < numChildren; c++)
 	{
 		oldM = gMatrix;																	// push matrix
-		UpdateSkinnedGeometry_Recurse(currentSkeleton->childIndecies[joint][c], skelType);
+		UpdateSkinnedGeometry_Recurse(skelNode, currentSkeleton->childIndecies[joint][c]);
 		gMatrix = oldM;																	// pop matrix
 	}
 }

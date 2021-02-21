@@ -38,8 +38,6 @@ static void CalcSkeletonBoundingSphere(long n);
 static SkeletonDefType		*gLoadedSkeletonsList[MAX_SKELETON_TYPES];
 static TQ3BoundingSphere	gSkeletonBoundingSpheres[MAX_SKELETON_TYPES];
 
-static short	gNumDecomposedTriMeshesInSkeleton[MAX_SKELETON_TYPES];
-TQ3TriMeshData	*gLocalTriMeshesOfSkelType[MAX_SKELETON_TYPES][MAX_DECOMPOSED_TRIMESHES];
 
 
 /**************** INIT SKELETON MANAGER *********************/
@@ -56,8 +54,6 @@ void InitSkeletonManager(void)
 
 void LoadASkeleton(Byte num)
 {
-short	i,numDecomp;
-
 	GAME_ASSERT(num < MAX_SKELETON_TYPES);
 
 	if (gLoadedSkeletonsList[num] == nil)					// check if already loaded
@@ -66,18 +62,6 @@ short	i,numDecomp;
 			/* CALC BOUNDING SPHERE OF OBJECT */
 				
 	CalcSkeletonBoundingSphere(num);
-	
-
-		/* MAKE LOCAL COPY OF DECOMPOSED TRIMESH */
-		
-	numDecomp = gLoadedSkeletonsList[num]->numDecomposedTriMeshes;
-	gNumDecomposedTriMeshesInSkeleton[num] = numDecomp;
-	for (i=0; i < numDecomp; i++)
-	{
-//		QD3D_DuplicateTriMeshData(gLoadedSkeletonsList[num]->decomposedTriMeshPtrs[i], &gLocalTriMeshesOfSkelType[num][i]);
-		gLocalTriMeshesOfSkelType[num][i] = Q3TriMeshData_Duplicate(gLoadedSkeletonsList[num]->decomposedTriMeshPtrs[i]);
-	}
-	
 }
 
 
@@ -117,13 +101,8 @@ TQ3Status status;
 
 void FreeSkeletonFile(Byte skeletonType)
 {
-short	i;
-
 	if (gLoadedSkeletonsList[skeletonType])										// make sure this really exists
 	{
-		for (i=0; i < gNumDecomposedTriMeshesInSkeleton[skeletonType]; i++)		// dispose of the local copies of the decomposed trimeshes
-			QD3D_FreeDuplicateTriMeshData(&gLocalTriMeshesOfSkelType[skeletonType][i]);
-	
 		DisposeSkeletonDefinitionMemory(gLoadedSkeletonsList[skeletonType]);	// free skeleton data
 		gLoadedSkeletonsList[skeletonType] = nil;
 	}
@@ -178,20 +157,33 @@ float	scale;
 	newNode->Skeleton = MakeNewSkeletonBaseData(type); 			// alloc & set skeleton data
 	GAME_ASSERT(newNode->Skeleton);
 
-	UpdateObjectTransforms(newNode);
+			/* MAKE COPY OF TRIMESHES FOR LOCAL USE */
 
+	GAME_ASSERT(newNode->NumMeshes == 0);
+
+	const SkeletonDefType* skeletonDef = gLoadedSkeletonsList[type];
+	newNode->NumMeshes = skeletonDef->numDecomposedTriMeshes;
+
+	for (int i = 0; i < skeletonDef->numDecomposedTriMeshes; i++)
+	{
+		GAME_ASSERT_MESSAGE(!newNode->MeshList[i], "Node already had a mesh at that index!");
+
+		newNode->MeshList[i] = Q3TriMeshData_Duplicate(skeletonDef->decomposedTriMeshPtrs[i]);
+		newNode->OwnsMeshMemory[i] = true;
+	}
 
 			/*  SET INITIAL DEFAULT POSITION */
-				
-	SetSkeletonAnim(newNode->Skeleton, newObjDef->animNum);		
+
+	UpdateObjectTransforms(newNode);
+
+	SetSkeletonAnim(newNode->Skeleton, newObjDef->animNum);
 	UpdateSkeletonAnimation(newNode);
 	UpdateSkinnedGeometry(newNode);								// prime the trimesh
 
-	
+
 			/**********************************/
 			/* CALC BOUNDING SPHERE OF OBJECT */
 			/**********************************/
-	
 
 	newNode->BoundingSphere.origin.x = gSkeletonBoundingSpheres[type].origin.x * scale;
 	newNode->BoundingSphere.origin.y = gSkeletonBoundingSpheres[type].origin.y * scale;
@@ -264,20 +256,15 @@ long	numAnims,numJoints;
 
 static void DisposeSkeletonDefinitionMemory(SkeletonDefType *skeleton)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-
-short	j,numAnims,numJoints;
-
 	if (skeleton == nil)
 		return;
 
-	numAnims = skeleton->NumAnims;										// get # anims in skeleton
-	numJoints = skeleton->NumBones;	
+	int numAnims = skeleton->NumAnims;									// get # anims in skeleton
+	int numJoints = skeleton->NumBones;
 
 			/* NUKE THE SKELETON BONE POINT & NORMAL INDEX ARRAYS */
 			
-	for (j=0; j < numJoints; j++)
+	for (int j=0; j < numJoints; j++)
 	{
 		if (skeleton->Bones[j].pointList)
 			DisposePtr((Ptr)skeleton->Bones[j].pointList);
@@ -293,14 +280,10 @@ short	j,numAnims,numJoints;
 	
 	Free2DArray((void**) skeleton->AnimEventsList);
 	skeleton->AnimEventsList = nil;
-	
-//	for (i=0; i < numAnims; i++)
-//		DisposePtr((Ptr)skeleton->AnimEventsList[i]);
-//	DisposePtr((Ptr)skeleton->AnimEventsList);
 
 			/* DISPOSE JOINT INFO */
 			
-	for (j=0; j < numJoints; j++)
+	for (int j=0; j < numJoints; j++)
 	{
 		Free2DArray((void**) skeleton->JointKeyframes[j].keyFrames);		// dispose 2D array of keyframe data
 
@@ -308,14 +291,13 @@ short	j,numAnims,numJoints;
 	}
 
 			/* DISPOSE DECOMPOSED DATA ARRAYS */
-	
-	for (j = 0; j < skeleton->numDecomposedTriMeshes; j++)			// first dispose of the trimesh data in there
-		Q3TriMesh_EmptyData(&skeleton->decomposedTriMeshes[j]);
-	
-	if (skeleton->decomposedTriMeshes)
+
+	// DON'T call Q3TriMeshData_Dispose on every decomposedTriMeshPtrs as they're just pointers
+	// to trimeshes in the 3DMF. We dispose of the 3DMF at the end.
+	if (skeleton->decomposedTriMeshPtrs)
 	{
-		DisposePtr((Ptr)skeleton->decomposedTriMeshes);
-		skeleton->decomposedTriMeshes = nil;
+		DisposePtr((Ptr)skeleton->decomposedTriMeshPtrs);
+		skeleton->decomposedTriMeshPtrs = nil;
 	}
 
 	if (skeleton->decomposedPointList)
@@ -330,10 +312,18 @@ short	j,numAnims,numJoints;
 		skeleton->decomposedNormalsList = nil;
 	}
 
+			/* DISPOSE OF 3DMF */
+
+	if (skeleton->associated3DMF)
+	{
+		Render_Dispose3DMFTextures(skeleton->associated3DMF);
+		Q3MetaFile_Dispose(skeleton->associated3DMF);
+		skeleton->associated3DMF = nil;
+	}
+
 			/* DISPOSE OF MASTER DEFINITION BLOCK */
 			
 	DisposePtr((Ptr)skeleton);
-#endif
 }
 
 #pragma mark -
@@ -365,11 +355,6 @@ SkeletonObjDataType	*skeletonData;
 	skeletonData->AnimSpeed = 1.0;
 	skeletonData->JointsAreGlobal = false;
 
-			/****************************************/
-			/* MAKE COPY OF TRIMESHES FOR LOCAL USE */
-			/****************************************/
-			
-
 	return(skeletonData);
 }
 
@@ -383,21 +368,4 @@ void FreeSkeletonBaseData(SkeletonObjDataType *data)
 			
 	DisposePtr((Ptr)data);			
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

@@ -20,7 +20,6 @@ extern	QD3DSetupOutputType		*gGameViewInfoPtr;
 extern	float					gPlayerMaxSpeed,gMyDistToFloor,gBallTimer;
 extern	unsigned long 			gInfobarUpdateBits;
 extern	Boolean					gPlayerCanMove,gPlayerUsingKeyControl;
-extern	TQ3TriMeshData			*gLocalTriMeshesOfSkelType[MAX_SKELETON_TYPES][MAX_DECOMPOSED_TRIMESHES];
 extern	PrefsType	gGamePrefs;
 
 
@@ -78,11 +77,11 @@ TQ3Vector3D		gPlayerKnockOnButtDelta;
 void InitPlayer_Ball(ObjNode *oldObj, TQ3Point3D *where)
 {
 ObjNode	*newObj;
-long	numTriMeshes,i;
 float	rotY;
 
 	GAME_ASSERT_MESSAGE(gPlayerMode == PLAYER_MODE_BUG, "To become ball, player must be bug");
-					
+	GAME_ASSERT(oldObj);
+
 	gPlayerKnockOnButt = false;
 					
 	Q3Matrix4x4_SetIdentity(&gBallRotationMatrix);
@@ -129,22 +128,18 @@ float	rotY;
 
 	UpdateSkinnedGeometry(oldObj);
 	
-	numTriMeshes = oldObj->Skeleton->skeletonDefinition->numDecomposedTriMeshes;
-	for (i = 0; i < numTriMeshes; i++)
+	for (int i = 0; i < oldObj->NumMeshes; i++)
 	{
-		TQ3TriMeshData		*data;
-		float				xoff,yoff,zoff;
-		
 					/* OFFSET THE GEOMETRY */
 					//
 					// Remember, geometry is in world-space, so convert to local space.
 					//
 
-		xoff = -oldObj->Coord.x;
-		yoff = -oldObj->Coord.y - PLAYER_BALL_FOOTOFFSET;
-		zoff = -oldObj->Coord.z;
+		float xoff = -oldObj->Coord.x;
+		float yoff = -oldObj->Coord.y - PLAYER_BALL_FOOTOFFSET;
+		float zoff = -oldObj->Coord.z;
 		
-		data = gLocalTriMeshesOfSkelType[SKELETON_TYPE_ME][i];
+		TQ3TriMeshData* data = oldObj->MeshList[i];
 		for (int p = 0; p < data->numPoints; p++)
 		{
 			data->points[p].x += xoff;
@@ -156,7 +151,17 @@ float	rotY;
 
 				/* PUT TRIMESHES INTO STATIC DISPLAY GROUP */
 
-	AttachGeometryToDisplayGroupObject(newObj, numTriMeshes, gLocalTriMeshesOfSkelType[SKELETON_TYPE_ME]);
+	AttachGeometryToDisplayGroupObject(newObj, oldObj->NumMeshes, oldObj->MeshList);//gLocalTriMeshesOfSkelType[SKELETON_TYPE_ME]);
+
+				/* TRANSFER OWNERSHIP OF MESH MEMORY TO NEWOBJ */
+
+	GAME_ASSERT(newObj->NumMeshes == oldObj->NumMeshes);
+
+	memcpy(newObj->OwnsMeshMemory, oldObj->OwnsMeshMemory, sizeof(oldObj->OwnsMeshMemory));
+	memcpy(newObj->OwnsMeshTexture, oldObj->OwnsMeshTexture, sizeof(oldObj->OwnsMeshTexture));
+
+	memset(oldObj->OwnsMeshMemory, 0, sizeof(oldObj->OwnsMeshMemory));		// prevent mesh memory from being freed when we delete oldObj
+	memset(oldObj->OwnsMeshTexture, 0, sizeof(oldObj->OwnsMeshTexture));
 
 	
 				/**********************/
@@ -183,29 +188,26 @@ float	rotY;
 			/*******************************************/
 			/* COPY SOME STUFF FROM OLD OBJ & NUKE OLD */
 			/*******************************************/
-			
-	if (oldObj)
+
+	newObj->Damage			= oldObj->Damage;
+	newObj->InvincibleTimer = oldObj->InvincibleTimer;
+	newObj->Delta			= oldObj->Delta;
+	newObj->Rot.x = newObj->Rot.z = 0;
+
+			/* COPY OLD COLLISION BOX */
+
+	newObj->OldCoord 		= oldObj->OldCoord;
+
+	GAME_ASSERT(newObj->NumCollisionBoxes > 0);
+
+	if (oldObj->NumCollisionBoxes != 0)  // old obj may have 0 collision boxes in title screen!
 	{
-		newObj->Damage 			= oldObj->Damage;
-		newObj->InvincibleTimer = oldObj->InvincibleTimer;
-		newObj->Delta 			= oldObj->Delta;
-		newObj->Rot.x = newObj->Rot.z = 0;
-		
-				/* COPY OLD COLLISION BOX */
+		newObj->OldCollisionBoxes[0] = oldObj->OldCollisionBoxes[0];
+	}
 
-		newObj->OldCoord 		= oldObj->OldCoord;
+	DeleteObject(oldObj);
+	oldObj = nil;
 
-		GAME_ASSERT(newObj->NumCollisionBoxes > 0);
-
-		if (oldObj->NumCollisionBoxes != 0)  // old obj may have 0 collision boxes in title screen!
-		{
-			newObj->OldCollisionBoxes[0] = oldObj->OldCollisionBoxes[0];
-		}
-		
-		DeleteObject(oldObj);
-		oldObj = nil;
-	}	
-	
 	
 	
 				/* SET GLOBALS */

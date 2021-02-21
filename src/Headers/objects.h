@@ -50,8 +50,6 @@ extern	void CreateBaseGroup(ObjNode *theNode);
 extern	void UpdateObjectTransforms(ObjNode *theNode);
 extern	void SetObjectTransformMatrix(ObjNode *theNode);
 extern	void MakeObjectKeepBackfaces(ObjNode *theNode);
-extern	void DisposeObjectBaseGroup(ObjNode *theNode);
-extern	void ResetDisplayGroupObject(ObjNode *theNode);
 extern	void MakeObjectTransparent(ObjNode *theNode, float transPercent);
 void AttachObject(ObjNode *theNode);
 

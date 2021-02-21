@@ -18,7 +18,6 @@ extern	short		gNumObjectsInGroupList[MAX_3DMF_GROUPS];
 extern	float		gFramesPerSecondFrac;
 extern	ObjNode		*gPlayerObj;
 extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	TQ3TriMeshData			*gLocalTriMeshesOfSkelType[MAX_SKELETON_TYPES][MAX_DECOMPOSED_TRIMESHES];
 extern	Boolean		gShowDebug;
 
 /****************************/
@@ -211,26 +210,6 @@ ObjNode	*newObj;
 	newObj->CustomDrawFunction = drawFunc;
 	
 	return(newObj);
-}
-
-
-/******************* RESET DISPLAY GROUP OBJECT *********************/
-//
-// If the ObjNode's "Type" field has changed, call this to dispose of
-// the old BaseGroup and create a new one with the correct model attached.
-//
-
-void ResetDisplayGroupObject(ObjNode *theNode)
-{
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-	DisposeObjectBaseGroup(theNode);									// dispose of old group
-	CreateBaseGroup(theNode);											// create new group object
-
-	GAME_ASSERT(theNode->Type < gNumObjectsInGroupList[theNode->Group]);	// see if illegal
-
-	AttachGeometryToDisplayGroupObject(theNode,gObjectGroupList[theNode->Group][theNode->Type]);	// attach geometry to group
-#endif
 }
 
 
@@ -594,8 +573,8 @@ short			skelType;
 					numTriMeshes = theNode->Skeleton->skeletonDefinition->numDecomposedTriMeshes;
 					skelType = theNode->Type;
 					Render_SubmitMeshList(															// submit each trimesh of it
-							numTriMeshes,
-							gLocalTriMeshesOfSkelType[skelType],
+							theNode->NumMeshes,
+							theNode->MeshList,
 							nil,		// Don't mult matrix with BaseTransformMatrix -- skeleton code already does it
 							&theNode->RenderModifiers,
 							&theNode->Coord);
@@ -737,9 +716,26 @@ void DeleteObject(ObjNode	*theNode)
 
 
 		/* SEE IF NEED TO DEREFERENCE A QD3D OBJECT */
-	
-	DisposeObjectBaseGroup(theNode);		
 
+	for (int i = 0; i < theNode->NumMeshes; i++)
+	{
+		// If the node has ownership of this mesh's OpenGL texture name, delete it
+		if (theNode->MeshList[i]->glTextureName && theNode->OwnsMeshTexture[i])
+		{
+			glDeleteTextures(1, &theNode->MeshList[i]->glTextureName);
+			theNode->MeshList[i]->glTextureName = 0;
+		}
+
+		// If the node has ownership of this mesh's memory, dispose of it
+		if (theNode->OwnsMeshMemory[i])
+		{
+			Q3TriMeshData_Dispose(theNode->MeshList[i]);
+		}
+
+		theNode->MeshList[i] = nil;
+		theNode->OwnsMeshMemory[i] = false;
+	}
+	theNode->NumMeshes = 0;
 
 			/* REMOVE NODE FROM LINKED LIST */
 
@@ -889,31 +885,6 @@ long	i,num;
 		DisposePtr((Ptr)gObjectDeleteQueue[i]);					
 
 	gNumObjsInDeleteQueue = 0;
-}
-
-
-/****************** DISPOSE OBJECT BASE GROUP **********************/
-
-void DisposeObjectBaseGroup(ObjNode *theNode)
-{
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-TQ3Status	status;
-
-	if (theNode->BaseGroup != nil)
-	{
-		status = Q3Object_Dispose(theNode->BaseGroup);
-		GAME_ASSERT(status);
-
-		theNode->BaseGroup = nil;
-	}
-	
-	if (theNode->BaseTransformObject != nil)							// also nuke extra ref to transform object
-	{
-		Q3Object_Dispose(theNode->BaseTransformObject);
-		theNode->BaseTransformObject = nil;
-	}
-#endif
 }
 
 
