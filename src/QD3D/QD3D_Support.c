@@ -690,7 +690,9 @@ void QD3D_DrawScene(QD3DSetupOutputType *setupInfo, void (*drawRoutine)(const QD
 	// Clip pane
 	if (setupInfo->needScissorTest)
 	{
-		DoFatalAlert("NOQUESA: need scissor test!");
+		printf("TODO NOQUESA: need scissor test!\n");
+		gWindowWidth = 640;		gWindowHeight = 480;		// TODO NOQUESA: TEMP
+		Render_SetViewport(false, 0, 0, gWindowWidth, gWindowHeight); // TODO NOQUESA: TEMP
 		/*
 		// Render backdrop
 		Render_Draw2DCover(setupInfo->backdropFit);

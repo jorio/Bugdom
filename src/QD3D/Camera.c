@@ -377,8 +377,6 @@ void CalcCameraMatrixInfo(QD3DSetupOutputType *setupInfo)
 
 static void MoveCamera_Manual(void)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
 TQ3Point3D	from,to,target;
 float		distX,distZ,distY,dist;
 TQ3Vector2D	pToC;
@@ -568,7 +566,6 @@ float		fps = gFramesPerSecondFrac;
 				/**********************/
 
 	QD3D_UpdateCameraFromTo(gGameViewInfoPtr,&from,&to);
-#endif
 }
 
 

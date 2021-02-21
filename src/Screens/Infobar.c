@@ -1177,9 +1177,12 @@ int		w,x;
 
 void SubmitInfobarOverlay(void)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0
 	Overlay_SubmitQuad(0,	0,		640,	62,		0,	0,				1.0f,	62.0f/480.0f);
 	if (gShowBottomBar)
 	{
 		Overlay_SubmitQuad(0,	420,	640,	60,		0,	420.0f/480.0f,	1.0f,	60.0f/480.0f);
 	}
+#endif
 }

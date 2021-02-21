@@ -366,6 +366,8 @@ static void InitWaterPatch(void)
 
 Boolean AddWaterPatch(TerrainItemEntryType *itemPtr, long  x, long z)
 {
+	printf("TODO NOQUESA: AddWaterPatch skipped \n");
+	return false; // NOQUESA
 ObjNode				*newObj;
 float				y,yOff;
 TQ3BoundingSphere	bSphere;

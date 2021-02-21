@@ -1601,6 +1601,7 @@ use_1:
 	Q3Shader_Submit(setupInfo->shaderObject, view);						// set the normal shader
 	QD3D_SetTriangleCacheMode(true);
 
+#endif
 
 		/* DRAW OBJECTS */
 		
@@ -1611,7 +1612,6 @@ use_1:
 	QD3D_DrawParticles(setupInfo);
 	DrawParticleGroup(setupInfo);
 	DrawLensFlare(setupInfo);
-#endif
 }
 
 
