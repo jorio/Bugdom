@@ -339,8 +339,6 @@ ObjNode					*newObj;
 
 
 
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
 			/**************/
 			/* MAKE ICONS */
 			/**************/
@@ -372,14 +370,16 @@ ObjNode					*newObj;
 		gMenuIcons[i] = MakeNewDisplayGroupObject(&gNewObjectDefinition);
 
 					/* ADD PICK ID TO ICON */
-					
+
+		printf("TODO NOQUESA: %s\n", __func__);
+#if 0
 		pick = Q3PickIDStyle_New(i);					
 		AttachGeometryToDisplayGroupObject(gMenuIcons[i], pick);
 		Q3Object_Dispose(pick);
+#endif
 	}
 	
 	MakeFadeEvent(true);
-#endif
 }
 
 
