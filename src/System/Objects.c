@@ -423,10 +423,7 @@ short			skelType;
 		if (theNode->CType == INVALID_NODE_FLAG)				// see if already deleted
 			goto next;		
 
-//		if (statusBits & STATUS_BIT_REFLECTIONMAP)				// dont draw here if this is reflection mapped
-//			goto next;
 
-			
 				/**************************/
 				/* CHECK TRIANGLE CACHING */
 				/**************************/
@@ -691,11 +688,6 @@ void DeleteAllObjects(void)
 		DeleteObject(gFirstNodePtr);
 		
 	FlushObjectDeleteQueue();
-#if 1	//NOQUESA
-	printf("TODO NOQUESA: InitReflectionMapQueue?\n");
-#else
-	InitReflectionMapQueue();						// also purge data from here
-#endif
 }
 
 
