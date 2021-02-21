@@ -17,7 +17,6 @@ extern	long	gNumTerrainTextureTiles;
 extern	long	gNumSuperTilesDeep,gNumSuperTilesWide;
 extern	long	gTerrainUnitWidth,gTerrainUnitDepth;
 extern	TQ3Point3D	gCoord,gMyCoord;
-extern	const float	gOneOver_TERRAIN_POLYGON_SIZE;
 extern	Byte		gMyStartAim;
 extern	TQ3Vector3D		gRecentTerrainNormal[2];
 extern	u_short	**gVertexColors[2];

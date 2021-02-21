@@ -97,10 +97,6 @@ float	gTerrainItemDeleteWindow_Near,gTerrainItemDeleteWindow_Far,
 
 float		gSuperTileRadius;			// normal x/z radius
 
-float		gUnitToPixel = 1.0f/(TERRAIN_POLYGON_SIZE/TERRAIN_HMTILE_SIZE);
-
-const float gOneOver_TERRAIN_POLYGON_SIZE = (1.0f / TERRAIN_POLYGON_SIZE);
-
 static Handle	gTerrainTextureBuffers[MAX_SUPERTILES][2][MAX_LODS];
 
 			/* TILE SPLITTING TABLES */
