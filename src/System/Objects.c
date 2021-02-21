@@ -411,14 +411,11 @@ short			skelType;
 	{
 		statusBits = theNode->StatusBits;						// get obj's status bits
 
-		printf("TODO NOQUESA: Restore objnode culling!!!\n");
-#if 0	// NOQUESA
 		if (statusBits & STATUS_BIT_ISCULLED)					// see if is culled
 			goto next;		
 		
 		if (statusBits & STATUS_BIT_HIDDEN)						// see if is hidden
 			goto next;		
-#endif
 
 		if (theNode->CType == INVALID_NODE_FLAG)				// see if already deleted
 			goto next;		
@@ -1022,7 +1019,7 @@ TQ3Matrix4x4	m,m2;
 
 void SetObjectTransformMatrix(ObjNode *theNode)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
+//	printf("TODO NOQUESA: %s\n", __func__);
 #if 0	// NOQUESA
 TQ3Status 				error;
 

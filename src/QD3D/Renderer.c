@@ -625,7 +625,7 @@ static void DrawMeshList(int renderPass, const MeshQueueEntry* entry)
 		else
 		{
 //			EnableState(GL_LIGHTING);
-printf("TODO NOQUESA: LIGHTING!!\n");
+//printf("TODO NOQUESA: LIGHTING!!\n");
 DisableState(GL_LIGHTING);
 		}
 
