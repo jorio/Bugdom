@@ -73,10 +73,10 @@ struct SuperTileMemoryType
 	Byte				mode;									// free, used, etc.
 	Byte				hasLOD[MAX_LODS];						// flag set when LOD exists
 	Byte				hiccupTimer;							// timer to delay drawing to avoid hiccup of texture upload
-	float				x,z,y[2];								// world coords (y for floor & ceiling)
+	TQ3Point3D			coord[2];								// world coords (y for floor & ceiling)
 	long				left,back;								// integer coords of back/left corner
-	TQ3AttributeSet		texture[MAX_LODS][2];					// attribute set containing texture for floor & ceiling at all LOD's
-	TQ3TriMeshData		triMeshData[2];							// trimesh's data for the supertile (floor & ceiling)
+	uint32_t			glTextureName[MAX_LODS][2];				// attribute set containing texture for floor & ceiling at all LOD's
+	TQ3TriMeshData*		triMeshDataPtrs[2];						// trimesh's data for the supertile (floor & ceiling)
 	float				radius[2];								// radius of this supertile (floor & ceiling)
 };
 typedef struct SuperTileMemoryType SuperTileMemoryType;
