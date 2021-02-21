@@ -1044,19 +1044,7 @@ TQ3Status 				error;
 
 void MakeObjectKeepBackfaces(ObjNode *theNode)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-//TQ3Status			status;
-
-	GAME_ASSERT(theNode->BaseGroup);
-
-//	status = Q3Group_GetFirstPosition(theNode->BaseGroup, &position);
-//	if ((status == kQ3Failure) || (position == nil))
-//		DoFatalAlert("MakeObjectKeepBackfaces: Q3Group_GetFirstPosition failed!");
-	
-	TQ3GroupPosition pos = Q3Group_AddObject(theNode->BaseGroup, gKeepBackfaceStyleObject);
-	GAME_ASSERT(pos);
-#endif
+	theNode->StatusBits |= STATUS_BIT_KEEPBACKFACES;
 }
 
 
@@ -1070,72 +1058,7 @@ void MakeObjectKeepBackfaces(ObjNode *theNode)
 
 void MakeObjectTransparent(ObjNode *theNode, float transPercent)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-TQ3GroupPosition	position;
-TQ3Status			status;
-//TQ3ObjectType		oType;
-TQ3Object			attrib;
-TQ3ColorRGB			transColor;
-TQ3AttributeType	attribType;
-
-	GAME_ASSERT(theNode->BaseGroup);
-
-//	oType = Q3Group_GetType(theNode->BaseGroup);
-//	if (oType == kQ3ObjectTypeInvalid)
-//		DoFatalAlert("MakeObjectTransparent: BaseGroup is not a Group Object!");
-
-
-			/* GET CURRENT ATTRIBUTE OBJECT OR MAKE NEW ONE */
-
-	status = Q3Group_GetFirstPositionOfType(theNode->BaseGroup, kQ3SharedTypeSet, &position);	// see if attribute object in the group
-	if (position != nil)																		// YES
-	{
-		status = Q3Group_GetPositionObject(theNode->BaseGroup, position, &attrib);				// get the attribute object
-		GAME_ASSERT(status);
-
-		if (transPercent >= 1.0f)															// if totally opaque then remove this attrib
-		{
-			Q3AttributeSet_Clear(attrib, kQ3AttributeTypeTransparencyColor);				// remove this attrib type from attrib
-			
-			attribType = kQ3AttributeTypeNone;
-			Q3AttributeSet_GetNextAttributeType(attrib, &attribType);						// if nothing in attrib set then remove attrib obj
-			if (attribType == kQ3AttributeTypeNone)
-			{
-				TQ3Object	removedObj;
-				
-				removedObj = (TQ3Object)Q3Group_RemovePosition(theNode->BaseGroup, position);			// remove attrib from group		
-				if (removedObj)
-					Q3Object_Dispose(removedObj);											// now throw it out
-			}
-			goto bye;
-		}		
-	}
-	
-					/* NO ATTRIB OBJ IN GROUP, SO MAKE NEW ATTRIB SET */
-	else
-	{
-		if (transPercent >= 1.0)															// if totally opaque then dont do it
-			return;
-
-		attrib = Q3AttributeSet_New();														// make new attrib set
-		GAME_ASSERT(attrib);
-			
-				/* ADD NEW ATTRIB SET TO GROUP */
-					
-		position = Q3Group_AddObject(theNode->BaseGroup, attrib);
-		GAME_ASSERT(position);
-	}
-				
-					/* ADD TRANSPARENCY */
-					
-	transColor.r = transColor.g = transColor.b = transPercent;
-	status = Q3AttributeSet_Add(attrib, kQ3AttributeTypeTransparencyColor, &transColor);
-	GAME_ASSERT(status);
-
-bye:
-	Q3Object_Dispose(attrib);								// dispose of extra ref
-#endif
+	theNode->RenderModifiers.diffuseColor.a = transPercent;
 }
 
 
