@@ -43,7 +43,7 @@ void EnvironmentMapTriMesh(
 		const TQ3TriMeshData *mesh,
 		const TQ3Matrix4x4* transform)
 {
-	if (!mesh->hasTexture)
+	if (mesh->texturingMode == kQ3TexturingModeOff)
 		return;
 
 	TQ3Matrix4x4		invTranspose;

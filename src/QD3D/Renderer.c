@@ -205,6 +205,8 @@ static inline void __SetClientState(GLenum stateEnum, bool* stateFlagPtr, bool e
 #define SetInitialState(stateEnum, initialValue) __SetInitialState(stateEnum, &gState.hasState_##stateEnum, initialValue)
 #define SetInitialClientState(stateEnum, initialValue) __SetInitialClientState(stateEnum, &gState.hasClientState_##stateEnum, initialValue)
 
+#define SetState(stateEnum, value) __SetState(stateEnum, &gState.hasState_##stateEnum, (value))
+
 #define EnableState(stateEnum) __SetState(stateEnum, &gState.hasState_##stateEnum, true)
 #define EnableClientState(stateEnum) __SetClientState(stateEnum, &gState.hasClientState_##stateEnum, true)
 
@@ -214,17 +216,12 @@ static inline void __SetClientState(GLenum stateEnum, bool* stateFlagPtr, bool e
 #define RestoreStateFromBackup(stateEnum, backup) __SetState(stateEnum, &gState.hasState_##stateEnum, (backup)->hasState_##stateEnum)
 #define RestoreClientStateFromBackup(stateEnum, backup) __SetClientState(stateEnum, &gState.hasClientState_##stateEnum, (backup)->hasClientState_##stateEnum)
 
-#define EnableFlag(glFunction) do {					\
-	if (!gState.hasFlag_##glFunction) {				\
-		glFunction(GL_TRUE);						\
-		gState.hasFlag_##glFunction = true;			\
+#define SetFlag(glFunction, value) do {				\
+	if ((value) != gState.hasFlag_##glFunction) {	\
+		glFunction((value)? GL_TRUE: GL_FALSE);		\
+		gState.hasFlag_##glFunction = (value);		\
 	} } while(0)
 
-#define DisableFlag(glFunction) do {				\
-	if (gState.hasFlag_##glFunction) {				\
-		glFunction(GL_FALSE);						\
-		gState.hasFlag_##glFunction = false;		\
-	} } while(0)
 
 #pragma mark -
 
@@ -345,17 +342,26 @@ void Render_Load3DMFTextures(TQ3MetaFile* metaFile)
 		TQ3Pixmap* textureDef = metaFile->textures[i];
 		GAME_ASSERT_MESSAGE(textureDef->glTextureName == 0, "GL texture already allocated");
 
+		TQ3TexturingMode meshTexturingMode = kQ3TexturingModeOff;
 		GLenum internalFormat;
 		GLenum format;
 		GLenum type;
 		switch (textureDef->pixelType)
 		{
+			case kQ3PixelTypeARGB32:
+				meshTexturingMode = kQ3TexturingModeAlphaBlend;
+				internalFormat = GL_RGBA;
+				format = GL_BGRA;
+				type = GL_UNSIGNED_INT_8_8_8_8_REV;
+				break;
 			case kQ3PixelTypeRGB16:
+				meshTexturingMode = kQ3TexturingModeOpaque;
 				internalFormat = GL_RGB;
 				format = GL_BGRA;
 				type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
 				break;
 			case kQ3PixelTypeARGB16:
+				meshTexturingMode = kQ3TexturingModeAlphaTest;
 				internalFormat = GL_RGBA;
 				format = GL_BGRA;
 				type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
@@ -377,9 +383,10 @@ void Render_Load3DMFTextures(TQ3MetaFile* metaFile)
 		// Set glTextureName on meshes
 		for (int j = 0; j < metaFile->numMeshes; j++)
 		{
-			if (metaFile->meshes[j]->hasTexture && metaFile->meshes[j]->internalTextureID == i)
+			if (metaFile->meshes[j]->internalTextureID == i)
 			{
 				metaFile->meshes[j]->glTextureName = textureDef->glTextureName;
+				metaFile->meshes[j]->texturingMode = meshTexturingMode;
 			}
 		}
 	}
@@ -410,7 +417,7 @@ void Render_StartFrame(void)
 	gMeshQueueSize = 0;
 
 	// Clear color & depth buffers.
-	EnableFlag(glDepthMask);	// The depth mask must be re-enabled so we can clear the depth buffer.
+	SetFlag(glDepthMask, true);	// The depth mask must be re-enabled so we can clear the depth buffer.
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 //	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -561,7 +568,7 @@ static void DrawMeshList(int renderPass, const MeshQueueEntry* entry)
 	{
 		const TQ3TriMeshData* mesh = entry->meshPtrList[i];
 
-		bool meshIsTransparent = mesh->textureHasTransparency
+		bool meshIsTransparent = mesh->texturingMode == kQ3TexturingModeAlphaBlend
 				|| mesh->diffuseColor.a < .999f
 				|| entry->mods->diffuseColor.a < .999f;
 
@@ -575,16 +582,10 @@ static void DrawMeshList(int renderPass, const MeshQueueEntry* entry)
 		}
 
 		// Enable alpha blending if the mesh has transparency
-		if (meshIsTransparent)
-		{
-			EnableState(GL_BLEND);
-			DisableState(GL_ALPHA_TEST);
-		}
-		else
-		{
-			DisableState(GL_BLEND);
-			EnableState(GL_ALPHA_TEST);
-		}
+		SetState(GL_BLEND, meshIsTransparent);
+
+		// Enable alpha testing if the mesh's texture calls for it
+		SetState(GL_ALPHA_TEST, !meshIsTransparent && mesh->texturingMode == kQ3TexturingModeAlphaTest);
 
 		// Environment map effect
 		if (applyEnvironmentMap)
@@ -618,29 +619,13 @@ static void DrawMeshList(int renderPass, const MeshQueueEntry* entry)
 		}
 
 		// Apply gouraud or null illumination
-		if (entry->mods->statusBits & STATUS_BIT_NULLSHADER)
-		{
-			DisableState(GL_LIGHTING);
-		}
-		else
-		{
-//			EnableState(GL_LIGHTING);
-//printf("TODO NOQUESA: LIGHTING!!\n");
+		SetState(GL_LIGHTING, !(entry->mods->statusBits & STATUS_BIT_NULLSHADER));
 DisableState(GL_LIGHTING);
-		}
-
 		// Write geometry to depth buffer or not
-		if (meshIsTransparent || entry->mods->statusBits & STATUS_BIT_NOZWRITE)
-		{
-			DisableFlag(glDepthMask);
-		}
-		else
-		{
-			EnableFlag(glDepthMask);
-		}
+		SetFlag(glDepthMask, !(meshIsTransparent || entry->mods->statusBits & STATUS_BIT_NOZWRITE));
 
 		// Texture mapping
-		if (mesh->hasTexture)
+		if (mesh->texturingMode != kQ3TexturingModeOff)
 		{
 			EnableState(GL_TEXTURE_2D);
 			EnableClientState(GL_TEXTURE_COORD_ARRAY);
