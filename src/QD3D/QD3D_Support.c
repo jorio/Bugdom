@@ -566,68 +566,54 @@ QD3DCameraDefType 				*cameraDefPtr;
 
 static void CreateLights(QD3DLightDefType *lightDefPtr)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-TQ3GroupPosition		myGroupPosition;
-TQ3LightData			myLightData;
-TQ3DirectionalLightData	myDirectionalLightData;
-TQ3LightObject			myLight;
-short					i;
-TQ3Status	myErr;
-
-
-			/* CREATE NEW LIGHT GROUP */
-			
-	gQD3D_LightGroup = (TQ3GroupObject) Q3LightGroup_New();						// make new light group
-	GAME_ASSERT(gQD3D_LightGroup);
-
-
-	myLightData.isOn = kQ3True;									// light is ON
-	
 			/************************/
 			/* CREATE AMBIENT LIGHT */
 			/************************/
 
 	if (lightDefPtr->ambientBrightness != 0)						// see if ambient exists
 	{
-		myLightData.color = lightDefPtr->ambientColor;				// set color of light
-		myLightData.brightness = lightDefPtr->ambientBrightness;	// set brightness value
-		myLight = Q3AmbientLight_New(&myLightData);					// make it
-		GAME_ASSERT(myLight);
-
-		myGroupPosition = (TQ3GroupPosition)Q3Group_AddObject(gQD3D_LightGroup, myLight);	// add to group
-		GAME_ASSERT(myGroupPosition);
-
-		Q3Object_Dispose(myLight);									// dispose of light
-
+		GLfloat ambient[4] =
+		{
+			lightDefPtr->ambientBrightness * lightDefPtr->ambientColor.r,
+			lightDefPtr->ambientBrightness * lightDefPtr->ambientColor.g,
+			lightDefPtr->ambientBrightness * lightDefPtr->ambientColor.b,
+			1
+		};
+		glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambient);
 	}
 
 			/**********************/
 			/* CREATE FILL LIGHTS */
 			/**********************/
-			
-	for (i=0; i < lightDefPtr->numFillLights; i++)
-	{		
+
+	for (int i = 0; i < lightDefPtr->numFillLights; i++)
+	{
+		static GLfloat lightamb[4] = { 0.0, 0.0, 0.0, 1.0 };
+		GLfloat lightVec[4];
+		GLfloat	diffuse[4];
+
+					/* SET FILL DIRECTION */
+
 		Q3Vector3D_Normalize(&lightDefPtr->fillDirection[i], &lightDefPtr->fillDirection[i]);
-		myLightData.color = lightDefPtr->fillColor[i];						// set color of light
-		myLightData.brightness = lightDefPtr->fillBrightness[i];			// set brightness
-		myDirectionalLightData.lightData = myLightData;						// refer to general light info
-		myDirectionalLightData.castsShadows = kQ3True;						// shadows
-		myDirectionalLightData.direction =  lightDefPtr->fillDirection[i];	// set fill vector
-		myLight = Q3DirectionalLight_New(&myDirectionalLightData);			// make it
-		GAME_ASSERT(myLight);
+		lightVec[0] = -lightDefPtr->fillDirection[i].x;		// negate vector because OGL is stupid
+		lightVec[1] = -lightDefPtr->fillDirection[i].y;
+		lightVec[2] = -lightDefPtr->fillDirection[i].z;
+		lightVec[3] = 0;									// when w==0, this is a directional light, if 1 then point light
+		glLightfv(GL_LIGHT0+i, GL_POSITION, lightVec);
 
-		myGroupPosition = (TQ3GroupPosition)Q3Group_AddObject(gQD3D_LightGroup, myLight);		// add to group
-		GAME_ASSERT(myGroupPosition);
+					/* SET COLOR */
 
-		Q3Object_Dispose(myLight);											// dispose of light
+		glLightfv(GL_LIGHT0+i, GL_AMBIENT, lightamb);
+
+		diffuse[0] = lightDefPtr->fillColor[i].r * lightDefPtr->fillBrightness[i];
+		diffuse[1] = lightDefPtr->fillColor[i].g * lightDefPtr->fillBrightness[i];
+		diffuse[2] = lightDefPtr->fillColor[i].b * lightDefPtr->fillBrightness[i];
+		diffuse[3] = 1;
+
+		glLightfv(GL_LIGHT0+i, GL_DIFFUSE, diffuse);
+
+		glEnable(GL_LIGHT0+i);								// enable the light
 	}
-	
-			/* ASSIGN LIGHT GROUP TO VIEW */
-			
-	myErr = Q3View_SetLightGroup(gQD3D_ViewObject, gQD3D_LightGroup);		// assign light group to view
-	GAME_ASSERT(myErr);
-#endif
 }
 
 

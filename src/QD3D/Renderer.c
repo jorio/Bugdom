@@ -620,7 +620,7 @@ static void DrawMeshList(int renderPass, const MeshQueueEntry* entry)
 
 		// Apply gouraud or null illumination
 		SetState(GL_LIGHTING, !(entry->mods->statusBits & STATUS_BIT_NULLSHADER));
-DisableState(GL_LIGHTING);
+
 		// Write geometry to depth buffer or not
 		SetFlag(glDepthMask, !(meshIsTransparent || entry->mods->statusBits & STATUS_BIT_NOZWRITE));
 
