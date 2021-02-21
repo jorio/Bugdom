@@ -20,7 +20,7 @@ extern	QD3DSetupOutputType		*gGameViewInfoPtr;
 extern	float					gPlayerMaxSpeed,gMyDistToFloor,gBallTimer;
 extern	unsigned long 			gInfobarUpdateBits;
 extern	Boolean					gPlayerCanMove,gPlayerUsingKeyControl;
-extern	TQ3TriMeshData			**gLocalTriMeshesOfSkelType;
+extern	TQ3TriMeshData			*gLocalTriMeshesOfSkelType[MAX_SKELETON_TYPES][MAX_DECOMPOSED_TRIMESHES];
 extern	PrefsType	gGamePrefs;
 
 

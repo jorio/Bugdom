@@ -12,7 +12,7 @@
 
 #include "3dmath.h"
 
-extern	TQ3TriMeshData		**gLocalTriMeshesOfSkelType;
+extern	TQ3TriMeshData		*gLocalTriMeshesOfSkelType[MAX_SKELETON_TYPES][MAX_DECOMPOSED_TRIMESHES];
 
 
 /****************************/
@@ -266,9 +266,12 @@ SkeletonObjDataType	*currentSkelObjData;
 	gCurrentSkelObjData = currentSkelObjData = theNode->Skeleton;
 	if (gCurrentSkelObjData == nil)
 		return;
-	
+
 	gCurrentSkeleton = currentSkelObjData->skeletonDefinition;
 	GAME_ASSERT(gCurrentSkeleton);
+
+	const SkeletonDefType* skeletonDef = theNode->Skeleton->skeletonDefinition;
+	GAME_ASSERT(skeletonDef);
 
 	if (currentSkelObjData->JointsAreGlobal)
 		Q3Matrix4x4_SetIdentity(&gMatrix);
@@ -277,10 +280,9 @@ SkeletonObjDataType	*currentSkelObjData;
 
 	gBBox.min.x = gBBox.min.y = gBBox.min.z = 10000000;
 	gBBox.max.x = gBBox.max.y = gBBox.max.z = -gBBox.min.x;								// init bounding box calc
-	
-	if (gCurrentSkeleton->Bones[0].parentBone != NO_PREVIOUS_JOINT)
-		DoFatalAlert("UpdateSkinnedGeometry: joint 0 isnt base - fix code Brian!");
-	
+
+	GAME_ASSERT_MESSAGE(skeletonDef->Bones[0].parentBone == NO_PREVIOUS_JOINT, "joint 0 isnt base - fix code Brian!");
+
 	skelType = theNode->Type;
 		
 	UpdateSkinnedGeometry_Recurse(0, skelType);											// start @ base
@@ -291,7 +293,7 @@ SkeletonObjDataType	*currentSkelObjData;
 	
 	for (i = 0; i < numTriMeshes; i++)
 	{
-		gLocalTriMeshesOfSkelType[skelType][i].bBox = gBBox;				// apply to local copy of trimesh
+		gLocalTriMeshesOfSkelType[skelType][i]->bBox = gBBox;				// apply to local copy of trimesh
 	}
 }
 
@@ -300,9 +302,6 @@ SkeletonObjDataType	*currentSkelObjData;
 
 static void UpdateSkinnedGeometry_Recurse(short joint, short skelType)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-
 long					numChildren,numPoints,p,i,numRefs,r,triMeshNum,p2,c,numNormals,n;
 TQ3Matrix4x4			oldM;
 TQ3Vector3D				*normalAttribs;
@@ -316,7 +315,7 @@ const SkeletonDefType	*currentSkeleton = gCurrentSkeleton;
 const float				*jointMat;
 float					*matPtr;
 DecomposedPointType		*decomposedPointList = currentSkeleton->decomposedPointList;
-TQ3TriMeshData			*localTriMeshes = &gLocalTriMeshesOfSkelType[skelType][0];
+TQ3TriMeshData			**localTriMeshes = gLocalTriMeshesOfSkelType[skelType];
 
 	minX = minY = minZ = 10000000;
 	maxX = maxY = maxZ = -minX;									// calc local bbox with registers for speed
@@ -390,7 +389,7 @@ TQ3TriMeshData			*localTriMeshes = &gLocalTriMeshesOfSkelType[skelType][0];
 			p2 = decomposedPointList[i].whichPoint[0];								// get point # in the triMesh 
 			n = decomposedPointList[i].whichNormal[0];								// get index into gDecomposedNormalsList
 
-			normalAttribs = (TQ3Vector3D *)(localTriMeshes[triMeshNum].vertexAttributeTypes[0].data);	// point to normals attribute list in local trimesh
+			normalAttribs = localTriMeshes[triMeshNum]->vertexNormals;				// point to normals attribute list in local trimesh
 			normalAttribs[p2] = gTransformedNormals[n];								// copy transformed normal into triMesh
 		}
 		else																		// handle multi-case
@@ -401,7 +400,7 @@ TQ3TriMeshData			*localTriMeshes = &gLocalTriMeshesOfSkelType[skelType][0];
 				p2 = decomposedPointList[i].whichPoint[r];								
 				n = decomposedPointList[i].whichNormal[r];								
 
-				normalAttribs = (TQ3Vector3D *)(localTriMeshes[triMeshNum].vertexAttributeTypes[0].data);
+				normalAttribs = localTriMeshes[triMeshNum]->vertexNormals;
 				normalAttribs[p2] = gTransformedNormals[n];
 			}
 		}
@@ -457,9 +456,9 @@ TQ3TriMeshData			*localTriMeshes = &gLocalTriMeshesOfSkelType[skelType][0];
 			triMeshNum = decomposedPointList[i].whichTriMesh[0];						// get triMesh # that uses this point
 			p2 = decomposedPointList[i].whichPoint[0];									// get point # in the triMesh
 	
-			localTriMeshes[triMeshNum].points[p2].x = newX;								// set the point in local copy of trimesh
-			localTriMeshes[triMeshNum].points[p2].y = newY;
-			localTriMeshes[triMeshNum].points[p2].z = newZ;
+			localTriMeshes[triMeshNum]->points[p2].x = newX;								// set the point in local copy of trimesh
+			localTriMeshes[triMeshNum]->points[p2].y = newY;
+			localTriMeshes[triMeshNum]->points[p2].z = newZ;
 		}
 		else																			// multi-refs
 		{		
@@ -468,9 +467,9 @@ TQ3TriMeshData			*localTriMeshes = &gLocalTriMeshesOfSkelType[skelType][0];
 				triMeshNum = decomposedPointList[i].whichTriMesh[r];					
 				p2 = decomposedPointList[i].whichPoint[r];								
 		
-				localTriMeshes[triMeshNum].points[p2].x = newX;	
-				localTriMeshes[triMeshNum].points[p2].y = newY;
-				localTriMeshes[triMeshNum].points[p2].z = newZ;
+				localTriMeshes[triMeshNum]->points[p2].x = newX;
+				localTriMeshes[triMeshNum]->points[p2].y = newY;
+				localTriMeshes[triMeshNum]->points[p2].z = newZ;
 			}
 		}
 	}
@@ -502,8 +501,6 @@ TQ3TriMeshData			*localTriMeshes = &gLocalTriMeshesOfSkelType[skelType][0];
 		UpdateSkinnedGeometry_Recurse(currentSkeleton->childIndecies[joint][c], skelType);
 		gMatrix = oldM;																	// pop matrix
 	}
-
-#endif
 }
 
 

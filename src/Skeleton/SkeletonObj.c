@@ -39,23 +39,16 @@ static SkeletonDefType		*gLoadedSkeletonsList[MAX_SKELETON_TYPES];
 static TQ3BoundingSphere	gSkeletonBoundingSpheres[MAX_SKELETON_TYPES];
 
 static short	gNumDecomposedTriMeshesInSkeleton[MAX_SKELETON_TYPES];
-TQ3TriMeshData	**gLocalTriMeshesOfSkelType = nil;
+TQ3TriMeshData	*gLocalTriMeshesOfSkelType[MAX_SKELETON_TYPES][MAX_DECOMPOSED_TRIMESHES];
 
 
 /**************** INIT SKELETON MANAGER *********************/
 
 void InitSkeletonManager(void)
 {
-short	i;
-
 	CalcAccelerationSplineCurve();									// calc accel curve
 
-	for (i =0; i < MAX_SKELETON_TYPES; i++)
-		gLoadedSkeletonsList[i] = nil;
-		
-		/* ALLOCATE LOCAL TRIMESHES FOR ALL SKELETON TYPES */
-
-	Alloc_2d_array(TQ3TriMeshData, gLocalTriMeshesOfSkelType, MAX_SKELETON_TYPES, MAX_DECOMPOSED_TRIMESHES);
+	memset(gLoadedSkeletonsList, 0, sizeof(gLoadedSkeletonsList));
 }
 
 
@@ -80,7 +73,10 @@ short	i,numDecomp;
 	numDecomp = gLoadedSkeletonsList[num]->numDecomposedTriMeshes;
 	gNumDecomposedTriMeshesInSkeleton[num] = numDecomp;
 	for (i=0; i < numDecomp; i++)
-		QD3D_DuplicateTriMeshData(gLoadedSkeletonsList[num]->decomposedTriMeshPtrs[i], &gLocalTriMeshesOfSkelType[num][i]);
+	{
+//		QD3D_DuplicateTriMeshData(gLoadedSkeletonsList[num]->decomposedTriMeshPtrs[i], &gLocalTriMeshesOfSkelType[num][i]);
+		gLocalTriMeshesOfSkelType[num][i] = Q3TriMeshData_Duplicate(gLoadedSkeletonsList[num]->decomposedTriMeshPtrs[i]);
+	}
 	
 }
 

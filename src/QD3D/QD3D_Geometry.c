@@ -15,7 +15,7 @@ extern	NewObjectDefinitionType	gNewObjectDefinition;
 extern	ObjNode				*gCurrentNode;
 extern	float				gFramesPerSecondFrac;
 extern	TQ3Point3D			gCoord;
-extern	TQ3TriMeshData	**gLocalTriMeshesOfSkelType;
+extern	TQ3TriMeshData		*gLocalTriMeshesOfSkelType[MAX_SKELETON_TYPES][MAX_DECOMPOSED_TRIMESHES];
 extern	u_short			**gFloorMap;
 
 

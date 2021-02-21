@@ -18,7 +18,7 @@ extern	short		gNumObjectsInGroupList[MAX_3DMF_GROUPS];
 extern	float		gFramesPerSecondFrac;
 extern	ObjNode		*gPlayerObj;
 extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	TQ3TriMeshData	**gLocalTriMeshesOfSkelType;
+extern	TQ3TriMeshData			*gLocalTriMeshesOfSkelType[MAX_SKELETON_TYPES][MAX_DECOMPOSED_TRIMESHES];
 extern	Boolean		gShowDebug;
 
 /****************************/
@@ -597,13 +597,14 @@ short			skelType;
 		{
 			case	SKELETON_GENRE:
 					UpdateSkinnedGeometry(theNode);													// update skeleton geometry
-					printf("TODO NOQUESA: submit skeleton geometry\n");
-#if 0	// NOQUESA
 					numTriMeshes = theNode->Skeleton->skeletonDefinition->numDecomposedTriMeshes;
 					skelType = theNode->Type;
-					for (i = 0; i < numTriMeshes; i++)												// submit each trimesh of it
-						Q3TriMesh_Submit(&gLocalTriMeshesOfSkelType[skelType][i], view);
-#endif
+					Render_SubmitMeshList(															// submit each trimesh of it
+							numTriMeshes,
+							gLocalTriMeshesOfSkelType[skelType],
+							nil,		// Don't mult matrix with BaseTransformMatrix -- skeleton code already does it
+							&theNode->RenderModifiers,
+							&theNode->Coord);
 					break;
 			
 			case	DISPLAY_GROUP_GENRE:
@@ -613,13 +614,6 @@ short			skelType;
 							&theNode->BaseTransformMatrix,
 							&theNode->RenderModifiers,
 							&theNode->Coord);
-					/*
-					if (theNode->BaseGroup)
-					{
-						myStatus = Q3Object_Submit(theNode->BaseGroup, view);
-						GAME_ASSERT(myStatus);
-					}
-					*/
 					break;
 					
 			case	CUSTOM_GENRE:
