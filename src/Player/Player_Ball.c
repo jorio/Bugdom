@@ -77,8 +77,6 @@ TQ3Vector3D		gPlayerKnockOnButtDelta;
 
 void InitPlayer_Ball(ObjNode *oldObj, TQ3Point3D *where)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
 ObjNode	*newObj;
 long	numTriMeshes,i;
 float	rotY;
@@ -135,36 +133,30 @@ float	rotY;
 	for (i = 0; i < numTriMeshes; i++)
 	{
 		TQ3TriMeshData		*data;
-		TQ3GeometryObject	triMeshObj;
-		u_long				p;
 		float				xoff,yoff,zoff;
 		
 					/* OFFSET THE GEOMETRY */
 					//
 					// Remember, geometry is in world-space, so convert to local space.
 					//
-		
+
 		xoff = -oldObj->Coord.x;
 		yoff = -oldObj->Coord.y - PLAYER_BALL_FOOTOFFSET;
 		zoff = -oldObj->Coord.z;
 		
-		data = &gLocalTriMeshesOfSkelType[SKELETON_TYPE_ME][i];
-		for (p = 0; p < data->numPoints; p++)
+		data = gLocalTriMeshesOfSkelType[SKELETON_TYPE_ME][i];
+		for (int p = 0; p < data->numPoints; p++)
 		{
 			data->points[p].x += xoff;
 			data->points[p].y += yoff;
 			data->points[p].z += zoff;
 		}		
 		Q3BoundingBox_SetFromPoints3D(&data->bBox, data->points, data->numPoints, sizeof(TQ3Point3D));	// recalc bbox
-		
-		
-					/* MAKE OBJ & PUT INTO GROUP */
-					
-		triMeshObj = Q3TriMesh_New(data);										// convert data into trimesh
-		GAME_ASSERT(triMeshObj);
-		AttachGeometryToDisplayGroupObject(newObj, triMeshObj);					// add to display group
-		Q3Object_Dispose(triMeshObj);											// nuke extra ref
-	}			
+	}
+
+				/* PUT TRIMESHES INTO STATIC DISPLAY GROUP */
+
+	AttachGeometryToDisplayGroupObject(newObj, numTriMeshes, gLocalTriMeshesOfSkelType[SKELETON_TYPE_ME]);
 
 	
 				/**********************/
@@ -225,7 +217,6 @@ float	rotY;
 	gNitroParticleGroup = -1;
 
 	gInfobarUpdateBits |= UPDATE_HANDS;
-#endif
 }
 
 
