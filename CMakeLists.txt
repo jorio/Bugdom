@@ -167,9 +167,6 @@ set(GAME_HEADERS
 	${GAME_SRCDIR}/Headers/triggers.h
 	${GAME_SRCDIR}/Headers/window.h
 	${GAME_SRCDIR}/Headers/worldmap.h
-	${GAME_SRCDIR}/Headers/GLFunctions.h
-	${GAME_SRCDIR}/Headers/GLOverlay.h
-	${GAME_SRCDIR}/Headers/GLOverlayFade.h
 	${GAME_SRCDIR}/Headers/gamepatches.h
 	${GAME_SRCDIR}/Headers/textmesh.h
 	${GAME_SRCDIR}/Headers/tga.h
@@ -183,12 +180,8 @@ set(GAME_HEADERS
 set(GAME_GLUE_SOURCES
 	${GAME_SRCDIR}/Main.cpp
 	${GAME_SRCDIR}/Glue/FrustumCulling.c
-	${GAME_SRCDIR}/Glue/GLFunctions.cpp
-	${GAME_SRCDIR}/Glue/GLOverlay.cpp
-	${GAME_SRCDIR}/Glue/GLOverlayFade.cpp
 	${GAME_SRCDIR}/Glue/KillMacMouseAcceleration.c
 	${GAME_SRCDIR}/Glue/MouseSmoothing.c
-	${GAME_SRCDIR}/Glue/Overlay.cpp
 	${GAME_SRCDIR}/Glue/Patch3DMFModels.c
 	${GAME_SRCDIR}/Glue/PickableQuads.cpp
 	${GAME_SRCDIR}/Glue/QuesaExtras.c
