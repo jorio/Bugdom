@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Bugdom
+GenericName=Bugdom
+Comment=Save Bugdom from Thorax's evil Fire Ants
+Exec=Bugdom.sh
+Icon=Bugdom
+Terminal=false
+Type=Application
+Categories=Game;ArcadeGame;ActionGame;
+StartupNotify=false
