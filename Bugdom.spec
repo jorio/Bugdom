@@ -56,18 +56,20 @@ cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release
 cmake --build build-release
 
 %install
-mkdir -p %{buildroot}%{_bindir}/%{name}
+mkdir -p %{buildroot}%{_bindir}
+mkdir -p %{buildroot}%{_libdir}/%{name}
 mkdir -p %{buildroot}%{_datadir}/{pixmaps,applications/}
-echo -e '#!%{_bindir}/sh\n\ncd "$(dirname "$(readlink -f "$0")")"/%{name}/;./%{name}' > %{buildroot}%{_bindir}/%{name}.sh
+echo -e '#!/usr/bin/sh\n\ncd %{_libdir}/%{name}/;./%{name}' > '%{buildroot}%{_bindir}/%{name}.sh'
 chmod +x %{buildroot}%{_bindir}/%{name}.sh
-mv build-release/{Data,%{name}} %{buildroot}%{_bindir}/%{name}/
+mv build-release/{Data,%{name}} %{buildroot}%{_libdir}/%{name}
 mv cmake/%{name}64.png %{buildroot}%{_datadir}/pixmaps/%{name}.png
 mv %{name}.desktop %{buildroot}%{_datadir}/applications/%{name}.desktop
 
 
 %files
 %license {LICENSE.md,docs,README.md}
-%{_bindir}/{%{name},%{name}.sh}
+%{_bindir}/%{name}.sh
+%{_libdir}/%{name}/
 %{_datadir}/pixmaps/%{name}.png
 %{_datadir}/applications/%{name}.desktop
 
