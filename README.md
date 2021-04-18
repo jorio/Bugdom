@@ -4,6 +4,8 @@ This is *Bugdom* running on modern macOS, Windows and Linux! This version, at ht
 
 Get builds for macOS and Windows here: https://github.com/jorio/Bugdom/releases
 
+Unofficial binaries for Linux are here https://software.opensuse.org/package/Bugdom
+
 ![Bugdom Screenshot](docs/screenshot.png)
 
 ## Documentation
