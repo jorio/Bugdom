@@ -2,8 +2,7 @@
 // Terrain.h
 //
 
-#ifndef TERRAIN_H
-#define TERRAIN_H
+#pragma once
 
 #include "qd3d_support.h"
 
@@ -75,7 +74,8 @@ struct SuperTileMemoryType
 	Byte				hiccupTimer;							// timer to delay drawing to avoid hiccup of texture upload
 	TQ3Point3D			coord[2];								// world coords (y for floor & ceiling)
 	long				left,back;								// integer coords of back/left corner
-	uint32_t			glTextureName[MAX_LODS][2];				// attribute set containing texture for floor & ceiling at all LOD's
+	uint32_t			glTextureName[2][MAX_LODS];				// OpenGL texture name for floor & ceiling at all LODs
+	uint16_t*			textureData[2][MAX_LODS];				// pixel data for floor & ceiling at all LODs
 	TQ3TriMeshData*		triMeshDataPtrs[2];						// trimesh's data for the supertile (floor & ceiling)
 	float				radius[2];								// radius of this supertile (floor & ceiling)
 };
@@ -152,12 +152,4 @@ void CalcTileNormals(long layer, long row, long col, TQ3Vector3D *n1, TQ3Vector3
 void CalculateSplitModeMatrix(void);
 
 void DoItemShadowCasting(void);
-
-
-#endif
-
-
-
-
-
 
