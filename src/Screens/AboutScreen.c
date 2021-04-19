@@ -171,10 +171,15 @@ static void MakeAboutScreenObjects(int slideNumber)
 		{
 			TextMesh_Create(&tmd, "CONTROLS");
 
+#if 1	// TODO NOQUESA
+			printf("TODO NOQUESA: Gamepad Diagram\n");
+			TQ3SurfaceShaderObject diagramSurfaceShader = 0;
+#else
 			FSSpec diagramSpec;
 			FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Images:GamepadDiagram.tga", &diagramSpec);
 			TQ3SurfaceShaderObject diagramSurfaceShader = QD3D_TGAToTexture(&diagramSpec);
 			GAME_ASSERT(diagramSurfaceShader);
+#endif
 
 			float y = 25;
 

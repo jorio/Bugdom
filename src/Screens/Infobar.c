@@ -22,7 +22,7 @@ extern	TQ3Matrix4x4		gCameraWorldToFrustumMatrix,gCameraFrustumToWindowMatrix,gC
 extern	TQ3Point3D		gMyCoord;
 extern	long			gNumSuperTilesDeep,gNumSuperTilesWide;	
 extern	FSSpec			gDataSpec;
-extern	short		gMainAppRezFile,gTextureRezfile;
+extern	short		gMainAppRezFile;
 extern	TerrainItemEntryType 	**gMasterItemList;
 extern	short	  				gNumTerrainItems;
 extern	PrefsType	gGamePrefs;
@@ -408,9 +408,8 @@ FSSpec	spec;
 	
 	
 	UseResFile(gMainAppRezFile);
-	UseResFile(gTextureRezfile);
-	
-	
+
+
 			/* READ NITRO GAUGE TEMPLATE (SOURCE PORT ADDITION) */
 
 	LoadNitroGaugeTemplate();

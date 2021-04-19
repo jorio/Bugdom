@@ -308,11 +308,15 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 	snprintf(textBuffer, sizeof(textBuffer), ":Images:Floppy%d.tga", saveDataValid? saveData.realLevel: 0);
 
 	// Set floppy label texture
+#if 0		// NOQUESA
 	FSSpec floppyLabelPictSpec;
 	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, textBuffer, &floppyLabelPictSpec);
 	TQ3ShaderObject shaderObject = QD3D_TGAToTexture(&floppyLabelPictSpec);
 	GAME_ASSERT(shaderObject);
 	QD3D_ReplaceGeometryTexture(newFloppy/*->BaseGroup*/, shaderObject);
+#else
+	printf("TODO NOQUESA: replace floppy texture\n");
+#endif
 
 //	gPickables[gNumPickables++] = newFloppy->BaseGroup;
 

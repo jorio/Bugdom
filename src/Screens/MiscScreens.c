@@ -17,7 +17,6 @@ extern	u_short		gLevelType,gAreaNum,gRealLevel;
 extern	Boolean		gGameOverFlag,gAbortedFlag;
 extern	QD3DSetupOutputType		*gGameViewInfoPtr;
 extern	ObjNode		*gPlayerObj;
-extern	short		gTextureRezfile;
 extern	NewObjectDefinitionType	gNewObjectDefinition;
 extern	Boolean		gSongPlayingFlag,gResetSong,gDisableAnimSounds,gSongPlayingFlag;
 extern	PrefsType	gGamePrefs;

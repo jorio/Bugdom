@@ -89,7 +89,7 @@ Boolean		gShowBottomBar;
 float		gCurrentYon;
 
 u_long		gAutoFadeStatusBits;
-short		gMainAppRezFile,gTextureRezfile;
+short		gMainAppRezFile;
 Boolean		gGameOverFlag,gAbortedFlag,gAreaCompleted;
 Boolean		gPlayerGotKilledFlag,gWonGameFlag,gRestoringSavedGame = false;
 
@@ -253,18 +253,6 @@ OSErr		err;
 			/* BOOT QD3D */
 			
 	QD3D_Boot();
-
-
-
-		/* OPEN TEXTURES RESOURCE FILE */
-				
-	err = FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Images:Textures", &spec) != noErr;
-	GAME_ASSERT(err == noErr);
-
-	gTextureRezfile = FSpOpenResFile(&spec, fsRdPerm);
-	GAME_ASSERT(gTextureRezfile != -1);
-
-	UseResFile(gTextureRezfile);
 
 
 

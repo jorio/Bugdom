@@ -18,6 +18,7 @@ extern	WindowPtr			gCoverWindow;
 extern	Boolean		gShowDebug;
 extern	Byte		gDemoMode;
 extern	PrefsType	gGamePrefs;
+extern	FSSpec		gDataSpec;
 extern	QD3DSetupOutputType		*gGameViewInfoPtr;
 
 /****************************/
@@ -1096,73 +1097,20 @@ TQ3Status				status;
 // OUTPUT: TQ3ShaderObject = shader object for texture map.  nil == error.
 //
 
-TQ3SurfaceShaderObject	QD3D_GetTextureMapFromPICTResource(long	textureRezID, Boolean blackIsAlpha)
+GLuint QD3D_NumberedTGAToTexture(long textureRezID, bool blackIsAlpha, int flags)
 {
-PicHandle			picture;
-TQ3SurfaceShaderObject		shader;
+	char path[128];
+	FSSpec spec;
 
-	picture = GetPicture(textureRezID);
-	GAME_ASSERT(picture);
+	snprintf(path, sizeof(path), ":Images:Textures:%ld.tga", textureRezID);
 
-	shader = QD3D_PICTToTexture(picture, blackIsAlpha);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, path, &spec);
 
-	ReleaseResource((Handle) picture);
-
-	return shader;
+	return QD3D_TGAToTexture(&spec, blackIsAlpha, flags);
 }
 
-
-/**************** QD3D PICT TO TEXTURE ***********************/
-//
-//
-// INPUT: picture = handle to PICT.
-//
-// OUTPUT: TQ3ShaderObject = shader object for texture map.
-//
-
-TQ3SurfaceShaderObject	QD3D_PICTToTexture(PicHandle picture, Boolean blackIsAlpha)
+GLuint QD3D_TGAToTexture(FSSpec* spec, bool blackIsAlpha, int flags)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-	return nil;
-#if 0	// NOQUESA
-TQ3Mipmap 				mipmap;
-TQ3TextureObject		texture;
-TQ3SurfaceShaderObject	shader;
-long					width,height;
-
-
-			/* MAKE INTO STORAGE MIPMAP */
-
-	width = (**picture).picFrame.right  - (**picture).picFrame.left;		// calc dimensions of mipmap
-	height = (**picture).picFrame.bottom - (**picture).picFrame.top;
-		
-	DrawPICTIntoMipmap (picture, width, height, &mipmap, blackIsAlpha);
-		
-
-			/* MAKE NEW PIXMAP TEXTURE */
-			
-	texture = Q3MipmapTexture_New(&mipmap);							// make new mipmap	
-	GAME_ASSERT(texture);
-
-	shader = Q3TextureShader_New (texture);
-	GAME_ASSERT(shader);
-
-	Q3Object_Dispose (texture);
-	Q3Object_Dispose (mipmap.image);			// disposes of extra reference to storage obj
-
-	return(shader);
-#endif
-}
-
-
-TQ3SurfaceShaderObject	QD3D_TGAToTexture(FSSpec* spec)
-{
-	printf("TODO NOQUESA: %s\n", __func__);
-	return nil;
-#if 0	// NOQUESA
-TQ3Mipmap 				mipmap;
-TQ3TextureObject		texture;
-TQ3SurfaceShaderObject	shader;
 Handle					tgaHandle = nil;
 TGAHeader				header;
 OSErr					err;
@@ -1170,41 +1118,30 @@ OSErr					err;
 	err = ReadTGA(spec, &tgaHandle, &header);
 	if (err != noErr)
 	{
-		return nil;
+		return 0;
 	}
 
-	GAME_ASSERT(header.bpp == 24);
+	GAME_ASSERT(header.bpp == 24 || header.bpp == 16);
 	GAME_ASSERT(header.imageType == TGA_IMAGETYPE_RAW_RGB);
 
-	int rowBytes = (header.bpp/8) * header.width;
+	if (blackIsAlpha)
+	{
+		printf("TODO NOQUESA: Black is alpha\n");
+	}
 
-	mipmap.image = Q3MemoryStorage_New((unsigned char*)*tgaHandle, rowBytes * header.height);
-	GAME_ASSERT(mipmap.image);
-
-	mipmap.useMipmapping = kQ3False;							// not actually using mipmaps (just 1 srcmap)
-	mipmap.pixelType = kQ3PixelTypeRGB24;
-
-	mipmap.bitOrder = kQ3EndianBig;
-	mipmap.byteOrder = kQ3EndianLittle;
-	mipmap.reserved = 0;
-	mipmap.mipmaps[0].width = header.width;
-	mipmap.mipmaps[0].height = header.height;
-	mipmap.mipmaps[0].rowBytes = rowBytes;
-	mipmap.mipmaps[0].offset = 0;
-
-	texture = Q3MipmapTexture_New(&mipmap);							// make new mipmap
-	GAME_ASSERT(texture);
-
-	shader = Q3TextureShader_New(texture);
-	GAME_ASSERT(shader);
-
-	Q3Object_Dispose(texture);
-	Q3Object_Dispose(mipmap.image);			// disposes of extra reference to storage obj
+	GLuint glTextureName = Render_LoadTexture(
+			GL_RGB,
+			header.width,
+			header.height,
+			header.bpp == 16 ? GL_BGRA : GL_BGR,
+			header.bpp == 16 ? GL_UNSIGNED_SHORT_1_5_5_5_REV : GL_UNSIGNED_BYTE,
+			*tgaHandle,
+			flags
+			);
 
 	DisposeHandle(tgaHandle);
 
-	return shader;
-#endif
+	return glTextureName;
 }
 
 /******************** DRAW PICT INTO MIPMAP ********************/

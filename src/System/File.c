@@ -13,7 +13,7 @@
 #include <string.h>
 
 
-extern	short			gMainAppRezFile,gTextureRezfile;
+extern	short			gMainAppRezFile;
 extern  short			gNumObjectsInGroupList[MAX_3DMF_GROUPS];
 extern	short			gNumTerrainItems;
 extern	short			gPrefsFolderVRefNum;
@@ -189,9 +189,8 @@ char		pathBuf[128];
 			
 	CloseResFile(fRefNum);
 	UseResFile(gMainAppRezFile);
-	UseResFile(gTextureRezfile);
-		
-		
+
+
 	return(skeleton);
 }
 
@@ -747,10 +746,9 @@ short	fRefNum;
 			
 	CloseResFile(fRefNum);
 	UseResFile(gMainAppRezFile);
-	UseResFile(gTextureRezfile);
-	
-		
-	
+
+
+
 				/***********************/
 				/* DO ADDITIONAL SETUP */
 				/***********************/

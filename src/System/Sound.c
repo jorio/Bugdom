@@ -9,7 +9,7 @@
 /* EXTERNALS   */
 /***************/
 
-extern	short		gMainAppRezFile,gTextureRezfile;
+extern	short		gMainAppRezFile;
 extern	TQ3Point3D	gMyCoord;
 extern	QD3DSetupOutputType		*gGameViewInfoPtr;
 extern	Boolean		gEnteringName;
@@ -276,7 +276,6 @@ OSErr			iErr;
 	}
 
 	UseResFile(gMainAppRezFile );								// go back to normal res file
-	UseResFile(gTextureRezfile);
 	CloseResFile(srcFile1);
 
 	gNumSndsInBank[bankNum] = numSoundsInBank;					// remember how many sounds we've got
