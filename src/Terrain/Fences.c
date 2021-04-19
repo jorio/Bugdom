@@ -22,7 +22,7 @@ extern	const float	gTextureAlphaThreshold;
 /*    PROTOTYPES            */
 /****************************/
 
-static void SubmitFence(int f, TQ3ViewObject viewObj, float camX, float camZ);
+static void SubmitFence(int f, float camX, float camZ);
 
 
 /****************************/
@@ -57,9 +57,11 @@ enum
 
 long			gNumFences = 0;
 FenceDefType	*gFenceList = nil;
-Boolean			gIsFenceVisible[MAX_FENCES];
 
-static TQ3AttributeSet	gFenceShaderAttribs[NUM_FENCE_SHADERS];
+static Boolean					gIsFenceVisible[MAX_FENCES];
+static TQ3TriMeshData*			gFenceTriMeshDataPtrs[MAX_FENCES];
+static RenderModifiers			gFenceRenderMods[MAX_FENCES];
+static GLuint					gFenceTypeTextures[NUM_FENCE_SHADERS];
 
 
 static Boolean gFenceOnThisLevel[NUM_LEVELS][NUM_FENCE_SHADERS] =
@@ -114,13 +116,6 @@ Boolean			gFenceUsesNullShader[NUM_FENCE_SHADERS] =
 	true			// hive
 };
 
-static TQ3TriMeshData			gFenceTriMeshData;
-static TQ3TriMeshAttributeData	gFenceVertexAttribs[2];
-static TQ3TriMeshTriangleData	gFenceTriangles[MAX_NUBS_IN_FENCE*2];
-static TQ3Point3D				gFencePoints[MAX_NUBS_IN_FENCE*2];
-static TQ3Param2D				gFenceUVs[MAX_NUBS_IN_FENCE*2];
-static TQ3ColorRGB				gFenceTransp[MAX_NUBS_IN_FENCE*2];
-
 
 /******************** INIT FENCE MANAGER ***********************/
 //
@@ -129,31 +124,30 @@ static TQ3ColorRGB				gFenceTransp[MAX_NUBS_IN_FENCE*2];
 
 void InitFenceManager(void)
 {
-int	i;
-	
-	for (i = 0; i < NUM_FENCE_SHADERS; i++)
-		gFenceShaderAttribs[i] = nil;
+	for (int i = 0; i < NUM_FENCE_SHADERS; i++)
+		gFenceTypeTextures[i] = 0;
 
+	for (int f = 0; f < MAX_FENCES; f++)
+	{
+		gFenceTriMeshDataPtrs[f] = nil;
+		Render_SetDefaultModifiers(&gFenceRenderMods[f]);
+	}
 }
 
 /******************** DISPOSE FENCE SHADERS ********************/
 
 void DisposeFenceShaders(void)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-int	i;
 			/* DISPOSE OLD SHADER ATTRIBS */
-			
-	for (i = 0; i < NUM_FENCE_SHADERS; i++)
+
+	for (int i = 0; i < NUM_FENCE_SHADERS; i++)
 	{
-		if (gFenceShaderAttribs[i])
+		if (gFenceTypeTextures[i])
 		{
-			Q3Object_Dispose(gFenceShaderAttribs[i]);
-			gFenceShaderAttribs[i] = nil;
+			glDeleteTextures(1, &gFenceTypeTextures[i]);
+			gFenceTypeTextures[i] = 0;
 		}
 	}
-#endif
 }
 
 
@@ -172,14 +166,14 @@ FencePointType			*nubs;
 
 
 			/* DISPOSE OLD SHADER ATTRIBS */
-			
+
 	DisposeFenceShaders();
 
-	
+
 			/******************************/
 			/* ADJUST TO GAME COORDINATES */
 			/******************************/
-			
+
 	for (f = 0; f < gNumFences; f++)
 	{
 		gIsFenceVisible[f] = false;							// assume invisible
@@ -225,78 +219,50 @@ FencePointType			*nubs;
 			/* LOAD FENCE SHADER TEXTURES & CONVERT INTO ATTRIBUTE SET */
 			/***********************************************************/
 
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-
 	for (i = 0; i < NUM_FENCE_SHADERS; i++)
 	{
-		TQ3ShaderObject	shader;
-		
 		if (gFenceOnThisLevel[gLevelType][i])										// see if this fence exists on this level
 		{
-			shader = QD3D_GetTextureMapFromPICTResource(2000+i, true);				// create shader object
-			GAME_ASSERT(shader);
-
-			// Source port addition: clamp texture vertically to avoid ugly line at top
-			Q3Shader_SetUBoundary(shader, kQ3ShaderUVBoundaryWrap);
-			Q3Shader_SetVBoundary(shader, kQ3ShaderUVBoundaryClamp);
-
-			gFenceShaderAttribs[i] = Q3AttributeSet_New();							// create new attribute set
-			GAME_ASSERT(gFenceShaderAttribs[i]);
-
-			Q3AttributeSet_Add(gFenceShaderAttribs[i], kQ3AttributeTypeSurfaceShader, &shader);	// put shader into attrib
-
-			// Source port addition: discard transparent texels to prevent mesh from being knocked off fast rendering path
-			Q3Object_AddElement(shader, kQ3ElementTypeTextureShaderAlphaTest, &gTextureAlphaThreshold);
-
-			Q3Object_Dispose(shader);												// nuke extra ref
+			// Create texture from :Data:Images:Textures:200X.tga.
+			// Clamp texture vertically to avoid ugly line at top.
+			gFenceTypeTextures[i] = QD3D_NumberedTGAToTexture(2000 + i, true, kRendererTextureFlags_ClampV);	// create shader object
+			GAME_ASSERT(gFenceTypeTextures[i]);
 		}
 		else
 		{
-			gFenceShaderAttribs[i] = nil;
+			gFenceTypeTextures[i] = 0;
 		}
 	}
 
 			/*****************************/
 			/* SETUP COMMON TRIMESH INFO */
 			/*****************************/
-			
-	gFenceTriMeshData.triMeshAttributeSet 		= nil;
-	gFenceTriMeshData.numEdges 					= 0;
-	gFenceTriMeshData.edges 					= nil;
-	gFenceTriMeshData.numEdgeAttributeTypes 	= 0;
-	gFenceTriMeshData.edgeAttributeTypes 		= 0;	
-	gFenceTriMeshData.points 					= &gFencePoints[0];
-	gFenceTriMeshData.triangles					= &gFenceTriangles[0];
-	gFenceTriMeshData.numTriangleAttributeTypes = 0;
-	gFenceTriMeshData.triangleAttributeTypes	= nil;
-	gFenceTriMeshData.numVertexAttributeTypes 	= 2;
-	gFenceTriMeshData.vertexAttributeTypes		= &gFenceVertexAttribs[0];
-	gFenceTriMeshData.bBox.isEmpty 				= kQ3True;
 
-	gFenceVertexAttribs[0].attributeType 		= kQ3AttributeTypeSurfaceUV;
-	gFenceVertexAttribs[0].attributeUseArray 	= nil;
-	gFenceVertexAttribs[0].data					= &gFenceUVs[0];
-
-	gFenceVertexAttribs[1].attributeType 		= kQ3AttributeTypeTransparencyColor;
-	gFenceVertexAttribs[1].attributeUseArray 	= nil;
-	gFenceVertexAttribs[1].data					= &gFenceTransp[0];
-
-
-			/* PREBUILD TRIANGLE INFO */
-			
-	for (i = j = 0; i < MAX_NUBS_IN_FENCE; i++, j+=2)
+	for (f = 0; f < MAX_FENCES; f++)
 	{
-		gFenceTriangles[j].pointIndices[0] = 1 + j;
-		gFenceTriangles[j].pointIndices[1] = 0 + j;
-		gFenceTriangles[j].pointIndices[2] = 3 + j;
+		TQ3TriMeshData* tmd = Q3TriMeshData_New(
+				MAX_NUBS_IN_FENCE * 2,
+				MAX_NUBS_IN_FENCE * 2,
+				true
+		);
 
-		gFenceTriangles[j+1].pointIndices[0] = 3 + j;
-		gFenceTriangles[j+1].pointIndices[1] = 0 + j;
-		gFenceTriangles[j+1].pointIndices[2] = 2 + j;	
+		gFenceTriMeshDataPtrs[f] = tmd;
+
+		tmd->texturingMode = kQ3TexturingModeAlphaTest;
+
+				/* PREBUILD TRIANGLE INFO */
+
+		for (i = j = 0; i < MAX_NUBS_IN_FENCE; i++, j+=2)
+		{
+			tmd->triangles[j].pointIndices[0] = 1 + j;
+			tmd->triangles[j].pointIndices[1] = 0 + j;
+			tmd->triangles[j].pointIndices[2] = 3 + j;
+
+			tmd->triangles[j+1].pointIndices[0] = 3 + j;
+			tmd->triangles[j+1].pointIndices[1] = 0 + j;
+			tmd->triangles[j+1].pointIndices[2] = 2 + j;
+		}
 	}
-
-#endif
 }
 
 
@@ -304,22 +270,12 @@ FencePointType			*nubs;
 
 void DrawFences(const QD3DSetupOutputType *setupInfo)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-
-long			f,n,row,col,numNubs,type;
+long			row,col,numNubs,type;
 FencePointType	*nubs;
-TQ3ViewObject 	view = setupInfo->viewObject;
 float			cameraX, cameraZ;
-Boolean			isNullShader = false;
-
-			/* SET TAGS */
-			
-	Q3BackfacingStyle_Submit(kQ3BackfacingStyleBoth, view);
-
 
 			/* GET CAMERA COORDS */
-			
+
 	cameraX = setupInfo->currentCameraCoords.x;
 	cameraZ = setupInfo->currentCameraCoords.z;
 
@@ -328,7 +284,7 @@ Boolean			isNullShader = false;
 			/* DRAW EACH FENCE */
 			/*******************/			
 
-	for (f = 0; f < gNumFences; f++)
+	for (int f = 0; f < gNumFences; f++)
 	{
 		type = gFenceList[f].type;							// get type
 		
@@ -345,7 +301,7 @@ Boolean			isNullShader = false;
 		numNubs = gFenceList[f].numNubs;
 		nubs = *gFenceList[f].nubList;
 		
-		for (n = 0; n < numNubs; n++)
+		for (int n = 0; n < numNubs; n++)
 		{
 			row = nubs[n].z / TERRAIN_SUPERTILE_UNIT_SIZE;	// calc supertile row,col
 			col = nubs[n].x / TERRAIN_SUPERTILE_UNIT_SIZE;
@@ -361,38 +317,23 @@ Boolean			isNullShader = false;
 				/*********************/
 drawit:	
 		gIsFenceVisible[f] = true;
-		
-				/* SEE IF USE NULL SHADER */
-				
-		if (gFenceUsesNullShader[type])
+
+				/* SET TAGS */
+
+		gFenceRenderMods[f].statusBits = STATUS_BIT_KEEPBACKFACES;
+
+		if (gFenceUsesNullShader[type])		// see if null illumination rather than lambert shading
 		{
-			if (!isNullShader)
-			{
-				Q3Shader_Submit(setupInfo->nullShaderObject, view);		// use null shader
-				isNullShader = true;
-			}
+			gFenceRenderMods[f].statusBits |= STATUS_BIT_NULLSHADER;
 		}
-		else
-		{
-			if (isNullShader)
-			{
-				Q3Shader_Submit(setupInfo->shaderObject, view);			// use lambert shader
-				isNullShader = false;
-			}		
-		}
-		
+
 				/* SUBMIT GEOMETRY */
-				
-		SubmitFence(f, view, cameraX, cameraZ);
+
+		SubmitFence(f, cameraX, cameraZ);
 	}
 
-			/* RESET TAGS */
-			
-	if (isNullShader)
-		Q3Shader_Submit(setupInfo->shaderObject, view);			// restore lambert shader
-	Q3BackfacingStyle_Submit(kQ3BackfacingStyleRemove, view);
 
-#endif
+	Render_FlushQueue();
 }
 
 
@@ -602,52 +543,52 @@ next_fence:;
 // Visibility checks have already been done, so there's a good chance the fence is visible
 //
 
-static void SubmitFence(int f, TQ3ViewObject viewObj, float camX, float camZ)
+static void SubmitFence(int f, float camX, float camZ)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-
 u_short					type;
 float					u,height;
 long					i,numNubs,j;
 FenceDefType			*fence;
 FencePointType			*nubs;
-			
+TQ3TriMeshData			*tmd;
+
 			/* GET FENCE INFO */
-			
+
 	fence = &gFenceList[f];								// point to this fence
 	nubs = (*fence->nubList);							// point to nub list	
 	numNubs = fence->numNubs;							// get # nubs in fence
 
+	tmd = gFenceTriMeshDataPtrs[f];
 
 		/* SET TRIMESH SHADER ATTRIBUTE */
-		
+
 	type = fence->type;									// get fence type
 	GAME_ASSERT_MESSAGE(type < NUM_FENCE_SHADERS, "illegal fence type");
-	gFenceTriMeshData.triMeshAttributeSet = gFenceShaderAttribs[type];
-	
+
+	tmd->glTextureName = gFenceTypeTextures[type];
+
 
 		/* SET TRIMESH POINT AND TRI INFO */
-			
-	gFenceTriMeshData.numPoints = numNubs * 2;				// 2 vertices per nub
-	gFenceTriMeshData.numTriangles = (numNubs-1) * 2;			// 2 faces per nub (minus 1st)
+
+	tmd->numPoints = numNubs * 2;						// 2 vertices per nub
+	tmd->numTriangles = (numNubs-1) * 2;				// 2 faces per nub (minus 1st)
 
 
 		/* SET TRIMESH BBOX X/Z (Y WILL BE COMPUTED LATER) */
 
-	gFenceTriMeshData.bBox.isEmpty = false;
-	gFenceTriMeshData.bBox.min.x = gFenceList[f].bBox.left;
-	gFenceTriMeshData.bBox.max.x = gFenceList[f].bBox.right;
-	gFenceTriMeshData.bBox.min.y = FLT_MAX;
-	gFenceTriMeshData.bBox.max.y = -FLT_MAX;
-	gFenceTriMeshData.bBox.min.z = gFenceList[f].bBox.top;
-	gFenceTriMeshData.bBox.max.z = gFenceList[f].bBox.bottom;
+	tmd->bBox.isEmpty = false;
+	tmd->bBox.min.x = gFenceList[f].bBox.left;
+	tmd->bBox.max.x = gFenceList[f].bBox.right;
+	tmd->bBox.min.y = FLT_MAX;
+	tmd->bBox.max.y = -FLT_MAX;
+	tmd->bBox.min.z = gFenceList[f].bBox.top;
+	tmd->bBox.max.z = gFenceList[f].bBox.bottom;
 
 
 			/************************************/
 			/* BUILD POINTS, UV's & TRANSP LIST */
 			/************************************/
-		
+
 	switch(type)
 	{
 		case	FENCE_TYPE_MOSS:
@@ -693,29 +634,29 @@ FencePointType			*nubs;
 					y -= FENCE_SINK_FACTOR;										// sink into ground a little bit
 					y2 = y + height;
 		}
-	
-		gFencePoints[j].x = x;
-		gFencePoints[j].y = y;
-		gFencePoints[j].z = z;
-		
-		gFencePoints[j+1].x = x;
-		gFencePoints[j+1].y = y2;
-		gFencePoints[j+1].z = z;		
+
+		tmd->points[j].x = x;
+		tmd->points[j].y = y;
+		tmd->points[j].z = z;
+
+		tmd->points[j+1].x = x;
+		tmd->points[j+1].y = y2;
+		tmd->points[j+1].z = z;
 
 		// Update mesh bbox y min/max
-		if (y  < gFenceTriMeshData.bBox.min.y) gFenceTriMeshData.bBox.min.y = y;
-		if (y2 > gFenceTriMeshData.bBox.max.y) gFenceTriMeshData.bBox.max.y = y2;
-		
+		if (y  < tmd->bBox.min.y) tmd->bBox.min.y = y;
+		if (y2 > tmd->bBox.max.y) tmd->bBox.max.y = y2;
+
 		if (i > 0)
-			u += Q3Point3D_Distance(&gFencePoints[j], &gFencePoints[j-2]) * gFenceTextureW[type];
-					
-		gFenceUVs[j].v 		= 0;									// bottom
-		gFenceUVs[j+1].v 	= 1.0;									// top
-		gFenceUVs[j].u 		= gFenceUVs[j+1].u = u;
-		
-		
+			u += Q3Point3D_Distance(&tmd->points[j], &tmd->points[j-2]) * gFenceTextureW[type];
+
+		tmd->vertexUVs[j].v		= 1;
+		tmd->vertexUVs[j+1].v	= 0;
+		tmd->vertexUVs[j].u		= tmd->vertexUVs[j+1].u = u;
+
+
 				/* CALC & SET TRANSPARENCY */
-		
+
 		if (gAutoFadeStartDist != 0.0f)								// see if this level has xparency
 		{
 			dist = CalcQuickDistance(camX, camZ, x, z);				// see if in fade zone
@@ -731,22 +672,16 @@ FencePointType			*nubs;
 		}
 		else
 			dist = 1.0f;
-				
-		gFenceTransp[j].r = 										// set xparency value
-		gFenceTransp[j].g = 
-		gFenceTransp[j].b =		
-		gFenceTransp[j+1].r = 
-		gFenceTransp[j+1].g = 
-		gFenceTransp[j+1].b = dist;				
+
+		tmd->vertexColors[j  ].a = dist;							// set xparency value
+		tmd->vertexColors[j+1].a = dist;
 	}
-	
-			
-			
+
+
 		/*******************/
 		/* SUBMIT GEOMETRY */
 		/*******************/
-						
-	Q3TriMesh_Submit(&gFenceTriMeshData, viewObj);
-#endif
+
+	Render_SubmitMesh(tmd, nil, &gFenceRenderMods[f], nil);
 }
 

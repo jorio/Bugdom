@@ -72,6 +72,7 @@ typedef struct MeshQueueEntry
 static MeshQueueEntry		gMeshQueueBuffer[MESHQUEUE_MAX_SIZE];
 static MeshQueueEntry*		gMeshQueuePtrs[MESHQUEUE_MAX_SIZE];
 static int					gMeshQueueSize = 0;
+static bool					gFrameStarted = false;
 
 static int DepthSortCompare(void const* a_void, void const* b_void);
 static void DrawMeshList(int renderPass, const MeshQueueEntry* entry);
@@ -415,12 +416,16 @@ void Render_StartFrame(void)
 
 	// Clear transparent queue
 	gMeshQueueSize = 0;
+	gRenderStats.meshQueueSize = 0;
 
 	// Clear color & depth buffers.
 	SetFlag(glDepthMask, true);	// The depth mask must be re-enabled so we can clear the depth buffer.
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 //	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	GAME_ASSERT(!gFrameStarted);
+	gFrameStarted = true;
 }
 
 void Render_SetViewport(bool scissor, int x, int y, int w, int h)
@@ -438,37 +443,46 @@ void Render_SetViewport(bool scissor, int x, int y, int w, int h)
 	}
 }
 
-void Render_EndFrame(void)
+void Render_FlushQueue(void)
 {
+	GAME_ASSERT(gFrameStarted);
+
 	// Keep track of transparent queue size for debug stats
-	gRenderStats.meshQueueSize = gMeshQueueSize;
+	gRenderStats.meshQueueSize += gMeshQueueSize;
 
 	// Flush mesh draw queue
-	if (gMeshQueueSize != 0)
+	if (gMeshQueueSize == 0)
+		return;
+
+	// Sort mesh draw queue, front to back
+	qsort(
+			gMeshQueuePtrs,
+			gMeshQueueSize,
+			sizeof(gMeshQueuePtrs[0]),
+			DepthSortCompare
+	);
+
+	// PASS 1: draw opaque meshes, front to back
+	for (int i = 0; i < gMeshQueueSize; i++)
 	{
-		// Sort mesh draw queue, front to back
-		qsort(
-				gMeshQueuePtrs,
-				gMeshQueueSize,
-				sizeof(gMeshQueuePtrs[0]),
-				DepthSortCompare
-		);
-
-		// PASS 1: draw opaque meshes, front to back
-		for (int i = 0; i < gMeshQueueSize; i++)
-		{
-			DrawMeshList(kRenderPass_Opaque, gMeshQueuePtrs[i]);
-		}
-
-		// PASS 2: draw transparent meshes, back to front
-		for (int i = gMeshQueueSize-1; i >= 0; i--)
-		{
-			DrawMeshList(kRenderPass_Transparent, gMeshQueuePtrs[i]);
-		}
-
-		// Clear mesh draw queue
-		gMeshQueueSize = 0;
+		DrawMeshList(kRenderPass_Opaque, gMeshQueuePtrs[i]);
 	}
+
+	// PASS 2: draw transparent meshes, back to front
+	for (int i = gMeshQueueSize-1; i >= 0; i--)
+	{
+		DrawMeshList(kRenderPass_Transparent, gMeshQueuePtrs[i]);
+	}
+
+	// Clear mesh draw queue
+	gMeshQueueSize = 0;
+}
+
+void Render_EndFrame(void)
+{
+	GAME_ASSERT(gFrameStarted);
+
+	Render_FlushQueue();
 
 	if (gState.hasState_GL_SCISSOR_TEST)
 	{
@@ -482,9 +496,37 @@ void Render_EndFrame(void)
 		DrawFadeOverlay(gFadeOverlayOpacity);
 	}
 #endif
+
+	gFrameStarted = false;
 }
 
 #pragma mark -
+
+static float GetDepthSortZ(
+		int						numMeshes,
+		TQ3TriMeshData**		meshList,
+		const TQ3Point3D*		centerCoord)
+{
+	TQ3Point3D altCenter;
+
+	if (!centerCoord)
+	{
+		float mult = (float) numMeshes / 2.0f;
+		altCenter = (TQ3Point3D) { 0, 0, 0 };
+		for (int i = 0; i < numMeshes; i++)
+		{
+			altCenter.x += (meshList[i]->bBox.min.x + meshList[i]->bBox.max.x) * mult;
+			altCenter.y += (meshList[i]->bBox.min.y + meshList[i]->bBox.max.y) * mult;
+			altCenter.z += (meshList[i]->bBox.min.z + meshList[i]->bBox.max.z) * mult;
+		}
+		centerCoord = &altCenter;
+	}
+
+	TQ3Point3D coordInFrustum;
+	Q3Point3D_Transform(centerCoord, &gCameraWorldToFrustumMatrix, &coordInFrustum);
+
+	return coordInFrustum.z;
+}
 
 void Render_SubmitMeshList(
 		int						numMeshes,
@@ -496,9 +538,7 @@ void Render_SubmitMeshList(
 	if (numMeshes <= 0)
 		printf("not drawing this!\n");
 
-	TQ3Point3D coordInFrustum;
-	Q3Point3D_Transform(centerCoord, &gCameraWorldToFrustumMatrix, &coordInFrustum);
-
+	GAME_ASSERT(gFrameStarted);
 	GAME_ASSERT(gMeshQueueSize < MESHQUEUE_MAX_SIZE);
 
 	MeshQueueEntry* entry = gMeshQueuePtrs[gMeshQueueSize++];
@@ -507,7 +547,7 @@ void Render_SubmitMeshList(
 	entry->mesh0			= nil;
 	entry->transform		= transform;
 	entry->mods				= mods ? mods : &kDefaultRenderMods;
-	entry->depthSortZ		= coordInFrustum.z;
+	entry->depthSortZ		= GetDepthSortZ(numMeshes, meshList, centerCoord);
 }
 
 void Render_SubmitMesh(
@@ -516,9 +556,7 @@ void Render_SubmitMesh(
 		const RenderModifiers*	mods,
 		const TQ3Point3D*		centerCoord)
 {
-	TQ3Point3D coordInFrustum;
-	Q3Point3D_Transform(centerCoord, &gCameraWorldToFrustumMatrix, &coordInFrustum);
-
+	GAME_ASSERT(gFrameStarted);
 	GAME_ASSERT(gMeshQueueSize < MESHQUEUE_MAX_SIZE);
 
 	MeshQueueEntry* entry = gMeshQueuePtrs[gMeshQueueSize++];
@@ -527,7 +565,7 @@ void Render_SubmitMesh(
 	entry->mesh0			= mesh;
 	entry->transform		= transform;
 	entry->mods				= mods ? mods : &kDefaultRenderMods;
-	entry->depthSortZ		= coordInFrustum.z;
+	entry->depthSortZ		= GetDepthSortZ(1, &mesh, centerCoord);
 }
 
 #pragma mark -

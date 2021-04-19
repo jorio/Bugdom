@@ -106,6 +106,10 @@ void Render_Dispose3DMFTextures(TQ3MetaFile* metaFile);
 void Render_StartFrame(void);
 
 // Flushes the rendering queue.
+// May be called multiple times between Render_StartFrame and Render_EndFrame.
+void Render_FlushQueue(void);
+
+// Flushes the rendering queue and finishes the frame.
 void Render_EndFrame(void);
 
 void Render_SetViewport(bool scissor, int x, int y, int w, int h);
