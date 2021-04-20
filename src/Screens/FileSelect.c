@@ -305,7 +305,7 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 	floppies[fileNumber] = newFloppy;
 
 	// Get path to floppy label image
-	snprintf(textBuffer, sizeof(textBuffer), ":Images:Floppy%d.tga", saveDataValid? saveData.realLevel: 0);
+	snprintf(textBuffer, sizeof(textBuffer), ":Images:Floppy:%d.tga", saveDataValid? saveData.realLevel: 0);
 
 	// Set floppy label texture
 #if 0		// NOQUESA
