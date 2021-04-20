@@ -244,7 +244,7 @@ struct ObjNode
 	Byte			Group;				// obj group (If Genre=display_group: index into gObjectGroupList.)
 	void			(*MoveCall)(struct ObjNode *);			// pointer to object's move routine
 	void			(*SplineMoveCall)(struct ObjNode *);	// pointer to object's spline move routine
-	void			(*CustomDrawFunction)(struct ObjNode *, TQ3ViewObject view);// pointer to object's custom draw function
+	void			(*CustomDrawFunction)(struct ObjNode *);// pointer to object's custom draw function
 	u_long			StatusBits;			// various status bits
 	
 	TQ3Point3D		Coord;				// coord of object

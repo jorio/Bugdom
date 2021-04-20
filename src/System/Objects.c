@@ -195,8 +195,7 @@ Byte	group,type;
 
 /************* MAKE NEW CUSTOM DRAW OBJECT *************/
 
-ObjNode *MakeNewCustomDrawObject(NewObjectDefinitionType *newObjDef, TQ3BoundingSphere *cullSphere,
-						 void drawFunc(ObjNode *, TQ3ViewObject))
+ObjNode *MakeNewCustomDrawObject(NewObjectDefinitionType *newObjDef, TQ3BoundingSphere *cullSphere, void drawFunc(ObjNode *))
 {
 ObjNode	*newObj;
 
@@ -592,8 +591,7 @@ short			skelType;
 			case	CUSTOM_GENRE:
 					if (theNode->CustomDrawFunction)
 					{
-						printf("TODO NOQUESA: CustomDrawFunction!\n");
-						//theNode->CustomDrawFunction(theNode, view);
+						theNode->CustomDrawFunction(theNode);
 					}
 					break;
 		}

@@ -36,8 +36,7 @@ enum
 extern	void InitObjectManager(void);
 extern	ObjNode	*MakeNewObject(NewObjectDefinitionType *newObjDef);
 extern	void MoveObjects(void);
-ObjNode *MakeNewCustomDrawObject(NewObjectDefinitionType *newObjDef, TQ3BoundingSphere *cullSphere,
-						 void drawFunc(ObjNode *, TQ3ViewObject));
+ObjNode *MakeNewCustomDrawObject(NewObjectDefinitionType *newObjDef, TQ3BoundingSphere *cullSphere, void drawFunc(ObjNode *));
 extern	void DrawObjects(const QD3DSetupOutputType *setupInfo);
 extern	void DeleteAllObjects(void);
 extern	void DeleteObject(ObjNode	*theNode);
