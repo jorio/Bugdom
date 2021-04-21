@@ -63,6 +63,7 @@ enum
 #define	MAX_SUPERTILES_DEEP		(MAX_TERRAIN_DEPTH/SUPERTILE_SIZE)
 
 #define MAX_LODS				3
+#define MAX_LAYERS				2
 
 //=====================================================================
 
@@ -72,12 +73,12 @@ struct SuperTileMemoryType
 	Byte				mode;									// free, used, etc.
 	Byte				hasLOD[MAX_LODS];						// flag set when LOD exists
 	Byte				hiccupTimer;							// timer to delay drawing to avoid hiccup of texture upload
-	TQ3Point3D			coord[2];								// world coords (y for floor & ceiling)
+	TQ3Point3D			coord[MAX_LAYERS];						// world coords (y for floor & ceiling)
 	long				left,back;								// integer coords of back/left corner
-	uint32_t			glTextureName[2][MAX_LODS];				// OpenGL texture name for floor & ceiling at all LODs
-	uint16_t*			textureData[2][MAX_LODS];				// pixel data for floor & ceiling at all LODs
-	TQ3TriMeshData*		triMeshDataPtrs[2];						// trimesh's data for the supertile (floor & ceiling)
-	float				radius[2];								// radius of this supertile (floor & ceiling)
+	uint32_t			glTextureName[MAX_LAYERS][MAX_LODS];	// OpenGL texture name for floor & ceiling at all LODs
+	uint16_t*			textureData[MAX_LAYERS][MAX_LODS];		// pixel data for floor & ceiling at all LODs
+	TQ3TriMeshData*		triMeshDataPtrs[MAX_LAYERS];			// trimesh's data for the supertile (floor & ceiling)
+	float				radius[MAX_LAYERS];						// radius of this supertile (floor & ceiling)
 };
 typedef struct SuperTileMemoryType SuperTileMemoryType;
 
