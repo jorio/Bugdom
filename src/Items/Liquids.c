@@ -22,29 +22,21 @@ extern	ObjNode				*gFirstNodePtr;
 /*    PROTOTYPES            */
 /****************************/
 
-static void InitWaterPatch(void);
-static void InitHoneyPatch(void);
-static void InitLavaPatch(void);
-
-
 static void MoveWaterPatch(ObjNode *theNode);
 static void DrawWaterPatch(ObjNode *theNode);
 static void DrawWaterPatchTesselated(ObjNode *theNode);
 static void UpdateWaterTextureAnimation(void);
 
-
 static void MoveHoneyPatch(ObjNode *theNode);
-static void DrawHoneyPatchTesselated(ObjNode *theNode);
 static void UpdateHoneyTextureAnimation(void);
 
-static void InitSlimePatch(void);
 static void MoveSlimePatch(ObjNode *theNode);
-static void DrawSlimePatchTesselated(ObjNode *theNode);
 static void UpdateSlimeTextureAnimation(void);
 
 static void MoveLavaPatch(ObjNode *theNode);
 static void UpdateLavaTextureAnimation(void);
-static void DrawLavaPatchTesselated(ObjNode *theNode);
+
+static void DrawSolidLiquidPatchTesselated(ObjNode *theNode);
 
 
 /****************************/
@@ -58,6 +50,16 @@ static void DrawLavaPatchTesselated(ObjNode *theNode);
 
 #define	RISING_WATER_YOFF		200.0f
 
+static const bool gLiquidOnThisLevel[NUM_LEVEL_TYPES][NUM_LIQUID_TYPES] =
+{
+	//								Water	Slime	Honey	Lava
+	[LEVEL_TYPE_LAWN	]	=	{	1,		0,		0,		0,		},
+	[LEVEL_TYPE_POND	]	=	{	1,		0,		0,		0,		},
+	[LEVEL_TYPE_FOREST	]	=	{	1,		0,		0,		0,		},
+	[LEVEL_TYPE_HIVE	]	=	{	0,		0,		1,		0,		},
+	[LEVEL_TYPE_NIGHT	]	=	{	0,		1,		0,		0,		},
+	[LEVEL_TYPE_ANTHILL	]	=	{	1,		1,		0,		1,		},
+};
 
 /*********************/
 /*    VARIABLES      */
@@ -75,31 +77,9 @@ static TQ3TriMeshData	*gLiquidMeshPtrs[MAX_LIQUID_MESHES];
 static int				gFreeLiquidMeshes[MAX_LIQUID_MESHES];
 static int				gNumActiveLiquidMeshes = 0;
 
-
-		/* WATER */
-
-static GLuint			gWaterShader = 0;
-static float gWaterU, gWaterV;				// uv offsets values for Water
-static float gWaterU2, gWaterV2;
-
-
-		/* HONEY */
-			
-static GLuint			gHoneyShader = 0;
-static float			gHoneyU, gHoneyV;
-
-
-		/* SLIME */
-
-static GLuint			gSlimeShader = 0;
-static float			gSlimeU, gSlimeV;
-
-
-		/* LAVA */
-
-static GLuint			gLavaShader = 0;
-static float			gLavaU, gLavaV;
-
+static GLuint			gLiquidShaders[NUM_LIQUID_TYPES];
+static TQ3Param2D		gLiquidUVOffsets[NUM_LIQUID_TYPES];
+static TQ3Param2D		gWaterUVOffset2;		// extra uv offsets for second plane of non-tesselated water
 
 /****************** HELPER: DELETE TEXTURE **********************/
 
@@ -152,6 +132,7 @@ static bool liquidMeshesAllocated = false;
 
 	gNumActiveLiquidMeshes = 0;
 
+	// Initialize trimeshes
 	if (!liquidMeshesAllocated)
 	{
 		for (int i = 0; i < MAX_LIQUID_MESHES; i++)
@@ -162,10 +143,33 @@ static bool liquidMeshesAllocated = false;
 		liquidMeshesAllocated = true;
 	}
 
-	InitWaterPatch();
-	InitHoneyPatch();
-	InitSlimePatch();
-	InitLavaPatch();
+	// Clear UV offsets
+	for (int i = 0; i < NUM_LIQUID_TYPES; i++)
+	{
+		gLiquidUVOffsets[i] = (TQ3Param2D) { 0, 0 };
+	}
+	gWaterUVOffset2 = (TQ3Param2D) { 0, 0 };
+
+	// Load textures
+	for (int i = 0; i < NUM_LIQUID_TYPES; i++)
+	{
+		DeleteTexture(&gLiquidShaders[i]);
+
+		if (!gLiquidOnThisLevel[gLevelType][i])
+			continue;
+
+		long textureFile;
+		switch (i)
+		{
+			case LIQUID_WATER:	textureFile = gLevelType == LEVEL_TYPE_POND ? 129 : 128; break;
+			case LIQUID_HONEY:	textureFile = 200; break;
+			case LIQUID_SLIME:	textureFile = 201; break;
+			case LIQUID_LAVA:	textureFile = 202; break;
+			default:			textureFile = 128; break;
+		}
+
+		gLiquidShaders[i] = QD3D_NumberedTGAToTexture(textureFile, false, kRendererTextureFlags_None);
+	}
 }
 
 
@@ -173,10 +177,10 @@ static bool liquidMeshesAllocated = false;
 
 void DisposeLiquids(void)
 {
-	DeleteTexture(&gWaterShader);
-	DeleteTexture(&gHoneyShader);
-	DeleteTexture(&gSlimeShader);
-	DeleteTexture(&gLavaShader);
+	for (int i = 0; i < NUM_LIQUID_TYPES; i++)
+	{
+		DeleteTexture(&gLiquidShaders[i]);
+	}
 
 	for (int i = 0; i < MAX_LIQUID_MESHES; i++)
 	{
@@ -192,6 +196,42 @@ void UpdateLiquidAnimation(void)
 	UpdateHoneyTextureAnimation();
 	UpdateSlimeTextureAnimation();
 	UpdateLavaTextureAnimation();
+}
+
+
+
+void ApplyRandomJitterToInnerVertex(TQ3Point3D* p, int type)
+{
+	float x = p->x;
+	float y = p->y;
+	float z = p->z;
+
+	switch (type)
+	{
+		case LIQUID_WATER:
+			p->x = x + sinf(x*z) * 60.0f;
+			p->y = y;
+			p->z = z + cosf(z*-x) * 60.0f;
+			break;
+
+		case LIQUID_HONEY:
+			p->x = x + sinf(x*z) * 40.0f;
+			p->y = y + sinf(z*x) * 10.0f;
+			p->z = z + cosf(z*-x) * 40.0f;
+			break;
+
+		case LIQUID_SLIME:
+			p->x = x + sinf(x*z) * 40.0f;
+			p->y = y;
+			p->z = z + cosf(z*-x) * 40.0f;
+			break;
+
+		case LIQUID_LAVA:
+			p->x = x + sinf(x*z) * 30.0f;
+			p->y = y;
+			p->z = z + cosf(z*-x) * 30.0f;
+			break;
+	}
 }
 
 /***************** FIND LIQUID Y **********************/
@@ -251,37 +291,6 @@ next:
 
 #pragma mark -
 
-/********************** INIT WATER PATCH ************************/
-
-static void InitWaterPatch(void)
-{
-	gWaterU = gWaterV = 0.0f;
-	gWaterU2 = gWaterV2 = 0.0f;
-
-
-			/**********************/
-			/* INIT WATER TEXTURE */
-			/**********************/
-
-			/* DISPOSE OF OLD WATER */
-
-	DeleteTexture(&gWaterShader);
-
-			/* SEE IF THIS LEVEL NEEDS WATER */
-
-	const uint16_t kLevelsWithWater =
-			(1<<LEVEL_TYPE_LAWN) | (1<<LEVEL_TYPE_POND) | (1<<LEVEL_TYPE_FOREST) | (1<<LEVEL_TYPE_ANTHILL);
-
-	if (!(gLevelTypeMask & kLevelsWithWater))
-		return;
-
-				/* LOAD WATER TEXTURE */
-
-	long waterFile = gLevelType == LEVEL_TYPE_POND ? 129 : 128;
-
-	gWaterShader = QD3D_NumberedTGAToTexture(waterFile, false, kRendererTextureFlags_None);
-}
-
 /************************* ADD WATER PATCH *********************************/
 //
 // parm[0] = # tiles wide
@@ -303,8 +312,7 @@ Boolean				putUnderGround;
 static const float	yTable[] = {900,950,0,0,0,0};
 static const float	yTable2[] = {-540,-540,-540,-540,-370,-540,-540,-540};
 
-	if (!gWaterShader)
-		DoFatalAlert("AddWaterPatch: water not activated on this level");
+	GAME_ASSERT_MESSAGE(gLiquidShaders[LIQUID_WATER], "water not activated on this level");
 		
 	x -= (int)x % (int)TERRAIN_POLYGON_SIZE;				// round down to nearest tile & center
 	x += TERRAIN_POLYGON_SIZE/2;
@@ -478,10 +486,10 @@ static void MoveWaterPatch(ObjNode *theNode)
 
 static void UpdateWaterTextureAnimation(void)
 {
-	gWaterU += gFramesPerSecondFrac * .05f;
-	gWaterV += gFramesPerSecondFrac * .1f;
-	gWaterU2 -= gFramesPerSecondFrac * .12f;
-	gWaterV2 -= gFramesPerSecondFrac * .07f;
+	gLiquidUVOffsets[LIQUID_WATER].u += gFramesPerSecondFrac * .05f;
+	gLiquidUVOffsets[LIQUID_WATER].v += gFramesPerSecondFrac * .1f;
+	gWaterUVOffset2.u -= gFramesPerSecondFrac * .12f;
+	gWaterUVOffset2.v -= gFramesPerSecondFrac * .07f;
 }
 
 
@@ -502,7 +510,7 @@ TQ3Point3D		*p;
 
 	tmd->diffuseColor.a = gLevelType == LEVEL_TYPE_POND ? .7f : .5f;
 	tmd->texturingMode = kQ3TexturingModeAlphaBlend;
-	tmd->glTextureName = gWaterShader;
+	tmd->glTextureName = gLiquidShaders[LIQUID_WATER];
 	tmd->numPoints = 8;
 	tmd->numTriangles = 4;
 
@@ -596,23 +604,25 @@ TQ3Point3D		*p;
 
 		/* SET VERTEX UVS */
 
-	tmd->vertexUVs[0].u = gWaterU;
-	tmd->vertexUVs[0].v = gWaterV + patchD*(1.0/2.0);
-	tmd->vertexUVs[1].u = gWaterU;
-	tmd->vertexUVs[1].v = gWaterV;
-	tmd->vertexUVs[2].u = gWaterU + patchW*(1.0/2.0);
-	tmd->vertexUVs[2].v = gWaterV;
-	tmd->vertexUVs[3].u = gWaterU + patchW*(1.0/2.0);
-	tmd->vertexUVs[3].v = gWaterV + patchD*(1.0/2.0);
+	const TQ3Param2D scroll = gLiquidUVOffsets[LIQUID_WATER];
 
-	tmd->vertexUVs[4].u = gWaterU2;
-	tmd->vertexUVs[4].v = gWaterV2 + patchD*(1.0/3.0);
-	tmd->vertexUVs[5].u = gWaterU2;
-	tmd->vertexUVs[5].v = gWaterV2;
-	tmd->vertexUVs[6].u = gWaterU2 + patchW*(1.0/3.0);
-	tmd->vertexUVs[6].v = gWaterV2;
-	tmd->vertexUVs[7].u = gWaterU2 + patchW*(1.0/3.0);
-	tmd->vertexUVs[7].v = gWaterV2 + patchD*(1.0/3.0);
+	tmd->vertexUVs[0].u = scroll.u;
+	tmd->vertexUVs[0].v = scroll.v + patchD*(1.0/2.0);
+	tmd->vertexUVs[1].u = scroll.u;
+	tmd->vertexUVs[1].v = scroll.v;
+	tmd->vertexUVs[2].u = scroll.u + patchW*(1.0/2.0);
+	tmd->vertexUVs[2].v = scroll.v;
+	tmd->vertexUVs[3].u = scroll.u + patchW*(1.0/2.0);
+	tmd->vertexUVs[3].v = scroll.v + patchD*(1.0/2.0);
+
+	tmd->vertexUVs[4].u = gWaterUVOffset2.u;
+	tmd->vertexUVs[4].v = gWaterUVOffset2.v + patchD * (1.0 / 3.0);
+	tmd->vertexUVs[5].u = gWaterUVOffset2.u;
+	tmd->vertexUVs[5].v = gWaterUVOffset2.v;
+	tmd->vertexUVs[6].u = gWaterUVOffset2.u + patchW * (1.0 / 3.0);
+	tmd->vertexUVs[6].v = gWaterUVOffset2.v;
+	tmd->vertexUVs[7].u = gWaterUVOffset2.u + patchW * (1.0 / 3.0);
+	tmd->vertexUVs[7].v = gWaterUVOffset2.v + patchD * (1.0 / 3.0);
 
 			/*************/
 			/* SUBMIT IT */
@@ -642,7 +652,9 @@ TQ3TriMeshTriangleData	*t;
 
 	tmd->diffuseColor.a = gLevelType == LEVEL_TYPE_POND ? .6f : .5f;
 	tmd->texturingMode = kQ3TexturingModeAlphaBlend;
-	tmd->glTextureName = gWaterShader;
+	tmd->glTextureName = gLiquidShaders[LIQUID_WATER];
+
+	const TQ3Param2D uvScroll = gLiquidUVOffsets[LIQUID_WATER];
 
 			/************************/
 			/* CALC BOUNDS OF WATER */
@@ -690,23 +702,18 @@ TQ3TriMeshTriangleData	*t;
 		{
 				/* SET POINT */
 
+			p[i].x = x;
+			p[i].y = y;
+			p[i].z = z;
 			if ((h > 0) && (h < depth2) && (w > 0) && (w < width2))		// add random jitter to inner vertices
 			{
-				p[i].x = x + sinf(x*z)*60.0f;
-				p[i].y = y;
-				p[i].z = z + cosf(z*-x)*60.0f;
-			}
-			else
-			{
-				p[i].x = x;
-				p[i].y = y;
-				p[i].z = z;
+				ApplyRandomJitterToInnerVertex(&p[i], LIQUID_WATER);
 			}
 
 				/* SET UV */
 
-			tmd->vertexUVs[i].u = gWaterU+u;
-			tmd->vertexUVs[i].v = gWaterV+v;
+			tmd->vertexUVs[i].u = uvScroll.u + u;
+			tmd->vertexUVs[i].v = uvScroll.v + v;
 
 			i++;
 			x += TERRAIN_POLYGON_SIZE*2.0f;	
@@ -771,35 +778,6 @@ TQ3TriMeshTriangleData	*t;
 #pragma mark -
 
 
-/********************** INIT HONEY PATCH ************************/
-//
-// NOTE: Also does Toxic Waste on AntHill & Night Level
-//
-
-static void InitHoneyPatch(void)
-{
-	gHoneyU = gHoneyV = 0.0f;
-
-			/**********************/
-			/* INIT HONEY TEXTURE */
-			/**********************/
-
-			/* NUKE OLD SHADER */
-
-	DeleteTexture(&gHoneyShader);
-
-
-		/* SEE IF THIS LEVEL NEEDS HONEY OR LAVA */
-
-	if (gLevelType == LEVEL_TYPE_HIVE)
-	{
-			/* LOAD HONEY TEXTURE */
-
-		gHoneyShader = QD3D_NumberedTGAToTexture(200, false, kRendererTextureFlags_None);
-	}
-}
-
-
 /************************* ADD HONEY PATCH *********************************/
 //
 // parm[0] = # tiles wide
@@ -817,8 +795,7 @@ float				width,depth;
 //static const float	yTable[] = {-230,-200,0,0,0,0};
 static const float	yTable[] = {-620,-580,-550,-600,0,0};
 
-	if (!gHoneyShader)
-		DoFatalAlert("AddHoneyPatch: honey not activated on this level");
+	GAME_ASSERT_MESSAGE(gLiquidShaders[LIQUID_HONEY], "honey not activated on this level");
 		
 	x -= (int)x % (int)TERRAIN_POLYGON_SIZE;				// round down to nearest tile & center
 	x += TERRAIN_POLYGON_SIZE/2;
@@ -867,7 +844,7 @@ static const float	yTable[] = {-620,-580,-550,-600,0,0};
 	gNewObjectDefinition.moveCall = MoveHoneyPatch;
 	gNewObjectDefinition.rot 	= 0;
 	gNewObjectDefinition.scale = 1.0;
-	newObj = MakeNewCustomDrawObject(&gNewObjectDefinition, &bSphere, DrawHoneyPatchTesselated);	
+	newObj = MakeNewCustomDrawObject(&gNewObjectDefinition, &bSphere, DrawSolidLiquidPatchTesselated);
 		
 	if (newObj == nil)
 		return(false);
@@ -919,185 +896,15 @@ static void MoveHoneyPatch(ObjNode *theNode)
 
 static void UpdateHoneyTextureAnimation(void)
 {
-	gHoneyU += gFramesPerSecondFrac * .09f;
-	gHoneyV += gFramesPerSecondFrac * .1f;
+	gLiquidUVOffsets[LIQUID_HONEY].u += gFramesPerSecondFrac * .09f;
+	gLiquidUVOffsets[LIQUID_HONEY].v += gFramesPerSecondFrac * .1f;
 }
 
 
-
-/********************* DRAW HONEY PATCH TESSELATED **********************/
-//
-// This version tesselates the water patch so fog will look better on it.
-//
-
-static void DrawHoneyPatchTesselated(ObjNode *theNode)
-{
-float			x,y,z,left,back, right, front, width, depth;
-float			u,v;
-TQ3Point3D		*p;
-int				width2,depth2,w,h,i;
-TQ3TriMeshTriangleData	*t;
-
-	TQ3TriMeshData* tmd = gLiquidMeshPtrs[theNode->PatchMeshID];
-
-			/*********************/
-			/* SETUP ENVIRONMENT */
-			/*********************/
-
-	tmd->diffuseColor.a = 1.0f;
-	tmd->texturingMode = kQ3TexturingModeOpaque;
-	tmd->glTextureName = gHoneyShader;
-
-			/************************/
-			/* CALC BOUNDS OF HONEY */
-			/************************/
-			
-	x = theNode->Coord.x;
-	y = theNode->Coord.y;
-	z = theNode->Coord.z;
-	
-	width2 = theNode->PatchWidth;
-	depth2 = theNode->PatchDepth;
-	
-	left = x - (width2*.5f) * TERRAIN_POLYGON_SIZE;
-	right = left + width2 * TERRAIN_POLYGON_SIZE;
-	back = z - (depth2*.5f) * TERRAIN_POLYGON_SIZE;
-	front = back + depth2 * TERRAIN_POLYGON_SIZE;
-
-	width = right - left;
-	depth = front - back;
-	
-
-			/******************/
-			/* BUILD GEOMETRY */
-			/******************/
-
-		/**************************/
-		/* MAKE POINTS & UV ARRAY */
-		/**************************/
-
-	p = tmd->points;							// get ptr to points array
-	tmd->numPoints = (width2+1) * (depth2+1);	// calc # points in geometry
-	i = 0;
-	
-	z = back;
-	v = 1.0f;
-	
-	for (h = 0; h <= depth2; h++)
-	{
-		x = left;
-		u = 0;
-		for (w = 0; w <= width2; w++)
-		{
-				/* SET POINT */
-				
-			if ((h > 0) && (h < depth2) && (w > 0) && (w < width2))		// add random jitter to inner vertices
-			{
-				p[i].x = x + sinf(x*z)*40.0f;
-				p[i].y = y + sinf(z*x)*10.0f;
-				p[i].z = z + cosf(z*-x)*40.0f;
-			}
-			else
-			{
-				p[i].x = x;
-				p[i].y = y;
-				p[i].z = z;
-			}
-			
-				/* SET UV */
-
-			tmd->vertexUVs[i].u = gHoneyU+u;
-			tmd->vertexUVs[i].v = gHoneyV+v;
-
-			i++;
-			x += TERRAIN_POLYGON_SIZE;	
-			u += .4f;
-		}
-		v -= .4f;
-		z += TERRAIN_POLYGON_SIZE;
-	}
-	
-
-			/* UPDATE BBOX */
-
-	tmd->bBox.min.x = left;
-	tmd->bBox.min.y = y;
-	tmd->bBox.min.z = back;
-	tmd->bBox.max.x = right;
-	tmd->bBox.max.y = y;
-	tmd->bBox.max.z = front;
-	tmd->bBox.isEmpty = false;
-
-
-		/**************************/
-		/* MAKE TRIANGLE INDECIES */
-		/**************************/
-
-	t = tmd->triangles;								// get ptr to triangle array
-	i = 0;
-	for (h = 0; h < depth2; h++)
-	{
-		for (w = 0; w < width2; w++)
-		{
-			int rw = width2+1;
-			
-				/* TRIANGLE A */
-				
-			t[i].pointIndices[0] = (h * rw) + w;			// far left
-			t[i].pointIndices[1] = ((h+1) * rw) + w;		// near left
-			t[i].pointIndices[2] = ((h+1) * rw) + w + 1;	// near right
-			i++;
-
-				/* TRIANGLE B */
-
-			t[i].pointIndices[0] = (h * rw) + w;			// far left
-			t[i].pointIndices[1] = ((h+1) * rw) + w + 1; 	// near right
-			t[i].pointIndices[2] = (h * rw) + w + 1;		// far right
-			i++;		
-		}
-	}
-	tmd->numTriangles = i;						// set # triangles in geometry
-
-
-			/*************/
-			/* SUBMIT IT */
-			/*************/
-
-	Render_SubmitMesh(tmd, nil, nil, nil);
-}
 
 
 
 #pragma mark -
-
-
-/********************** INIT SLIME PATCH ************************/
-//
-// NOTE: Also does Toxic Waste on AntHill & Night Level
-//
-
-static void InitSlimePatch(void)
-{
-	gSlimeU = gSlimeV = 0.0f;
-	
-			/**********************/
-			/* INIT SLIME TEXTURE */
-			/**********************/
-
-			/* NUKE OLD SHADER */
-
-	DeleteTexture(&gSlimeShader);
-
-
-		/* SEE IF THIS LEVEL NEEDS SLIME OR LAVA */
-
-	if (gLevelTypeMask & ((1<<LEVEL_TYPE_ANTHILL) | (1<<LEVEL_TYPE_NIGHT)))		// ant hill & night
-	{
-			/* LOAD SLIME TEXTURE */
-
-		gSlimeShader = QD3D_NumberedTGAToTexture(201, false, kRendererTextureFlags_None);
-	}
-}
 
 
 /************************* ADD SLIME PATCH *********************************/
@@ -1116,9 +923,8 @@ TQ3BoundingSphere	bSphere;
 float				width,depth;
 static const float	yTable[] = {0,-200,0,0,0,0};
 
-	if (!gSlimeShader)
-		DoFatalAlert("AddSlimePatch: slime not activated on this level");
-		
+	GAME_ASSERT_MESSAGE(gLiquidShaders[LIQUID_SLIME], "slime not activated on this level");
+
 	x -= (int)x % (int)TERRAIN_POLYGON_SIZE;				// round down to nearest tile & center
 	x += TERRAIN_POLYGON_SIZE/2;
 	z -= (int)z % (int)TERRAIN_POLYGON_SIZE;
@@ -1168,7 +974,7 @@ static const float	yTable[] = {0,-200,0,0,0,0};
 	gNewObjectDefinition.moveCall = MoveSlimePatch;
 	gNewObjectDefinition.rot 	= 0;
 	gNewObjectDefinition.scale = 1.0;
-	newObj = MakeNewCustomDrawObject(&gNewObjectDefinition, &bSphere, DrawSlimePatchTesselated);	
+	newObj = MakeNewCustomDrawObject(&gNewObjectDefinition, &bSphere, DrawSolidLiquidPatchTesselated);
 		
 	if (newObj == nil)
 		return(false);
@@ -1221,181 +1027,14 @@ static void MoveSlimePatch(ObjNode *theNode)
 
 static void UpdateSlimeTextureAnimation(void)
 {
-	gSlimeU += gFramesPerSecondFrac * .09f;
-	gSlimeV += gFramesPerSecondFrac * .1f;
+	gLiquidUVOffsets[LIQUID_SLIME].u += gFramesPerSecondFrac * .09f;
+	gLiquidUVOffsets[LIQUID_SLIME].v += gFramesPerSecondFrac * .1f;
 }
 
 
-
-/********************* DRAW SLIME PATCH TESSELATED **********************/
-//
-// This version tesselates the water patch so fog will look better on it.
-//
-
-static void DrawSlimePatchTesselated(ObjNode *theNode)
-{
-float			x,y,z,left,back, right, front, width, depth;
-float			u,v;
-TQ3Point3D		*p;
-int				width2,depth2,w,h,i;
-TQ3TriMeshTriangleData	*t;
-
-	TQ3TriMeshData* tmd = gLiquidMeshPtrs[theNode->PatchMeshID];
-
-			/*********************/
-			/* SETUP ENVIRONMENT */
-			/*********************/
-
-	tmd->diffuseColor.a = 1.0f;
-	tmd->texturingMode = kQ3TexturingModeOpaque;
-	tmd->glTextureName = gSlimeShader;
-
-			/************************/
-			/* CALC BOUNDS OF SLIME */
-			/************************/
-			
-	x = theNode->Coord.x;
-	y = theNode->Coord.y;
-	z = theNode->Coord.z;
-	
-	width2 = theNode->PatchWidth;
-	depth2 = theNode->PatchDepth;
-	
-	left = x - (width2*.5f) * TERRAIN_POLYGON_SIZE;
-	right = left + width2 * TERRAIN_POLYGON_SIZE;
-	back = z - (depth2*.5f) * TERRAIN_POLYGON_SIZE;
-	front = back + depth2 * TERRAIN_POLYGON_SIZE;
-
-	width = right - left;
-	depth = front - back;
-	
-
-			/******************/
-			/* BUILD GEOMETRY */
-			/******************/
-
-		/**************************/
-		/* MAKE POINTS & UV ARRAY */
-		/**************************/
-
-	p = tmd->points;							// get ptr to points array
-	tmd->numPoints = (width2+1) * (depth2+1);	// calc # points in geometry
-	i = 0;
-	
-	z = back;
-	v = 1.0f;
-	
-	for (h = 0; h <= depth2; h++)
-	{
-		x = left;
-		u = 0;
-		for (w = 0; w <= width2; w++)
-		{
-				/* SET POINT */
-				
-			if ((h > 0) && (h < depth2) && (w > 0) && (w < width2))		// add random jitter to inner vertices
-			{
-				p[i].x = x + sinf(x*z)*40.0f;
-				p[i].y = y;
-				p[i].z = z + cosf(z*-x)*40.0f;
-			}
-			else
-			{
-				p[i].x = x;
-				p[i].y = y;
-				p[i].z = z;
-			}
-			
-				/* SET UV */
-
-			tmd->vertexUVs[i].u = gSlimeU+u;
-			tmd->vertexUVs[i].v = gSlimeV+v;
-
-			i++;
-			x += TERRAIN_POLYGON_SIZE;	
-			u += .4f;
-		}
-		v -= .4f;
-		z += TERRAIN_POLYGON_SIZE;
-	}
-
-
-			/* UPDATE BBOX */
-
-	tmd->bBox.min.x = left;
-	tmd->bBox.min.y = y;
-	tmd->bBox.min.z = back;
-	tmd->bBox.max.x = right;
-	tmd->bBox.max.y = y;
-	tmd->bBox.max.z = front;
-	tmd->bBox.isEmpty = false;
-
-
-		/**************************/
-		/* MAKE TRIANGLE INDECIES */
-		/**************************/
-
-	t = tmd->triangles;								// get ptr to triangle array
-	i = 0;
-	for (h = 0; h < depth2; h++)
-	{
-		for (w = 0; w < width2; w++)
-		{
-			int rw = width2+1;
-			
-				/* TRIANGLE A */
-				
-			t[i].pointIndices[0] = (h * rw) + w;			// far left
-			t[i].pointIndices[1] = ((h+1) * rw) + w;		// near left
-			t[i].pointIndices[2] = ((h+1) * rw) + w + 1;	// near right
-			i++;
-
-				/* TRIANGLE B */
-
-			t[i].pointIndices[0] = (h * rw) + w;			// far left
-			t[i].pointIndices[1] = ((h+1) * rw) + w + 1; 	// near right
-			t[i].pointIndices[2] = (h * rw) + w + 1;		// far right
-			i++;		
-		}
-	}
-	tmd->numTriangles = i;						// set # triangles in geometry
-
-
-			/*************/
-			/* SUBMIT IT */
-			/*************/
-
-	Render_SubmitMesh(tmd, nil, nil, nil);
-}
 
 #pragma mark -
 
-
-
-/********************** INIT LAVA PATCH ************************/
-
-static void InitLavaPatch(void)
-{
-	gLavaU = gLavaV = 0.0f;
-	
-			/**********************/
-			/* INIT LAVA TEXTURE */
-			/**********************/
-
-			/* NUKE OLD SHADER */
-
-	DeleteTexture(&gLavaShader);
-
-
-		/* SEE IF THIS LEVEL NEEDS LAVA */
-
-	if (gLevelType == LEVEL_TYPE_ANTHILL)
-	{
-			/* LOAD LAVA TEXTURE */
-
-		gLavaShader = QD3D_NumberedTGAToTexture(202, false, kRendererTextureFlags_None);
-	}
-}
 
 
 /************************* ADD LAVA PATCH *********************************/
@@ -1414,8 +1053,7 @@ TQ3BoundingSphere	bSphere;
 float				width,depth;
 static const float	yTable[] = {-230,-230,-230,0,0,0};
 
-	if (!gLavaShader)
-		DoFatalAlert("AddLavaPatch: slime not activated on this level");
+	GAME_ASSERT_MESSAGE(gLiquidShaders[LIQUID_LAVA], "lava not activated on this level");
 		
 	x -= (int)x % (int)TERRAIN_POLYGON_SIZE;				// round down to nearest tile & center
 	x += TERRAIN_POLYGON_SIZE/2;
@@ -1464,7 +1102,7 @@ static const float	yTable[] = {-230,-230,-230,0,0,0};
 	gNewObjectDefinition.moveCall = MoveLavaPatch;
 	gNewObjectDefinition.rot 	= 0;
 	gNewObjectDefinition.scale = 1.0;
-	newObj = MakeNewCustomDrawObject(&gNewObjectDefinition, &bSphere, DrawLavaPatchTesselated);	
+	newObj = MakeNewCustomDrawObject(&gNewObjectDefinition, &bSphere, DrawSolidLiquidPatchTesselated);
 		
 	if (newObj == nil)
 		return(false);
@@ -1516,8 +1154,8 @@ static void MoveLavaPatch(ObjNode *theNode)
 
 static void UpdateLavaTextureAnimation(void)
 {
-	gLavaU += gFramesPerSecondFrac * .09f;
-	gLavaV += gFramesPerSecondFrac * .1f;
+	gLiquidUVOffsets[LIQUID_LAVA].u += gFramesPerSecondFrac * .09f;
+	gLiquidUVOffsets[LIQUID_LAVA].v += gFramesPerSecondFrac * .1f;
 }
 
 
@@ -1527,7 +1165,7 @@ static void UpdateLavaTextureAnimation(void)
 // This version tesselates the water patch so fog will look better on it.
 //
 
-static void DrawLavaPatchTesselated(ObjNode *theNode)
+static void DrawSolidLiquidPatchTesselated(ObjNode *theNode)
 {
 float			x,y,z,left,back, right, front, width, depth;
 float			u,v;
@@ -1543,20 +1181,21 @@ TQ3TriMeshTriangleData	*t;
 
 	tmd->diffuseColor.a = 1.0f;
 	tmd->texturingMode = kQ3TexturingModeOpaque;
-	tmd->glTextureName = gLavaShader;
+	tmd->glTextureName = gLiquidShaders[theNode->Kind];
 
+	const TQ3Param2D uvOffset = gLiquidUVOffsets[theNode->Kind];
 
 			/************************/
-			/* CALC BOUNDS OF LAVA */
+			/* CALC BOUNDS OF HONEY */
 			/************************/
-			
+
 	x = theNode->Coord.x;
 	y = theNode->Coord.y;
 	z = theNode->Coord.z;
-	
+
 	width2 = theNode->PatchWidth;
 	depth2 = theNode->PatchDepth;
-	
+
 	left = x - (width2*.5f) * TERRAIN_POLYGON_SIZE;
 	right = left + width2 * TERRAIN_POLYGON_SIZE;
 	back = z - (depth2*.5f) * TERRAIN_POLYGON_SIZE;
@@ -1577,10 +1216,10 @@ TQ3TriMeshTriangleData	*t;
 	p = tmd->points;							// get ptr to points array
 	tmd->numPoints = (width2+1) * (depth2+1);	// calc # points in geometry
 	i = 0;
-	
+
 	z = back;
 	v = 1.0f;
-	
+
 	for (h = 0; h <= depth2; h++)
 	{
 		x = left;
@@ -1588,27 +1227,22 @@ TQ3TriMeshTriangleData	*t;
 		for (w = 0; w <= width2; w++)
 		{
 				/* SET POINT */
-				
+
+			p[i].x = x;
+			p[i].y = y;
+			p[i].z = z;
 			if ((h > 0) && (h < depth2) && (w > 0) && (w < width2))		// add random jitter to inner vertices
 			{
-				p[i].x = x + sinf(x*z)*30.0f;
-				p[i].y = y;
-				p[i].z = z + cosf(z*-x)*30.0f;
+				ApplyRandomJitterToInnerVertex(&p[i], theNode->Kind);
 			}
-			else
-			{
-				p[i].x = x;
-				p[i].y = y;
-				p[i].z = z;
-			}
-			
+
 				/* SET UV */
 
-			tmd->vertexUVs[i].u = gLavaU+u;
-			tmd->vertexUVs[i].v = gLavaV+v;
+			tmd->vertexUVs[i].u = uvOffset.u + u;
+			tmd->vertexUVs[i].v = uvOffset.v + v;
 
 			i++;
-			x += TERRAIN_POLYGON_SIZE;	
+			x += TERRAIN_POLYGON_SIZE;
 			u += .4f;
 		}
 		v -= .4f;
