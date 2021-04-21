@@ -19,6 +19,7 @@ extern	TQ3Point3D	gCoord;
 extern	NewObjectDefinitionType	gNewObjectDefinition;
 extern	u_long		gAutoFadeStatusBits;
 extern	PrefsType	gGamePrefs;
+extern	const float	gLiquidCollisionTopOffset[NUM_LIQUID_TYPES];
 
 /****************************/
 /*    PROTOTYPES            */
@@ -316,24 +317,7 @@ float	dist;
 					
 					if (thisNodePtr->CType & CTYPE_LIQUID)						// if liquid, move to top
 					{
-						switch(thisNodePtr->Kind)
-						{
-							case	LIQUID_WATER:
-									shadowNode->Coord.y += WATER_COLLISION_TOPOFF;
-									break;
-									
-							case	LIQUID_SLIME:
-									shadowNode->Coord.y += SLIME_COLLISION_TOPOFF;
-									break;
-
-							case	LIQUID_HONEY:
-									shadowNode->Coord.y += HONEY_COLLISION_TOPOFF;
-									break;
-
-							case	LIQUID_LAVA:
-									shadowNode->Coord.y += LAVA_COLLISION_TOPOFF;
-									break;						
-						}
+						shadowNode->Coord.y += gLiquidCollisionTopOffset[thisNodePtr->Kind];
 					}
 					
 					shadowNode->Scale.x = shadowNode->SpecialF[0];				// use preset scale

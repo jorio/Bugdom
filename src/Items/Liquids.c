@@ -22,21 +22,17 @@ extern	ObjNode				*gFirstNodePtr;
 /*    PROTOTYPES            */
 /****************************/
 
-static void MoveWaterPatch(ObjNode *theNode);
 static void DrawWaterPatch(ObjNode *theNode);
 static void DrawWaterPatchTesselated(ObjNode *theNode);
 static void UpdateWaterTextureAnimation(void);
-
-static void MoveHoneyPatch(ObjNode *theNode);
 static void UpdateHoneyTextureAnimation(void);
-
-static void MoveSlimePatch(ObjNode *theNode);
 static void UpdateSlimeTextureAnimation(void);
-
-static void MoveLavaPatch(ObjNode *theNode);
 static void UpdateLavaTextureAnimation(void);
 
+static Boolean AddLiquidPatch(TerrainItemEntryType *itemPtr, long x, long z, int kind);
+static void MoveLiquidPatch(ObjNode *theNode);
 static void DrawSolidLiquidPatchTesselated(ObjNode *theNode);
+static void ApplyJitterToLiquidVertex(TQ3Point3D* p, int type);
 
 
 /****************************/
@@ -52,13 +48,30 @@ static void DrawSolidLiquidPatchTesselated(ObjNode *theNode);
 
 static const bool gLiquidOnThisLevel[NUM_LEVEL_TYPES][NUM_LIQUID_TYPES] =
 {
-	//								Water	Slime	Honey	Lava
+	//								Water	Honey	Slime	Lava
 	[LEVEL_TYPE_LAWN	]	=	{	1,		0,		0,		0,		},
 	[LEVEL_TYPE_POND	]	=	{	1,		0,		0,		0,		},
 	[LEVEL_TYPE_FOREST	]	=	{	1,		0,		0,		0,		},
-	[LEVEL_TYPE_HIVE	]	=	{	0,		0,		1,		0,		},
-	[LEVEL_TYPE_NIGHT	]	=	{	0,		1,		0,		0,		},
-	[LEVEL_TYPE_ANTHILL	]	=	{	1,		1,		0,		1,		},
+	[LEVEL_TYPE_HIVE	]	=	{	0,		1,		0,		0,		},
+	[LEVEL_TYPE_NIGHT	]	=	{	0,		0,		1,		0,		},
+	[LEVEL_TYPE_ANTHILL	]	=	{	1,		0,		1,		1,		},
+};
+
+static const float gLiquidYTable[NUM_LIQUID_TYPES][6] =
+{
+	[LIQUID_WATER	] = {	900,	950,	0,		0,		0,		0	},
+	[LIQUID_HONEY	] = {	-620,	-580,	-550,	-600,	0,		0	},
+	[LIQUID_SLIME	] = {	0,		-200,	0,		0,		0,		0	},
+	[LIQUID_LAVA	] = {	-230,	-230,	-230,	0,		0,		0	},
+};
+
+// offset from top where water collision volume starts
+const float gLiquidCollisionTopOffset[NUM_LIQUID_TYPES] =
+{
+	[LIQUID_WATER	] = 75.0f,
+	[LIQUID_HONEY	] = 70.0f,
+	[LIQUID_SLIME	] = 60.0f,
+	[LIQUID_LAVA	] = 60.0f,
 };
 
 /*********************/
@@ -200,39 +213,6 @@ void UpdateLiquidAnimation(void)
 
 
 
-void ApplyRandomJitterToInnerVertex(TQ3Point3D* p, int type)
-{
-	float x = p->x;
-	float y = p->y;
-	float z = p->z;
-
-	switch (type)
-	{
-		case LIQUID_WATER:
-			p->x = x + sinf(x*z) * 60.0f;
-			p->y = y;
-			p->z = z + cosf(z*-x) * 60.0f;
-			break;
-
-		case LIQUID_HONEY:
-			p->x = x + sinf(x*z) * 40.0f;
-			p->y = y + sinf(z*x) * 10.0f;
-			p->z = z + cosf(z*-x) * 40.0f;
-			break;
-
-		case LIQUID_SLIME:
-			p->x = x + sinf(x*z) * 40.0f;
-			p->y = y;
-			p->z = z + cosf(z*-x) * 40.0f;
-			break;
-
-		case LIQUID_LAVA:
-			p->x = x + sinf(x*z) * 30.0f;
-			p->y = y;
-			p->z = z + cosf(z*-x) * 30.0f;
-			break;
-	}
-}
 
 /***************** FIND LIQUID Y **********************/
 
@@ -258,26 +238,8 @@ float		y;
 					goto next;
 
 				y = thisNodePtr->CollisionBoxes[0].top;
-				
-				switch(thisNodePtr->Kind)
-				{
-					case	LIQUID_WATER:
-							y += WATER_COLLISION_TOPOFF;
-							break;
-							
-					case	LIQUID_SLIME:
-							y += SLIME_COLLISION_TOPOFF;
-							break;
-
-					case	LIQUID_HONEY:
-							y += HONEY_COLLISION_TOPOFF;
-							break;
-
-					case	LIQUID_LAVA:
-							y += LAVA_COLLISION_TOPOFF;
-							break;						
-				}				
-				return(y);				
+				y += gLiquidCollisionTopOffset[thisNodePtr->Kind];
+				return(y);
 			}
 		}		
 next:					
@@ -403,7 +365,7 @@ static const float	yTable2[] = {-540,-540,-540,-540,-370,-540,-540,-540};
 	gNewObjectDefinition.coord.z = z;
 	gNewObjectDefinition.flags 	= STATUS_BIT_NOTRICACHE|STATUS_BIT_NULLSHADER|STATUS_BIT_NOZWRITE;
 	gNewObjectDefinition.slot 	= SLOT_OF_DUMB-1;
-	gNewObjectDefinition.moveCall = MoveWaterPatch;
+	gNewObjectDefinition.moveCall = MoveLiquidPatch;
 	gNewObjectDefinition.rot 	= 0;
 	gNewObjectDefinition.scale = 1.0;
 	if (tesselateFlag)
@@ -437,18 +399,35 @@ static const float	yTable2[] = {-540,-540,-540,-540,-370,-540,-540,-540};
 				
 	newObj->CType = CTYPE_LIQUID|CTYPE_BLOCKCAMERA;
 	newObj->CBits = CBITS_TOUCHABLE;
-	SetObjectCollisionBounds(newObj,-WATER_COLLISION_TOPOFF,-2000,
-							-(width*.5f) * TERRAIN_POLYGON_SIZE,width*.5f * TERRAIN_POLYGON_SIZE,
-							depth*.5f * TERRAIN_POLYGON_SIZE,-(depth*.5f) * TERRAIN_POLYGON_SIZE);
+	SetObjectCollisionBounds(newObj,
+							-gLiquidCollisionTopOffset[LIQUID_WATER],
+							-2000,
+							-(width*.5f) * TERRAIN_POLYGON_SIZE,
+							width*.5f * TERRAIN_POLYGON_SIZE,
+							depth*.5f * TERRAIN_POLYGON_SIZE,
+							-(depth*.5f) * TERRAIN_POLYGON_SIZE);
 
+			/* SET MESH PROPERTIES */
+
+	TQ3TriMeshData* tmd = gLiquidMeshPtrs[newObj->PatchMeshID];
+
+	if (gLevelType != LEVEL_TYPE_POND)		// any water in non-pond levels
+		tmd->diffuseColor.a = .5f;
+	else if (tesselateFlag)					// tesselated water in pond level
+		tmd->diffuseColor.a = .6f;
+	else									// non-tesselated water in pond level (is there even any?)
+		tmd->diffuseColor.a = .7f;
+
+	tmd->texturingMode = kQ3TexturingModeAlphaBlend;
+	tmd->glTextureName = gLiquidShaders[LIQUID_WATER];
 
 	return(true);													// item was added
 }
 
 
-/********************* MOVE WATER PATCH **********************/
+/********************* MOVE LIQUID PATCH **********************/
 
-static void MoveWaterPatch(ObjNode *theNode)
+static void MoveLiquidPatch(ObjNode *theNode)
 {
 	if (TrackTerrainItem(theNode))						// just check to see if it's gone
 	{
@@ -456,10 +435,12 @@ static void MoveWaterPatch(ObjNode *theNode)
 		DeleteObject(theNode);
 		return;
 	}
-	
+
 		/* ON ANTHILL LEVEL, SEE IF TIME TO RAISE THE WATER */
 
-	if ((gLevelType == LEVEL_TYPE_ANTHILL) && (!theNode->PatchHasRisen))
+	if (gLevelType == LEVEL_TYPE_ANTHILL &&
+		theNode->Kind == LIQUID_WATER &&
+		!theNode->PatchHasRisen)
 	{
 		int	id = theNode->PatchValveID;				// get valve ID
 
@@ -508,9 +489,6 @@ TQ3Point3D		*p;
 
 			/* SETUP ENVIRONMENT */
 
-	tmd->diffuseColor.a = gLevelType == LEVEL_TYPE_POND ? .7f : .5f;
-	tmd->texturingMode = kQ3TexturingModeAlphaBlend;
-	tmd->glTextureName = gLiquidShaders[LIQUID_WATER];
 	tmd->numPoints = 8;
 	tmd->numTriangles = 4;
 
@@ -628,7 +606,7 @@ TQ3Point3D		*p;
 			/* SUBMIT IT */
 			/*************/
 
-	Render_SubmitMesh(tmd, nil, nil, nil);
+	Render_SubmitMesh(tmd, nil, &theNode->RenderModifiers, nil);
 }
 
 /********************* DRAW WATER PATCH TESSELATED **********************/
@@ -644,15 +622,12 @@ TQ3Point3D		*p;
 int				width2,depth2,w,h,i;
 TQ3TriMeshTriangleData	*t;
 
-	TQ3TriMeshData* tmd = gLiquidMeshPtrs[theNode->PatchMeshID];
 
 			/*********************/
 			/* SETUP ENVIRONMENT */
 			/*********************/
 
-	tmd->diffuseColor.a = gLevelType == LEVEL_TYPE_POND ? .6f : .5f;
-	tmd->texturingMode = kQ3TexturingModeAlphaBlend;
-	tmd->glTextureName = gLiquidShaders[LIQUID_WATER];
+	TQ3TriMeshData* tmd = gLiquidMeshPtrs[theNode->PatchMeshID];
 
 	const TQ3Param2D uvScroll = gLiquidUVOffsets[LIQUID_WATER];
 
@@ -707,7 +682,7 @@ TQ3TriMeshTriangleData	*t;
 			p[i].z = z;
 			if ((h > 0) && (h < depth2) && (w > 0) && (w < width2))		// add random jitter to inner vertices
 			{
-				ApplyRandomJitterToInnerVertex(&p[i], LIQUID_WATER);
+				ApplyJitterToLiquidVertex(&p[i], LIQUID_WATER);
 			}
 
 				/* SET UV */
@@ -770,7 +745,7 @@ TQ3TriMeshTriangleData	*t;
 			/* SUBMIT IT */
 			/*************/
 
-	Render_SubmitMesh(tmd, nil, nil, nil);
+	Render_SubmitMesh(tmd, nil, &theNode->RenderModifiers, nil);
 }
 
 
@@ -779,117 +754,28 @@ TQ3TriMeshTriangleData	*t;
 
 
 /************************* ADD HONEY PATCH *********************************/
-//
-// parm[0] = # tiles wide
-// parm[1] = # tiles deep
-// parm[2] = y off or y coord index
-// parm[3]: bit 0 = use y coord index for fixed ht.
-//
 
-Boolean AddHoneyPatch(TerrainItemEntryType *itemPtr, long  x, long z)
+Boolean AddHoneyPatch(TerrainItemEntryType *itemPtr, long x, long z)
 {
-ObjNode				*newObj;
-float				y,yOff;
-TQ3BoundingSphere	bSphere;
-float				width,depth;
-//static const float	yTable[] = {-230,-200,0,0,0,0};
-static const float	yTable[] = {-620,-580,-550,-600,0,0};
+	return AddLiquidPatch(itemPtr, x, z, LIQUID_HONEY);
+}
 
-	GAME_ASSERT_MESSAGE(gLiquidShaders[LIQUID_HONEY], "honey not activated on this level");
-		
-	x -= (int)x % (int)TERRAIN_POLYGON_SIZE;				// round down to nearest tile & center
-	x += TERRAIN_POLYGON_SIZE/2;
-	z -= (int)z % (int)TERRAIN_POLYGON_SIZE;
-	z += TERRAIN_POLYGON_SIZE/2;
-		
-	if (itemPtr->parm[3]&1)									// see if use indexed y
-	{
-		y = yTable[itemPtr->parm[2]];						// get y from table
-	}
-	else
-	{
-		yOff = itemPtr->parm[2];							// get y offset
-		yOff *= 10.0f;										// multiply by n since parm is only a Byte 0..255
-		if (yOff == 0.0f)
-			yOff = 40.0f;
-		y = GetTerrainHeightAtCoord(x,z,FLOOR)+yOff;		// get y coord of patch
-	}
+/************************* ADD SLIME PATCH *********************************/
 
-	width = itemPtr->parm[0];								// get width & depth of water patch
-	depth = itemPtr->parm[1];
-	if (width == 0)
-		width = 4;
-	if (depth == 0)
-		depth = 4;
-		
-	GAME_ASSERT(width <= MAX_LIQUID_SIZE);
-	GAME_ASSERT(depth <= MAX_LIQUID_SIZE);
+Boolean AddSlimePatch(TerrainItemEntryType *itemPtr, long x, long z)
+{
+	return AddLiquidPatch(itemPtr, x, z, LIQUID_SLIME);
+}
 
+/************************* ADD LAVA PATCH *********************************/
 
-			/* CALC BSPHERE */
-
-	bSphere.origin.x = x;
-	bSphere.origin.y = y;
-	bSphere.origin.z = z;
-	bSphere.radius = (((float)width + (float)depth) * .5f) * TERRAIN_POLYGON_SIZE;
-
-
-			/* MAKE OBJECT */
-			
-	gNewObjectDefinition.coord.x = x;
-	gNewObjectDefinition.coord.y = y;
-	gNewObjectDefinition.coord.z = z;
-	gNewObjectDefinition.flags 	= STATUS_BIT_NULLSHADER;
-	gNewObjectDefinition.slot 	= SLOT_OF_DUMB-1;
-	gNewObjectDefinition.moveCall = MoveHoneyPatch;
-	gNewObjectDefinition.rot 	= 0;
-	gNewObjectDefinition.scale = 1.0;
-	newObj = MakeNewCustomDrawObject(&gNewObjectDefinition, &bSphere, DrawSolidLiquidPatchTesselated);
-		
-	if (newObj == nil)
-		return(false);
-
-	newObj->TerrainItemPtr = itemPtr;								// keep ptr to item list
-
-	newObj->Kind = LIQUID_HONEY;
-
-	newObj->PatchWidth 		= width;
-	newObj->PatchDepth 		= depth;
-	newObj->PatchMeshID		= AllocLiquidMesh();
-
-			/* SET COLLISION */
-			//
-			// Honey patches have a water volume collision area.
-			// The collision volume starts a little under the top of the water so that
-			// no collision is detected in shallow water, but if player sinks deep
-			// then a collision will be detected.
-			//
-				
-	newObj->CType = CTYPE_LIQUID|CTYPE_BLOCKCAMERA|CTYPE_BLOCKSHADOW;
-	newObj->CBits = CBITS_TOUCHABLE;
-	SetObjectCollisionBounds(newObj,
-							-HONEY_COLLISION_TOPOFF,
-							-2000,
-							-(width*.5f) * TERRAIN_POLYGON_SIZE,
-							(width*.5f) * TERRAIN_POLYGON_SIZE,
-							(depth*.5f) * TERRAIN_POLYGON_SIZE,
-							-(depth*.5f) * TERRAIN_POLYGON_SIZE);
-
-	return(true);													// item was added
+Boolean AddLavaPatch(TerrainItemEntryType *itemPtr, long x, long z)
+{
+	return AddLiquidPatch(itemPtr, x, z, LIQUID_LAVA);
 }
 
 
-/********************* MOVE HONEY PATCH **********************/
-
-static void MoveHoneyPatch(ObjNode *theNode)
-{
-	if (TrackTerrainItem(theNode))						// just check to see if it's gone
-	{
-		DisposeLiquidMesh(theNode);
-		DeleteObject(theNode);
-		return;
-	}
-}
+#pragma mark -
 
 
 /**************** UPDATE HONEY TEXTURE ANIMATION ********************/
@@ -900,129 +786,6 @@ static void UpdateHoneyTextureAnimation(void)
 	gLiquidUVOffsets[LIQUID_HONEY].v += gFramesPerSecondFrac * .1f;
 }
 
-
-
-
-
-#pragma mark -
-
-
-/************************* ADD SLIME PATCH *********************************/
-//
-// parm[0] = # tiles wide
-// parm[1] = # tiles deep
-// parm[2] = y off or y coord index
-// parm[3]: bit 0 = use y coord index for fixed ht.
-//
-
-Boolean AddSlimePatch(TerrainItemEntryType *itemPtr, long  x, long z)
-{
-ObjNode				*newObj;
-float				y,yOff;
-TQ3BoundingSphere	bSphere;
-float				width,depth;
-static const float	yTable[] = {0,-200,0,0,0,0};
-
-	GAME_ASSERT_MESSAGE(gLiquidShaders[LIQUID_SLIME], "slime not activated on this level");
-
-	x -= (int)x % (int)TERRAIN_POLYGON_SIZE;				// round down to nearest tile & center
-	x += TERRAIN_POLYGON_SIZE/2;
-	z -= (int)z % (int)TERRAIN_POLYGON_SIZE;
-	z += TERRAIN_POLYGON_SIZE/2;
-		
-	
-	if (itemPtr->parm[3]&1)									// see if use indexed y
-	{
-		y = yTable[itemPtr->parm[2]];						// get y from table
-	}
-	else
-	{
-		yOff = itemPtr->parm[2];							// get y offset
-		yOff *= 10.0f;										// multiply by n since parm is only a Byte 0..255
-		if (yOff == 0.0f)
-			yOff = 40.0f;
-		y = GetTerrainHeightAtCoord(x,z,FLOOR)+yOff;		// get y coord of patch
-	}
-
-
-	width = itemPtr->parm[0];								// get width & depth of water patch
-	depth = itemPtr->parm[1];
-	if (width == 0)
-		width = 4;
-	if (depth == 0)
-		depth = 4;
-		
-	GAME_ASSERT(width <= MAX_LIQUID_SIZE);
-	GAME_ASSERT(depth <= MAX_LIQUID_SIZE);
-
-
-			/* CALC BSPHERE */
-
-	bSphere.origin.x = x;
-	bSphere.origin.y = y;
-	bSphere.origin.z = z;
-	bSphere.radius = (((float)width + (float)depth) * .5f) * TERRAIN_POLYGON_SIZE;
-
-
-			/* MAKE OBJECT */
-			
-	gNewObjectDefinition.coord.x = x;
-	gNewObjectDefinition.coord.y = y;
-	gNewObjectDefinition.coord.z = z;
-	gNewObjectDefinition.flags 	= STATUS_BIT_NOTRICACHE|STATUS_BIT_NULLSHADER|STATUS_BIT_NOZWRITE;
-	gNewObjectDefinition.slot 	= SLOT_OF_DUMB-1;
-	gNewObjectDefinition.moveCall = MoveSlimePatch;
-	gNewObjectDefinition.rot 	= 0;
-	gNewObjectDefinition.scale = 1.0;
-	newObj = MakeNewCustomDrawObject(&gNewObjectDefinition, &bSphere, DrawSolidLiquidPatchTesselated);
-		
-	if (newObj == nil)
-		return(false);
-
-	newObj->TerrainItemPtr = itemPtr;								// keep ptr to item list
-
-	newObj->Kind = LIQUID_SLIME;
-
-
-	newObj->PatchWidth 		= width;
-	newObj->PatchDepth 		= depth;
-	newObj->PatchMeshID		= AllocLiquidMesh();
-
-			/* SET COLLISION */
-			//
-			// Slime patches have a water volume collision area.
-			// The collision volume starts a little under the top of the water so that
-			// no collision is detected in shallow water, but if player sinks deep
-			// then a collision will be detected.
-			//
-				
-	newObj->CType = CTYPE_LIQUID|CTYPE_BLOCKCAMERA|CTYPE_BLOCKSHADOW;
-	newObj->CBits = CBITS_TOUCHABLE;
-	SetObjectCollisionBounds(newObj,
-							-SLIME_COLLISION_TOPOFF,
-							-2000,
-							-(width*.5f) * TERRAIN_POLYGON_SIZE,
-							(width*.5f) * TERRAIN_POLYGON_SIZE,
-							(depth*.5f) * TERRAIN_POLYGON_SIZE,
-							-(depth*.5f) * TERRAIN_POLYGON_SIZE);
-
-	return(true);													// item was added
-}
-
-
-/********************* MOVE SLIME PATCH **********************/
-
-static void MoveSlimePatch(ObjNode *theNode)
-{
-	if (TrackTerrainItem(theNode))						// just check to see if it's gone
-	{
-		DisposeLiquidMesh(theNode);
-		DeleteObject(theNode);
-		return;
-	}
-}
-
-
 /**************** UPDATE SLIME TEXTURE ANIMATION ********************/
 
 static void UpdateSlimeTextureAnimation(void)
@@ -1030,125 +793,6 @@ static void UpdateSlimeTextureAnimation(void)
 	gLiquidUVOffsets[LIQUID_SLIME].u += gFramesPerSecondFrac * .09f;
 	gLiquidUVOffsets[LIQUID_SLIME].v += gFramesPerSecondFrac * .1f;
 }
-
-
-
-#pragma mark -
-
-
-
-/************************* ADD LAVA PATCH *********************************/
-//
-// parm[0] = # tiles wide
-// parm[1] = # tiles deep
-// parm[2] = y off or y coord index
-// parm[3]: bit 0 = use y coord index for fixed ht.
-//
-
-Boolean AddLavaPatch(TerrainItemEntryType *itemPtr, long  x, long z)
-{
-ObjNode				*newObj;
-float				y,yOff;
-TQ3BoundingSphere	bSphere;
-float				width,depth;
-static const float	yTable[] = {-230,-230,-230,0,0,0};
-
-	GAME_ASSERT_MESSAGE(gLiquidShaders[LIQUID_LAVA], "lava not activated on this level");
-		
-	x -= (int)x % (int)TERRAIN_POLYGON_SIZE;				// round down to nearest tile & center
-	x += TERRAIN_POLYGON_SIZE/2;
-	z -= (int)z % (int)TERRAIN_POLYGON_SIZE;
-	z += TERRAIN_POLYGON_SIZE/2;
-		
-	if (itemPtr->parm[3]&1)									// see if use indexed y
-	{
-		y = yTable[itemPtr->parm[2]];						// get y from table
-	}
-	else
-	{
-		yOff = itemPtr->parm[2];							// get y offset
-		yOff *= 10.0f;										// multiply by n since parm is only a Byte 0..255
-		if (yOff == 0.0f)
-			yOff = 40.0f;
-		y = GetTerrainHeightAtCoord(x,z,FLOOR)+yOff;		// get y coord of patch
-	}
-		
-	width = itemPtr->parm[0];								// get width & depth of water patch
-	depth = itemPtr->parm[1];
-	if (width == 0)
-		width = 4;
-	if (depth == 0)
-		depth = 4;
-		
-	GAME_ASSERT(width <= MAX_LIQUID_SIZE);
-	GAME_ASSERT(depth <= MAX_LIQUID_SIZE);
-
-
-			/* CALC BSPHERE */
-
-	bSphere.origin.x = x;
-	bSphere.origin.y = y;
-	bSphere.origin.z = z;
-	bSphere.radius = (((float)width + (float)depth) / 2.0f) * TERRAIN_POLYGON_SIZE;
-
-
-			/* MAKE OBJECT */
-			
-	gNewObjectDefinition.coord.x = x;
-	gNewObjectDefinition.coord.y = y;
-	gNewObjectDefinition.coord.z = z;
-	gNewObjectDefinition.flags 	= STATUS_BIT_NOTRICACHE|STATUS_BIT_NULLSHADER|STATUS_BIT_NOZWRITE;
-	gNewObjectDefinition.slot 	= SLOT_OF_DUMB-1;
-	gNewObjectDefinition.moveCall = MoveLavaPatch;
-	gNewObjectDefinition.rot 	= 0;
-	gNewObjectDefinition.scale = 1.0;
-	newObj = MakeNewCustomDrawObject(&gNewObjectDefinition, &bSphere, DrawSolidLiquidPatchTesselated);
-		
-	if (newObj == nil)
-		return(false);
-
-	newObj->TerrainItemPtr = itemPtr;								// keep ptr to item list
-
-	newObj->Kind = LIQUID_LAVA;
-
-	newObj->PatchWidth 		= width;
-	newObj->PatchDepth 		= depth;
-	newObj->PatchMeshID		= AllocLiquidMesh();
-
-			/* SET COLLISION */
-			//
-			// Lava patches have a water volume collision area.
-			// The collision volume starts a little under the top of the water so that
-			// no collision is detected in shallow water, but if player sinks deep
-			// then a collision will be detected.
-			//
-				
-	newObj->CType = CTYPE_LIQUID|CTYPE_BLOCKCAMERA|CTYPE_BLOCKSHADOW;
-	newObj->CBits = CBITS_TOUCHABLE;
-	SetObjectCollisionBounds(newObj,
-							-LAVA_COLLISION_TOPOFF,
-							-2000,
-							-(width*.5f) * TERRAIN_POLYGON_SIZE,
-							(width*.5f) * TERRAIN_POLYGON_SIZE,
-							(depth*.5f) * TERRAIN_POLYGON_SIZE,
-							-(depth*.5f) * TERRAIN_POLYGON_SIZE);
-
-	return(true);													// item was added
-}
-
-
-/********************* MOVE LAVA PATCH **********************/
-
-static void MoveLavaPatch(ObjNode *theNode)
-{
-	if (TrackTerrainItem(theNode))						// just check to see if it's gone
-	{
-		DisposeLiquidMesh(theNode);
-		DeleteObject(theNode);
-		return;
-	}
-}
-
 
 /**************** UPDATE LAVA TEXTURE ANIMATION ********************/
 
@@ -1160,7 +804,118 @@ static void UpdateLavaTextureAnimation(void)
 
 
 
-/********************* DRAW LAVA PATCH TESSELATED **********************/
+#pragma mark - Generic liquid routines
+
+
+/************************* ADD HONEY/SLIME/LAVA PATCH *********************************/
+//
+// parm[0] = # tiles wide
+// parm[1] = # tiles deep
+// parm[2] = y off or y coord index
+// parm[3]: bit 0 = use y coord index for fixed ht.
+//
+
+static Boolean AddLiquidPatch(TerrainItemEntryType *itemPtr, long x, long z, int kind)
+{
+ObjNode				*newObj;
+float				y,yOff;
+TQ3BoundingSphere	bSphere;
+float				width,depth;
+
+	GAME_ASSERT_MESSAGE(gLiquidShaders[kind], "this kind of liquid is not activated on this level");
+
+	x -= (int)x % (int)TERRAIN_POLYGON_SIZE;				// round down to nearest tile & center
+	x += TERRAIN_POLYGON_SIZE/2;
+	z -= (int)z % (int)TERRAIN_POLYGON_SIZE;
+	z += TERRAIN_POLYGON_SIZE/2;
+
+	if (itemPtr->parm[3]&1)									// see if use indexed y
+	{
+		GAME_ASSERT(itemPtr->parm[2] < 6);
+		y = gLiquidYTable[kind][itemPtr->parm[2]];			// get y from table
+	}
+	else
+	{
+		yOff = itemPtr->parm[2];							// get y offset
+		yOff *= 10.0f;										// multiply by n since parm is only a Byte 0..255
+		if (yOff == 0.0f)
+			yOff = 40.0f;
+		y = GetTerrainHeightAtCoord(x,z,FLOOR)+yOff;		// get y coord of patch
+	}
+
+	width = itemPtr->parm[0];								// get width & depth of water patch
+	depth = itemPtr->parm[1];
+	if (width == 0)
+		width = 4;
+	if (depth == 0)
+		depth = 4;
+
+	GAME_ASSERT(width <= MAX_LIQUID_SIZE);
+	GAME_ASSERT(depth <= MAX_LIQUID_SIZE);
+
+
+			/* CALC BSPHERE */
+
+	bSphere.origin.x = x;
+	bSphere.origin.y = y;
+	bSphere.origin.z = z;
+	bSphere.radius = (((float)width + (float)depth) * .5f) * TERRAIN_POLYGON_SIZE;
+
+
+			/* MAKE OBJECT */
+
+	gNewObjectDefinition.coord.x = x;
+	gNewObjectDefinition.coord.y = y;
+	gNewObjectDefinition.coord.z = z;
+	gNewObjectDefinition.flags 	= STATUS_BIT_NULLSHADER;	// note: Slime/Lava also had notricache|nozwrite. Honey just had nullshader.
+	gNewObjectDefinition.slot 	= SLOT_OF_DUMB-1;
+	gNewObjectDefinition.moveCall = MoveLiquidPatch;
+	gNewObjectDefinition.rot 	= 0;
+	gNewObjectDefinition.scale = 1.0;
+	newObj = MakeNewCustomDrawObject(&gNewObjectDefinition, &bSphere, DrawSolidLiquidPatchTesselated);
+
+	if (newObj == nil)
+		return(false);
+
+	newObj->TerrainItemPtr = itemPtr;								// keep ptr to item list
+
+	newObj->Kind = kind;
+
+	newObj->PatchWidth 		= width;
+	newObj->PatchDepth 		= depth;
+	newObj->PatchMeshID		= AllocLiquidMesh();					// allocate liquid mesh
+
+			/* SET COLLISION */
+			//
+			// Liquid patches have a liquid volume collision area.
+			// The collision volume starts a little under the top of the liquid so that
+			// no collision is detected in shallow liquid, but if player sinks deep
+			// then a collision will be detected.
+			//
+
+	newObj->CType = CTYPE_LIQUID|CTYPE_BLOCKCAMERA|CTYPE_BLOCKSHADOW;
+	newObj->CBits = CBITS_TOUCHABLE;
+	SetObjectCollisionBounds(newObj,
+							-gLiquidCollisionTopOffset[kind],
+							-2000,
+							-(width*.5f) * TERRAIN_POLYGON_SIZE,
+							(width*.5f) * TERRAIN_POLYGON_SIZE,
+							(depth*.5f) * TERRAIN_POLYGON_SIZE,
+							-(depth*.5f) * TERRAIN_POLYGON_SIZE);
+
+			/* SET MESH PROPERTIES */
+
+	TQ3TriMeshData* tmd = gLiquidMeshPtrs[newObj->PatchMeshID];
+
+	tmd->diffuseColor.a = 1.0f;
+	tmd->texturingMode = kQ3TexturingModeOpaque;
+	tmd->glTextureName = gLiquidShaders[kind];
+
+
+	return(true);													// item was added
+}
+
+/********************* DRAW LIQUID PATCH TESSELATED **********************/
 //
 // This version tesselates the water patch so fog will look better on it.
 //
@@ -1173,21 +928,18 @@ TQ3Point3D		*p;
 int				width2,depth2,w,h,i;
 TQ3TriMeshTriangleData	*t;
 
-	TQ3TriMeshData* tmd = gLiquidMeshPtrs[theNode->PatchMeshID];
 
 			/*********************/
 			/* SETUP ENVIRONMENT */
 			/*********************/
 
-	tmd->diffuseColor.a = 1.0f;
-	tmd->texturingMode = kQ3TexturingModeOpaque;
-	tmd->glTextureName = gLiquidShaders[theNode->Kind];
+	TQ3TriMeshData* tmd = gLiquidMeshPtrs[theNode->PatchMeshID];
 
 	const TQ3Param2D uvOffset = gLiquidUVOffsets[theNode->Kind];
 
-			/************************/
-			/* CALC BOUNDS OF HONEY */
-			/************************/
+			/*************************/
+			/* CALC BOUNDS OF LIQUID */
+			/*************************/
 
 	x = theNode->Coord.x;
 	y = theNode->Coord.y;
@@ -1233,7 +985,7 @@ TQ3TriMeshTriangleData	*t;
 			p[i].z = z;
 			if ((h > 0) && (h < depth2) && (w > 0) && (w < width2))		// add random jitter to inner vertices
 			{
-				ApplyRandomJitterToInnerVertex(&p[i], theNode->Kind);
+				ApplyJitterToLiquidVertex(&p[i], theNode->Kind);
 			}
 
 				/* SET UV */
@@ -1295,5 +1047,40 @@ TQ3TriMeshTriangleData	*t;
 			/* SUBMIT IT */
 			/*************/
 
-	Render_SubmitMesh(tmd, nil, nil, nil);
+	Render_SubmitMesh(tmd, nil, &theNode->RenderModifiers, nil);
+}
+
+
+static void ApplyJitterToLiquidVertex(TQ3Point3D* p, int type)
+{
+	float x = p->x;
+	float y = p->y;
+	float z = p->z;
+
+	switch (type)
+	{
+		case LIQUID_WATER:
+			p->x = x + sinf(x*z) * 60.0f;
+			p->y = y;
+			p->z = z + cosf(z*-x) * 60.0f;
+			break;
+
+		case LIQUID_HONEY:
+			p->x = x + sinf(x*z) * 40.0f;
+			p->y = y + sinf(z*x) * 10.0f;
+			p->z = z + cosf(z*-x) * 40.0f;
+			break;
+
+		case LIQUID_SLIME:
+			p->x = x + sinf(x*z) * 40.0f;
+			p->y = y;
+			p->z = z + cosf(z*-x) * 40.0f;
+			break;
+
+		case LIQUID_LAVA:
+			p->x = x + sinf(x*z) * 30.0f;
+			p->y = y;
+			p->z = z + cosf(z*-x) * 30.0f;
+			break;
+	}
 }

@@ -32,6 +32,7 @@ extern	u_short			gLevelTypeMask;
 extern	int				gNitroParticleGroup;
 extern	Boolean			gPlayerCanMove,gLiquidCheat,gPlayerUsingKeyControl;
 extern	PrefsType	gGamePrefs;
+extern	const float	gLiquidCollisionTopOffset[NUM_LIQUID_TYPES];
 
 
 /****************************/
@@ -568,7 +569,7 @@ static void MovePlayerBug_Swim(void)
 	if (gPlayerObj->RippleTimer > .25f)
 	{
 		gPlayerObj->RippleTimer = 0;
-		MakeRipple(gCoord.x, gCoord.y+WATER_COLLISION_TOPOFF, gCoord.z, 3.0);
+		MakeRipple(gCoord.x, gCoord.y+gLiquidCollisionTopOffset[LIQUID_WATER], gCoord.z, 3.0f);
 	}
 
 
