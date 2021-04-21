@@ -109,8 +109,8 @@ TQ3ColorRGB		gFillColor2 = { 1.0, 1.0, 1 };
 
 
 		/* LEVEL SETUP PARAMETER TABLES */
-			
-static const Boolean	gLevelHasCyc[NUM_LEVELS] =
+
+static const bool	gLevelHasCyc[NUM_LEVEL_TYPES] =
 {
 	true,						// garden
 	false,						// boat
@@ -120,7 +120,7 @@ static const Boolean	gLevelHasCyc[NUM_LEVELS] =
 	false						// anthill
 };
 
-static const Boolean	gLevelHasCeiling[NUM_LEVELS] =
+static const bool	gLevelHasCeiling[NUM_LEVEL_TYPES] =
 {
 	false,						// garden
 	false,						// boat
@@ -130,7 +130,7 @@ static const Boolean	gLevelHasCeiling[NUM_LEVELS] =
 	true						// anthill
 };
 
-static const Byte	gLevelSuperTileActiveRange[NUM_LEVELS] =
+static const Byte	gLevelSuperTileActiveRange[NUM_LEVEL_TYPES] =
 {
 	5,						// garden
 	4,						// boat
@@ -140,7 +140,7 @@ static const Byte	gLevelSuperTileActiveRange[NUM_LEVELS] =
 	4						// anthill
 };
 
-static const float	gLevelFogStart[NUM_LEVELS] =
+static const float	gLevelFogStart[NUM_LEVEL_TYPES] =
 {
 	.5,						// garden
 	.4,						// boat
@@ -150,7 +150,7 @@ static const float	gLevelFogStart[NUM_LEVELS] =
 	.65,					// anthill
 };
 
-static const float	gLevelFogEnd[NUM_LEVELS] =
+static const float	gLevelFogEnd[NUM_LEVEL_TYPES] =
 {
 	.9,						// garden
 	1,						// boat
@@ -161,7 +161,7 @@ static const float	gLevelFogEnd[NUM_LEVELS] =
 };
 
 
-static const float	gLevelAutoFadeStart[NUM_LEVELS] =
+static const float	gLevelAutoFadeStart[NUM_LEVEL_TYPES] =
 {
 	YON_DISTANCE+400,		// garden
 	0,						// boat
@@ -172,7 +172,7 @@ static const float	gLevelAutoFadeStart[NUM_LEVELS] =
 };
 
 
-static const Boolean	gLevelHasLenseFlare[NUM_LEVELS] =
+static const bool	gLevelHasLensFlare[NUM_LEVEL_TYPES] =
 {
 	true,						// garden
 	true,						// boat
@@ -182,7 +182,7 @@ static const Boolean	gLevelHasLenseFlare[NUM_LEVELS] =
 	false						// anthill
 };
 
-static const TQ3Vector3D	gLensFlareVector[NUM_LEVELS] =
+static const TQ3Vector3D	gLensFlareVector[NUM_LEVEL_TYPES] =
 {
 	{ 0.4f, -0.35f, 1.0f },				// garden
 	{ 0.4f, -0.45f, 1.0f },				// boat
@@ -192,7 +192,7 @@ static const TQ3Vector3D	gLensFlareVector[NUM_LEVELS] =
 	{ 0.4f, -0.35f, 1.0f },				// anthill
 };
 
-static const TQ3ColorRGB	gLevelLightColors[NUM_LEVELS][3] =		// 0 = ambient, 1 = fill0, 2 = fill1
+static const TQ3ColorRGB	gLevelLightColors[NUM_LEVEL_TYPES][3] =		// 0 = ambient, 1 = fill0, 2 = fill1
 {
 	{ {1.0f, 1.0f, 0.9f}, {1.0f, 1.0f, 0.6f}, {1.0f, 1.0f, 1.0f} }, // garden
 	{ {1.0f, 1.0f, 0.9f}, {1.0f, 1.0f, 0.6f}, {1.0f, 1.0f, 1.0f} }, // boat
@@ -202,7 +202,7 @@ static const TQ3ColorRGB	gLevelLightColors[NUM_LEVELS][3] =		// 0 = ambient, 1 =
 	{ {0.5f, 0.5f, 0.6f}, {0.7f, 0.7f, 0.8f}, {1.0f, 1.0f, 1.0f} }, // anthill
 };
 
-static const TQ3ColorARGB	gLevelFogColor[NUM_LEVELS] =
+static const TQ3ColorARGB	gLevelFogColor[NUM_LEVEL_TYPES] =
 {
 	{ 1.000f, 0.050f, 0.250f, 0.050f },				// garden
 	{ 1.000f, 0.900f, 0.900f, 0.850f },				// boat
@@ -217,7 +217,7 @@ static const TQ3ColorARGB	gLevelFogColor[NUM_LEVELS] =
 // To camouflage this, we make the clear color roughly match the color at the top of the cyc.
 // This is not necessarily the same color as the fog!
 // NOTE: If there's no cyc in a level, this value is ignored and the fog color is used instead.
-static const TQ3ColorARGB	gLevelClearColorWithCyc[NUM_LEVELS] =
+static const TQ3ColorARGB	gLevelClearColorWithCyc[NUM_LEVEL_TYPES] =
 {
 	{ 1.000f, 0.352f, 0.380f, 1.000f },				// garden		(DIFFERENT FROM FOG)
 	{ 1.000f, 0.900f, 0.900f, 0.850f },				// boat			(same)
@@ -492,7 +492,7 @@ QD3DSetupInputType	viewDef;
 
 	gUseCyclorama			= gGamePrefs.useCyclorama && gLevelHasCyc[gLevelType];
 	gAutoFadeStartDist		= gUseCyclorama ? gLevelAutoFadeStart[gLevelType] : 0;
-	gDrawLensFlare			= gLevelHasLenseFlare[gLevelType];
+	gDrawLensFlare			= gLevelHasLensFlare[gLevelType];
 		
 	gDoCeiling				= gLevelHasCeiling[gLevelType];
 	gSuperTileActiveRange	= gLevelSuperTileActiveRange[gLevelType];

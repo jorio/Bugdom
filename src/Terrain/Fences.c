@@ -64,7 +64,7 @@ static RenderModifiers			gFenceRenderMods[MAX_FENCES];
 static GLuint					gFenceTypeTextures[NUM_FENCE_SHADERS];
 
 
-static Boolean gFenceOnThisLevel[NUM_LEVELS][NUM_FENCE_SHADERS] =
+static Boolean gFenceOnThisLevel[NUM_LEVEL_TYPES][NUM_FENCE_SHADERS] =
 {
 	//			Hay										AntHill
 	//	Thorn	weed	Grass	????	Night	Pond	moss	Wood	Hive

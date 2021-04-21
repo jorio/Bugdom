@@ -1000,7 +1000,7 @@ static void MakePowerup(ObjNode *theNut)
 {
 short				group,type;
 ObjNode				*newObj;
-static const Byte	keyTypes[NUM_LEVELS] =
+static const Byte	keyTypes[NUM_LEVEL_TYPES] =
 {
 	LAWN1_MObjType_Key_Green,	// lawn
 	0, 							// pond
