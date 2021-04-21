@@ -360,7 +360,6 @@ Boolean			noCache = false;
 Boolean			useNullShader = false;
 Boolean			noZWrites = false;
 Boolean			noFog = false;
-Boolean			glow = false;
 float			cameraX, cameraZ;
 static const TQ3ColorRGB	white = {1,1,1};	
 short			skelType;		
@@ -521,30 +520,7 @@ short			skelType;
 			QD3D_ReEnableFog(setupInfo);
 		}
 */
-				
-			/********************/
-			/* CHECK GLOW BLEND */
-			/********************/
 
-		if (statusBits & STATUS_BIT_GLOW) printf("TODO NOQUESA: additive blending!\n");
-/* NOQUESA: rendermods should be enough
-		if (statusBits & STATUS_BIT_GLOW)
-		{
-			if (!glow)
-			{
-				QD3D_SetAdditiveBlending(true);
-				glow = true;
-			}
-		}
-		else
-		if (glow)
-		{
-			glow = false;
-			QD3D_SetAdditiveBlending(false);
-		}
-*/
-	
-		
 			/************************/
 			/* SHOW COLLISION BOXES */
 			/************************/
@@ -622,9 +598,6 @@ next:
 
 	if (noFog)
 		QD3D_ReEnableFog(setupInfo);
-
-	if (glow)
-		QD3D_SetAdditiveBlending(false);
 
 	SubmitReflectionMapQueue(setupInfo);						// draw anything in the reflection map queue
 #endif

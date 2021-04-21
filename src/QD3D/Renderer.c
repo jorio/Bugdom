@@ -55,6 +55,7 @@ typedef struct RendererState
 	bool		hasState_GL_LIGHTING;
 	bool		hasState_GL_FOG;
 	bool		hasFlag_glDepthMask;
+	bool		blendFuncIsAdditive;
 } RendererState;
 
 typedef struct MeshQueueEntry
@@ -267,9 +268,8 @@ void Render_InitState(void)
 	SetInitialState(GL_LIGHTING,		true);
 //	SetInitialState(GL_FOG,				true);
 
-
-
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	gState.blendFuncIsAdditive = false;
 
 	gState.hasFlag_glDepthMask = true;		// initially active on a fresh context
 
@@ -608,7 +608,9 @@ static void DrawMeshList(int renderPass, const MeshQueueEntry* entry)
 
 		bool meshIsTransparent = mesh->texturingMode == kQ3TexturingModeAlphaBlend
 				|| mesh->diffuseColor.a < .999f
-				|| entry->mods->diffuseColor.a < .999f;
+				|| entry->mods->diffuseColor.a < .999f
+				|| (entry->mods->statusBits & STATUS_BIT_GLOW)
+				;
 
 		// Decide whether or not to draw this mesh in this pass, depending on which pass we're in
 		// (opaque or transparent), and whether the mesh has transparency.
@@ -621,6 +623,20 @@ static void DrawMeshList(int renderPass, const MeshQueueEntry* entry)
 
 		// Enable alpha blending if the mesh has transparency
 		SetState(GL_BLEND, meshIsTransparent);
+
+		// Set blending function for transparent meshes
+		if (meshIsTransparent)
+		{
+			bool wantAdditive = !!(entry->mods->statusBits & STATUS_BIT_GLOW);
+			if (gState.blendFuncIsAdditive != wantAdditive)
+			{
+				if (wantAdditive)
+					glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+				else
+					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+				gState.blendFuncIsAdditive = wantAdditive;
+			}
+		}
 
 		// Enable alpha testing if the mesh's texture calls for it
 		SetState(GL_ALPHA_TEST, !meshIsTransparent && mesh->texturingMode == kQ3TexturingModeAlphaTest);
@@ -715,6 +731,7 @@ static void DrawMeshList(int renderPass, const MeshQueueEntry* entry)
 		__glDrawRangeElements(GL_TRIANGLES, 0, mesh->numPoints-1, mesh->numTriangles*3, GL_UNSIGNED_SHORT, mesh->triangles);
 		CHECK_GL_ERROR();
 
+		/*
 		// Axis lines for debugging
 		glColor4f(1, 1, 1, 1);
 		glBegin(GL_LINES);
@@ -722,6 +739,7 @@ static void DrawMeshList(int renderPass, const MeshQueueEntry* entry)
 		glVertex3i(0,0,0);glVertex3i(1,0,0);
 		glVertex3i(0,0,0);glVertex3i(0,0,1);
 		glEnd();
+		*/
 
 		// Pass 2 to draw transparent meshes without face culling (see above for an explanation)
 		if (meshIsTransparent && entry->mods->statusBits & STATUS_BIT_KEEPBACKFACES)
