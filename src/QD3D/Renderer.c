@@ -1086,3 +1086,32 @@ void Render_FreezeFrameFadeOut(void)
 	gFadeOverlayOpacity = 1;
 #endif
 }
+
+#pragma mark -
+
+float Render_GetViewportAspectRatio(Rect paneClip)
+{
+	int w = gWindowWidth	- paneClip.left	- paneClip.right;
+	int h = gWindowHeight	- paneClip.top	- paneClip.bottom;
+
+	if (h == 0)
+		return 1;
+	else
+		return (float)w / (float)h;
+}
+
+TQ3Area Render_GetAdjustedViewportRect(Rect paneClip, int logicalWidth, int logicalHeight)
+{
+	float scaleX = gWindowWidth / (float)logicalWidth;	// scale clip pane to window size
+	float scaleY = gWindowHeight / (float)logicalHeight;
+
+	// Floor min to avoid seam at edges of HUD if scale ratio is dirty
+	float left = floorf( scaleX * paneClip.left );
+	float top = floorf( scaleY * paneClip.top  );
+	// Ceil max to avoid seam at edges of HUD if scale ratio is dirty
+	float right = ceilf( scaleX * (logicalWidth  - paneClip.right ) );
+	float bottom = ceilf( scaleY * (logicalHeight - paneClip.bottom) );
+
+
+	return (TQ3Area) {{left,top},{right,bottom}};
+}

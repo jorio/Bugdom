@@ -90,7 +90,6 @@ typedef struct
 	WindowPtr				window;
 	Rect					paneClip;			// not pane size, but clip:  left = amount to clip off left
 	bool					needScissorTest;
-	int						backdropFit;
 	TQ3Point3D				currentCameraCoords;
 	TQ3Point3D				currentCameraLookAt;
 	TQ3Vector3D				currentCameraUpVector;

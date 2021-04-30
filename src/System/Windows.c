@@ -15,6 +15,8 @@ extern	float	gFramesPerSecondFrac;
 extern	SDL_Window*				gSDLWindow;
 extern	PrefsType				gGamePrefs;
 extern	QD3DSetupOutputType*	gGameViewInfoPtr;
+extern	int						gWindowWidth;
+extern	int						gWindowHeight;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -305,22 +307,13 @@ PixMapHandle pm;
 }
 
 
-// Called when the game window gets resized.
-// Adjusts the clipping pane and camera aspect ratio.
 void QD3D_OnWindowResized(int windowWidth, int windowHeight)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
 	if (!gGameViewInfoPtr)
 		return;
 
-	TQ3Area pane = GetAdjustedPane(windowWidth, windowHeight, GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT, gGameViewInfoPtr->paneClip);
-	Q3DrawContext_SetPane(gGameViewInfoPtr->drawContext, &pane);
-
-	float aspectRatioXToY = (pane.max.x-pane.min.x)/(pane.max.y-pane.min.y);
-
-	Q3ViewAngleAspectCamera_SetAspectRatio(gGameViewInfoPtr->cameraObject, aspectRatioXToY);
-#endif
+	gWindowWidth = windowWidth;
+	gWindowHeight = windowHeight;
 }
 
 

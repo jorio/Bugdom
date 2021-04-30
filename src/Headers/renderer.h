@@ -159,3 +159,9 @@ void Render_Draw2DCover(int fit);
 void Render_SetWindowGamma(float percent);
 
 void Render_FreezeFrameFadeOut(void);
+
+#pragma mark -
+
+float Render_GetViewportAspectRatio(Rect paneClip);
+
+TQ3Area Render_GetAdjustedViewportRect(Rect paneClip, int logicalWidth, int logicalHeight);

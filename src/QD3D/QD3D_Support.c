@@ -677,23 +677,16 @@ void QD3D_DrawScene(QD3DSetupOutputType *setupInfo, void (*drawRoutine)(const QD
 	// Clip pane
 	if (setupInfo->needScissorTest)
 	{
-		printf("TODO NOQUESA: need scissor test!\n");
-		gWindowWidth = 640;		gWindowHeight = 480;		// TODO NOQUESA: TEMP
-		Render_SetViewport(false, 0, 0, gWindowWidth, gWindowHeight); // TODO NOQUESA: TEMP
-		/*
-		// Render backdrop
-		Render_Draw2DCover(setupInfo->backdropFit);
+		Render_Draw2DCover(kCoverQuadFill);
 
 		// Set scissor
-		TQ3Area pane	= GetAdjustedPane(setupInfo->paneClip);
+		TQ3Area pane	= Render_GetAdjustedViewportRect(setupInfo->paneClip, GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
 		int paneWidth	= pane.max.x-pane.min.x;
 		int paneHeight	= pane.max.y-pane.min.y;
-		Render_SetViewport(true, pane.min.x, pane.min.y, paneWidth, paneHeight);
-		 */
+		Render_SetViewport(true, pane.min.x, gWindowHeight-pane.max.y, paneWidth, paneHeight);
 	}
 	else
 	{
-		gWindowWidth = 640;		gWindowHeight = 480;		// TODO NOQUESA: TEMP -- GET ACTUAL WINDOW SIZE OR IMPLEMENT QD3D_ONRESIZEWINDOW
 		Render_SetViewport(false, 0, 0, gWindowWidth, gWindowHeight);
 	}
 

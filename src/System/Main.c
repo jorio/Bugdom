@@ -684,9 +684,6 @@ static void CleanupLevel(void)
 		DisposeGWorld(gInfoBarTop);
 		gInfoBarTop = nil;
 	}
-	
-	// Flush any Quesa errors so we don't prevent loading the next screen (Error -28411 comes up often...TODO?)
-	FlushQuesaErrors();
 }
 
 
