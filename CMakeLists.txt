@@ -61,7 +61,6 @@ set(GAME_SOURCES
 	${GAME_SRCDIR}/Enemies/Enemy_PondFish.c
 	${GAME_SRCDIR}/Enemies/Enemy_QueenBee.c
 	${GAME_SRCDIR}/Enemies/Enemy_Roach.c
-	${GAME_SRCDIR}/Enemies/Enemy_Skeleton.c
 	${GAME_SRCDIR}/Enemies/Enemy_Skippy.c
 	${GAME_SRCDIR}/Enemies/Enemy_Slug.c
 	${GAME_SRCDIR}/Enemies/Enemy_Spider.c
