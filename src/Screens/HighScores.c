@@ -373,6 +373,7 @@ EventRecord	theEvent;
 	gNewObjectDefinition.coord.x = LEFT_EDGE;
 	gNewObjectDefinition.coord.y = 0;
 	gNewObjectDefinition.coord.z = 0;
+	gNewObjectDefinition.flags = STATUS_BIT_KEEPBACKFACES_2PASS;
 	gNewObjectDefinition.moveCall = MoveCursor;
 	gCursorObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
 	MakeObjectKeepBackfaces(gCursorObj);
