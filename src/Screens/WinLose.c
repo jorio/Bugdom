@@ -539,12 +539,14 @@ float	fps;
 			UpdateLoseFire();
 			gU += fps * .1f;
 			gV += fps * .05f;
+			printf("TODO NOQUESA: scroll throne room lava UVs\n");
 			QD3D_ScrollUVs(gThrone/*->BaseGroup*/, gU, gV, 6);
 		}
 		else
 		{
 			gU += fps * .1f;
 			gV += fps * .05f;
+			printf("TODO NOQUESA: scroll throne room water UVs\n");
 			QD3D_ScrollUVs(gThrone/*->BaseGroup*/, gU, gV, 6);
 		}
 		
