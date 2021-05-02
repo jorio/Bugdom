@@ -33,7 +33,7 @@ static void ApplyJitterToLiquidVertex(TQ3Point3D* p, int type);
 /*    CONSTANTS             */
 /****************************/
 
-#define MAX_LIQUID_MESHES		16
+#define MAX_LIQUID_MESHES		32
 #define MAX_LIQUID_SIZE			20
 #define MAX_LIQUID_TRIANGLES	(MAX_LIQUID_SIZE*MAX_LIQUID_SIZE*2)
 #define MAX_LIQUID_VERTS		((MAX_LIQUID_SIZE+1)*(MAX_LIQUID_SIZE+1))
