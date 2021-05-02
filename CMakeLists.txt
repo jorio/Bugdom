@@ -110,7 +110,6 @@ set(GAME_SOURCES
 	${GAME_SRCDIR}/System/Misc.c
 	${GAME_SRCDIR}/System/Objects.c
 	${GAME_SRCDIR}/System/Objects2.c
-	${GAME_SRCDIR}/System/SelfRunDemo.c
 	${GAME_SRCDIR}/System/Sound.c
 	${GAME_SRCDIR}/System/Windows.c
 	${GAME_SRCDIR}/System/input.c
@@ -155,7 +154,6 @@ set(GAME_HEADERS
 	${GAME_SRCDIR}/Headers/qd3d_geometry.h
 	${GAME_SRCDIR}/Headers/qd3d_support.h
 	${GAME_SRCDIR}/Headers/renderer.h
-	${GAME_SRCDIR}/Headers/selfrundemo.h
 	${GAME_SRCDIR}/Headers/skeletonanim.h
 	${GAME_SRCDIR}/Headers/skeletonjoints.h
 	${GAME_SRCDIR}/Headers/skeletonobj.h

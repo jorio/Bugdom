@@ -11,10 +11,11 @@
 
 #include <string.h>
 
-extern	Boolean			gAbortDemoFlag,gGameIsDemoFlag,gSongPlayingFlag,gDisableHiccupTimer;
+extern	Boolean			gSongPlayingFlag;
+extern	Boolean			gDisableHiccupTimer;
 extern	NewObjectDefinitionType	gNewObjectDefinition;
 extern	float			gFramesPerSecond,gFramesPerSecondFrac,gAutoFadeStartDist;
-extern	Byte		gDemoMode,gPlayerMode;
+extern	Byte		gPlayerMode;
 extern	WindowPtr	gCoverWindow;
 extern	TQ3Point3D	gCoord;
 extern	long				gMyStartX,gMyStartZ;
@@ -386,12 +387,6 @@ float fps;
 		fps = gFramesPerSecondFrac;
 		UpdateInput();
 
-				/* SEE IF DEMO ENDED */				
-		
-		if (gAbortDemoFlag)
-			break;
-	
-	
 				/* SPECIFIC MAINTENANCE */
 
 		CheckPlayerMorph();				
@@ -428,17 +423,14 @@ float fps;
 		
 
 			/* SEE IF PAUSE GAME */
-				
-		if (gDemoMode != DEMO_MODE_RECORD)
+
+		if (GetNewKeyState(kKey_Pause))				// see if pause/abort
 		{
-			if (GetNewKeyState(kKey_Pause))				// see if pause/abort
-			{
-				CaptureMouse(false);
-				DoPaused();
-				CaptureMouse(true);
-			}
+			CaptureMouse(false);
+			DoPaused();
+			CaptureMouse(true);
 		}
-		
+
 			/* SEE IF GAME ENDED */				
 		
 		if (gGameOverFlag)
@@ -619,10 +611,10 @@ QD3DSetupInputType	viewDef;
 			
 	LoadLevelArt();			
 
-	
+
 				/* INIT FLAGS */
-				
-	gAbortDemoFlag = gGameOverFlag = false;
+
+	gGameOverFlag = false;
 	gPlayerGotKilledFlag = false;
 	gWonGameFlag = false;
 
@@ -666,7 +658,6 @@ QD3DSetupInputType	viewDef;
 static void CleanupLevel(void)
 {
 	StopAllEffectChannels();
-	StopDemo();
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
  	EmptySplineObjectList();
 	DeleteAllObjects();

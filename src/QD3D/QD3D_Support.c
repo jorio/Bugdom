@@ -16,7 +16,6 @@
 extern	SDL_Window	*gSDLWindow;
 extern	WindowPtr			gCoverWindow;
 extern	Boolean		gShowDebug;
-extern	Byte		gDemoMode;
 extern	PrefsType	gGamePrefs;
 extern	FSSpec		gDataSpec;
 extern	QD3DSetupOutputType		*gGameViewInfoPtr;
@@ -1382,19 +1381,6 @@ void	QD3D_CalcFramesPerSecond(void)
 UnsignedWide	wide;
 unsigned long	now;
 static	unsigned long then = 0;
-
-			/* HANDLE SPECIAL DEMO MODE STUFF */
-			
-	if (gDemoMode)
-	{
-		gFramesPerSecond = DEMO_FPS;
-		gFramesPerSecondFrac = 1.0f/gFramesPerSecond;
-	
-		do											// speed limiter
-		{	
-			Microseconds(&wide);
-		}while((wide.lo - then) < (1000000.0f / 25.0f));
-	}
 
 
 			/* DO REGULAR CALCULATION */
