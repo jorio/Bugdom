@@ -235,15 +235,7 @@ void InitMyRandomSeed(void)
 
 Handle	AllocHandle(long size)
 {
-Handle	hand;
-
-	hand = NewHandle(size);							// alloc in APPL
-	if (hand == nil)
-	{
-		DoAlert("AllocHandle: failed!");
-		return(nil);
-	}
-	return(hand);									
+	return NewHandleClear(size);
 }
 
 
@@ -251,10 +243,7 @@ Handle	hand;
 
 Ptr	AllocPtr(long size)
 {
-Ptr	pr;
-
-	pr = NewPtr(size);						// alloc in Application
-	return(pr);
+	return NewPtrClear(size);
 }
 
 
@@ -264,10 +253,10 @@ void** Alloc2DArray(int sizeofType, int n, int m)
 {
 	GAME_ASSERT_MESSAGE(n > 0, "Alloc2DArray n*m: n cannot be 0");
 
-	char** array = (char**) NewPtr(n * sizeof(Ptr));
+	char** array = (char**) NewPtrClear(n * sizeof(Ptr));
 	GAME_ASSERT(array);
 
-	array[0] = NewPtr(n * m * sizeofType);
+	array[0] = NewPtrClear(n * m * sizeofType);
 	GAME_ASSERT(array[0]);
 
 	for (int i = 1; i < n; i++)
