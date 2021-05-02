@@ -9,18 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 
-extern	float				gFramesPerSecondFrac,gFramesPerSecond;
-extern	WindowPtr			gCoverWindow;
-extern	FSSpec		gDataSpec;
-extern	u_short		gLevelType,gAreaNum,gRealLevel;
-extern	Boolean		gGameOverFlag,gAbortedFlag;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	ObjNode		*gPlayerObj;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	Boolean		gSongPlayingFlag,gResetSong,gDisableAnimSounds,gSongPlayingFlag;
-extern	PrefsType	gGamePrefs;
-extern	SDL_Window*	gSDLWindow;
 
 /****************************/
 /*    PROTOTYPES            */

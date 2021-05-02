@@ -9,28 +9,9 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 #include <string.h>
 
-extern	Boolean			gSongPlayingFlag;
-extern	Boolean			gDisableHiccupTimer;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	float			gFramesPerSecond,gFramesPerSecondFrac,gAutoFadeStartDist;
-extern	Byte		gPlayerMode;
-extern	WindowPtr	gCoverWindow;
-extern	TQ3Point3D	gCoord;
-extern	long				gMyStartX,gMyStartZ;
-extern	Boolean				gDoCeiling,gDrawLensFlare;
-extern	unsigned long 		gScore;
-extern	ObjNode				*gPlayerObj,*gFirstNodePtr;
-extern	TQ3ShaderObject		gWaterShader;
-extern	short			gNumLives;
-extern	short		gBestCheckPoint,gNumEnemies;
-extern	u_long 		gInfobarUpdateBits;
-extern	float		gCycScale,gBallTimer;
-extern	signed char	gNumEnemyOfKind[];
-extern	TQ3Point3D	gMyCoord;
-extern	int			gMaxItemsAllocatedInAPass;
-extern	GWorldPtr	gInfoBarTop;
 
 /****************************/
 /*    PROTOTYPES            */

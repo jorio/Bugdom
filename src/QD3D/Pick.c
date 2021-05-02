@@ -9,10 +9,7 @@
 /*    EXTERNALS             */
 /****************************/
 
-
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	ObjNode				*gMenuIcons[NUM_MENU_ICONS];
-extern	ObjNode				*gSaveYes,*gSaveNo;
+#include "game.h"
 
 
 /****************************/

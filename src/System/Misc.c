@@ -9,13 +9,7 @@
 /* EXTERNALS   */
 /***************/
 
-
-extern	unsigned long gOriginalSystemVolume;
-extern	short		gMainAppRezFile;
-extern	Boolean		gGameOverFlag,gAbortedFlag,gQD3DInitialized;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	FSSpec		gDataSpec;
-extern	SDL_Window*	gSDLWindow;
+#include "game.h"
 
 
 /****************************/

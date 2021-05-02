@@ -9,16 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	SplineDefType			**gSplineList;
-extern	TQ3Point3D				gCoord,gMyCoord;
-extern	short					gNumEnemies;
-extern	float					gFramesPerSecondFrac,gFramesPerSecond;
-extern	TQ3Vector3D				gDelta;
-extern	signed char				gNumEnemyOfKind[];
-extern	ObjNode					*gPlayerObj;
-extern	Byte		gPlayerMode;
 
 /****************************/
 /*    PROTOTYPES            */

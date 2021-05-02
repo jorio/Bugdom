@@ -9,14 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
-extern	float				gFramesPerSecondFrac,gFramesPerSecond;
-extern	TQ3Point3D			gCoord;
-extern	WindowPtr			gCoverWindow;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	Boolean		gSongPlayingFlag,gResetSong,gDisableAnimSounds,gSongPlayingFlag;
-extern	FSSpec		gDataSpec;
-extern	PrefsType	gGamePrefs;
+#include "game.h"
+
 
 /****************************/
 /*    PROTOTYPES            */

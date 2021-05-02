@@ -9,18 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
-#include "3dmath.h"
+#include "game.h"
 
-extern	float				gFramesPerSecondFrac,gFramesPerSecond;
-extern	TQ3Point3D			gCoord;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	TQ3Vector3D			gDelta;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	u_short				**gFloorMap;
-extern	Byte				gPlayerMode;
-extern	TQ3Vector3D		gRecentTerrainNormal[2];
-extern	u_short				**gCeilingMap;
-extern	Boolean				gTorchPlayer,gPlayerGotKilledFlag;
 
 /****************************/
 /*    PROTOTYPES            */

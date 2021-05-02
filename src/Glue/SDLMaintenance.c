@@ -2,17 +2,11 @@
 // (C) 2020 Iliyas Jorio
 // This file is part of Bugdom. https://github.com/jorio/bugdom
 
-#include "bugdom.h"
+#include "game.h"
 #include "killmacmouseacceleration.h"
 #include "version.h"
 
-extern SDL_Window*			gSDLWindow;
-extern float				gFramesPerSecond;
-extern PrefsType			gGamePrefs;
-extern long					gEatMouse;
 char						gTypedAsciiKey = '\0';
-extern RenderStats			gRenderStats;
-extern TQ3Point3D			gMyCoord;
 
 #if _DEBUG
 static const uint32_t	kDebugTextUpdateInterval = 50;

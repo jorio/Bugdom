@@ -14,19 +14,10 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 #include <time.h>
 #include <ctype.h>
 
-extern	float				gFramesPerSecondFrac,gFramesPerSecond;
-extern	WindowPtr			gCoverWindow;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	FSSpec		gDataSpec;
-extern	PrefsType	gGamePrefs;
-extern	u_short		gLevelType,gRealLevel;
-extern 	ObjNode 	*gFirstNodePtr;
-
-extern	TQ3Int32	gHoveredPick;
 
 /****************************/
 /*    PROTOTYPES            */

@@ -2,6 +2,8 @@
 // Sound2.h
 //
 
+#pragma once
+
 typedef struct
 {
 	short	effectNum;
@@ -224,12 +226,4 @@ Boolean Update3DSoundChannel(short effectNum, short *channel, TQ3Point3D *where)
 void DoSSPConfig(void);
 Boolean IsEffectChannelPlaying(short chanNum);
 void UpdateListenerLocation(void);
-
-
-
-
-
-
-
-
 

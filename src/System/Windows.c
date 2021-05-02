@@ -9,14 +9,8 @@
 /* EXTERNALS   */
 /***************/
 
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	ObjNode	*gCurrentNode,*gFirstNodePtr;
-extern	float	gFramesPerSecondFrac;
-extern	SDL_Window*				gSDLWindow;
-extern	PrefsType				gGamePrefs;
-extern	QD3DSetupOutputType*	gGameViewInfoPtr;
-extern	int						gWindowWidth;
-extern	int						gWindowHeight;
+#include "game.h"
+
 
 /****************************/
 /*    PROTOTYPES            */

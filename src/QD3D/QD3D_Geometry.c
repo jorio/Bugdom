@@ -9,13 +9,7 @@
 /*    EXTERNALS             */
 /****************************/
 
-#include "3dmath.h"
-
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	ObjNode				*gCurrentNode;
-extern	float				gFramesPerSecondFrac;
-extern	TQ3Point3D			gCoord;
-extern	u_short			**gFloorMap;
+#include "game.h"
 
 
 /****************************/

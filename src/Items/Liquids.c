@@ -9,14 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
-extern	float				gFramesPerSecondFrac,gFramesPerSecond;
-extern	TQ3Point3D			gCoord,gMyCoord;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	QD3DSetupOutputType	*gGameViewInfoPtr;
-extern	u_short				gLevelTypeMask;
-extern	u_short				gLevelType;
-extern	Boolean				gValveIsOpen[];
-extern	ObjNode				*gFirstNodePtr;
+#include "game.h"
+
 
 /****************************/
 /*    PROTOTYPES            */

@@ -7,24 +7,8 @@
 /* EXTERNALS   */
 /***************/
 
+#include "game.h"
 
-
-extern	ObjNode		*gFirstNodePtr;
-extern	TerrainItemEntryType	**gTerrainItemLookupTableX;
-extern	TQ3Matrix4x4		gCameraWorldToViewMatrix;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	TQ3Point3D		gMyCoord;
-extern	TerrainYCoordType		**gMapYCoords;
-extern	TerrainInfoMatrixType	**gMapInfoMatrix;
-extern	TerrainItemEntryType 	**gMasterItemList;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	long					gNumSplines;
-extern	SplineDefType			**gSplineList;
-extern	FenceDefType	*gFenceList;
-extern	long			gNumFences;
-extern	long		gMyStartX,gMyStartZ;
-extern	TQ3Point3D	gMostRecentCheckPointCoord;
-extern	PrefsType	gGamePrefs;
 
 /****************************/
 /*  PROTOTYPES             */
@@ -87,7 +71,7 @@ long	gNumTerrainTextureTiles = 0;
 long	gNumSuperTilesDeep,gNumSuperTilesWide;	  		// dimensions of terrain in terms of supertiles
 long	gCurrentSuperTileRow,gCurrentSuperTileCol;
 
-u_char	gTerrainScrollBuffer[MAX_SUPERTILES_DEEP][MAX_SUPERTILES_WIDE];		// 2D array which has index to supertiles for each possible supertile
+uint8_t	gTerrainScrollBuffer[MAX_SUPERTILES_DEEP][MAX_SUPERTILES_WIDE];		// 2D array which has index to supertiles for each possible supertile
 
 short	gNumFreeSupertiles;
 static	SuperTileMemoryType		gSuperTileMemoryList[MAX_SUPERTILES];

@@ -3,19 +3,11 @@
 /**********************/
 
 
-#include "3dmath.h"
-
 /***************/
 /* EXTERNALS   */
 /***************/
 
-extern	u_char	gTerrainScrollBuffer[MAX_SUPERTILES_DEEP][MAX_SUPERTILES_WIDE];
-extern	TQ3Point3D	gCoord;
-extern	TQ3Vector3D	gDelta;
-extern	float		gAutoFadeStartDist;
-extern	u_short		gLevelType;
-extern	ObjNode		*gCurrentDragonFly,*gPlayerObj;
-extern	const float	gTextureAlphaThreshold;
+#include "game.h"
 
 
 /****************************/

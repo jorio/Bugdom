@@ -9,24 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 
-#include "3dmath.h"
-
-extern	float				gFramesPerSecondFrac,gFramesPerSecond;
-extern	TQ3Point3D			gCoord,gMyCoord;
-extern	TQ3Vector3D			gDelta;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	TQ3BoundingBox 		gObjectGroupBBoxList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
-extern	QD3DSetupOutputType	*gGameViewInfoPtr;
-extern	u_short				gLevelTypeMask;
-extern	u_short				gLevelType;
-extern	u_long				gAutoFadeStatusBits,gInfobarUpdateBits;
-extern	Boolean				gBatExists,gAreaCompleted;
-extern	ObjNode				*gCurrentCarryingFireFly,*gCurrentChasingFireFly;
-extern	Boolean				gValveIsOpen[];
-extern	ObjNode				*gCurrentDragonFly,*gCurrentWaterBug;
-extern	float gHoneyTubeU,gHoneyTubeV;
-extern	TQ3Vector3D		gRecentTerrainNormal[2];
 
 /****************************/
 /*    PROTOTYPES            */

@@ -119,7 +119,7 @@ set(GAME_SOURCES
 )
 
 set(GAME_HEADERS
-	${GAME_SRCDIR}/Headers/bugdom.h
+	${GAME_SRCDIR}/Headers/game.h
 	${GAME_SRCDIR}/Headers/3dmath.h
 	${GAME_SRCDIR}/Headers/3dmf.h
 	${GAME_SRCDIR}/Headers/bones.h
@@ -201,16 +201,6 @@ set(GAME_ALL_SOURCES
 source_group(TREE ${GAME_SRCDIR} PREFIX "" FILES ${GAME_ALL_SOURCES})
 
 #------------------------------------------------------------------------------
-# SOURCE FILE PROPERTIES
-#------------------------------------------------------------------------------
-
-if(NOT MSVC)
-	set_source_files_properties(${GAME_SOURCES} PROPERTIES COMPILE_FLAGS "-include bugdom.h")
-else()
-	set_source_files_properties(${GAME_SOURCES} PROPERTIES COMPILE_FLAGS /FIbugdom.h)
-endif()
-
-#------------------------------------------------------------------------------
 # EXECUTABLE TARGET
 #------------------------------------------------------------------------------
 
@@ -275,11 +265,11 @@ if(NOT MSVC)
 		-Wshadow
 		-Wno-multichar
 		-Wno-unknown-pragmas
-		-Wno-unused-parameter
 		$<$<CXX_COMPILER_ID:GNU>:-Wno-unused-but-set-variable>
-
-		-Werror=implicit-function-declaration
 		-Werror=return-type
+		-Wno-unused-parameter
+		-Wno-unused-variable	# TODO NOQUESA: remove me when new renderer is done
+		-Wno-unused-function	# TODO NOQUESA: remove me when new renderer is done
 	)
 else()
 	target_compile_options(${GAME_TARGET} PRIVATE

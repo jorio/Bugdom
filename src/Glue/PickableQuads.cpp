@@ -7,7 +7,7 @@
 //#include <QuesaGeometry.h>
 //#include <QuesaGroup.h>
 //#include <QuesaStyle.h>
-#include "bugdom.h"
+#include "game.h"
 
 struct PickableQuad
 {

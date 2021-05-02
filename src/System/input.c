@@ -9,16 +9,13 @@
 /* EXTERNALS   */
 /***************/
 
+#include "game.h"
 #include <string.h>
 
 #if __APPLE__
 #include "killmacmouseacceleration.h"
 #endif
 
-extern	float	gFramesPerSecondFrac;
-extern	PrefsType	gGamePrefs;
-extern	SDL_Window* gSDLWindow;
-extern 	SDL_GameController* gSDLController;
 
 /**********************/
 /*     PROTOTYPES     */

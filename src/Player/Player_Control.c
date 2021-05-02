@@ -9,22 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
-#include "3dmath.h"
+#include "game.h"
 
-extern	ObjNode			*gPlayerObj;
-extern	float			gFramesPerSecondFrac,gFramesPerSecond,gPlayerToCameraAngle,gBallTimer;
-extern	Byte			gPlayerMode;
-extern	TQ3Point3D		gCoord;
-extern	TQ3Vector3D		gDelta;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	TQ3Vector3D		gRecentTerrainNormal[2];
-extern	float			gPlayerMaxSpeed,gPlayerCurrentWaterY;
-extern	Boolean			gPlayerGotKilledFlag,gPlayerUsingKeyControl,gShowDebug,gDoCeiling;
-extern	u_short			gLevelType;
-extern	TQ3Point3D	gMyCoord;
-extern	Byte		gCurrentLiquidType;
-extern	PrefsType	gGamePrefs;
 
 /****************************/
 /*    PROTOTYPES            */

@@ -9,20 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
-#include "3dmath.h"
+#include "game.h"
 
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	float					gFramesPerSecond,gFramesPerSecondFrac;
-extern	ObjNode					*gPlayerObj;
-extern	TQ3Point3D				gMyCoord;
-extern	Boolean					gPlayerGotKilledFlag,gDoCeiling;
-extern	TQ3Vector3D				gLightDirection1;
-extern	u_short					gLevelType;
-extern	Byte					gPlayerMode;
-extern	CollisionRec			gCollisionList[];
-extern	SDL_Window*				gSDLWindow;
-extern	TQ3Vector2D				gCameraControlDelta;
 
 /****************************/
 /*    PROTOTYPES            */

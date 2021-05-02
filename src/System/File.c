@@ -9,33 +9,10 @@
 /* EXTERNALS   */
 /***************/
 
+#include "game.h"
 #include <time.h>
 #include <string.h>
 
-
-extern	short			gMainAppRezFile;
-extern  short			gNumObjectsInGroupList[MAX_3DMF_GROUPS];
-extern	short			gNumTerrainItems;
-extern	short			gPrefsFolderVRefNum;
-extern	long			gPrefsFolderDirID,gNumTerrainTextureTiles;
-extern	long			gTerrainTileWidth,gTerrainTileDepth,gTerrainUnitWidth,gTerrainUnitDepth;		
-extern	long			gNumSuperTilesDeep,gNumSuperTilesWide;
-extern	u_short			**gFloorMap,**gCeilingMap,**gTileDataHandle;
-extern	long			gCurrentSuperTileRow,gCurrentSuperTileCol;
-extern	long			gMyStartX,gMyStartZ,gNumSplines;
-extern	FSSpec			gDataSpec;
-extern	TerrainInfoMatrixType	**gMapInfoMatrix;
-extern	TerrainYCoordType		**gMapYCoords;
-extern	TerrainItemEntryType 	**gMasterItemList;
-extern	u_short			**gVertexColors[2],gLevelType,gAreaNum,gRealLevel;
-extern	Boolean			gDoCeiling,gRestoringSavedGame,gMuteMusicFlag;
-extern	SplineDefType	**gSplineList;
-extern	FenceDefType	*gFenceList;
-extern	long			gNumFences;
-extern	u_long			gScore;
-extern	float			gMyHealth,gBallTimer;
-extern	short			gNumLives;
-extern	short			gNumGoldClovers;
 
 /****************************/
 /*    PROTOTYPES            */

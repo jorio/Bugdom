@@ -9,24 +9,7 @@
 /*    EXTERNALS             */
 /****************************/
 
-
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	Byte			gPlayerMode;
-extern	float			gFramesPerSecond,gFramesPerSecondFrac;
-extern	WindowPtr		gCoverWindow;
-extern	Boolean			gGameOverFlag,gAbortedFlag,gRestoringSavedGame;
-extern	ObjNode			*gPlayerObj,*gHiveObj,*gTheQueen,*gAntKingObj;
-extern	u_short			gRealLevel;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	TQ3Matrix4x4		gCameraWorldToFrustumMatrix,gCameraFrustumToWindowMatrix,gCameraWorldToWindowMatrix,gCameraWindowToWorldMatrix;
-extern	TQ3Point3D		gMyCoord;
-extern	long			gNumSuperTilesDeep,gNumSuperTilesWide;	
-extern	FSSpec			gDataSpec;
-extern	short		gMainAppRezFile;
-extern	TerrainItemEntryType 	**gMasterItemList;
-extern	short	  				gNumTerrainItems;
-extern	PrefsType	gGamePrefs;
-extern	Boolean		gShowBottomBar;
+#include "game.h"
 
 
 /****************************/

@@ -4,10 +4,7 @@
 /* By Brian Greenstone      */
 /****************************/
 
-#ifndef MYGLOBALS_H
-#define MYGLOBALS_H
-
-#include <QD3DMath.h>
+#pragma once
 
 			/* SOME FLOATING POINT HELPERS */
 			
@@ -130,16 +127,4 @@ enum
 	STATUS_BIT_CLONE		=	(1<<23),	// set so Display Group node creates its own copy of model; then you can modify the model freely
 	STATUS_BIT_KEEPBACKFACES=	(1<<24),
 };
-
-
-#endif
-
-
-
-
-
-
-
-
-
 

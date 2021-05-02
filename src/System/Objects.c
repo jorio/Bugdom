@@ -9,16 +9,8 @@
 /* EXTERNALS   */
 /***************/
 
-#include "3dmath.h"
+#include "game.h"
 
-extern	TQ3TriMeshFlatGroup		gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
-extern	TQ3BoundingSphere		gObjectGroupRadiusList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
-extern	TQ3Matrix4x4	gCameraWorldToViewMatrix;
-extern	short		gNumObjectsInGroupList[MAX_3DMF_GROUPS];
-extern	float		gFramesPerSecondFrac;
-extern	ObjNode		*gPlayerObj;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	Boolean		gShowDebug;
 
 /****************************/
 /*    PROTOTYPES            */

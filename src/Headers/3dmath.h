@@ -2,8 +2,7 @@
 // 3DMath.h
 //
 
-#ifndef __3DMATH
-#define __3DMATH
+#pragma once
 
 extern	float CalcXAngleFromPointToPoint(float fromY, float fromZ, float toY, float toZ);
 float	CalcYAngleFromPointToPoint(float oldRot, float fromX, float fromZ, float toX, float toZ);
@@ -95,26 +94,4 @@ static inline void AngleToVector(float angle, TQ3Vector2D *theVector)
 #define FastVectorLength3D(_inX, _inY, _inZ)	sqrtf(((_inY)*(_inY)) + ((_inX)*(_inX)) + ((_inZ)*(_inZ)))
 
 #define FastVectorLength2D(_inX, _inY)			sqrtf(((_inY)*(_inY)) + ((_inX)*(_inX)))
-
-
-
-
-
-
-
-
-
-
-
-#endif
-
-
-
-
-
-
-
-
-
-
 

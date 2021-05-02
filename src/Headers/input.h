@@ -2,8 +2,7 @@
 // input.h
 //
 
-#ifndef __INPUT_H
-#define __INPUT_H
+#pragma once
 
 #include <SDL.h>
 
@@ -78,9 +77,4 @@ void CaptureMouse(Boolean doCapture);
 
 SDL_GameController* TryOpenController(bool showMessageOnFailure);
 void OnJoystickRemoved(SDL_JoystickID which);
-
-
-#endif
-
-
 

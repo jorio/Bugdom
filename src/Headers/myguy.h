@@ -2,6 +2,8 @@
 // myguy.h
 //
 
+#pragma once
+
 #define	PLAYER_RADIUS				60.0f		// both bug & ball share same radius value so that morphing near fences doesnt cause fall-thru
 
 #define BUG_LIMB_NUM_PELVIS			0

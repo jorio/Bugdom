@@ -9,22 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
-#include "3dmath.h"
+#include "game.h"
 
-extern	TQ3Point3D				gCoord;
-extern	TQ3Vector3D				gDelta;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	float					gFramesPerSecondFrac,gMyHealth;
-extern	short					gNumCollisions;
-extern	CollisionRec			gCollisionList[];
-extern	unsigned long 			gScore;
-extern	float					gMyDistToFloor;
-extern	Boolean					gPlayerGotKilledFlag,gGameOverFlag,gDoCeiling,gTorchPlayer,gPlayerCanMove;
-extern	float 					gCameraDistFromMe,gCheckPointRot;
-extern	short					gNumLives;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	u_long 					gInfobarUpdateBits,gAutoFadeStatusBits;
-extern	ObjNode					*gCurrentDragonFly;
 
 /****************************/
 /*    PROTOTYPES            */

@@ -9,10 +9,8 @@
 /* EXTERNALS   */
 /***************/
 
-extern	short		gMainAppRezFile;
-extern	TQ3Point3D	gMyCoord;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	Boolean		gEnteringName;
+#include "game.h"
+
 
 /****************************/
 /*    PROTOTYPES            */

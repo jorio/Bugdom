@@ -9,12 +9,7 @@
 /*    EXTERNALS             */
 /****************************/
 
-
-
-
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	ObjNode				*gPlayerNode[];
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
+#include "game.h"
 
 
 /****************************/

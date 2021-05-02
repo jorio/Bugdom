@@ -9,21 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
-#include "3dmath.h"
+#include "game.h"
 
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	ObjNode					*gFirstNodePtr,*gPlayerObj;
-extern	TQ3Point3D				gCoord;
-extern	float					gFramesPerSecondFrac,gFramesPerSecond;
-extern	TQ3Vector3D				gDelta;
-extern	Byte					gPlayerMode;
-extern	unsigned long 			gInfobarUpdateBits;
-extern	u_short					gLevelType;
-extern	CollisionRec			gCollisionList[];
-extern	short			gNumCollisions;
-extern	TQ3Point3D	gMyCoord;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	Boolean					gPlayerUsingKeyControl;
 
 /*******************/
 /*   PROTOTYPES    */

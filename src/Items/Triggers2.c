@@ -9,20 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	ObjNode					*gFirstNodePtr,*gPlayerObj;
-extern	TQ3Point3D				gCoord;
-extern	float					gFramesPerSecondFrac;
-extern	TQ3Vector3D				gDelta;
-extern	Byte					gPlayerMode;
-extern	unsigned long 			gInfobarUpdateBits;
-extern	TQ3Vector3D		gRecentTerrainNormal[2];
-extern	u_short				gLevelType,gRealLevel;
-extern	short		gBestCheckPoint;
-extern	TQ3Point3D	gMostRecentCheckPointCoord;
-extern	Boolean		gAreaCompleted;
-extern	u_long		gAutoFadeStatusBits;
 
 /*******************/
 /*   PROTOTYPES    */

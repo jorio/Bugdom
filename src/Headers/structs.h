@@ -2,8 +2,7 @@
 // structs.h
 //
 
-#ifndef STRUCTS_H
-#define STRUCTS_H
+#pragma once
 
 
 #define	MAX_ANIMS			25
@@ -339,10 +338,4 @@ typedef struct
 	Boolean	hideBottomBarInNonBossLevels;
 	Boolean useCyclorama;
 }PrefsType;
-
-
-#endif
-
-
-
 

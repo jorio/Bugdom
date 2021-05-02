@@ -9,15 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	float			gFramesPerSecond,gFramesPerSecondFrac;
-extern	WindowPtr		gCoverWindow;
-extern	short	gPrefsFolderVRefNum;
-extern	long	gPrefsFolderDirID;
-extern	FSSpec	gDataSpec;
-extern	char	gTypedAsciiKey;
 
 /****************************/
 /*    PROTOTYPES            */

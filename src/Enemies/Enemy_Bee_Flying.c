@@ -9,18 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	ObjNode					*gCurrentNode,*gCurrentDragonFly;
-extern	TQ3Point3D				gCoord,gMyCoord;
-extern	short					gNumEnemies;
-extern	float					gFramesPerSecondFrac,gFramesPerSecond;
-extern	TQ3Vector3D			gDelta;
-extern	signed char			gNumEnemyOfKind[];
-extern	ObjNode				*gPlayerObj;
-extern	Byte				gPlayerMode;
-extern	Boolean				gPlayerGotKilledFlag,gDoCeiling;
-extern	u_short				gLevelType,gRealLevel;
-extern	Boolean 	gDetonatorBlown[];
+#include "game.h"
+
 
 /****************************/
 /*    PROTOTYPES            */

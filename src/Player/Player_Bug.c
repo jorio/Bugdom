@@ -9,30 +9,7 @@
 /*    EXTERNALS             */
 /****************************/
 
-extern	Byte					gCurrentLiquidType;
-extern	ObjNode					*gFirstNodePtr,*gCurrentEatingFish,*gPlayerObj, *gCurrentEatingBat;
-extern	float					gFramesPerSecondFrac,gFramesPerSecond,gPlayerMaxSpeed;
-extern	TQ3Point3D				gCoord,gMyCoord;
-extern	TQ3Vector3D				gDelta;
-extern	Byte					gPlayerMode;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	float					gMyDistToFloor,gPlayerCurrentWaterY;
-extern	unsigned long 			gInfobarUpdateBits;
-extern	short					gNumCollisions;
-extern	CollisionRec			gCollisionList[];
-extern	Boolean			gPlayerKnockOnButt,gPlayerGotKilledFlag;
-extern	TQ3Vector3D		gPlayerKnockOnButtDelta;
-extern	ObjNode			*gCurrentWaterBug, *gCurrentDragonFly;
-extern	const TQ3Point3D gPondFishMouthOff,gBatMouthOff;
-extern	u_short			gLevelType,gRealLevel;
-extern	ObjNode			*gCurrentRope,*gPrevRope,*gCurrentCarryingFireFly;
-extern	short			gCurrentRopeJoint;
-extern	u_short			gLevelTypeMask;
-extern	int				gNitroParticleGroup;
-extern	Boolean			gPlayerCanMove,gLiquidCheat,gPlayerUsingKeyControl;
-extern	PrefsType	gGamePrefs;
-extern	const float	gLiquidCollisionTopOffset[NUM_LIQUID_TYPES];
+#include "game.h"
 
 
 /****************************/

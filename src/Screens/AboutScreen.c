@@ -5,18 +5,12 @@
 
 /****************************/
 /*    EXTERNALS             */
-#include <SDL_opengl.h>
-#include <version.h>
-
 /****************************/
 
-extern	float						gFramesPerSecondFrac,gFramesPerSecond;
-extern	WindowPtr					gCoverWindow;
-extern	NewObjectDefinitionType		gNewObjectDefinition;
-extern	QD3DSetupOutputType			*gGameViewInfoPtr;
-extern	FSSpec						gDataSpec;
-extern	PrefsType					gGamePrefs;
-extern 	ObjNode 					*gFirstNodePtr;
+#include "game.h"
+#include "version.h"
+#include <SDL_opengl.h>
+
 
 /****************************/
 /*    PROTOTYPES            */

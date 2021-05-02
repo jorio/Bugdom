@@ -9,17 +9,8 @@
 /* EXTERNALS   */
 /***************/
 
-extern	TQ3BoundingSphere		gObjectGroupRadiusList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
-extern	TQ3Matrix4x4	gCameraWorldToViewMatrix;
-extern	short		gNumObjectsInGroupList[MAX_3DMF_GROUPS];
-extern	float		gFramesPerSecondFrac;
-extern	ObjNode		*gPlayerObj,*gFirstNodePtr;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	TQ3Point3D	gCoord;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	u_long		gAutoFadeStatusBits;
-extern	PrefsType	gGamePrefs;
-extern	const float	gLiquidCollisionTopOffset[NUM_LIQUID_TYPES];
+#include "game.h"
+
 
 /****************************/
 /*    PROTOTYPES            */

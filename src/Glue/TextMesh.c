@@ -2,11 +2,7 @@
 // (C) 2020 Iliyas Jorio
 // This file is part of Bugdom. https://github.com/jorio/bugdom
 
-#include "bugdom.h"
-
-extern	NewObjectDefinitionType		gNewObjectDefinition;
-extern	FSSpec						gDataSpec;
-extern	TQ3TriMeshFlatGroup			gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
+#include "game.h"
 
 static const TextMeshDef gDefaultTextMeshDef =
 {

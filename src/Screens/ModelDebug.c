@@ -2,17 +2,7 @@
 // (C) 2020 Iliyas Jorio
 // This file is part of Bugdom. https://github.com/jorio/bugdom
 
-extern	float				gFramesPerSecondFrac,gFramesPerSecond;
-extern	WindowPtr			gCoverWindow;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	FSSpec		gDataSpec;
-extern	PrefsType	gGamePrefs;
-extern	SDL_Window*	gSDLWindow;
-extern	Boolean		gDisableAnimSounds;
-extern float gAutoFadeStartDist;
-extern	short		gNumObjectsInGroupList[MAX_3DMF_GROUPS];
-
+#include "game.h"
 
 static TQ3Point3D gModelDebug_modelCoord = { 0, 0, 0 };
 static float gCameraLookAtAccel = 9;

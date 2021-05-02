@@ -9,8 +9,7 @@
 /*    EXTERNALS             */
 /****************************/
 
-
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
+#include "game.h"
 
 #include <string.h>				// strcasecmp
 #ifdef _MSC_VER
@@ -34,9 +33,6 @@ static TQ3FileObject	Create3DMFFileObject(const FSSpec *myFSSpec);
 /*********************/
 /*    VARIABLES      */
 /*********************/
-
-FSSpec	gLast3DMF_FSSpec;
-
 
 TQ3MetaFile*				gObjectGroupFile[MAX_3DMF_GROUPS];
 TQ3TriMeshFlatGroup			gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];

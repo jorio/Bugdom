@@ -9,12 +9,7 @@
 /*    EXTERNALS             */
 /****************************/
 
-
-#include "3dmath.h"
-
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	TQ3ViewObject			gGameViewObject;
-extern	Boolean					gCanDoMP;
+#include "game.h"
 
 
 /****************************/

@@ -2,8 +2,7 @@
 // qd3d_support.h
 //
 
-#ifndef QD3D_SUP
-#define QD3D_SUP
+#pragma once
 
 #define	DEFAULT_FPS			4
 
@@ -144,11 +143,6 @@ void ShowNormal(TQ3Point3D *where, TQ3Vector3D *normal);
 
 #define	kQATag_ZSortedHint	0
 #define	kQATag_ZBufferMask	0
-
-
-
-#endif
-
 
 
 

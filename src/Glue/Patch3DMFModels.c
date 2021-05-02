@@ -18,15 +18,13 @@
 /*    EXTERNALS             */
 /****************************/
 
-#include "bugdom.h"
+#include "game.h"
 
 #include <string.h>				// strcasecmp
 #ifdef _MSC_VER
 #define strncasecmp _strnicmp
 	#define strcasecmp _stricmp
 #endif
-
-extern	const TQ3Float32	gTextureAlphaThreshold;
 
 /****************************/
 /*    CONSTANTS             */

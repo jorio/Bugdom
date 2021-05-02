@@ -9,18 +9,7 @@
 /*    EXTERNALS             */
 /****************************/
 
-
-extern	ObjNode					*gCurrentNode,*gPlayerObj;
-extern	float					gFramesPerSecondFrac,gFramesPerSecond,gPlayerToCameraAngle;
-extern	TQ3Point3D				gCoord,gMyCoord;
-extern	TQ3Vector3D				gDelta;
-extern	Byte					gPlayerMode;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	float					gPlayerMaxSpeed,gMyDistToFloor,gBallTimer;
-extern	unsigned long 			gInfobarUpdateBits;
-extern	Boolean					gPlayerCanMove,gPlayerUsingKeyControl;
-extern	PrefsType	gGamePrefs;
+#include "game.h"
 
 
 /****************************/

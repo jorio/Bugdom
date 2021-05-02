@@ -9,22 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	ObjNode					*gCurrentNode;
-extern	SplineDefType			**gSplineList;
-extern	TQ3Point3D				gCoord,gMyCoord;
-extern	float					gFramesPerSecondFrac;
-extern	TQ3Vector3D			gDelta;
-extern	ObjNode				*gPlayerObj;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	u_short					gLevelType;
-extern	short	  				gNumTerrainItems;
-extern	u_long					gAutoFadeStatusBits;
-extern	TerrainItemEntryType 	**gMasterItemList;
-extern	Byte					gPlayerMode;
-extern	signed char	gNumEnemyOfKind[];
-extern	CollisionRec	gCollisionList[];
 
 /****************************/
 /*    PROTOTYPES            */

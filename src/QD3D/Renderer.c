@@ -7,24 +7,13 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 #include <SDL.h>
 #include <SDL_opengl.h>
 #include <SDL_opengl_glext.h>
 #include <QD3D.h>
-#include "misc.h"	// assertions
-#include "environmentmap.h"
-#include "renderer.h"
-#include "globals.h"	// status bits
 #include <stdlib.h>		// qsort
 
-extern TQ3Param2D				gEnvMapUVs[];
-extern RenderStats				gRenderStats;
-extern PrefsType				gGamePrefs;
-extern UInt32*const				gCoverWindowPixPtr;
-extern int						gWindowWidth;
-extern int						gWindowHeight;
-extern SDL_Window*				gSDLWindow;
-extern TQ3Matrix4x4				gCameraWorldToFrustumMatrix;
 
 #pragma mark -
 

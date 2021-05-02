@@ -10,15 +10,8 @@
 /****************************/
 
 #include <SDL_opengl.h>
+#include "game.h"
 
-#include "3dmath.h"
-
-extern	SDL_Window	*gSDLWindow;
-extern	WindowPtr			gCoverWindow;
-extern	Boolean		gShowDebug;
-extern	PrefsType	gGamePrefs;
-extern	FSSpec		gDataSpec;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
 
 /****************************/
 /*    PROTOTYPES            */

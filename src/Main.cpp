@@ -6,15 +6,12 @@
 #include "PommeInit.h"
 #include "PommeFiles.h"
 #include "PommeGraphics.h"
-#include "version.h"
-
-#include <QD3D.h>
-#include <SDL.h>
-
-#include "gamepatches.h"
 
 #include <iostream>
 #include <cstring>
+
+#include "game.h"
+#include "version.h"
 
 #if __APPLE__
 #include "killmacmouseacceleration.h"
@@ -24,14 +21,10 @@
 
 extern "C"
 {
-	// bare minimum from Windows.c to satisfy externs in game code
+	// bare minimum to satisfy externs in game code
 	WindowPtr gCoverWindow = nullptr;
 	UInt32* gCoverWindowPixPtr = nullptr;
-
-	// Lets the game know where to find its asset files
-	extern FSSpec gDataSpec;
-
-	SDL_Window* gSDLWindow;
+	SDL_Window* gSDLWindow = nullptr;
 
 	// Tell Windows graphics driver that we prefer running on a dedicated GPU if available
 #if _WIN32
@@ -64,7 +57,7 @@ static fs::path FindGameData()
 
 	dataPath = dataPath.lexically_normal();
 
-	// Set data spec
+	// Set data spec -- Lets the game know where to find its asset files
 	gDataSpec = Pomme::Files::HostPathToFSSpec(dataPath / "Skeletons");
 
 	// Use application resource file

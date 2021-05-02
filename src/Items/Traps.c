@@ -9,19 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 
-
-extern	float				gFramesPerSecondFrac;
-extern	TQ3Point3D			gCoord,gMyCoord;
-extern	TQ3Vector3D			gDelta;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	TQ3Vector3D			gRecentTerrainNormal[2];
-extern	SplineDefType		**gSplineList;
-extern	Byte		gPlayerMode;
-extern	ObjNode		*gPlayerObj;
-extern	u_short		gLevelType;
-extern	Boolean		gValveIsOpen[];
-extern	u_long		gAutoFadeStatusBits;
 
 /****************************/
 /*    PROTOTYPES            */

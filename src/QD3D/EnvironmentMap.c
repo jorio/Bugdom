@@ -9,14 +9,9 @@
 /*    EXTERNALS             */
 /****************************/
 
-#include <QD3D.h>
 #include <QD3DMath.h>
+#include "game.h"
 
-#include "qd3d_support.h"
-#include "misc.h"
-#include "environmentmap.h"
-
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
 
 /****************************/
 /*    PROTOTYPES            */

@@ -9,17 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
-extern	float				gFramesPerSecondFrac,gFramesPerSecond;
-extern	TQ3Point3D			gCoord;
-extern	WindowPtr			gCoverWindow;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	Boolean		gSongPlayingFlag,gDisableAnimSounds,gRestoringSavedGame;
-extern	FSSpec		gDataSpec;
-extern	PrefsType	gGamePrefs;
-extern	u_short		gLevelType;
-extern	TQ3Matrix4x4	gCameraWindowToWorldMatrix;
-extern	int			gCurrentSaveSlot;
+#include "game.h"
+
 
 /****************************/
 /*    PROTOTYPES            */
