@@ -61,7 +61,7 @@ static TQ3SurfaceShaderObject	gLensFlareShader[NUM_FLARE_TYPES] = {nil,nil,nil,n
 static TQ3SurfaceShaderObject	gMoonFlareShader = nil;
 
 //NOQUESA static TQ3PolygonData		gLensQuad;
-static TQ3Vertex3D			gLensVerts[4] = { {{0,0,0},nil}, {{0,0,0},nil}, {{0,0,0},nil}, {{0,0,0},nil} };
+static TQ3Vertex3D			gLensVerts[4] = { {{0,0,0}}, {{0,0,0}}, {{0,0,0}}, {{0,0,0}} };
 
 static float	gFlareOffsetTable[]=
 {
