@@ -204,6 +204,12 @@ source_group(TREE ${GAME_SRCDIR} PREFIX "" FILES ${GAME_ALL_SOURCES})
 # EXECUTABLE TARGET
 #------------------------------------------------------------------------------
 
+set(GAME_LIBRARIES
+	Pomme
+	${SDL2_LIBRARIES}
+	${OPENGL_LIBRARIES}
+)
+
 if(WIN32)
 	# "WIN32" here is equivalent to /SUBSYSTEM:WINDOWS for MSVC
 	add_executable(${GAME_TARGET} WIN32
@@ -211,12 +217,18 @@ if(WIN32)
         "${CMAKE_CURRENT_SOURCE_DIR}/cmake/WindowsResources.rc"
     )
 elseif(APPLE)
+	# Add required frameworks for KillMacMouseAcceleration
+	list(APPEND GAME_LIBRARIES -framework Foundation -framework IOKit)
+
 	add_executable(${GAME_TARGET} MACOSX_BUNDLE
 		${GAME_ALL_SOURCES}
 		${GAME_ICNS}
 		${SDL2_LIBRARIES}
 	)
 else()
+	# Math lib, explicitly required on some Linux systems
+	list(APPEND GAME_LIBRARIES m)
+
 	add_executable(${GAME_TARGET} ${GAME_ALL_SOURCES})
 endif()
 
@@ -227,17 +239,9 @@ target_include_directories(${GAME_TARGET} PRIVATE
 	extern/Pomme/src/QD3D
 	${GAME_SRCDIR}
 	${GAME_SRCDIR}/Headers
-	${GAME_SRCDIR}/Headers/Glue
-	${GAME_SRCDIR}/Headers/QD3DCompat
 )
 
-target_link_libraries(${GAME_TARGET}
-	Pomme
-	${SDL2_LIBRARIES}
-	${OPENGL_LIBRARIES}
-	"$<$<BOOL:${APPLE}>:-framework Foundation>"		# Required for KillMacMouseAcceleration
-	"$<$<BOOL:${APPLE}>:-framework IOKit>"			# Required for KillMacMouseAcceleration
-)
+target_link_libraries(${GAME_TARGET} ${GAME_LIBRARIES})
 
 #------------------------------------------------------------------------------
 # DEFINES
@@ -272,8 +276,16 @@ if(NOT MSVC)
 		-Wno-unused-function	# TODO NOQUESA: remove me when new renderer is done
 	)
 else()
+	# By default, MSVC may add /EHsc to CMAKE_CXX_FLAGS, which we don't want (we use /EHs below)
+	string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+
+	# By default, MSVC may add /W3 to CMAKE_CXX_FLAGS, which we don't want (we use /W4 below)
+	# Note that this is not required with "cmake_minimum_required(VERSION 3.15)" or later
+	string(REPLACE "/W3" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+	string(REPLACE "/W3" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+
 	target_compile_options(${GAME_TARGET} PRIVATE
-		/EHa    # C++ may throw exceptions from extern "C" functions
+		/EHs	# synchronous exceptions; also, extern "C" functions may throw exceptions
 		/W4
 		/wd4068 # ignore unrecognized pragmas
 		/wd4100 # unreferenced formal parameters
