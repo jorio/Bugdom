@@ -84,6 +84,8 @@ float		gSuperTileRadius;			// normal x/z radius
 
 static int		gTextureSizePerLOD[MAX_LODS] = { 0, 0, 0 };
 
+static RenderModifiers gTerrainRenderMods;
+
 			/* TILE SPLITTING TABLES */
 			
 					
@@ -162,6 +164,12 @@ void InitTerrainManager(void)
 		gTempTextureBuffer = (u_short *)AllocPtr(TEMP_TEXTURE_BUFF_SIZE * TEMP_TEXTURE_BUFF_SIZE * sizeof(u_short));
 		GAME_ASSERT(gTempTextureBuffer);
 	}
+
+
+			/* INIT RENDER MODIFIERS */
+
+	Render_SetDefaultModifiers(&gTerrainRenderMods);
+	gTerrainRenderMods.statusBits |= STATUS_BIT_NULLSHADER;
 }
 
 
@@ -1397,7 +1405,7 @@ void DrawTerrain(const QD3DSetupOutputType *setupInfo)
 
 						/* SUBMIT FOR DRAWING */
 
-			Render_SubmitMesh(gSuperTileMemoryList[i].triMeshDataPtrs[j], nil, nil, &gSuperTileMemoryList[i].coord[j]);
+			Render_SubmitMesh(gSuperTileMemoryList[i].triMeshDataPtrs[j], nil, &gTerrainRenderMods, &gSuperTileMemoryList[i].coord[j]);
 		}
 	}
 
