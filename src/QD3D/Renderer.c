@@ -338,6 +338,12 @@ void Render_Load3DMFTextures(TQ3MetaFile* metaFile)
 		GLenum type;
 		switch (textureDef->pixelType)
 		{
+			case kQ3PixelTypeRGB32:
+				meshTexturingMode = kQ3TexturingModeOpaque;
+				internalFormat = GL_RGB;
+				format = GL_BGRA;
+				type = GL_UNSIGNED_INT_8_8_8_8_REV;
+				break;
 			case kQ3PixelTypeARGB32:
 				meshTexturingMode = kQ3TexturingModeAlphaBlend;
 				internalFormat = GL_RGBA;
@@ -355,6 +361,12 @@ void Render_Load3DMFTextures(TQ3MetaFile* metaFile)
 				internalFormat = GL_RGBA;
 				format = GL_BGRA;
 				type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
+				break;
+			case kQ3PixelTypeRGB24:
+				meshTexturingMode = kQ3TexturingModeOpaque;
+				internalFormat = GL_RGB;
+				format = GL_BGR;
+				type = GL_UNSIGNED_BYTE;
 				break;
 			default:
 				DoAlert("3DMF texture: Unsupported kQ3PixelType");
