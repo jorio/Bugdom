@@ -678,7 +678,7 @@ static void DrawMeshList(int renderPass, const MeshQueueEntry* entry)
 		SetState(GL_LIGHTING, !(entry->mods->statusBits & STATUS_BIT_NULLSHADER));
 
 		// Write geometry to depth buffer or not
-		SetFlag(glDepthMask, !(meshIsTransparent || entry->mods->statusBits & STATUS_BIT_NOZWRITE));
+		SetFlag(glDepthMask, !(entry->mods->statusBits & STATUS_BIT_NOZWRITE));
 
 		// Texture mapping
 		if (mesh->texturingMode != kQ3TexturingModeOff)
