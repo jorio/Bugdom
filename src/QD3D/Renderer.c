@@ -724,10 +724,19 @@ static void DrawMeshList(int renderPass, const MeshQueueEntry* entry)
 			matrixPushedYet = true;
 		}
 
-		// Submit vertex and normal data
+		// Submit normal data if any
+		if (mesh->hasVertexNormals && !(entry->mods->statusBits & STATUS_BIT_NULLSHADER))
+		{
+			EnableClientState(GL_NORMAL_ARRAY);
+			glNormalPointer(GL_FLOAT, 0, mesh->vertexNormals);
+		}
+		else
+		{
+			DisableClientState(GL_NORMAL_ARRAY);
+		}
+
+		// Submit vertex data
 		glVertexPointer(3, GL_FLOAT, 0, mesh->points);
-		glNormalPointer(GL_FLOAT, 0, mesh->vertexNormals);
-		CHECK_GL_ERROR();
 
 		// Draw the mesh
 		__glDrawRangeElements(GL_TRIANGLES, 0, mesh->numPoints-1, mesh->numTriangles*3, GL_UNSIGNED_SHORT, mesh->triangles);

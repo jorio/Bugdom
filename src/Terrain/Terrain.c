@@ -427,7 +427,7 @@ retryParseLODPref:
 			TQ3TriMeshData* tmd = Q3TriMeshData_New(
 					NUM_TRIS_IN_SUPERTILE,
 					NUM_VERTICES_IN_SUPERTILE,
-					true		// we want per-vertex colors
+					kQ3TriMeshDataFeatureVertexUVs | kQ3TriMeshDataFeatureVertexNormals | kQ3TriMeshDataFeatureVertexColors
 			);
 			GAME_ASSERT(tmd);
 

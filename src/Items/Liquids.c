@@ -144,7 +144,10 @@ static bool liquidMeshesAllocated = false;
 	{
 		for (int i = 0; i < MAX_LIQUID_MESHES; i++)
 		{
-			gLiquidMeshPtrs[i] = Q3TriMeshData_New(MAX_LIQUID_TRIANGLES, MAX_LIQUID_VERTS, false);
+			gLiquidMeshPtrs[i] = Q3TriMeshData_New(
+					MAX_LIQUID_TRIANGLES,
+					MAX_LIQUID_VERTS,
+					kQ3TriMeshDataFeatureVertexUVs);
 			gFreeLiquidMeshes[i] = i;
 		}
 		liquidMeshesAllocated = true;

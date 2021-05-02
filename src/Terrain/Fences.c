@@ -235,7 +235,7 @@ FencePointType			*nubs;
 		TQ3TriMeshData* tmd = Q3TriMeshData_New(
 				MAX_NUBS_IN_FENCE * 2,
 				MAX_NUBS_IN_FENCE * 2,
-				true
+				kQ3TriMeshDataFeatureVertexUVs | kQ3TriMeshDataFeatureVertexColors
 		);
 
 		gFenceTriMeshDataPtrs[f] = tmd;
