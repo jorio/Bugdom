@@ -649,17 +649,18 @@ static void DrawMeshList(int renderPass, const MeshQueueEntry* entry)
 		}
 
 		// Cull backfaces or not
-		if (entry->mods->statusBits & STATUS_BIT_KEEPBACKFACES)
+		if ((entry->mods->statusBits & STATUS_BIT_KEEPBACKFACES) ||
+			(entry->mods->statusBits & STATUS_BIT_KEEPBACKFACES_2PASS))
 		{
-			if (meshIsTransparent)
+			if (meshIsTransparent && (entry->mods->statusBits & STATUS_BIT_KEEPBACKFACES_2PASS))
 			{
 				// If we want to keep backfaces on a transparent mesh, keep GL_CULL_FACE enabled,
 				// draw the backfaces first, then the frontfaces. This enhances the appearance of
 				// e.g. Nanosaur shield spheres, without the need to depth-sort individual faces.
-				
+
 				EnableState(GL_CULL_FACE);
 				glCullFace(GL_FRONT);		// Pass 1: draw backfaces (cull frontfaces)
-				
+
 				// Pass 2 (at the end of the function) will draw the mesh again with backfaces culled.
 				// It will restore glCullFace to GL_BACK.
 			}
@@ -743,7 +744,7 @@ static void DrawMeshList(int renderPass, const MeshQueueEntry* entry)
 		*/
 
 		// Pass 2 to draw transparent meshes without face culling (see above for an explanation)
-		if (meshIsTransparent && entry->mods->statusBits & STATUS_BIT_KEEPBACKFACES)
+		if (meshIsTransparent && (entry->mods->statusBits & STATUS_BIT_KEEPBACKFACES_2PASS))
 		{
 			glCullFace(GL_BACK);	// pass 2: draw frontfaces (cull backfaces)
 			// We've restored glCullFace to GL_BACK, which is the default for all other meshes.
