@@ -833,10 +833,10 @@ static void MoveHoneyTube(ObjNode *theNode)
 
 void UpdateHoneyTubeTextureAnimation(void)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
 	if (gLevelType == LEVEL_TYPE_HIVE)
 	{
+		printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 					/* MOVE UVS */
 					//
 					// NOTE: since all 4 tube types share the same shader object, we
@@ -847,8 +847,8 @@ void UpdateHoneyTubeTextureAnimation(void)
 						gHoneyTubeU,gHoneyTubeV, 2);
 		
 		gHoneyTubeV -= .6f*gFramesPerSecondFrac;
-	}
 #endif
+	}
 }
 
 #pragma mark -
