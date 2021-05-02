@@ -277,7 +277,7 @@ void LoadGrouped3DMF(FSSpec *spec, Byte groupNum)
 		GAME_ASSERT(0 != meshList.numMeshes);
 		GAME_ASSERT(nil != meshList.meshes);
 
-		QD3D_CalcObjectBoundingSphere(gGameViewInfoPtr, &gObjectGroupList[groupNum][i], &gObjectGroupRadiusList[groupNum][i]);
+		QD3D_CalcObjectBoundingSphere(meshList.numMeshes, meshList.meshes, &gObjectGroupRadiusList[groupNum][i]);
 		QD3D_CalcObjectBoundingBox(meshList.numMeshes, meshList.meshes, &gObjectGroupBBoxList[groupNum][i]); // save bbox
 	}
 

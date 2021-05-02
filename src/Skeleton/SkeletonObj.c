@@ -18,7 +18,6 @@
 
 static SkeletonObjDataType *MakeNewSkeletonBaseData(short sourceSkeletonNum);
 static void DisposeSkeletonDefinitionMemory(SkeletonDefType *skeleton);
-static void CalcSkeletonBoundingSphere(long n);
 
 
 /****************************/
@@ -53,38 +52,14 @@ void LoadASkeleton(Byte num)
 
 	if (gLoadedSkeletonsList[num] == nil)					// check if already loaded
 		gLoadedSkeletonsList[num] = LoadSkeletonFile(num);
-			
+
 			/* CALC BOUNDING SPHERE OF OBJECT */
-				
-	CalcSkeletonBoundingSphere(num);
-}
 
-
-/*************** CALC SKELETON BOUNDING SPHERE ************************/
-
-static void CalcSkeletonBoundingSphere(long n)
-{
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-
-long	i;
-TQ3Status status;
-
-	GAME_ASSERT(gGameViewInfoPtr);
-
-	status = Q3View_StartBoundingSphere(gGameViewInfoPtr->viewObject, kQ3ComputeBoundsExact);
-	GAME_ASSERT(status);
-
-	do
-	{
-		for (i = 0; i < gLoadedSkeletonsList[n]->numDecomposedTriMeshes; i++)
-		{
-			status = Q3TriMesh_Submit(&gLoadedSkeletonsList[n]->decomposedTriMeshes[i], gGameViewInfoPtr->viewObject);
-			GAME_ASSERT(status);
-		}
-	}while(Q3View_EndBoundingSphere(gGameViewInfoPtr->viewObject, &gSkeletonBoundingSpheres[n]) == kQ3ViewStatusRetraverse);
-
-#endif
+	QD3D_CalcObjectBoundingSphere(
+			gLoadedSkeletonsList[num]->numDecomposedTriMeshes,
+			gLoadedSkeletonsList[num]->decomposedTriMeshPtrs,
+			&gSkeletonBoundingSpheres[num]
+			);
 }
 
 

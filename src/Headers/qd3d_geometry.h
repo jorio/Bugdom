@@ -35,6 +35,7 @@ typedef struct
 }ParticleType;
 
 void QD3D_CalcObjectBoundingBox(int numMeshes, TQ3TriMeshData** meshList, TQ3BoundingBox* boundingBox);
+void QD3D_CalcObjectBoundingSphere(int numMeshes, TQ3TriMeshData** meshList, TQ3BoundingSphere* boundingSphere);
 extern	void QD3D_ExplodeGeometry(ObjNode *theNode, float boomForce, Byte particleMode, long particleDensity, float particleDecaySpeed);
 extern	void QD3D_ReplaceGeometryTexture(TQ3Object obj, TQ3SurfaceShaderObject theShader);
 void QD3D_ScrollUVs(TQ3Object theObject, float du, float dv, short whichShader);
@@ -45,7 +46,6 @@ extern	void QD3D_MoveParticles(void);
 void QD3D_DrawParticles(const QD3DSetupOutputType *setupInfo);
 extern	void QD3D_CopyTriMeshData(const TQ3TriMeshData *inData, TQ3TriMeshData *outData);
 extern	void QD3D_FreeCopyTriMeshData(TQ3TriMeshData *data);
-void QD3D_CalcObjectBoundingSphere(QD3DSetupOutputType *setupInfo, TQ3Object theObject, TQ3BoundingSphere *sphere);
 
 void ForEachTriMesh(TQ3Object root, void (*callback)(TQ3TriMeshData triMeshData, void* userData), void* userData, uint64_t triMeshMask);
 

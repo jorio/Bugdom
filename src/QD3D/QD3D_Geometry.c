@@ -95,21 +95,48 @@ void QD3D_CalcObjectBoundingBox(int numMeshes, TQ3TriMeshData** meshList, TQ3Bou
 
 /*************** QD3D: CALC OBJECT BOUNDING SPHERE ************************/
 
-void QD3D_CalcObjectBoundingSphere(QD3DSetupOutputType *setupInfo, TQ3Object theObject, TQ3BoundingSphere *sphere)
+void QD3D_CalcObjectBoundingSphere(int numMeshes, TQ3TriMeshData** meshList, TQ3BoundingSphere* boundingSphere)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
+	GAME_ASSERT(numMeshes);
+	GAME_ASSERT(meshList);
+	GAME_ASSERT(boundingSphere);
 
-	GAME_ASSERT(setupInfo);
-	GAME_ASSERT(theObject);
-	GAME_ASSERT(sphere);
+	int totalNumPoints = 0;
+	TQ3Point3D origin = (TQ3Point3D) {0, 0, 0};
 
-	Q3View_StartBoundingSphere(setupInfo->viewObject, kQ3ComputeBoundsExact);
-	do
+	for (int i = 0; i < numMeshes; i++)
 	{
-		Q3Object_Submit(theObject,setupInfo->viewObject);
-	}while(Q3View_EndBoundingSphere(setupInfo->viewObject, sphere) == kQ3ViewStatusRetraverse);
-#endif
+		TQ3TriMeshData* mesh = meshList[i];
+		for (int v = 0; v < mesh->numPoints; v++)
+		{
+			TQ3Point3D p = mesh->points[v];
+			origin.x += p.x;
+			origin.y += p.y;
+			origin.z += p.z;
+			totalNumPoints++;
+		}
+	}
+
+	origin.x /= (float)totalNumPoints;
+	origin.y /= (float)totalNumPoints;
+	origin.z /= (float)totalNumPoints;
+
+	float radiusSquared = 0;
+
+	for (int i = 0; i < numMeshes; i++)
+	{
+		TQ3TriMeshData* mesh = meshList[i];
+		for (int v = 0; v < mesh->numPoints; v++)
+		{
+			float newRadius = Q3Point3D_DistanceSquared(&origin, &mesh->points[v]);
+			if (newRadius > radiusSquared)
+				radiusSquared = newRadius;
+		}
+	}
+
+	boundingSphere->isEmpty = totalNumPoints == 0 ? kQ3True : kQ3False;
+	boundingSphere->origin = origin;
+	boundingSphere->radius = sqrtf(radiusSquared);
 }
 
 
