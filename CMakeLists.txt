@@ -143,7 +143,6 @@ set(GAME_HEADERS
 	${GAME_SRCDIR}/Headers/misc.h
 	${GAME_SRCDIR}/Headers/miscscreens.h
 	${GAME_SRCDIR}/Headers/mobjtypes.h
-	${GAME_SRCDIR}/Headers/morphobj.h
 	${GAME_SRCDIR}/Headers/myguy.h
 	${GAME_SRCDIR}/Headers/mytraps.h
 	${GAME_SRCDIR}/Headers/objects.h
