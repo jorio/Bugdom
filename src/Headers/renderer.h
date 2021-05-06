@@ -92,6 +92,18 @@ GLuint Render_LoadTexture(
 		RendererTextureFlags flags
 );
 
+void Render_UpdateTexture(
+		GLuint textureName,
+		int x,
+		int y,
+		int width,
+		int height,
+		GLenum bufferFormat,
+		GLenum bufferType,
+		const GLvoid* pixels,
+		int rowBytesInInput
+);
+
 // Uploads all textures from a 3DMF file to the GPU.
 // Requires an OpenGL context to be active.
 void Render_Load3DMFTextures(TQ3MetaFile* metaFile);

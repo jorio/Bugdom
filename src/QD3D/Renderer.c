@@ -325,6 +325,47 @@ GLuint Render_LoadTexture(
 	return textureName;
 }
 
+void Render_UpdateTexture(
+		GLuint textureName,
+		int x,
+		int y,
+		int width,
+		int height,
+		GLenum bufferFormat,
+		GLenum bufferType,
+		const GLvoid* pixels,
+		int rowBytesInInput)
+{
+	GLint pUnpackRowLength = 0;
+
+	Render_BindTexture(textureName);
+
+	// Set unpack row length (if valid rowbytes input given)
+	if (rowBytesInInput > 0)
+	{
+		glGetIntegerv(GL_UNPACK_ROW_LENGTH, &pUnpackRowLength);
+		glPixelStorei(GL_UNPACK_ROW_LENGTH, rowBytesInInput);
+	}
+
+	glTexSubImage2D(
+			GL_TEXTURE_2D,
+			0,
+			x,
+			y,
+			width,
+			height,
+			bufferFormat,
+			bufferType,
+			pixels);
+	CHECK_GL_ERROR();
+
+	// Restore unpack row length
+	if (rowBytesInInput > 0)
+	{
+		glPixelStorei(GL_UNPACK_ROW_LENGTH, pUnpackRowLength);
+	}
+}
+
 void Render_Load3DMFTextures(TQ3MetaFile* metaFile)
 {
 	for (int i = 0; i < metaFile->numTextures; i++)

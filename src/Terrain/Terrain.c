@@ -905,19 +905,16 @@ static TQ3Vector3D	faceNormal[NUM_TRIS_IN_SUPERTILE];
 
 			superTilePtr->hasLOD[0] = true;
 
-			Render_BindTexture(superTilePtr->glTextureName[layer][0]);
-			glTexSubImage2D(
-					GL_TEXTURE_2D,
-					0,
+			Render_UpdateTexture(
+					superTilePtr->glTextureName[layer][0],
 					0,
 					0,
 					gTextureSizePerLOD[0],
 					gTextureSizePerLOD[0],
 					TILE_TEXTURE_FORMAT,
 					TILE_TEXTURE_TYPE,
-					superTilePtr->textureData[layer][0]
-					);
-			CHECK_GL_ERROR();
+					superTilePtr->textureData[layer][0],
+					0);
 		}
 
 				/***********************/
@@ -991,19 +988,16 @@ static void BuildSuperTileLOD(SuperTileMemoryType *superTilePtr, short lod)
 
 			/* UPDATE THE TEXTURE */
 
-		Render_BindTexture(superTilePtr->glTextureName[j][lod]);
-		glTexSubImage2D(
-				GL_TEXTURE_2D,
+		Render_UpdateTexture(
+				superTilePtr->glTextureName[j][lod],
 				0,
 				0,
-				0,
-				gTextureSizePerLOD[lod],
-				gTextureSizePerLOD[lod],
+				gTextureSizePerLOD[0],
+				gTextureSizePerLOD[0],
 				TILE_TEXTURE_FORMAT,
 				TILE_TEXTURE_TYPE,
-				newBuffer
-		);
-		CHECK_GL_ERROR();
+				newBuffer,
+				0);
 	}
 }
 
