@@ -27,6 +27,9 @@ if(MSVC)
 	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Bugdom)
 endif()
 
+set(POMME_NO_VIDEO true)
+set(POMME_NO_QD3D true)  # This version of the game uses Quesa rather than Pomme's QD3D/3DMF support
+
 #------------------------------------------------------------------------------
 # DEPENDENCIES
 #------------------------------------------------------------------------------
