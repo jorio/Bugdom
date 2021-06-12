@@ -16,6 +16,7 @@ enum
 };
 
 
+void DisposeInfobarTexture(void);
 extern	void InitInfobar(void);
 extern	void InitInventoryForGame(void);
 void LoadInfobarArt(void);

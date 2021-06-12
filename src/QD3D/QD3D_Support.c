@@ -282,7 +282,7 @@ QD3DSetupOutputType	*outputPtr;
 	glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
 
 	Render_InitState();
-	Render_Alloc2DCover(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
+//	Render_Alloc2DCover(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
 
 	glClearColor(setupDefPtr->view.clearColor.r, setupDefPtr->view.clearColor.g, setupDefPtr->view.clearColor.b, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -304,7 +304,7 @@ QD3DSetupOutputType	*data;
 	data = *dataHandle;
 	GAME_ASSERT(data);										// see if this setup exists
 
-	Render_Dispose2DCover(); // Source port addition - release backdrop GL texture
+//	Render_Dispose2DCover(); // Source port addition - release backdrop GL texture
 
 	SDL_GL_DeleteContext(gGLContext);						// dispose GL context
 	gGLContext = nil;
@@ -669,7 +669,7 @@ void QD3D_DrawScene(QD3DSetupOutputType *setupInfo, void (*drawRoutine)(const QD
 	// Clip pane
 	if (setupInfo->needScissorTest)
 	{
-		Render_Draw2DCover(kCoverQuadFill);
+//		Render_Draw2DCover(kCoverQuadFill);
 
 		// Set scissor
 		TQ3Area pane	= Render_GetAdjustedViewportRect(setupInfo->paneClip, GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
@@ -752,6 +752,10 @@ void QD3D_DrawScene(QD3DSetupOutputType *setupInfo, void (*drawRoutine)(const QD
 			/*****************/
 
 	Render_EndFrame();
+
+	SubmitInfobarOverlay();			// draw 2D elements on top
+
+	// TODO: draw fade overlay here
 
 	SDL_GL_SwapWindow(gSDLWindow);
 }
@@ -1096,11 +1100,11 @@ GLuint QD3D_NumberedTGAToTexture(long textureRezID, bool blackIsAlpha, int flags
 
 GLuint QD3D_TGAToTexture(FSSpec* spec, bool blackIsAlpha, int flags)
 {
-Handle					tgaHandle = nil;
+uint8_t*				pixelData = nil;
 TGAHeader				header;
 OSErr					err;
 
-	err = ReadTGA(spec, &tgaHandle, &header);
+	err = ReadTGA(spec, &pixelData, &header, false);
 	if (err != noErr)
 	{
 		return 0;
@@ -1120,11 +1124,11 @@ OSErr					err;
 			header.height,
 			header.bpp == 16 ? GL_BGRA : GL_BGR,
 			header.bpp == 16 ? GL_UNSIGNED_SHORT_1_5_5_5_REV : GL_UNSIGNED_BYTE,
-			*tgaHandle,
+			pixelData,
 			flags
 			);
 
-	DisposeHandle(tgaHandle);
+	DisposePtr((Ptr) pixelData);
 
 	return glTextureName;
 }
@@ -1385,26 +1389,7 @@ static	unsigned long then = 0;
 		gFramesPerSecond = 1000000.0f/(float)(now-then);
 		if (gFramesPerSecond < DEFAULT_FPS)			// (avoid divide by 0's later)
 			gFramesPerSecond = DEFAULT_FPS;
-	
-#if 0
-		if (GetKeyState(KEY_F8))
-		{
-			RGBColor	color;
-			Str255		s;
-				
-			SetPort(GetWindowPort(gCoverWindow));
-			GetForeColor(&color);
-			FloatToString(gFramesPerSecond,s);		// print # rounded up to nearest integer
-			MoveTo(20,20);
-			ForeColor(greenColor);
-			TextSize(12);
-			TextMode(srcCopy);
-			DrawString(s);
-			DrawChar(' ');
-			RGBForeColor(&color);
-		}
-#endif
-		
+
 		if (gFramesPerSecond < 9.0f)					// this is the minimum we let it go
 			gFramesPerSecond = 9.0f;
 		

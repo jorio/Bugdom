@@ -166,6 +166,8 @@ void Render_Clear2DCover(uint32_t argb);
 
 void Render_Draw2DCover(int fit);
 
+void Render_Draw2DQuad(int texture);
+
 #pragma mark -
 
 void Render_SetWindowGamma(float percent);

@@ -127,10 +127,6 @@ static RendererState gState;
 
 static PFNGLDRAWRANGEELEMENTSPROC __glDrawRangeElements;
 
-static	GLuint			gCoverWindowTextureName = 0;
-static	GLuint			gCoverWindowTextureWidth = 0;
-static	GLuint			gCoverWindowTextureHeight = 0;
-
 static	float			gFadeOverlayOpacity = 0;
 
 #pragma mark -
@@ -526,10 +522,7 @@ void Render_EndFrame(void)
 
 	Render_FlushQueue();
 
-	if (gState.hasState_GL_SCISSOR_TEST)
-	{
-		DisableState(GL_SCISSOR_TEST);
-	}
+	DisableState(GL_SCISSOR_TEST);
 
 #if ALLOW_FADE
 	// Draw fade overlay
@@ -829,6 +822,9 @@ static void Render_EnterExit2D(bool enter)
 	if (enter)
 	{
 		backup3DState = gState;
+		glViewport(0, 0, gWindowWidth, gWindowHeight);
+		DisableState(GL_SCISSOR_TEST);
+
 		DisableState(GL_LIGHTING);
 		DisableState(GL_FOG);
 		DisableState(GL_DEPTH_TEST);
@@ -840,7 +836,8 @@ static void Render_EnterExit2D(bool enter)
 		glMatrixMode(GL_PROJECTION);
 		glPushMatrix();
 		glLoadIdentity();
-		glOrtho(-1, 1,  -1, 1, 0, 1000);
+		//glOrtho(-1, 1,  -1, 1, 0, 1000);
+		glOrtho(0,640,480,0,0,1000);
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
 		glLoadIdentity();
@@ -851,6 +848,7 @@ static void Render_EnterExit2D(bool enter)
 		glPopMatrix();
 		glMatrixMode(GL_MODELVIEW);
 		glPopMatrix();
+		RestoreStateFromBackup(GL_SCISSOR_TEST,	&backup3DState);
 		RestoreStateFromBackup(GL_LIGHTING,		&backup3DState);
 		RestoreStateFromBackup(GL_FOG,			&backup3DState);
 		RestoreStateFromBackup(GL_DEPTH_TEST,	&backup3DState);
@@ -872,6 +870,48 @@ void Render_Exit2D(void)
 	Render_EnterExit2D(false);
 }
 
+void Render_Draw2DQuad(
+		int texture)
+{
+	float screenLeft   = 0.0f;
+	float screenRight  = (float)gWindowWidth;
+	float screenTop    = 0.0f;
+	float screenBottom = (float)gWindowHeight;
+
+
+
+	// Compute normalized device coordinates for the quad vertices.
+	float ndcLeft   = 2.0f * screenLeft  / gWindowWidth - 1.0f;
+	float ndcRight  = 2.0f * screenRight / gWindowWidth - 1.0f;
+	float ndcTop    = 1.0f - 2.0f * screenTop    / gWindowHeight;
+	float ndcBottom = 1.0f - 2.0f * screenBottom / gWindowHeight;
+
+
+
+	TQ3Point2D pts[4] =
+			{
+					//{ ndcLeft,	ndcBottom },		//		2----3
+					//{ ndcRight,	ndcBottom },		//		| \  |
+					//{ ndcLeft,	ndcTop },			//		|  \ |
+					//{ ndcRight,	ndcTop },			//		0----1
+					{ 0,	480 },	/*0*/	//		2----3
+					{ 640,	480 },	/*1*/	//		| \  |
+					{ 0,	0 },			/*2*/	//		|  \ |
+					{ 640,	0 },			/*3*/	//		0----1
+			};
+
+	glColor4f(1, 1, 1, 1);
+	EnableState(GL_TEXTURE_2D);
+	EnableClientState(GL_TEXTURE_COORD_ARRAY);
+	Render_BindTexture(texture);
+	EnableClientState(GL_VERTEX_ARRAY);
+	glVertexPointer(2, GL_FLOAT, 0, pts);
+	glTexCoordPointer(2, GL_FLOAT, 0, kFullscreenQuadUVs);
+
+	__glDrawRangeElements(GL_TRIANGLES, 0, 3*2, 3*2, GL_UNSIGNED_BYTE, kFullscreenQuadTriangles);
+}
+
+#if 0  // TODO: clean this up
 static void Render_Draw2DFullscreenQuad(int fit)
 {
 	//		2----3
@@ -938,6 +978,7 @@ static void Render_Draw2DFullscreenQuad(int fit)
 	glTexCoordPointer(2, GL_FLOAT, 0, kFullscreenQuadUVs);
 	__glDrawRangeElements(GL_TRIANGLES, 0, 3*2, 3*2, GL_UNSIGNED_BYTE, kFullscreenQuadTriangles);
 }
+#endif
 
 #pragma mark -
 
@@ -947,6 +988,7 @@ static void Render_Draw2DFullscreenQuad(int fit)
 /*    BACKDROP/OVERLAY (COVER WINDOW)      */
 /*******************************************/
 
+#if 0  // TODO: clean this up
 void Render_Alloc2DCover(int width, int height)
 {
 	GAME_ASSERT_MESSAGE(gCoverWindowTextureName == 0, "cover texture already allocated");
@@ -1033,6 +1075,7 @@ void Render_Draw2DCover(int fit)
 	Render_Draw2DFullscreenQuad(fit);
 	Render_Exit2D();
 }
+#endif
 
 static void DrawFadeOverlay(float opacity)
 {

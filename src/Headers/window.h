@@ -6,20 +6,13 @@
 #define GAME_VIEW_HEIGHT	(480)
 
 extern void	InitWindowStuff(void);
-extern void	DoLockPixels(GWorldPtr);
 extern	void MakeFadeEvent(Boolean	fadeIn);
-void DumpGWorld2(GWorldPtr thisWorld, WindowPtr thisWindow,Rect *destRect);
 
 extern	void CleanupDisplay(void);
 extern	void GammaFadeOut(void);
 extern	void GammaOn(void);
 
 extern	void GameScreenToBlack(void);
-
-void DoLockPixels(GWorldPtr world);
-void DumpGWorldTransparent(GWorldPtr thisWorld, WindowPtr thisWindow,Rect *destRect);
-void DumpGWorld3(GWorldPtr thisWorld, WindowPtr thisWindow,Rect *srcRect, Rect *destRect);
-
 
 void QD3D_OnWindowResized(int windowWidth, int windowHeight);
 void SetFullscreenMode(void);

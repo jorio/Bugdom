@@ -4,7 +4,7 @@
 
 #include "game.h"
 
-static void DecompressRLE(short refNum, TGAHeader* header, Handle handle)
+static void DecompressRLE(short refNum, TGAHeader* header, uint8_t* out)
 {
 	OSErr err = noErr;
 
@@ -30,7 +30,6 @@ static void DecompressRLE(short refNum, TGAHeader* header, Handle handle)
 	long pixelsProcessed		= 0;
 
 	const uint8_t*			in  = (uint8_t*) compressedData;
-	uint8_t*				out = (uint8_t*) *handle;
 	const uint8_t* const	eod = in + compressedLength;
 
 	while (pixelsProcessed < pixelCount)
@@ -67,16 +66,13 @@ static void DecompressRLE(short refNum, TGAHeader* header, Handle handle)
 	DisposePtr(compressedData);
 }
 
-static Handle ConvertColormappedToRGB(const Handle handle, const TGAHeader* header, const Ptr palette)
+static uint8_t* ConvertColormappedToRGB(const uint8_t* in, const TGAHeader* header, const uint8_t* palette)
 {
 	const int pixelCount				= header->width * header->height;
 	const int bytesPerColor				= header->paletteBitsPerColor / 8;
 	const uint16_t paletteColorCount	= header->paletteColorCountLo	| ((uint16_t)header->paletteColorCountHi	<< 8);
 
-	Handle remapped = NewHandle(pixelCount * (header->paletteBitsPerColor / 8));
-
-	const uint8_t*	in	= (uint8_t*) *handle;
-	uint8_t*		out	= (uint8_t*) *remapped;
+	uint8_t* out = (uint8_t*) NewPtr(pixelCount * (header->paletteBitsPerColor / 8));
 
 	for (int i = 0; i < pixelCount; i++)
 	{
@@ -90,16 +86,16 @@ static Handle ConvertColormappedToRGB(const Handle handle, const TGAHeader* head
 		out += bytesPerColor;
 	}
 
-	return remapped;
+	return out;
 }
 
-static void FlipPixelData(Handle handle, TGAHeader* header)
+static void FlipPixelData(uint8_t* data, TGAHeader* header)
 {
 	int rowBytes = header->width * (header->bpp / 8);
 
-	Ptr topRow = *handle;
-	Ptr bottomRow = topRow + rowBytes * (header->height - 1);
-	Ptr topRowCopy = NewPtr(rowBytes);
+	uint8_t* topRow = data;
+	uint8_t* bottomRow = topRow + rowBytes * (header->height - 1);
+	uint8_t* topRowCopy = (uint8_t*) NewPtr(rowBytes);
 	while (topRow < bottomRow)
 	{
 		BlockMove(topRow, topRowCopy, rowBytes);
@@ -108,16 +104,16 @@ static void FlipPixelData(Handle handle, TGAHeader* header)
 		topRow += rowBytes;
 		bottomRow -= rowBytes;
 	}
-	DisposePtr(topRowCopy);
+	DisposePtr((Ptr) topRowCopy);
 }
 
-OSErr ReadTGA(const FSSpec* spec, Handle* outHandle, TGAHeader* outHeader)
+OSErr ReadTGA(const FSSpec* spec, uint8_t** outPtr, TGAHeader* outHeader, bool forceRGBA)
 {
 	short		refNum;
 	OSErr		err;
 	long		readCount;
 	TGAHeader	header;
-	Handle		pixelDataHandle;
+	uint8_t*	pixelData;
 
 	// Open data fork
 	err = FSpOpenDF(spec, fsRdPerm, &refNum);
@@ -157,7 +153,7 @@ OSErr ReadTGA(const FSSpec* spec, Handle* outHandle, TGAHeader* outHeader)
 	GAME_ASSERT(header.idFieldLength == 0);
 
 	// If there's palette data, load it in
-	Ptr palette = nil;
+	uint8_t* palette = nil;
 	if (header.imageType == TGA_IMAGETYPE_RAW_CMAP || header.imageType == TGA_IMAGETYPE_RLE_CMAP)
 	{
 		uint16_t paletteColorCount	= header.paletteColorCountLo | ((uint16_t)header.paletteColorCountHi << 8);
@@ -167,26 +163,26 @@ OSErr ReadTGA(const FSSpec* spec, Handle* outHandle, TGAHeader* outHeader)
 		GAME_ASSERT(header.paletteOriginLo == 0 && header.paletteOriginHi == 0);
 		GAME_ASSERT(paletteColorCount <= 256);
 
-		palette = NewPtr(paletteBytes);
+		palette = (uint8_t*) NewPtr(paletteBytes);
 
 		readCount = paletteBytes;
-		FSRead(refNum, &readCount, palette);
+		FSRead(refNum, &readCount, (Ptr) palette);
 		GAME_ASSERT(readCount == paletteBytes);
 	}
 
 	// Allocate pixel data
-	pixelDataHandle = NewHandle(pixelDataLength);
+	pixelData = (uint8_t*) NewPtr(pixelDataLength);
 
 	// Read pixel data; decompress it if needed
 	if (compressed)
 	{
-		DecompressRLE(refNum, &header, pixelDataHandle);
+		DecompressRLE(refNum, &header, pixelData);
 		header.imageType &= ~8;		// flip compressed bit
 	}
 	else
 	{
 		readCount = pixelDataLength;
-		err = FSRead(refNum, &readCount, *pixelDataHandle);
+		err = FSRead(refNum, &readCount, (Ptr) pixelData);
 		GAME_ASSERT(readCount == pixelDataLength);
 		GAME_ASSERT(err == noErr);
 	}
@@ -194,35 +190,71 @@ OSErr ReadTGA(const FSSpec* spec, Handle* outHandle, TGAHeader* outHeader)
 	// Close file -- we don't need it anymore
 	FSClose(refNum);
 
+	// If pixel data is stored bottom-up, flip it vertically.
+	if (needFlip)
+	{
+		FlipPixelData(pixelData, &header);
+
+		// Set top-left origin bit
+		header.imageDescriptor |= (1u << 5u);
+	}
+
 	// If the image is color-mapped, map pixel data back to RGB
 	if (palette)
 	{
-		Handle remapped = ConvertColormappedToRGB(pixelDataHandle, &header, palette);
+		uint8_t* remapped = ConvertColormappedToRGB(pixelData, &header, palette);
 
-		DisposePtr(palette);
+		DisposePtr((Ptr) palette);
 		palette = nil;
 
-		DisposeHandle(pixelDataHandle);
-		pixelDataHandle = remapped;
+		DisposePtr((Ptr) pixelData);
+		pixelData = remapped;
 
 		// Update header to make it an RGB image
 		header.imageType = TGA_IMAGETYPE_RAW_RGB;
 		header.bpp = header.paletteBitsPerColor;
 	}
 
-	// If pixel data is stored bottom-up, flip it vertically.
-	if (needFlip)
+	if (forceRGBA && header.bpp != 32)
 	{
-		FlipPixelData(pixelDataHandle, &header);
+		uint8_t* converted = (uint8_t*) NewPtr(header.width * header.height * 4);
+		uint8_t* rgbaOut = converted;
 
-		// Set top-left origin bit
-		header.imageDescriptor |= (1u << 5u);
+		switch (header.bpp)
+		{
+			case 16:
+			{
+				const uint16_t* inPtr16 = (const uint16_t*) pixelData;
+				for (int p = 0; p < pixelDataLength/2; p++)
+				{
+					uint16_t inRGB16 = *inPtr16;
+					rgbaOut[0] = 0xFF;
+					rgbaOut[1] = ( ((inRGB16 >> 10) & 0b11111) * 255 ) / 31;
+					rgbaOut[2] = ( ((inRGB16 >>  5) & 0b11111) * 255 ) / 31;
+					rgbaOut[3] = ( ((inRGB16 >>  0) & 0b11111) * 255 ) / 31;
+
+					rgbaOut += 4;
+					inPtr16++;
+				}
+				break;
+			}
+
+			default:
+				GAME_ASSERT_MESSAGE(false, "TGA: Unsupported bpp for conversion to RGBA");
+				break;
+		}
+
+		header.imageType = TGA_IMAGETYPE_RAW_RGB;
+		header.bpp = 32;
+
+		DisposePtr((Ptr) pixelData);
+		pixelData = converted;
 	}
 
 	// Store result
 	if (outHeader != nil)
 		*outHeader = header;
-	*outHandle = pixelDataHandle;
+	*outPtr = pixelData;
 	
 	return noErr;
 }

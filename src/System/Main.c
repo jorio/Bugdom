@@ -390,7 +390,7 @@ float fps;
 
 		DoMyTerrainUpdate();
 		QD3D_DrawScene(gGameViewInfoPtr,DrawTerrain);
-		SubmitInfobarOverlay();
+//		SubmitInfobarOverlay();
 
 		QD3D_CalcFramesPerSecond();
 		DoSDLMaintenance();
@@ -639,7 +639,6 @@ QD3DSetupInputType	viewDef;
 static void CleanupLevel(void)
 {
 	StopAllEffectChannels();
-	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
  	EmptySplineObjectList();
 	DeleteAllObjects();
 	FreeAllSkeletonFiles(-1);
@@ -650,12 +649,8 @@ static void CleanupLevel(void)
 	DisposeLensFlares();
 	DisposeLiquids();
 	DeleteAll3DMFGroups();
-	
-	if (gInfoBarTop)								// dispose of infobar cached image
-	{
-		DisposeGWorld(gInfoBarTop);
-		gInfoBarTop = nil;
-	}
+	DisposeInfobarTexture();
+	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
 }
 
 
@@ -707,15 +702,7 @@ static void CheckForCheats(void)
 	{
 		if (GetNewKeyState_SDL(SDL_SCANCODE_F1))	// win the level!
 			gAreaCompleted = true;
-			
-		if (GetKeyState_SDL(SDL_SCANCODE_F2))	// Show player position
-		{
-			char msgbuf[128];
-			sprintf(msgbuf, "%.0f   %.0f   %.0f    ", gPlayerObj->Coord.x, gPlayerObj->Coord.y, gPlayerObj->Coord.z);
-			MoveTo(0, 12);
-			DrawStringC(msgbuf);
-		}
-		
+
 		if (GetKeyState_SDL(SDL_SCANCODE_F3))	// get full health
 			GetHealth(1.0);							
 			
@@ -738,8 +725,8 @@ static void CheckForCheats(void)
 		if (GetNewKeyState_SDL(SDL_SCANCODE_F6))	// see if liquid invincible
 		{
 			gLiquidCheat = !gLiquidCheat;
-			MoveTo(0, 12);
-			DrawStringC(gLiquidCheat ? "Liquid cheat ON   " : "Liquid cheat OFF   ");
+//			MoveTo(0, 12);
+//			DrawStringC(gLiquidCheat ? "Liquid cheat ON   " : "Liquid cheat OFF   ");
 		}
 
 		if (GetNewKeyState_SDL(SDL_SCANCODE_F9))

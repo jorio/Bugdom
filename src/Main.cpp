@@ -23,7 +23,6 @@ extern "C"
 {
 	// bare minimum to satisfy externs in game code
 	WindowPtr gCoverWindow = nullptr;
-	UInt32* gCoverWindowPixPtr = nullptr;
 	SDL_Window* gSDLWindow = nullptr;
 
 	// Tell Windows graphics driver that we prefer running on a dedicated GPU if available
@@ -106,8 +105,8 @@ int CommonMain(int argc, const char** argv)
 	//Pomme_StartDumpingResources("/tmp/BugdomRezDump");
 
 	// Set up globals that the game expects
+	// TODO: Nuke this
 	gCoverWindow = Pomme::Graphics::GetScreenPort();
-	gCoverWindowPixPtr = (UInt32*) GetPixBaseAddr(GetGWorldPixMap(gCoverWindow));
 
 	// Clear window
 	printf("TODO NOQUESA: %s\n", __func__);
