@@ -24,19 +24,12 @@ typedef struct
 	float					decaySpeed,scale;
 	Byte					mode;
 	TQ3Matrix4x4			matrix;
-	
-	TQ3TriMeshData			triMesh;
-	TQ3Point3D				points[3];
-	TQ3TriMeshTriangleData	triangle;
-	TQ3Param2D				uvs[3];
-	TQ3Vector3D				vertNormals[3],faceNormal;
-	TQ3TriMeshAttributeData	vertAttribs[2];
-
+	TQ3TriMeshData			*mesh;
 }ParticleType;
 
 void QD3D_CalcObjectBoundingBox(int numMeshes, TQ3TriMeshData** meshList, TQ3BoundingBox* boundingBox);
 void QD3D_CalcObjectBoundingSphere(int numMeshes, TQ3TriMeshData** meshList, TQ3BoundingSphere* boundingSphere);
-extern	void QD3D_ExplodeGeometry(ObjNode *theNode, float boomForce, Byte particleMode, long particleDensity, float particleDecaySpeed);
+void QD3D_ExplodeGeometry(ObjNode *theNode, float boomForce, Byte particleMode, int particleDensity, float particleDecaySpeed);
 extern	void QD3D_ReplaceGeometryTexture(TQ3Object obj, TQ3SurfaceShaderObject theShader);
 void QD3D_ScrollUVs(TQ3Object theObject, float du, float dv, short whichShader);
 extern	void QD3D_InitParticles(void);
