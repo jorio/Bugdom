@@ -207,8 +207,8 @@ long	numAnims,numJoints;
 
 
 		/* ALLOC DECOMPOSED DATA */
-			
-	skeleton->decomposedTriMeshPtrs = (TQ3TriMeshData *)AllocPtr(sizeof(TQ3TriMeshData)*MAX_DECOMPOSED_TRIMESHES);
+
+	skeleton->decomposedTriMeshPtrs = (TQ3TriMeshData **)AllocPtr(sizeof(TQ3TriMeshData*)*MAX_DECOMPOSED_TRIMESHES);
 	GAME_ASSERT(skeleton->decomposedTriMeshPtrs);
 
 	skeleton->decomposedPointList = (DecomposedPointType *)AllocPtr(sizeof(DecomposedPointType)*MAX_DECOMPOSED_POINTS);		
