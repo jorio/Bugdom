@@ -347,7 +347,6 @@ ObjNode		*theNode;
 TQ3Status	myStatus;
 short		i,numTriMeshes;
 unsigned long	statusBits;
-Boolean			autoFade = false;
 Boolean			noCache = false;
 Boolean			useNullShader = false;
 Boolean			noZWrites = false;
@@ -380,6 +379,8 @@ short			skelType;
 	{
 		statusBits = theNode->StatusBits;						// get obj's status bits
 
+		theNode->RenderModifiers.statusBits = statusBits;		// copy status bits to render mods
+
 		if (statusBits & STATUS_BIT_ISCULLED)					// see if is culled
 			goto next;		
 		
@@ -409,47 +410,34 @@ short			skelType;
 			noCache = false;
 		}
 
-		
+
 			/******************/
 			/* CHECK AUTOFADE */
 			/******************/
-			
-		if (gAutoFadeStartDist != 0.0f)							// see if this level has autofade
+
+		if (statusBits & STATUS_BIT_AUTOFADE && gAutoFadeStartDist != 0.0f)		// see if this level has autofade
 		{
-			printf("TODO NOQUESA: submit autofade xparency\n");
-#if 0	// NOQUESA
-			if (statusBits & STATUS_BIT_AUTOFADE)
+			// TODO: Move to renderer? We already compute the distance to the camera there.
+			float dist = CalcQuickDistance(cameraX, cameraZ, theNode->Coord.x, theNode->Coord.z);	// see if in fade zone
+			if (dist >= gAutoFadeStartDist)
 			{
-				TQ3ColorRGB	xcolor;			
-				float		dist;
-				
-				dist = CalcQuickDistance(cameraX, cameraZ, theNode->Coord.x, theNode->Coord.z);			// see if in fade zone
-				if (dist < gAutoFadeStartDist)
-					goto no_auto_fade;
-				
-				dist -= gAutoFadeStartDist;							// calc xparency %
-				dist = 1.0f - (dist * (1.0f/AUTO_FADE_RANGE));				
-				if (dist < 0.0f)
+				float factor = 1.0f - (dist - gAutoFadeStartDist) / AUTO_FADE_RANGE;	// calc xparency %
+				if (factor <= 0.0f)		// too far; fully faded
 					goto next;
-					
-				xcolor.r = xcolor.g = xcolor.b = dist;
-				
-				Q3Attribute_Submit(kQ3AttributeTypeTransparencyColor, &xcolor, view);
-				autoFade = true;
+
+				theNode->RenderModifiers.autoFadeFactor = factor;
 			}
 			else
 			{
-	no_auto_fade:			
-				if (autoFade)
-				{
-					Q3Attribute_Submit(kQ3AttributeTypeTransparencyColor, &white, view);			
-					autoFade = false;
-				}
+				theNode->RenderModifiers.autoFadeFactor = 1.0f;
 			}
-#endif
 		}
-					
-		
+		else
+		{
+			theNode->RenderModifiers.autoFadeFactor = 1.0f;
+		}
+
+
 			/*********************/
 			/* CHECK NULL SHADER */
 			/*********************/
@@ -530,8 +518,6 @@ short			skelType;
 			/***********************/
 			/* SUBMIT THE GEOMETRY */
 			/***********************/
-
-		theNode->RenderModifiers.statusBits = statusBits;
 
 		switch(theNode->Genre)
 		{

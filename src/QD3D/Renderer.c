@@ -64,6 +64,8 @@ static MeshQueueEntry*		gMeshQueuePtrs[MESHQUEUE_MAX_SIZE];
 static int					gMeshQueueSize = 0;
 static bool					gFrameStarted = false;
 
+static float				gBackupVertexColors[4*65536];
+
 static int DepthSortCompare(void const* a_void, void const* b_void);
 static void DrawMeshList(int renderPass, const MeshQueueEntry* entry);
 static void DrawFadeOverlay(float opacity);
@@ -78,6 +80,7 @@ static const RenderModifiers kDefaultRenderMods =
 {
 	.statusBits = 0,
 	.diffuseColor = {1,1,1,1},
+	.autoFadeFactor = 1.0f,
 };
 
 static const float kFreezeFrameFadeOutDuration = .33f;
@@ -645,6 +648,7 @@ static void DrawMeshList(int renderPass, const MeshQueueEntry* entry)
 				|| mesh->diffuseColor.a < .999f
 				|| entry->mods->diffuseColor.a < .999f
 				|| (entry->mods->statusBits & STATUS_BIT_GLOW)
+				|| entry->mods->autoFadeFactor < .999f
 				;
 
 		// Decide whether or not to draw this mesh in this pass, depending on which pass we're in
@@ -735,20 +739,39 @@ static void DrawMeshList(int renderPass, const MeshQueueEntry* entry)
 		if (mesh->hasVertexColors)
 		{
 			EnableClientState(GL_COLOR_ARRAY);
-			glColorPointer(4, GL_FLOAT, 0, mesh->vertexColors);
+
+			if (entry->mods->autoFadeFactor < .999f)
+			{
+				// Old-school OpenGL will ignore the diffuse color (used for transparency) if we also send
+				// per-vertex colors. So, apply transparency to the per-vertex color array.
+				GAME_ASSERT(4 * mesh->numPoints <= (int)(sizeof(gBackupVertexColors) / sizeof(gBackupVertexColors[0])));
+				int j = 0;
+				for (int v = 0; v < mesh->numPoints; v++)
+				{
+					gBackupVertexColors[j++] = mesh->vertexColors[v].r;
+					gBackupVertexColors[j++] = mesh->vertexColors[v].g;
+					gBackupVertexColors[j++] = mesh->vertexColors[v].b;
+					gBackupVertexColors[j++] = mesh->vertexColors[v].a * entry->mods->autoFadeFactor;
+				}
+				glColorPointer(4, GL_FLOAT, 0, gBackupVertexColors);
+			}
+			else
+			{
+				glColorPointer(4, GL_FLOAT, 0, mesh->vertexColors);
+			}
 		}
 		else
 		{
 			DisableClientState(GL_COLOR_ARRAY);
-		}
 
-		// Apply diffuse color for the entire mesh
-		glColor4f(
+			// Apply diffuse color for the entire mesh
+			glColor4f(
 				mesh->diffuseColor.r * entry->mods->diffuseColor.r,
 				mesh->diffuseColor.g * entry->mods->diffuseColor.g,
 				mesh->diffuseColor.b * entry->mods->diffuseColor.b,
-				mesh->diffuseColor.a * entry->mods->diffuseColor.a
-				);
+				mesh->diffuseColor.a * entry->mods->diffuseColor.a * entry->mods->autoFadeFactor
+			);
+		}
 
 		// Submit transformation matrix if any
 		if (!matrixPushedYet && entry->transform)

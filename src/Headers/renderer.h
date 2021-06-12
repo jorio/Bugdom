@@ -36,6 +36,9 @@ typedef struct RenderModifiers
 	// Diffuse color applied to the entire mesh.
 	TQ3ColorRGBA			diffuseColor;
 
+	// Auto-fade alpha factor (applied on top of the alpha in diffuseColor).
+	float					autoFadeFactor;
+
 	// Set this to override the order in which meshes are drawn.
 	// The default value is 0.
 	// Positive values will cause the mesh to be drawn as if it were further back in the scene than it really is.
