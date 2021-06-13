@@ -1,5 +1,7 @@
 # Bugdom
 
+# THIS IS THE WORK-IN-PROGRESS BRANCH. The 3D renderer is being rewritten. Use branch 'master' if you just want to play the game.
+
 This is *Bugdom* running on modern macOS, Windows and Linux! This version, at https://github.com/jorio/Bugdom, is approved by Pangea Software.
 
 Get builds for macOS and Windows here: https://github.com/jorio/Bugdom/releases
