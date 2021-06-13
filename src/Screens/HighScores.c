@@ -135,7 +135,7 @@ static void SetupHighScoresScreen(void)
 TQ3Point3D			cameraFrom = { 0, 00, 400.0 };
 TQ3Point3D			cameraTo = { 0.0, 0, 0.0 };
 TQ3Vector3D			cameraUp = { 0.0, 1.0, 0.0 };
-TQ3ColorARGB		clearColor = {1,0,0,0};
+TQ3ColorRGBA		clearColor = {0,0,0,1};
 TQ3ColorRGB			ambientColor = { 1.0, 1.0, 1.0 };
 TQ3Vector3D			fillDirection1 = { .7, -.1, -0.3 };
 TQ3Vector3D			fillDirection2 = { -1, -.3, -.4 };

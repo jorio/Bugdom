@@ -47,10 +47,6 @@ int								gWindowHeight				= GAME_VIEW_HEIGHT;
 float	gFramesPerSecond = DEFAULT_FPS;				// this is used to maintain a constant timing velocity as frame rates differ
 float	gFramesPerSecondFrac = 1/DEFAULT_FPS;
 
-static TQ3FogMode			gFogMode;
-static float		gFogStart,gFogEnd,gFogDensity;
-static TQ3ColorARGB	gFogColor;
-
 Boolean		gQD3DInitialized = false;
 
 
@@ -114,7 +110,7 @@ TQ3Status	status;
 
 void QD3D_NewViewDef(QD3DSetupInputType *viewDef, WindowPtr theWindow)
 {
-TQ3ColorARGB		clearColor = {0,0,0,0};
+TQ3ColorRGBA		clearColor = {0,0,0,1};
 TQ3Point3D			cameraFrom = { 0, 40, 200.0 };
 TQ3Point3D			cameraTo = { 0, 0, 0 };
 TQ3Vector3D			cameraUp = { 0.0, 1.0, 0.0 };
@@ -228,18 +224,6 @@ QD3DSetupOutputType	*outputPtr;
 	outputPtr->lightList = setupDefPtr->lights;				// copy light list
 	
 	QD3D_MoveCameraFromTo(outputPtr,&v,&v);					// call this to set outputPtr->currentCameraCoords & camera matrix
-	
-	
-			/* FOG */
-			
-	if (setupDefPtr->lights.useFog)
-	{
-		gFogMode	= setupDefPtr->lights.fogMode;
-		gFogStart 	= setupDefPtr->lights.fogStart;
-		gFogEnd 	= setupDefPtr->lights.fogEnd;
-		gFogDensity = setupDefPtr->lights.fogDensity;
-		gFogColor	= setupDefPtr->lights.useCustomFogColor ? setupDefPtr->lights.fogColor : setupDefPtr->view.clearColor;
-	}
 
 
 
@@ -248,26 +232,6 @@ QD3DSetupOutputType	*outputPtr;
 	SDL_GL_SetSwapInterval(gGamePrefs.vsync ? 1 : 0);
 
 	CreateLights(&setupDefPtr->lights);
-
-	if (setupDefPtr->lights.useFog) //&& gGamePrefs.canDoFog)
-	{
-		printf("TODO NOQUESA: implement useFog\n");
-		/*
-		float camHither = setupDefPtr->camera.hither;
-		float camYon	= setupDefPtr->camera.yon;
-		float fogHither	= setupDefPtr->lights.fogHither;
-		float fogYon	= setupDefPtr->lights.fogYon;
-		glEnable(GL_FOG);
-		glHint(GL_FOG_HINT,		GL_NICEST);
-		glFogi(GL_FOG_MODE,		GL_LINEAR);
-		glFogf(GL_FOG_START,	camHither + fogHither * (camYon - camHither));
-		glFogf(GL_FOG_END,		camHither + fogYon    * (camYon - camHither));
-		glFogfv(GL_FOG_COLOR,	(float *)&setupDefPtr->view.clearColor);
-		//glFogf(GL_FOG_DENSITY,	0.5f);
-		 */
-	}
-	else
-		glDisable(GL_FOG);
 
 	glAlphaFunc(GL_GREATER, 0.4999f);
 
@@ -283,6 +247,18 @@ QD3DSetupOutputType	*outputPtr;
 
 	Render_InitState();
 //	Render_Alloc2DCover(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
+
+	if (setupDefPtr->lights.useFog)
+	{
+		Render_EnableFog(
+				setupDefPtr->camera.hither,
+				setupDefPtr->camera.yon,
+				setupDefPtr->lights.fogStart,
+				setupDefPtr->lights.fogEnd,
+				setupDefPtr->lights.useCustomFogColor ? setupDefPtr->lights.fogColor : setupDefPtr->view.clearColor);
+	}
+	else
+		Render_DisableFog();
 
 	glClearColor(setupDefPtr->view.clearColor.r, setupDefPtr->view.clearColor.g, setupDefPtr->view.clearColor.b, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1441,43 +1417,6 @@ Str255		s;
 
 
 #pragma mark -
-
-
-
-/******************************* DISABLE FOG *********************************/
-
-// TODO NOQUESA: we can probably remove this
-void QD3D_DisableFog(const QD3DSetupOutputType *setupInfo)
-{
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-	TQ3FogStyleData	fogData;
-	
-	fogData.state		= kQ3Off;
-	Q3FogStyle_Submit(&fogData, setupInfo->viewObject);
-#endif
-}
-
-
-/******************************* REENABLE FOG *********************************/
-
-// TODO NOQUESA: we can probably remove this
-void QD3D_ReEnableFog(const QD3DSetupOutputType *setupInfo)
-{
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-		TQ3FogStyleData	fogData;
-		
-		fogData.state		= kQ3On;
-		fogData.mode		= gFogMode;
-		fogData.fogStart	= setupInfo->yon * gFogStart;
-		fogData.fogEnd		= setupInfo->yon * gFogEnd;
-		fogData.density		= gFogDensity;
-		fogData.color		= gFogColor;
-		
-		Q3FogStyle_Submit(&fogData, setupInfo->viewObject);
-#endif
-}
 
 
 

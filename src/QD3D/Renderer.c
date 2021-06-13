@@ -45,6 +45,7 @@ typedef struct RendererState
 	bool		hasState_GL_FOG;
 	bool		hasFlag_glDepthMask;
 	bool		blendFuncIsAdditive;
+	bool		wantFog;
 } RendererState;
 
 typedef struct MeshQueueEntry
@@ -254,7 +255,7 @@ void Render_InitState(void)
 	SetInitialState(GL_TEXTURE_2D,		false);
 	SetInitialState(GL_BLEND,			false);
 	SetInitialState(GL_LIGHTING,		true);
-//	SetInitialState(GL_FOG,				true);
+	SetInitialState(GL_FOG,				false);
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	gState.blendFuncIsAdditive = false;
@@ -262,10 +263,31 @@ void Render_InitState(void)
 	gState.hasFlag_glDepthMask = true;		// initially active on a fresh context
 
 	gState.boundTexture = 0;
+	gState.wantFog = false;
 
 	gMeshQueueSize = 0;
 	for (int i = 0; i < MESHQUEUE_MAX_SIZE; i++)
 		gMeshQueuePtrs[i] = &gMeshQueueBuffer[i];
+}
+
+void Render_EnableFog(
+		float camHither,
+		float camYon,
+		float fogHither,
+		float fogYon,
+		TQ3ColorRGBA fogColor)
+{
+	glHint(GL_FOG_HINT,		GL_NICEST);
+	glFogi(GL_FOG_MODE,		GL_LINEAR);
+	glFogf(GL_FOG_START,	camHither + fogHither * (camYon - camHither));
+	glFogf(GL_FOG_END,		camHither + fogYon    * (camYon - camHither));
+	glFogfv(GL_FOG_COLOR,	(float *)&fogColor);
+	gState.wantFog = true;
+}
+
+void Render_DisableFog(void)
+{
+	gState.wantFog = false;
 }
 
 #pragma mark -
@@ -714,6 +736,9 @@ static void DrawMeshList(int renderPass, const MeshQueueEntry* entry)
 
 		// Apply gouraud or null illumination
 		SetState(GL_LIGHTING, !(entry->mods->statusBits & STATUS_BIT_NULLSHADER));
+
+		// Apply fog or not
+		SetState(GL_FOG, gState.wantFog && !(entry->mods->statusBits & STATUS_BIT_NOFOG));
 
 		// Write geometry to depth buffer or not
 		SetFlag(glDepthMask, !(entry->mods->statusBits & STATUS_BIT_NOZWRITE));

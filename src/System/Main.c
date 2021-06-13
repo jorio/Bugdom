@@ -184,29 +184,29 @@ static const TQ3ColorRGB	gLevelLightColors[NUM_LEVEL_TYPES][3] =		// 0 = ambient
 	{ {0.5f, 0.5f, 0.6f}, {0.7f, 0.7f, 0.8f}, {1.0f, 1.0f, 1.0f} }, // anthill
 };
 
-static const TQ3ColorARGB	gLevelFogColor[NUM_LEVEL_TYPES] =
+static const TQ3ColorRGBA	gLevelFogColor[NUM_LEVEL_TYPES] =
 {
-	{ 1.000f, 0.050f, 0.250f, 0.050f },				// garden
-	{ 1.000f, 0.900f, 0.900f, 0.850f },				// boat
-	{ 1.000f, 1.000f, 0.290f, 0.063f },				// dragonfly
-//	{ 1.000f, 0.900f, 0.700f, 0.100f },				// hive
-	{ 1.000f, 0.700f, 0.600f, 0.400f },				// hive
-	{ 1.000f, 0.020f, 0.020f, 0.080f },				// night
-	{ 1.000f, 0.150f, 0.070f, 0.150f },				// anthill
+	{ 0.050f, 0.250f, 0.050f, 1.000f },				// garden
+	{ 0.900f, 0.900f, 0.850f, 1.000f },				// boat
+	{ 1.000f, 0.290f, 0.063f, 1.000f },				// dragonfly
+//	{ 0.900f, 0.700f, 0.100f, 1.000f },				// hive
+	{ 0.700f, 0.600f, 0.400f, 1.000f },				// hive
+	{ 0.020f, 0.020f, 0.080f, 1.000f },				// night
+	{ 0.150f, 0.070f, 0.150f, 1.000f },				// anthill
 };
 
 // Source port addition: on rare occasions you get to see the void "above" the cyclorama.
 // To camouflage this, we make the clear color roughly match the color at the top of the cyc.
 // This is not necessarily the same color as the fog!
 // NOTE: If there's no cyc in a level, this value is ignored and the fog color is used instead.
-static const TQ3ColorARGB	gLevelClearColorWithCyc[NUM_LEVEL_TYPES] =
+static const TQ3ColorRGBA	gLevelClearColorWithCyc[NUM_LEVEL_TYPES] =
 {
-	{ 1.000f, 0.352f, 0.380f, 1.000f },				// garden		(DIFFERENT FROM FOG)
-	{ 1.000f, 0.900f, 0.900f, 0.850f },				// boat			(same)
-	{ 1.000f, 1.000f, 0.290f, 0.063f },				// dragonfly	(same)
-	{ 1.000f, 0.700f, 0.600f, 0.400f },				// hive			(same)
-	{ 1.000f, 0.020f, 0.020f, 0.080f },				// night		(same)
-	{ 1.000f, 0.150f, 0.070f, 0.150f },				// anthill		(same)
+	{ 0.352f, 0.380f, 1.000f, 1.000f },				// garden		(DIFFERENT FROM FOG)
+	{ 0.900f, 0.900f, 0.850f, 1.000f },				// boat			(same)
+	{ 1.000f, 0.290f, 0.063f, 1.000f },				// dragonfly	(same)
+	{ 0.700f, 0.600f, 0.400f, 1.000f },				// hive			(same)
+	{ 0.020f, 0.020f, 0.080f, 1.000f },				// night		(same)
+	{ 0.150f, 0.070f, 0.150f, 1.000f },				// anthill		(same)
 };
 
 

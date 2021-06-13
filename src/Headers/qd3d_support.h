@@ -15,7 +15,7 @@ typedef	struct
 	GWorldPtr				gworld;
 	TQ3ObjectType			rendererType;
 	Boolean					dontClear;
-	TQ3ColorARGB			clearColor;
+	TQ3ColorRGBA			clearColor;
 	Rect					paneClip;			// not pane size, but clip:  left = amount to clip off left
 }QD3DViewDefType;
 
@@ -47,7 +47,7 @@ typedef	struct
 	float			fogDensity;
 	short			fogMode;
 	Boolean			useCustomFogColor;		// if false (by default), fog will use view clear color instead of fogColor below
-	TQ3ColorARGB	fogColor;
+	TQ3ColorRGBA	fogColor;
 
 	float			ambientBrightness;
 	TQ3ColorRGB		ambientColor;
@@ -126,8 +126,6 @@ extern	void QD3D_NewViewDef(QD3DSetupInputType *viewDef, WindowPtr theWindow);
 extern	TQ3SurfaceShaderObject	QD3D_Data16ToTexture_NoMip(Ptr data, short width, short height);
 TQ3StorageObject QD3D_GetMipmapStorageObjectFromAttrib(TQ3AttributeSet attribSet);
 
-void QD3D_DisableFog(const QD3DSetupOutputType *setupInfo);
-void QD3D_ReEnableFog(const QD3DSetupOutputType *setupInfo);
 void QD3D_SetTriangleCacheMode(Boolean isOn);
 void QD3D_SetAdditiveBlending(Boolean isOn);
 void QD3D_SetZWrite(Boolean isOn);

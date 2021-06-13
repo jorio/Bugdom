@@ -78,6 +78,16 @@ void Render_SetDefaultModifiers(RenderModifiers* dest);
 // Call this function after creating the OpenGL context.
 void Render_InitState(void);
 
+void Render_EnableFog(
+		float camHither,
+		float camYon,
+		float fogHither,
+		float fogYon,
+		TQ3ColorRGBA fogColor
+);
+
+void Render_DisableFog(void);
+
 #pragma mark -
 
 void Render_BindTexture(GLuint textureName);
