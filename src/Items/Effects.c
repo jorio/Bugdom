@@ -30,9 +30,12 @@ static void DeleteParticleGroup(int groupNum);
 #define	MAX_PARTICLES			200		// (note change Byte below if > 255)
 #define	NUM_PARTICLE_TEXTURES	8
 
+_Static_assert(MAX_PARTICLES <= 255, "rewrite ParticleGroupType to support > 255 particles");
+
 typedef struct
 {
 	uint32_t		magicNum;
+	bool			isGroupActive;
 	bool			isUsed[MAX_PARTICLES];
 	Byte			type;
 	uint8_t			flags;
@@ -56,10 +59,11 @@ typedef struct
 /*    VARIABLES      */
 /*********************/
 
-static ParticleGroupType	*gParticleGroups[MAX_PARTICLE_GROUPS];
+static ParticleGroupType	gParticleGroups[MAX_PARTICLE_GROUPS];
+static bool					gParticleGroupsInitialized = false;
 
-static Boolean				gParticleShadersLoaded = false;
 static GLuint				gParticleShader[NUM_PARTICLE_TEXTURES];
+static bool					gParticleShadersLoaded = false;
 
 static float	gGravitoidDistBuffer[MAX_PARTICLES][MAX_PARTICLES];
 
@@ -127,15 +131,59 @@ float	fps = gFramesPerSecondFrac;
 
 #pragma mark -
 
+
+static void InitParticleGroup(ParticleGroupType* pg)
+{
+			/* INITIALIZE THE GROUP */
+
+	memset(pg, 0, sizeof(ParticleGroupType));
+
+			/* INIT THE GROUP'S TRIMESH STRUCTURE */
+
+	pg->mesh = Q3TriMeshData_New(MAX_PARTICLES*2, MAX_PARTICLES*4, kQ3TriMeshDataFeatureVertexUVs | kQ3TriMeshDataFeatureVertexColors);
+
+	pg->mesh->texturingMode = kQ3TexturingModeAlphaBlend;
+	pg->mesh->glTextureName = 0;
+
+	pg->mesh->bBox.isEmpty 			= kQ3False;
+
+			/* INIT UV ARRAYS */
+
+	for (int j = 0; j < (MAX_PARTICLES*4); j += 4)
+	{
+		pg->mesh->vertexUVs[j+0] = (TQ3Param2D) { 0, 1 };			// upper left
+		pg->mesh->vertexUVs[j+1] = (TQ3Param2D) { 0, 0 };			// lower left
+		pg->mesh->vertexUVs[j+2] = (TQ3Param2D) { 1, 0 };			// lower right
+		pg->mesh->vertexUVs[j+3] = (TQ3Param2D) { 1, 1 };			// upper right
+	}
+
+			/* INIT TRIANGLE ARRAYS */
+
+	for (int j = 0, k = 0; j < (MAX_PARTICLES*2); j += 2, k += 4)
+	{
+		pg->mesh->triangles[j].pointIndices[0] = k;				// triangle A
+		pg->mesh->triangles[j].pointIndices[1] = k+1;
+		pg->mesh->triangles[j].pointIndices[2] = k+2;
+
+		pg->mesh->triangles[j+1].pointIndices[0] = k;				// triangle B
+		pg->mesh->triangles[j+1].pointIndices[1] = k+2;
+		pg->mesh->triangles[j+1].pointIndices[2] = k+3;
+	}
+}
+
 /************************ INIT PARTICLE SYSTEM **************************/
 
 void InitParticleSystem(void)
 {
 			/* INIT GROUP ARRAY */
 
-	for (int i = 0; i < MAX_PARTICLE_GROUPS; i++)
+	if (!gParticleGroupsInitialized)
 	{
-		gParticleGroups[i] = nil;
+		for (int i = 0; i < MAX_PARTICLE_GROUPS; i++)
+		{
+			InitParticleGroup(&gParticleGroups[i]);
+		}
+		gParticleGroupsInitialized = true;
 	}
 
 			/* LOAD PARTICLE TEXTURES */
@@ -166,9 +214,20 @@ void InitParticleSystem(void)
 
 void DeleteAllParticleGroups(void)
 {
-	for (int i = 0; i < MAX_PARTICLE_GROUPS; i++)
+	if (gParticleGroupsInitialized)
 	{
-		DeleteParticleGroup(i);
+		for (int i = 0; i < MAX_PARTICLE_GROUPS; i++)
+		{
+			gParticleGroups[i].isGroupActive = false;
+
+			// Free mesh memory
+			if (gParticleGroups[i].mesh)
+			{
+				Q3TriMeshData_Dispose(gParticleGroups[i].mesh);
+				gParticleGroups[i].mesh = nil;
+			}
+		}
+		gParticleGroupsInitialized = false;
 	}
 
 	// Also delete textures
@@ -180,26 +239,6 @@ void DeleteAllParticleGroups(void)
 			gParticleShader[i] = 0;
 		}
 		gParticleShadersLoaded = false;
-	}
-}
-
-
-/******************* DELETE PARTICLE GROUP ***********************/
-
-static void DeleteParticleGroup(int groupNum)
-{
-	if (gParticleGroups[groupNum])
-	{
-			/* NUKE TRIMESH DATA */
-
-		Q3TriMeshData_Dispose(gParticleGroups[groupNum]->mesh);
-		gParticleGroups[groupNum]->mesh = nil;
-
-
-				/* NUKE GROUP ITSELF */
-
-		DisposePtr((Ptr)gParticleGroups[groupNum]);
-		gParticleGroups[groupNum] = nil;
 	}
 }
 
@@ -224,7 +263,8 @@ int NewParticleGroup(
 {
 int						pgSlot = 0;
 ParticleGroupType		*pg = NULL;
-TQ3TriMeshData			*tm = NULL;
+
+	GAME_ASSERT(gParticleGroupsInitialized);
 
 			/*************************/
 			/* SCAN FOR A FREE GROUP */
@@ -232,7 +272,7 @@ TQ3TriMeshData			*tm = NULL;
 
 	for (pgSlot = 0; pgSlot < MAX_PARTICLE_GROUPS; pgSlot++)
 	{
-		if (gParticleGroups[pgSlot] == nil)
+		if (!gParticleGroups[pgSlot].isGroupActive)
 			goto got_it;
 	}
 
@@ -242,18 +282,13 @@ TQ3TriMeshData			*tm = NULL;
 	return -1;
 
 got_it:
-			/* FOUND FREE SLOT FOR PARTICLE GROUP; ALLOCATE NEW GROUP */
-
-	pg = (ParticleGroupType *) NewPtrClear(sizeof(ParticleGroupType));
-	gParticleGroups[pgSlot] = pg;
-	GAME_ASSERT(pg);										// out of memory?
-
+	pg = &gParticleGroups[pgSlot];
 
 			/* INITIALIZE THE GROUP */
 
+	pg->isGroupActive = true;									// mark group as active
 	pg->type = type;										// set type
-	for (int p = 0; p < MAX_PARTICLES; p++)					// mark all unused
-		pg->isUsed[p] = false;
+	memset(pg->isUsed, 0, sizeof(pg->isUsed));				// mark all unused
 
 	pg->flags = flags;
 	pg->gravity = gravity;
@@ -264,40 +299,10 @@ got_it:
 	pg->magicNum = magicNum;
 	pg->particleTextureNum = particleTextureNum;
 
-
 			/* INIT THE GROUP'S TRIMESH STRUCTURE */
 
-	tm = Q3TriMeshData_New(MAX_PARTICLES*2, MAX_PARTICLES*4, kQ3TriMeshDataFeatureVertexUVs | kQ3TriMeshDataFeatureVertexColors);
-	pg->mesh = tm;
-
-	tm->texturingMode = kQ3TexturingModeAlphaBlend;
-	tm->glTextureName = gParticleShader[particleTextureNum];
-
-	tm->bBox.isEmpty 			= kQ3False;
-
-
-				/* INIT UV ARRAYS */
-
-	for (int j = 0; j < (MAX_PARTICLES*4); j += 4)
-	{
-		tm->vertexUVs[j+0] = (TQ3Param2D) { 0, 1 };			// upper left
-		tm->vertexUVs[j+1] = (TQ3Param2D) { 0, 0 };			// lower left
-		tm->vertexUVs[j+2] = (TQ3Param2D) { 1, 0 };			// lower right
-		tm->vertexUVs[j+3] = (TQ3Param2D) { 1, 1 };			// upper right
-	}
-
-				/* INIT TRIANGLE ARRAYS */
-
-	for (int j = 0, k = 0; j < (MAX_PARTICLES*2); j += 2, k += 4)
-	{
-		tm->triangles[j].pointIndices[0] = k;				// triangle A
-		tm->triangles[j].pointIndices[1] = k+1;
-		tm->triangles[j].pointIndices[2] = k+2;
-
-		tm->triangles[j+1].pointIndices[0] = k;				// triangle B
-		tm->triangles[j+1].pointIndices[1] = k+2;
-		tm->triangles[j+1].pointIndices[2] = k+3;
-	}
+	pg->mesh->texturingMode = kQ3TexturingModeAlphaBlend;
+	pg->mesh->glTextureName = gParticleShader[particleTextureNum];
 
 	return pgSlot;
 }
@@ -310,11 +315,14 @@ got_it:
 
 bool AddParticleToGroup(int groupNum, TQ3Point3D *where, TQ3Vector3D *delta, float scale, float alpha)
 {
+ParticleGroupType* pg;
 int p;
 
 	GAME_ASSERT((groupNum >= 0) && (groupNum < MAX_PARTICLE_GROUPS));
 
-	if (gParticleGroups[groupNum] == nil)
+	pg = &gParticleGroups[groupNum];
+
+	if (!pg->isGroupActive)
 	{
 		return(true);
 //		DoAlert("AddParticleToGroup: this group is nil");
@@ -326,7 +334,7 @@ int p;
 
 	for (p = 0; p < MAX_PARTICLES; p++)
 	{
-		if (!gParticleGroups[groupNum]->isUsed[p])
+		if (!pg->isUsed[p])
 			goto got_it;
 	}
 
@@ -337,12 +345,12 @@ int p;
 
 			/* INIT PARAMETERS */
 got_it:
-	gParticleGroups[groupNum]->alpha[p] = alpha;
-	gParticleGroups[groupNum]->scale[p] = scale;
-	gParticleGroups[groupNum]->coord[p] = *where;
-	gParticleGroups[groupNum]->delta[p] = *delta;	
-	gParticleGroups[groupNum]->isUsed[p] = true;
-	
+	pg->alpha[p] = alpha;
+	pg->scale[p] = scale;
+	pg->coord[p] = *where;
+	pg->delta[p] = *delta;
+	pg->isUsed[p] = true;
+
 	return(false);
 }
 
@@ -351,6 +359,7 @@ got_it:
 
 void MoveParticleGroups(void)
 {
+ParticleGroupType* pg;
 Byte		flags;
 float		fps = gFramesPerSecondFrac;
 float		y,baseScale,oneOverBaseScaleSquared,gravity;
@@ -360,208 +369,209 @@ TQ3Vector3D	*delta;
 
 	for (int i = 0; i < MAX_PARTICLE_GROUPS; i++)
 	{
-		if (gParticleGroups[i])
+		pg = &gParticleGroups[i];
+		if (!pg->isGroupActive)
+			continue;
+
+		baseScale 	= pg->baseScale;					// get base scale
+		oneOverBaseScaleSquared = 1.0f/(baseScale*baseScale);
+		gravity 	= pg->gravity;						// get gravity
+		decayRate 	= pg->decayRate;					// get decay rate
+		fadeRate 	= pg->fadeRate;						// get fade rate
+		magnetism 	= pg->magnetism;					// get magnetism
+		flags 		= pg->flags;
+
+		int n = 0;										// init counter
+		for (int p = 0; p < MAX_PARTICLES; p++)
 		{
-			baseScale 	= gParticleGroups[i]->baseScale;					// get base scale
-			oneOverBaseScaleSquared = 1.0f/(baseScale*baseScale);
-			gravity 	= gParticleGroups[i]->gravity;						// get gravity
-			decayRate 	= gParticleGroups[i]->decayRate;					// get decay rate
-			fadeRate 	= gParticleGroups[i]->fadeRate;						// get fade rate
-			magnetism 	= gParticleGroups[i]->magnetism;					// get magnetism
-			flags 		= gParticleGroups[i]->flags;
-			
-			int n = 0;														// init counter
-			for (int p = 0; p < MAX_PARTICLES; p++)
-			{
-				if (!gParticleGroups[i]->isUsed[p])							// make sure this particle is used
-					continue;
-				
-				n++;														// inc counter
-				delta = &gParticleGroups[i]->delta[p];						// get ptr to deltas
-				coord = &gParticleGroups[i]->coord[p];						// get ptr to coords
-				
+			if (!pg->isUsed[p])							// make sure this particle is used
+				continue;
+
+			n++;										// inc counter
+			delta = &pg->delta[p];						// get ptr to deltas
+			coord = &pg->coord[p];						// get ptr to coords
+
 							/* ADD GRAVITY */
-							
-				delta->y -= gravity * fps;									// add gravity
-				
-				
-				
-				switch(gParticleGroups[i]->type)
-				{
+
+			delta->y -= gravity * fps;									// add gravity
+
+
+
+			switch (pg->type)
+			{
 							/* FALLING SPARKS */
-							
-					case	PARTICLE_TYPE_FALLINGSPARKS:
-							coord->x += delta->x * fps;						// move it
-							coord->y += delta->y * fps;
-							coord->z += delta->z * fps;
-							break;
+
+				case	PARTICLE_TYPE_FALLINGSPARKS:
+						coord->x += delta->x * fps;						// move it
+						coord->y += delta->y * fps;
+						coord->z += delta->z * fps;
+						break;
 
 
 							/* GRAVITOIDS */
 							//
 							// Every particle has gravity pull on other particle
 							//
-							
-					case	PARTICLE_TYPE_GRAVITOIDS:
-							for (int j = MAX_PARTICLES-1; j >= 0; j--)
+
+				case	PARTICLE_TYPE_GRAVITOIDS:
+						for (int j = MAX_PARTICLES-1; j >= 0; j--)
+						{
+							float		dist,temp,x,z;
+							TQ3Vector3D	v;
+
+							if (p==j)									// dont check against self
+								continue;
+							if (!pg->isUsed[j])							// make sure this particle is used
+								continue;
+
+							x = pg->coord[j].x;
+							y = pg->coord[j].y;
+							z = pg->coord[j].z;
+
+									/* calc 1/(dist2) */
+
+							if (i < j)									// see if calc or get from buffer
 							{
-								float		dist,temp,x,z;
-								TQ3Vector3D	v;
-								
-								if (p==j)									// dont check against self
-									continue;
-								if (!gParticleGroups[i]->isUsed[j])			// make sure this particle is used
-									continue;
-															
-								x = gParticleGroups[i]->coord[j].x;
-								y = gParticleGroups[i]->coord[j].y;
-								z = gParticleGroups[i]->coord[j].z;
-								
-										/* calc 1/(dist2) */
-							
-								if (i < j)									// see if calc or get from buffer
-								{
-									temp = coord->x - x;					// dx squared
-									dist = temp*temp;
-									temp = coord->y - y;					// dy squared
-									dist += temp*temp;
-									temp = coord->z - z;					// dz squared
-									dist += temp*temp;
-									
-									dist = sqrt(dist);						// 1/dist2
-									if (dist != 0.0f)
-										dist = 1.0f / (dist*dist);  
+								temp = coord->x - x;					// dx squared
+								dist = temp*temp;
+								temp = coord->y - y;					// dy squared
+								dist += temp*temp;
+								temp = coord->z - z;					// dz squared
+								dist += temp*temp;
 
-									if (dist > oneOverBaseScaleSquared)		// adjust if closer than radius
-										dist = oneOverBaseScaleSquared;
-
-									gGravitoidDistBuffer[i][j] = dist;		// remember it
-								}
-								else
-								{
-									dist = gGravitoidDistBuffer[j][i];		// use from buffer
-								}
-								
-											/* calc vector to particle */
-											
+								dist = sqrtf(dist);						// 1/dist2
 								if (dist != 0.0f)
-								{
-									x = x - coord->x;
-									y = y - coord->y;
-									z = z - coord->z;
-									FastNormalizeVector(x, y, z, &v);
-								}
-								else
-								{
-									v.x = v.y = v.z = 0;
-								}
-																
-								delta->x += v.x * (dist * magnetism * fps);		// apply gravity to particle
-								delta->y += v.y * (dist * magnetism * fps);
-								delta->z += v.z * (dist * magnetism * fps);
+									dist = 1.0f / (dist*dist);
+
+								if (dist > oneOverBaseScaleSquared)		// adjust if closer than radius
+									dist = oneOverBaseScaleSquared;
+
+								gGravitoidDistBuffer[i][j] = dist;		// remember it
 							}
-														
-							coord->x += delta->x * fps;						// move it
-							coord->y += delta->y * fps;
-							coord->z += delta->z * fps;
-							break;							
-				}
-				
-				
-				if (gFloorMap)					// only do these checks if there's a terrain floor
-				{
+							else
+							{
+								dist = gGravitoidDistBuffer[j][i];		// use from buffer
+							}
+
+										/* calc vector to particle */
+
+							if (dist != 0.0f)
+							{
+								x = x - coord->x;
+								y = y - coord->y;
+								z = z - coord->z;
+								FastNormalizeVector(x, y, z, &v);
+							}
+							else
+							{
+								v.x = v.y = v.z = 0;
+							}
+
+							delta->x += v.x * (dist * magnetism * fps);		// apply gravity to particle
+							delta->y += v.y * (dist * magnetism * fps);
+							delta->z += v.z * (dist * magnetism * fps);
+						}
+
+						coord->x += delta->x * fps;						// move it
+						coord->y += delta->y * fps;
+						coord->z += delta->z * fps;
+						break;
+			}
+
+
+			if (gFloorMap)					// only do these checks if there's a terrain floor
+			{
 					/*****************/
 					/* SEE IF BOUNCE */
 					/*****************/
-					
-					if (flags & PARTICLE_FLAGS_BOUNCE)
+
+				if (flags & PARTICLE_FLAGS_BOUNCE)
+				{
+					if (delta->y < 0.0f)							// if moving down, see if hit floor
 					{
-						if (delta->y < 0.0f)							// if moving down, see if hit floor
+						y = GetTerrainHeightAtCoord(coord->x, coord->z, FLOOR)+10.0f;	// see if hit floor
+						if (coord->y < y)
 						{
-							y = GetTerrainHeightAtCoord(coord->x, coord->z, FLOOR)+10.0f;	// see if hit floor
-							if (coord->y < y)
-							{
-								coord->y = y;
-								delta->y *= -.4f;
-								
-								delta->x += gRecentTerrainNormal[FLOOR].x * 300.0f;	// reflect off of surface
-								delta->z += gRecentTerrainNormal[FLOOR].z * 300.0f;
-							}
+							coord->y = y;
+							delta->y *= -.4f;
+
+							delta->x += gRecentTerrainNormal[FLOOR].x * 300.0f;	// reflect off of surface
+							delta->z += gRecentTerrainNormal[FLOOR].z * 300.0f;
 						}
 					}
-					
-					
+				}
+
+
 					/**********************/
 					/* SEE IF HURT PLAYER */
 					/**********************/
-					
-					if (flags & PARTICLE_FLAGS_HURTPLAYER)
-					{					
-						if (DoSimpleBoxCollisionAgainstPlayer(coord->y+30.0f,coord->y-30.0f,
-															coord->x-30.0f, coord->x+30.0f,
-															coord->z+30.0f, coord->z-30.0f))
-						{
-							if (flags & PARTICLE_FLAGS_HURTPLAYERBAD)					// hurt really bad!
-							{
-								PlayerGotHurt(nil, 1.0, false, false, false,.5);		// hurt enough to kill!
-								if (gPlayerGotKilledFlag)
-									gTorchPlayer = true;
-							}
-							else														// normal hurt
-							{
-								if (gPlayerMode == PLAYER_MODE_BALL)					// ball gets hurt less
-									PlayerGotHurt(nil, .1, false, false, false,1.2);	
-								else
-									PlayerGotHurt(nil, .15, false, false, false,1.2);	
-							}
-						}
-					}
-				}
-				
-				if (gCeilingMap)
+
+				if (flags & PARTICLE_FLAGS_HURTPLAYER)
 				{
-						/* SEE IF HIT CEILING */
-					
-					if (flags & PARTICLE_FLAGS_ROOF)
+					if (DoSimpleBoxCollisionAgainstPlayer(coord->y+30.0f,coord->y-30.0f,
+														coord->x-30.0f, coord->x+30.0f,
+														coord->z+30.0f, coord->z-30.0f))
 					{
-						if (delta->y > 0.0f)							// if moving up, see if hit ceiling
+						if (flags & PARTICLE_FLAGS_HURTPLAYERBAD)					// hurt really bad!
 						{
-							y = GetTerrainHeightAtCoord(coord->x, coord->z, CEILING)-10.0f;	// see if hit ceiling
-							if (coord->y > y)
-							{
-								coord->y = y;
-								delta->x += gRecentTerrainNormal[FLOOR].x * 1000.0f;	// reflect off of surface
-								delta->z += gRecentTerrainNormal[FLOOR].z * 1000.0f;
-							}
+							PlayerGotHurt(nil, 1.0, false, false, false,.5);		// hurt enough to kill!
+							if (gPlayerGotKilledFlag)
+								gTorchPlayer = true;
+						}
+						else														// normal hurt
+						{
+							if (gPlayerMode == PLAYER_MODE_BALL)					// ball gets hurt less
+								PlayerGotHurt(nil, .1, false, false, false,1.2);
+							else
+								PlayerGotHurt(nil, .15, false, false, false,1.2);
 						}
 					}
 				}
-				
+			}
+
+			if (gCeilingMap)
+			{
+						/* SEE IF HIT CEILING */
+
+				if (flags & PARTICLE_FLAGS_ROOF)
+				{
+					if (delta->y > 0.0f)							// if moving up, see if hit ceiling
+					{
+						y = GetTerrainHeightAtCoord(coord->x, coord->z, CEILING)-10.0f;	// see if hit ceiling
+						if (coord->y > y)
+						{
+							coord->y = y;
+							delta->x += gRecentTerrainNormal[FLOOR].x * 1000.0f;	// reflect off of surface
+							delta->z += gRecentTerrainNormal[FLOOR].z * 1000.0f;
+						}
+					}
+				}
+			}
+
 				/***************/
 				/* SEE IF GONE */
 				/***************/
-				
+
 					/* DO SCALE */
-					
-				gParticleGroups[i]->scale[p] -= decayRate * fps;			// shrink it							
-				if (gParticleGroups[i]->scale[p] <= 0.0f)					// see if gone
-					gParticleGroups[i]->isUsed[p] = false;				
+
+			pg->scale[p] -= decayRate * fps;			// shrink it
+			if (pg->scale[p] <= 0.0f)					// see if gone
+				pg->isUsed[p] = false;
 
 					/* DO FADE */
-					
-				gParticleGroups[i]->alpha[p] -= fadeRate * fps;				// fade it							
-				if (gParticleGroups[i]->alpha[p] <= 0.0f)					// see if gone
-					gParticleGroups[i]->isUsed[p] = false;				
-					
-					
-			}
-			
+
+			pg->alpha[p] -= fadeRate * fps;				// fade it
+			if (pg->alpha[p] <= 0.0f)					// see if gone
+				pg->isUsed[p] = false;
+
+
+		}
+
 				/* SEE IF GROUP WAS EMPTY, THEN DELETE */
-					
-			if (n == 0)
-			{
-				DeleteParticleGroup(i);
-			}
+
+		if (n == 0)
+		{
+			pg->isGroupActive = false;
 		}
 	}
 }
@@ -571,6 +581,7 @@ TQ3Vector3D	*delta;
 
 void DrawParticleGroup(const QD3DSetupOutputType *setupInfo)
 {
+ParticleGroupType *pg;
 float			baseScale;
 TQ3TriMeshData	*tm;
 TQ3Point3D		v[4],*camCoords,*coord;
@@ -587,86 +598,87 @@ static const TQ3Vector3D up = {0,1,0};
 	{
 		float	minX,minY,minZ,maxX,maxY,maxZ;
 
-		if (gParticleGroups[g])
-		{
-			tm = gParticleGroups[g]->mesh;									// get pointer to trimesh data
-			baseScale = gParticleGroups[g]->baseScale;						// get base scale
+		pg = &gParticleGroups[g];
+		if (!pg->isGroupActive)
+			continue;
+
+		tm = pg->mesh;									// get pointer to trimesh data
+		baseScale = pg->baseScale;						// get base scale
 
 					/********************************/
 					/* ADD ALL PARTICLES TO TRIMESH */
 					/********************************/
 
-			minX = minY = minZ = 100000000;									// init bbox
-			maxX = maxY = maxZ = -minX;
+		minX = minY = minZ = 100000000;					// init bbox
+		maxX = maxY = maxZ = -minX;
 
-			int n = 0;
-			for (int p = 0; p < MAX_PARTICLES; p++)
-			{
-				if (!gParticleGroups[g]->isUsed[p])							// make sure this particle is used
-					continue;
+		int n = 0;
+		for (int p = 0; p < MAX_PARTICLES; p++)
+		{
+			if (!pg->isUsed[p])							// make sure this particle is used
+				continue;
 
 					/* TRANSFORM PARTICLE POSITION */
 
-				coord = &gParticleGroups[g]->coord[p];
-				SetLookAtMatrixAndTranslate(&m, &up, coord, camCoords);
+			coord = &pg->coord[p];
+			SetLookAtMatrixAndTranslate(&m, &up, coord, camCoords);
 
 					/* CULL PARTICLE TO AVOID OVERDRAW (SOURCE PORT ADD) */
 
-				if (!IsSphereInFrustum_XYZ(coord, 0))						// radius 0: cull somewhat aggressively
-				{															// (use negative radius to cull even more)
-					continue;
-				}
+			if (!IsSphereInFrustum_XYZ(coord, 0))		// radius 0: cull somewhat aggressively
+			{											// (use negative radius to cull even more)
+				continue;
+			}
 
 					/* TRANSFORM PARTICLE VERTICES & ADD TO TRIMESH */
 
-				const float S = baseScale * gParticleGroups[g]->scale[p];
-				v[0] = (TQ3Point3D) {  S, S, 0 };
-				v[1] = (TQ3Point3D) {  S,-S, 0 };
-				v[2] = (TQ3Point3D) { -S,-S, 0 };
-				v[3] = (TQ3Point3D) { -S, S, 0 };
+			const float S = baseScale * pg->scale[p];
+			v[0] = (TQ3Point3D) {  S, S, 0 };
+			v[1] = (TQ3Point3D) {  S,-S, 0 };
+			v[2] = (TQ3Point3D) { -S,-S, 0 };
+			v[3] = (TQ3Point3D) { -S, S, 0 };
 
-				Q3Point3D_To3DTransformArray(&v[0], &m, &tm->points[n*4], 4);//, sizeof(TQ3Point3D), sizeof(TQ3Point3D));
+			Q3Point3D_To3DTransformArray(&v[0], &m, &tm->points[n*4], 4);
 
 					/* UPDATE BBOX */
 
-				for (int i = 0; i < 4; i++)
-				{
-					if (tm->points[n*4+i].x < minX) minX = tm->points[n*4+i].x;
-					if (tm->points[n*4+i].x > maxX) maxX = tm->points[n*4+i].x;
-					if (tm->points[n*4+i].y < minY) minY = tm->points[n*4+i].y;
-					if (tm->points[n*4+i].y > maxY) maxY = tm->points[n*4+i].y;
-					if (tm->points[n*4+i].z < minZ) minZ = tm->points[n*4+i].z;
-					if (tm->points[n*4+i].z > maxZ) maxZ = tm->points[n*4+i].z;
-				}
+			for (int i = 0; i < 4; i++)
+			{
+				if (tm->points[n*4+i].x < minX) minX = tm->points[n*4+i].x;
+				if (tm->points[n*4+i].x > maxX) maxX = tm->points[n*4+i].x;
+				if (tm->points[n*4+i].y < minY) minY = tm->points[n*4+i].y;
+				if (tm->points[n*4+i].y > maxY) maxY = tm->points[n*4+i].y;
+				if (tm->points[n*4+i].z < minZ) minZ = tm->points[n*4+i].z;
+				if (tm->points[n*4+i].z > maxZ) maxZ = tm->points[n*4+i].z;
+			}
 
 					/* UPDATE FACE TRANSPARENCY */
 
-				tm->vertexColors[n*4+0].a = gParticleGroups[g]->alpha[p];
-				tm->vertexColors[n*4+1].a = gParticleGroups[g]->alpha[p];
-				tm->vertexColors[n*4+2].a = gParticleGroups[g]->alpha[p];
-				tm->vertexColors[n*4+3].a = gParticleGroups[g]->alpha[p];
+			tm->vertexColors[n*4+0].a = pg->alpha[p];
+			tm->vertexColors[n*4+1].a = pg->alpha[p];
+			tm->vertexColors[n*4+2].a = pg->alpha[p];
+			tm->vertexColors[n*4+3].a = pg->alpha[p];
 
-				n++;											// inc particle count
-			}
+			n++;										// inc particle count
+		}
 
-			if (n == 0)											// if no particles, then skip
-				continue;
+		if (n == 0)										// if no particles, then skip
+			continue;
 
 				/* UPDATE FINAL VALUES */
 
-			tm->numTriangles = n*2;
-			tm->numPoints = n*4;
-			tm->bBox.min.x = minX;
-			tm->bBox.min.y = minY;
-			tm->bBox.min.z = minZ;
-			tm->bBox.max.x = maxX;
-			tm->bBox.max.y = maxY;
-			tm->bBox.max.z = maxZ;
+		tm->numTriangles = n*2;
+		tm->numPoints = n*4;
+		tm->bBox.min.x = minX;
+		tm->bBox.min.y = minY;
+		tm->bBox.min.z = minZ;
+		tm->bBox.max.x = maxX;
+		tm->bBox.max.y = maxY;
+		tm->bBox.max.z = maxZ;
 
 					/* DRAW IT */
 
-			Render_SubmitMesh(tm, nil, &kParticleGroupRenderingMods, nil);
-		}
+		Render_SubmitMesh(tm, nil, &kParticleGroupRenderingMods, nil);
 	}
 }
 
@@ -674,13 +686,7 @@ static const TQ3Vector3D up = {0,1,0};
 
 bool VerifyParticleGroupMagicNum(int group, uint32_t magicNum)
 {
-	if (gParticleGroups[group] == nil)
-		return(false);
-
-	if (gParticleGroups[group]->magicNum != magicNum)
-		return(false);
-
-	return(true);
+	return gParticleGroups[group].isGroupActive && gParticleGroups[group].magicNum == magicNum;
 }
 
 
@@ -695,24 +701,24 @@ TQ3Point3D	*coord;
 
 	for (int i = 0; i < MAX_PARTICLE_GROUPS; i++)
 	{
-		if (!gParticleGroups[i])									// see if group active
+		if (!gParticleGroups[i].isGroupActive)							// see if group active
 			continue;
 			
-		if (inFlags)												// see if check flags
+		if (inFlags &&												// see if check flags
+			!(inFlags & gParticleGroups[i].flags))
 		{
-			if (!(inFlags & gParticleGroups[i]->flags))
-				continue;
+			continue;
 		}
 
 		for (int p = 0; p < MAX_PARTICLES; p++)
 		{
-			if (!gParticleGroups[i]->isUsed[p])						// make sure this particle is used
+			if (!gParticleGroups[i].isUsed[p])						// make sure this particle is used
 				continue;
 
-			if (gParticleGroups[i]->alpha[p] < .4f)				// if particle is too decayed, then skip
+			if (gParticleGroups[i].alpha[p] < .4f)					// if particle is too decayed, then skip
 				continue;			 
 
-			coord = &gParticleGroups[i]->coord[p];					// get ptr to coords					
+			coord = &gParticleGroups[i].coord[p];					// get ptr to coords
 			if (DoSimpleBoxCollisionAgainstObject(coord->y+40.0f,coord->y-40.0f,
 												coord->x-40.0f, coord->x+40.0f,
 												coord->z+40.0f, coord->z-40.0f,
