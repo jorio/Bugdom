@@ -51,7 +51,7 @@ void InitWindowStuff(void)
 void GammaFadeOut(void)
 {
 #if ALLOW_FADE
-	Overlay_FadeOutFrozenFrame(.3f);
+	printf("TODO NOQUESA: fade out!\n");//Overlay_FadeOutFrozenFrame(.3f);
 	gGammaFadePercent = 0;
 #endif
 	FlushMouseButtonPress();
