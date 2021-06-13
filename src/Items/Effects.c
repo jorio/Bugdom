@@ -18,7 +18,7 @@
 
 
 static void MoveRipple(ObjNode *theNode);
-static void DeleteParticleGroup(long groupNum);
+static void DeleteParticleGroup(int groupNum);
 
 
 
@@ -32,10 +32,10 @@ static void DeleteParticleGroup(long groupNum);
 
 typedef struct
 {
-	u_long			magicNum;
-	Byte			isUsed[MAX_PARTICLES];
+	uint32_t		magicNum;
+	bool			isUsed[MAX_PARTICLES];
 	Byte			type;
-	Byte			flags;
+	uint8_t			flags;
 	Byte			particleTextureNum;
 	float			gravity;
 	float			magnetism;
@@ -47,7 +47,7 @@ typedef struct
 	float			scale[MAX_PARTICLES];
 	TQ3Point3D		coord[MAX_PARTICLES];
 	TQ3Vector3D		delta[MAX_PARTICLES];
-	TQ3TriMeshData	triMesh;
+	TQ3TriMeshData	*mesh;
 }ParticleGroupType;
 
 
@@ -59,9 +59,11 @@ typedef struct
 static ParticleGroupType	*gParticleGroups[MAX_PARTICLE_GROUPS];
 
 static Boolean				gParticleShadersLoaded = false;
-static TQ3AttributeSet		gParticleShader[NUM_PARTICLE_TEXTURES];
+static GLuint				gParticleShader[NUM_PARTICLE_TEXTURES];
 
 static float	gGravitoidDistBuffer[MAX_PARTICLES][MAX_PARTICLES];
+
+static RenderModifiers kParticleGroupRenderingMods;
 
 
 #pragma mark -
@@ -129,38 +131,34 @@ float	fps = gFramesPerSecondFrac;
 
 void InitParticleSystem(void)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-short	i;
-
 			/* INIT GROUP ARRAY */
 
-	for (i = 0; i < MAX_PARTICLE_GROUPS; i++)
+	for (int i = 0; i < MAX_PARTICLE_GROUPS; i++)
 	{
 		gParticleGroups[i] = nil;
 	}
-	
+
 			/* LOAD PARTICLE TEXTURES */
-			
+
 	if (!gParticleShadersLoaded)
 	{
-		for (i = 0; i < NUM_PARTICLE_TEXTURES; i++)
+		for (int i = 0; i < NUM_PARTICLE_TEXTURES; i++)
 		{
-			TQ3ShaderObject	shader;
-		
-			shader = QD3D_GetTextureMapFromPICTResource(130+i, false);	// make PICT into shader
-			GAME_ASSERT(shader);
-			
-			gParticleShader[i] = Q3AttributeSet_New();					// new attrib set
-			GAME_ASSERT(gParticleShader[i]);
-
-			Q3AttributeSet_Add(gParticleShader[i], kQ3AttributeTypeSurfaceShader, &shader);	// put shader in attrib set
-			Q3Object_Dispose(shader);														// nuke extra ref
+			gParticleShader[i] = QD3D_NumberedTGAToTexture(130+i, false, kRendererTextureFlags_ClampBoth);
 		}
-		
+
 		gParticleShadersLoaded = true;
 	}
-#endif
+
+
+	Render_SetDefaultModifiers(&kParticleGroupRenderingMods);
+	kParticleGroupRenderingMods.statusBits
+			|= STATUS_BIT_NOFOG
+			| STATUS_BIT_NOAA
+			| STATUS_BIT_NOZWRITE
+			| STATUS_BIT_NULLSHADER
+			| STATUS_BIT_GLOW
+			;
 }
 
 
@@ -168,42 +166,41 @@ short	i;
 
 void DeleteAllParticleGroups(void)
 {
-long	i;
-
-	for (i = 0; i < MAX_PARTICLE_GROUPS; i++)
+	for (int i = 0; i < MAX_PARTICLE_GROUPS; i++)
 	{
 		DeleteParticleGroup(i);
+	}
+
+	// Also delete textures
+	if (gParticleShadersLoaded)
+	{
+		for (int i = 0; i < NUM_PARTICLE_TEXTURES; i++)
+		{
+			glDeleteTextures(1, &gParticleShader[i]);
+			gParticleShader[i] = 0;
+		}
+		gParticleShadersLoaded = false;
 	}
 }
 
 
 /******************* DELETE PARTICLE GROUP ***********************/
 
-static void DeleteParticleGroup(long groupNum)
+static void DeleteParticleGroup(int groupNum)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-	TQ3TriMeshData	*tm;
-
 	if (gParticleGroups[groupNum])
 	{
 			/* NUKE TRIMESH DATA */
-			
-		tm = &gParticleGroups[groupNum]->triMesh;			// get pointer to trimesh data
-			
-		DisposePtr((Ptr)tm->triangles);
-		DisposePtr((Ptr)tm->points);
-		DisposePtr((Ptr)tm->vertexAttributeTypes[0].data);
-		DisposePtr((Ptr)tm->vertexAttributeTypes);
-		DisposePtr((Ptr)tm->triangleAttributeTypes[0].data);
-		DisposePtr((Ptr)tm->triangleAttributeTypes);
+
+		Q3TriMeshData_Dispose(gParticleGroups[groupNum]->mesh);
+		gParticleGroups[groupNum]->mesh = nil;
+
 
 				/* NUKE GROUP ITSELF */
-					
+
 		DisposePtr((Ptr)gParticleGroups[groupNum]);
 		gParticleGroups[groupNum] = nil;
 	}
-#endif
 }
 
 
@@ -214,115 +211,95 @@ static void DeleteParticleGroup(long groupNum)
 // OUTPUT:	group ID#
 //
 
-short NewParticleGroup(u_long magicNum, Byte type, Byte flags, float gravity, float magnetism,
-					 float baseScale, float decayRate, float fadeRate, Byte particleTextureNum)
+int NewParticleGroup(
+		uint32_t magicNum,
+		Byte type,
+		Byte flags,
+		float gravity,
+		float magnetism,
+		float baseScale,
+		float decayRate,
+		float fadeRate,
+		Byte particleTextureNum)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-	return -1;
-#if 0	// NOQUESA
-short					p,i,j,k;
-TQ3TriMeshData			*tm;
-TQ3TriMeshTriangleData	*t;
-TQ3Param2D				*uv;
+int						pgSlot = 0;
+ParticleGroupType		*pg = NULL;
+TQ3TriMeshData			*tm = NULL;
 
 			/*************************/
 			/* SCAN FOR A FREE GROUP */
 			/*************************/
-			
-	for (i = 0; i < MAX_PARTICLE_GROUPS; i++)
+
+	for (pgSlot = 0; pgSlot < MAX_PARTICLE_GROUPS; pgSlot++)
 	{
-		if (gParticleGroups[i] == nil)
-		{
-				/* ALLOCATE NEW GROUP */
-				
-			gParticleGroups[i] = (ParticleGroupType *)AllocPtr(sizeof(ParticleGroupType));
-			if (gParticleGroups[i] == nil)
-				return(-1);									// out of memory
-
-			
-				/* INITIALIZE THE GROUP */
-			
-			gParticleGroups[i]->type = type;						// set type
-			for (p = 0; p < MAX_PARTICLES; p++)						// mark all unused
-				gParticleGroups[i]->isUsed[p] = false;
-			
-			gParticleGroups[i]->flags = flags;
-			gParticleGroups[i]->gravity = gravity;
-			gParticleGroups[i]->magnetism = magnetism;
-			gParticleGroups[i]->baseScale = baseScale;
-			gParticleGroups[i]->decayRate = decayRate;
-			gParticleGroups[i]->fadeRate = fadeRate;
-			gParticleGroups[i]->magicNum = magicNum;
-			gParticleGroups[i]->particleTextureNum = particleTextureNum;
-			
-			
-				/* INIT THE GROUP'S TRIMESH STRUCTURE */
-			
-			tm = &gParticleGroups[i]->triMesh;						// get pointer to trimesh data
-			
-			tm->triMeshAttributeSet 	= gParticleShader[particleTextureNum];
-			tm->triangles 				= (TQ3TriMeshTriangleData *)AllocPtr(sizeof(TQ3TriMeshTriangleData) * MAX_PARTICLES * 2);
-			tm->numTriangleAttributeTypes = 1;
-			tm->numEdges 				= 0;
-			tm->edges 					= nil;
-			tm->numEdgeAttributeTypes	= 0;
-			tm->edgeAttributeTypes 		= 0;
-			tm->points 					= (TQ3Point3D *)AllocPtr(sizeof(TQ3Point3D) * MAX_PARTICLES * 4);
-			tm->numVertexAttributeTypes = 1;
-
-			tm->vertexAttributeTypes						= (TQ3TriMeshAttributeData *)AllocPtr(sizeof(TQ3TriMeshAttributeData) * tm->numVertexAttributeTypes);
-			tm->vertexAttributeTypes[0].attributeType 		= kQ3AttributeTypeSurfaceUV;
-			tm->vertexAttributeTypes[0].attributeUseArray 	= nil;
-			tm->vertexAttributeTypes[0].data 				= (TQ3Param2D *)AllocPtr(sizeof(TQ3Param2D) * MAX_PARTICLES * 4);
-			GAME_ASSERT(tm->vertexAttributeTypes[0].data);
-
-			tm->triangleAttributeTypes						= (TQ3TriMeshAttributeData *)AllocPtr(sizeof(TQ3TriMeshAttributeData) * tm->numTriangleAttributeTypes);
-			tm->triangleAttributeTypes[0].attributeType 	= kQ3AttributeTypeTransparencyColor;
-			tm->triangleAttributeTypes[0].attributeUseArray = nil;
-			tm->triangleAttributeTypes[0].data 				= (TQ3ColorRGB *)AllocPtr(sizeof(TQ3ColorRGB) * MAX_PARTICLES * 2);
-			GAME_ASSERT(tm->triangleAttributeTypes[0].data);
-
-			tm->bBox.isEmpty 			= kQ3False;
-
-			
-					/* INIT UV ARRAYS */
-					
-			uv = (TQ3Param2D *)tm->vertexAttributeTypes[0].data;
-			for (j=0; j < (MAX_PARTICLES*4); j+=4)
-			{
-				uv[j].u = 0;									// upper left
-				uv[j].v = 1;
-				uv[j+1].u = 0;									// lower left
-				uv[j+1].v = 0;	
-				uv[j+2].u = 1;									// lower right
-				uv[j+2].v = 0;	
-				uv[j+3].u = 1;									// upper right
-				uv[j+3].v = 1;				
-			}
-						
-					/* INIT TRIANGLE ARRAYS */
-					
-			t = tm->triangles;
-			for (j = k = 0; j < (MAX_PARTICLES*2); j+=2, k+=4)
-			{
-				t[j].pointIndices[0] = k;							// triangle A
-				t[j].pointIndices[1] = k+1;
-				t[j].pointIndices[2] = k+2;
-
-				t[j+1].pointIndices[0] = k;							// triangle B
-				t[j+1].pointIndices[1] = k+2;
-				t[j+1].pointIndices[2] = k+3;			
-			}
-			
-			return(i);
-		}
+		if (gParticleGroups[pgSlot] == nil)
+			goto got_it;
 	}
-	
+
 			/* NOTHING FREE */
-			
+
 //	DoFatalAlert("NewParticleGroup: no free groups!");
-	return(-1);
-#endif
+	return -1;
+
+got_it:
+			/* FOUND FREE SLOT FOR PARTICLE GROUP; ALLOCATE NEW GROUP */
+
+	pg = (ParticleGroupType *) NewPtrClear(sizeof(ParticleGroupType));
+	gParticleGroups[pgSlot] = pg;
+	GAME_ASSERT(pg);										// out of memory?
+
+
+			/* INITIALIZE THE GROUP */
+
+	pg->type = type;										// set type
+	for (int p = 0; p < MAX_PARTICLES; p++)					// mark all unused
+		pg->isUsed[p] = false;
+
+	pg->flags = flags;
+	pg->gravity = gravity;
+	pg->magnetism = magnetism;
+	pg->baseScale = baseScale;
+	pg->decayRate = decayRate;
+	pg->fadeRate = fadeRate;
+	pg->magicNum = magicNum;
+	pg->particleTextureNum = particleTextureNum;
+
+
+			/* INIT THE GROUP'S TRIMESH STRUCTURE */
+
+	tm = Q3TriMeshData_New(MAX_PARTICLES*2, MAX_PARTICLES*4, kQ3TriMeshDataFeatureVertexUVs | kQ3TriMeshDataFeatureVertexColors);
+	pg->mesh = tm;
+
+	tm->texturingMode = kQ3TexturingModeAlphaBlend;
+	tm->glTextureName = gParticleShader[particleTextureNum];
+
+	tm->bBox.isEmpty 			= kQ3False;
+
+
+				/* INIT UV ARRAYS */
+
+	for (int j = 0; j < (MAX_PARTICLES*4); j += 4)
+	{
+		tm->vertexUVs[j+0] = (TQ3Param2D) { 0, 1 };			// upper left
+		tm->vertexUVs[j+1] = (TQ3Param2D) { 0, 0 };			// lower left
+		tm->vertexUVs[j+2] = (TQ3Param2D) { 1, 0 };			// lower right
+		tm->vertexUVs[j+3] = (TQ3Param2D) { 1, 1 };			// upper right
+	}
+
+				/* INIT TRIANGLE ARRAYS */
+
+	for (int j = 0, k = 0; j < (MAX_PARTICLES*2); j += 2, k += 4)
+	{
+		tm->triangles[j].pointIndices[0] = k;				// triangle A
+		tm->triangles[j].pointIndices[1] = k+1;
+		tm->triangles[j].pointIndices[2] = k+2;
+
+		tm->triangles[j+1].pointIndices[0] = k;				// triangle B
+		tm->triangles[j+1].pointIndices[1] = k+2;
+		tm->triangles[j+1].pointIndices[2] = k+3;
+	}
+
+	return pgSlot;
 }
 
 
@@ -331,9 +308,9 @@ TQ3Param2D				*uv;
 // Returns true if particle group was invalid or is full.
 //
 
-Boolean AddParticleToGroup(short groupNum, TQ3Point3D *where, TQ3Vector3D *delta, float scale, float alpha)
+bool AddParticleToGroup(int groupNum, TQ3Point3D *where, TQ3Vector3D *delta, float scale, float alpha)
 {
-short	p;
+int p;
 
 	GAME_ASSERT((groupNum >= 0) && (groupNum < MAX_PARTICLE_GROUPS));
 
@@ -346,15 +323,15 @@ short	p;
 
 
 			/* SCAN FOR FREE SLOT */
-			
+
 	for (p = 0; p < MAX_PARTICLES; p++)
 	{
 		if (!gParticleGroups[groupNum]->isUsed[p])
 			goto got_it;
 	}
-	
+
 			/* NO FREE SLOTS */
-			
+
 	return(true);
 
 
@@ -375,14 +352,13 @@ got_it:
 void MoveParticleGroups(void)
 {
 Byte		flags;
-long		i,n,p,j;
 float		fps = gFramesPerSecondFrac;
 float		y,baseScale,oneOverBaseScaleSquared,gravity;
 float		decayRate,magnetism,fadeRate;
 TQ3Point3D	*coord;
 TQ3Vector3D	*delta;
 
-	for (i = 0; i < MAX_PARTICLE_GROUPS; i++)
+	for (int i = 0; i < MAX_PARTICLE_GROUPS; i++)
 	{
 		if (gParticleGroups[i])
 		{
@@ -394,8 +370,8 @@ TQ3Vector3D	*delta;
 			magnetism 	= gParticleGroups[i]->magnetism;					// get magnetism
 			flags 		= gParticleGroups[i]->flags;
 			
-			n = 0;															// init counter
-			for (p = 0; p < MAX_PARTICLES; p++)
+			int n = 0;														// init counter
+			for (int p = 0; p < MAX_PARTICLES; p++)
 			{
 				if (!gParticleGroups[i]->isUsed[p])							// make sure this particle is used
 					continue;
@@ -427,7 +403,7 @@ TQ3Vector3D	*delta;
 							//
 							
 					case	PARTICLE_TYPE_GRAVITOIDS:
-							for (j = MAX_PARTICLES-1; j >= 0; j--)
+							for (int j = MAX_PARTICLES-1; j >= 0; j--)
 							{
 								float		dist,temp,x,z;
 								TQ3Vector3D	v;
@@ -595,56 +571,42 @@ TQ3Vector3D	*delta;
 
 void DrawParticleGroup(const QD3DSetupOutputType *setupInfo)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
 float			baseScale;
-long			g,p,n,i;
-TQ3ColorRGB		*faceColor;
 TQ3TriMeshData	*tm;
 TQ3Point3D		v[4],*camCoords,*coord;
 TQ3Matrix4x4	m;
 static const TQ3Vector3D up = {0,1,0};
-TQ3ViewObject	view = setupInfo->viewObject;
 
 
 				/* SETUP ENVIRONTMENT */
-				
-	QD3D_DisableFog(setupInfo);
-	Q3Shader_Submit(setupInfo->nullShaderObject, view);							// use null shader
-	QD3D_SetZWrite(false);
-	QD3D_SetAdditiveBlending(true);
-	QD3D_SetTriangleCacheMode(false);
-	QD3D_SetMultisampling(false);
 
 
 	camCoords = &gGameViewInfoPtr->currentCameraCoords;	
 
-	for (g = 0; g < MAX_PARTICLE_GROUPS; g++)
+	for (int g = 0; g < MAX_PARTICLE_GROUPS; g++)
 	{
 		float	minX,minY,minZ,maxX,maxY,maxZ;
-		int		temp;
 
 		if (gParticleGroups[g])
 		{
-			
-			tm = &gParticleGroups[g]->triMesh;								// get pointer to trimesh data
-			faceColor = (TQ3ColorRGB *)tm->triangleAttributeTypes[0].data;	// get point to face transp attribute array
+			tm = gParticleGroups[g]->mesh;									// get pointer to trimesh data
 			baseScale = gParticleGroups[g]->baseScale;						// get base scale
 
 					/********************************/
 					/* ADD ALL PARTICLES TO TRIMESH */
 					/********************************/
-					
+
 			minX = minY = minZ = 100000000;									// init bbox
 			maxX = maxY = maxZ = -minX;
-								
-			for (p = n = 0; p < MAX_PARTICLES; p++)
+
+			int n = 0;
+			for (int p = 0; p < MAX_PARTICLES; p++)
 			{
 				if (!gParticleGroups[g]->isUsed[p])							// make sure this particle is used
 					continue;
-				
+
 					/* TRANSFORM PARTICLE POSITION */
-					
+
 				coord = &gParticleGroups[g]->coord[p];
 				SetLookAtMatrixAndTranslate(&m, &up, coord, camCoords);
 
@@ -666,38 +628,32 @@ TQ3ViewObject	view = setupInfo->viewObject;
 				Q3Point3D_To3DTransformArray(&v[0], &m, &tm->points[n*4], 4);//, sizeof(TQ3Point3D), sizeof(TQ3Point3D));
 
 					/* UPDATE BBOX */
-						
-				for (i = 0; i < 4; i++)
-				{			
-					if (tm->points[n*4+i].x < minX)
-						minX = tm->points[n*4+i].x;
-					if (tm->points[n*4+i].x > maxX)
-						maxX = tm->points[n*4+i].x;
-					if (tm->points[n*4+i].y < minY)
-						minY = tm->points[n*4+i].y;
-					if (tm->points[n*4+i].y > maxY)
-						maxY = tm->points[n*4+i].y;
-					if (tm->points[n*4+i].z < minZ)
-						minZ = tm->points[n*4+i].z;
-					if (tm->points[n*4+i].z > maxZ)
-						maxZ = tm->points[n*4+i].z;
+
+				for (int i = 0; i < 4; i++)
+				{
+					if (tm->points[n*4+i].x < minX) minX = tm->points[n*4+i].x;
+					if (tm->points[n*4+i].x > maxX) maxX = tm->points[n*4+i].x;
+					if (tm->points[n*4+i].y < minY) minY = tm->points[n*4+i].y;
+					if (tm->points[n*4+i].y > maxY) maxY = tm->points[n*4+i].y;
+					if (tm->points[n*4+i].z < minZ) minZ = tm->points[n*4+i].z;
+					if (tm->points[n*4+i].z > maxZ) maxZ = tm->points[n*4+i].z;
 				}
-				
+
 					/* UPDATE FACE TRANSPARENCY */
-								
-				temp = n*2;		
-				faceColor[temp].r = faceColor[temp].g = faceColor[temp].b = gParticleGroups[g]->alpha[p];		// set transparency alpha tri A
-				temp++;
-				faceColor[temp].r = faceColor[temp].g = faceColor[temp].b = gParticleGroups[g]->alpha[p];		// set transparency alpha tri B
+
+				tm->vertexColors[n*4+0].a = gParticleGroups[g]->alpha[p];
+				tm->vertexColors[n*4+1].a = gParticleGroups[g]->alpha[p];
+				tm->vertexColors[n*4+2].a = gParticleGroups[g]->alpha[p];
+				tm->vertexColors[n*4+3].a = gParticleGroups[g]->alpha[p];
 
 				n++;											// inc particle count
 			}
-	
+
 			if (n == 0)											// if no particles, then skip
 				continue;
-	
+
 				/* UPDATE FINAL VALUES */
-						
+
 			tm->numTriangles = n*2;
 			tm->numPoints = n*4;
 			tm->bBox.min.x = minX;
@@ -708,25 +664,15 @@ TQ3ViewObject	view = setupInfo->viewObject;
 			tm->bBox.max.z = maxZ;
 
 					/* DRAW IT */
-		
-			if (Q3TriMesh_Submit(tm, view) == kQ3Failure)
-				DoFatalAlert("DrawParticleGroup: Q3TriMesh_Submit failed!");
+
+			Render_SubmitMesh(tm, nil, &kParticleGroupRenderingMods, nil);
 		}
 	}
-	
-			/* RESTORE MODES */
-			
-	Q3Shader_Submit(setupInfo->shaderObject, view);								// restore shader
-	QD3D_SetZWrite(true);
-	QD3D_SetTriangleCacheMode(true);
-	QD3D_SetAdditiveBlending(false);
-	QD3D_ReEnableFog(setupInfo);
-#endif
 }
 
 /**************** VERIFY PARTICLE GROUP MAGIC NUM ******************/
 
-Boolean VerifyParticleGroupMagicNum(short group, u_long magicNum)
+bool VerifyParticleGroupMagicNum(int group, uint32_t magicNum)
 {
 	if (gParticleGroups[group] == nil)
 		return(false);
@@ -743,32 +689,29 @@ Boolean VerifyParticleGroupMagicNum(short group, u_long magicNum)
 // INPUT:	inFlags = flags to check particle types against
 //
 
-Boolean ParticleHitObject(ObjNode *theNode, u_short inFlags)
+bool ParticleHitObject(ObjNode *theNode, uint8_t inFlags)
 {
-int		i,p;
-u_short	flags;
 TQ3Point3D	*coord;
 
-	for (i = 0; i < MAX_PARTICLE_GROUPS; i++)
+	for (int i = 0; i < MAX_PARTICLE_GROUPS; i++)
 	{
 		if (!gParticleGroups[i])									// see if group active
 			continue;
 			
 		if (inFlags)												// see if check flags
 		{
-			flags = gParticleGroups[i]->flags;
-			if (!(inFlags & flags))
+			if (!(inFlags & gParticleGroups[i]->flags))
 				continue;
 		}
-		
-		for (p = 0; p < MAX_PARTICLES; p++)
+
+		for (int p = 0; p < MAX_PARTICLES; p++)
 		{
 			if (!gParticleGroups[i]->isUsed[p])						// make sure this particle is used
 				continue;
-				
+
 			if (gParticleGroups[i]->alpha[p] < .4f)				// if particle is too decayed, then skip
 				continue;			 
-			
+
 			coord = &gParticleGroups[i]->coord[p];					// get ptr to coords					
 			if (DoSimpleBoxCollisionAgainstObject(coord->y+40.0f,coord->y-40.0f,
 												coord->x-40.0f, coord->x+40.0f,

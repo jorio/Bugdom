@@ -1446,6 +1446,7 @@ Str255		s;
 
 /******************************* DISABLE FOG *********************************/
 
+// TODO NOQUESA: we can probably remove this
 void QD3D_DisableFog(const QD3DSetupOutputType *setupInfo)
 {
 	printf("TODO NOQUESA: %s\n", __func__);
@@ -1460,6 +1461,7 @@ void QD3D_DisableFog(const QD3DSetupOutputType *setupInfo)
 
 /******************************* REENABLE FOG *********************************/
 
+// TODO NOQUESA: we can probably remove this
 void QD3D_ReEnableFog(const QD3DSetupOutputType *setupInfo)
 {
 	printf("TODO NOQUESA: %s\n", __func__);
