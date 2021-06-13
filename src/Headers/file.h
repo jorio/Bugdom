@@ -68,7 +68,7 @@ typedef struct
 //=================================================
 
 extern	SkeletonDefType *LoadSkeletonFile(short skeletonType);
-extern	void	OpenGameFile(Str255 filename,short *fRefNumPtr, Str255 errString);
+void	OpenGameFile(const char* filename, short *fRefNumPtr, const char* errString);
 extern	OSErr LoadPrefs(PrefsType *prefBlock);
 extern	void SavePrefs(PrefsType *prefs);
 extern	void SaveGame(int slot);

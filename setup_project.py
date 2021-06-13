@@ -133,6 +133,6 @@ if input(F"Build project '{proj.dir_name}' now? (Y/N) ").upper() == 'Y':
         call(['cmake', '--build', proj.dir_name] + extra_build_args)
 
     if system == 'Darwin':
-        call(['hdiutil', 'create', '-fs', 'HFS+', '-srcfolder', F'{proj.dir_name}/Release', '-volname', F'Bugdom {game_ver}', F'Bugdom-mac-{game_ver}.dmg'])
+        call(['hdiutil', 'create', '-fs', 'HFS+', '-srcfolder', F'{proj.dir_name}/Release', '-volname', F'Bugdom {game_ver}', F'Bugdom-{game_ver}-mac.dmg'])
     elif system == 'Windows':
         zipdir(F'Bugdom-{game_ver}-win64.zip', F'{proj.dir_name}/Release', F'Bugdom-{game_ver}')

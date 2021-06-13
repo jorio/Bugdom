@@ -19,6 +19,7 @@ Get builds for macOS and Windows here: https://github.com/jorio/Bugdom/releases
     [JA](docs/Instructions-JA.pdf)
     [SP](docs/Instructions-ES.pdf)
     [SV](docs/Instructions-SV.pdf)
+- [CHEATS.md](CHEATS.md) — Cheat codes!
 
 ## License
 
@@ -34,6 +35,8 @@ Bugdom® is a registered trademark of Pangea Software, Inc.
 - All music herein is © Mike Beckett.
 - This software includes portions © 2020 Iliyas Jorio.
 
-## See also
+## Other Pangea game ports
 
-If you like Pangea games, you might also be interested in my port of [Nanosaur](https://github.com/jorio/nanosaur).
+If you like games by Pangea Software, you might also enjoy my ports of
+[Nanosaur](https://github.com/jorio/Nanosaur)
+and [Mighty Mike (aka Power Pete)](https://github.com/jorio/MightyMike).
