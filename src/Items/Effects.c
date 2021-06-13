@@ -62,8 +62,8 @@ typedef struct
 static ParticleGroupType	gParticleGroups[MAX_PARTICLE_GROUPS];
 static bool					gParticleGroupsInitialized = false;
 
-static GLuint				gParticleShader[NUM_PARTICLE_TEXTURES];
-static bool					gParticleShadersLoaded = false;
+static GLuint				gParticleTextureNames[NUM_PARTICLE_TEXTURES];
+static bool					gParticleTexturesLoaded = false;
 
 static float	gGravitoidDistBuffer[MAX_PARTICLES][MAX_PARTICLES];
 
@@ -188,14 +188,14 @@ void InitParticleSystem(void)
 
 			/* LOAD PARTICLE TEXTURES */
 
-	if (!gParticleShadersLoaded)
+	if (!gParticleTexturesLoaded)
 	{
 		for (int i = 0; i < NUM_PARTICLE_TEXTURES; i++)
 		{
-			gParticleShader[i] = QD3D_NumberedTGAToTexture(130+i, false, kRendererTextureFlags_ClampBoth);
+			gParticleTextureNames[i] = QD3D_NumberedTGAToTexture(130 + i, false, kRendererTextureFlags_ClampBoth);
 		}
 
-		gParticleShadersLoaded = true;
+		gParticleTexturesLoaded = true;
 	}
 
 
@@ -231,14 +231,14 @@ void DeleteAllParticleGroups(void)
 	}
 
 	// Also delete textures
-	if (gParticleShadersLoaded)
+	if (gParticleTexturesLoaded)
 	{
 		for (int i = 0; i < NUM_PARTICLE_TEXTURES; i++)
 		{
-			glDeleteTextures(1, &gParticleShader[i]);
-			gParticleShader[i] = 0;
+			glDeleteTextures(1, &gParticleTextureNames[i]);
+			gParticleTextureNames[i] = 0;
 		}
-		gParticleShadersLoaded = false;
+		gParticleTexturesLoaded = false;
 	}
 }
 
@@ -302,7 +302,7 @@ got_it:
 			/* INIT THE GROUP'S TRIMESH STRUCTURE */
 
 	pg->mesh->texturingMode = kQ3TexturingModeAlphaBlend;
-	pg->mesh->glTextureName = gParticleShader[particleTextureNum];
+	pg->mesh->glTextureName = gParticleTextureNames[particleTextureNum];
 
 	return pgSlot;
 }
