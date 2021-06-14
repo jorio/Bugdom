@@ -162,7 +162,6 @@ set(GAME_HEADERS
 	${GAME_SRCDIR}/Headers/title.h
 	${GAME_SRCDIR}/Headers/triggers.h
 	${GAME_SRCDIR}/Headers/window.h
-	${GAME_SRCDIR}/Headers/worldmap.h
 	${GAME_SRCDIR}/Headers/gamepatches.h
 	${GAME_SRCDIR}/Headers/textmesh.h
 	${GAME_SRCDIR}/Headers/tga.h
