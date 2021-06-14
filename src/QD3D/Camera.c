@@ -51,6 +51,7 @@ float				gPlayerToCameraAngle = 0.0f;
 
 static TQ3Point3D 	gTargetTo,gTargetFrom;
 
+static bool			gLensFlaresInitialized = false;
 static GLuint		gLensFlareTextureNames[NUM_FLARE_TYPES] = {0,0,0,0};
 static GLuint		gMoonFlareTextureName = 0;
 
@@ -101,6 +102,9 @@ static const TQ3Param2D uvs[4] = { {0,1}, {1,1}, {1,0}, {0,0} };
 		/******************************/
 
 	if (!gDrawLensFlare)								// only load them for levels that need it
+		return;
+
+	if (gLensFlaresInitialized)
 		return;
 
 			/* SEE IF LOAD SPECIAL MOON FLARE TEXTURE */
@@ -154,6 +158,10 @@ static const TQ3Param2D uvs[4] = { {0,1}, {1,1}, {1,0}, {0,0} };
 			| STATUS_BIT_NULLSHADER
 			| STATUS_BIT_GLOW
 			;
+
+			/* WE'RE INITIALIZED */
+
+	gLensFlaresInitialized = true;
 }
 
 
@@ -164,6 +172,9 @@ static const TQ3Param2D uvs[4] = { {0,1}, {1,1}, {1,0}, {0,0} };
 
 void DisposeLensFlares(void)
 {
+	if (!gLensFlaresInitialized)
+		return;
+
 			/* NUKE MOON TEXTURE */
 
 	if (gMoonFlareTextureName)							// nuke any old moon shader
@@ -193,6 +204,10 @@ void DisposeLensFlares(void)
 			gFlareMeshes[i] = nil;
 		}
 	}
+
+			/* WE'LL NEED TO REINIT NEXT TIME */
+
+	gLensFlaresInitialized = false;
 }
 
 
