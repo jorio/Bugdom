@@ -439,7 +439,7 @@ retryParseLODPref:
 			);
 			GAME_ASSERT(tmd);
 
-			_Static_assert(sizeof(uvs) == sizeof(tmd->vertexUVs[0]) * NUM_VERTICES_IN_SUPERTILE);
+			_Static_assert(sizeof(uvs) == sizeof(tmd->vertexUVs[0]) * NUM_VERTICES_IN_SUPERTILE, "supertile UV array size mismatch");
 
 			memcpy(tmd->triangles,		newTriangle,	sizeof(tmd->triangles[0]) * NUM_TRIS_IN_SUPERTILE);
 			memcpy(tmd->vertexUVs,		uvs,			sizeof(tmd->vertexUVs[0]) * NUM_VERTICES_IN_SUPERTILE);
