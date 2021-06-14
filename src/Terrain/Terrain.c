@@ -1417,7 +1417,15 @@ void DrawTerrain(const QD3DSetupOutputType *setupInfo)
 	DrawObjects(setupInfo);												// draw objNodes
 	QD3D_DrawParticles(setupInfo);
 	DrawParticleGroup(setupInfo);
+
+	Render_FlushQueue();												// flush before drawing 2D stuff
+
+		/* DRAW IN-GAME 2D ELEMENTS */
+
+	Render_Enter2D();
 	DrawLensFlare(setupInfo);
+	Render_FlushQueue();
+	Render_Exit2D();
 }
 
 

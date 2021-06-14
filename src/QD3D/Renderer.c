@@ -82,6 +82,7 @@ static const RenderModifiers kDefaultRenderMods =
 	.statusBits = 0,
 	.diffuseColor = {1,1,1,1},
 	.autoFadeFactor = 1.0f,
+	.sortPriority = 0,
 };
 
 static const float kFreezeFrameFadeOutDuration = .33f;
