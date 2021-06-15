@@ -1422,10 +1422,10 @@ void DrawTerrain(const QD3DSetupOutputType *setupInfo)
 
 		/* DRAW IN-GAME 2D ELEMENTS */
 
-	Render_Enter2D();
+	Render_EnterExit2D_NormalizedCoordinates(true);
 	DrawLensFlare(setupInfo);
 	Render_FlushQueue();
-	Render_Exit2D();
+	Render_EnterExit2D_NormalizedCoordinates(false);
 }
 
 

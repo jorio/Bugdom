@@ -919,6 +919,27 @@ void Render_Exit2D(void)
 	Render_EnterExit2D(false);
 }
 
+void Render_EnterExit2D_NormalizedCoordinates(bool enter)
+{
+	if (enter)
+	{
+		glMatrixMode(GL_PROJECTION);
+		glPushMatrix();
+		glLoadIdentity();
+		glOrtho(-1, 1,  -1, 1, 0, 1000);
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();
+		glLoadIdentity();
+	}
+	else
+	{
+		glMatrixMode(GL_PROJECTION);
+		glPopMatrix();
+		glMatrixMode(GL_MODELVIEW);
+		glPopMatrix();
+	}
+}
+
 void Render_Draw2DQuad(
 		int texture)
 {

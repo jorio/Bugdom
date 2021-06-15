@@ -169,6 +169,8 @@ void Render_Enter2D(void);
 
 void Render_Exit2D(void);
 
+void Render_EnterExit2D_NormalizedCoordinates(bool enter);
+
 #pragma mark -
 
 void Render_Alloc2DCover(int width, int height);

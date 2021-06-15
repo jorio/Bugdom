@@ -586,13 +586,14 @@ float		fps = gFramesPerSecondFrac;
 
 void DrawLensFlare(const QD3DSetupOutputType *setupInfo)
 {
-float			x,y,dot;
+float			dot;
 TQ3Point3D		sunCoord;
 TQ3Point3D		sunFrustumCoord;
 TQ3Point3D		from;
 TQ3Vector3D		axis,lookAtVector,sunVector;
 float			length;
 const bool doMoon = gMoonFlareTextureName != 0;
+const float invAspectRatio = 1.0f / setupInfo->aspectRatio;
 
 	if (!gDrawLensFlare)
 		return;
@@ -630,12 +631,6 @@ const bool doMoon = gMoonFlareTextureName != 0;
 	length = sqrtf(sunFrustumCoord.x*sunFrustumCoord.x + sunFrustumCoord.y*sunFrustumCoord.y);
 	FastNormalizeVector(sunFrustumCoord.x, sunFrustumCoord.y, 0, &axis);
 
-			/* CALC SCREEN COORDS */
-			// TODO: just position the flare relative to the frustum instead of relative to 640x480 minus clipped area
-
-	float screenHalfWidth = 640.0f / 2.0f;
-	float screenHalfHeight = (480.0f - setupInfo->paneClip.top - setupInfo->paneClip.bottom) / 2.0f;
-
 			/***************/
 			/* DRAW FLARES */
 			/***************/
@@ -649,20 +644,21 @@ const bool doMoon = gMoonFlareTextureName != 0;
 		if (i > 0)									// always draw sun, but fade flares based on dot
 			mesh->diffuseColor.a = dot;				// flare brightness == dot product
 
-		o = gFlareOffsetTable[i];
 		if (doMoon && (i == 0))						// see if do moon
 			s = .3f;								// special scale for moon
 		else
 			s = gFlareScaleTable[i];
 
-		x = screenHalfWidth  * (1.0f + (axis.x * length * o));
-		y = screenHalfHeight * (1.0f - (axis.y * length * o)) + setupInfo->paneClip.top;
+		float x = axis.x * length * gFlareOffsetTable[i];
+		float y = axis.y * length * gFlareOffsetTable[i];
 
-		float extent = 120.0f * s;
-		mesh->points[0] = (TQ3Point3D) { x - extent, y + extent, 0 };
-		mesh->points[1] = (TQ3Point3D) { x + extent, y + extent, 0 };
-		mesh->points[2] = (TQ3Point3D) { x + extent, y - extent, 0 };
-		mesh->points[3] = (TQ3Point3D) { x - extent, y - extent, 0 };
+		float yExtent = s * .5f;
+		float xExtent = yExtent * invAspectRatio;
+
+		mesh->points[0] = (TQ3Point3D) { x - xExtent, y - yExtent, 0 };
+		mesh->points[1] = (TQ3Point3D) { x + xExtent, y - yExtent, 0 };
+		mesh->points[2] = (TQ3Point3D) { x + xExtent, y + yExtent, 0 };
+		mesh->points[3] = (TQ3Point3D) { x - xExtent, y + yExtent, 0 };
 
 		if (doMoon && (i == 0))							// see if do moon
 			mesh->glTextureName = gMoonFlareTextureName;
