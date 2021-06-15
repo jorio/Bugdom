@@ -315,7 +315,7 @@ void CalcCameraMatrixInfo(QD3DSetupOutputType *setupInfo)
 
 	gluPerspective(
 			Q3Math_RadiansToDegrees(setupInfo->fov),	// fov
-			Render_GetViewportAspectRatio(setupInfo->paneClip),		// aspect
+			setupInfo->aspectRatio,	// aspect
 			setupInfo->hither,		// hither
 			setupInfo->yon);		// yon
 

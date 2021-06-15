@@ -189,6 +189,4 @@ void Render_FreezeFrameFadeOut(void);
 
 #pragma mark -
 
-float Render_GetViewportAspectRatio(Rect paneClip);
-
 TQ3Area Render_GetAdjustedViewportRect(Rect paneClip, int logicalWidth, int logicalHeight);

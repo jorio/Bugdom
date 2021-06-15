@@ -88,6 +88,7 @@ typedef struct
 #endif
 	WindowPtr				window;
 	Rect					paneClip;			// not pane size, but clip:  left = amount to clip off left
+	float					aspectRatio;
 	bool					needScissorTest;
 	TQ3Point3D				currentCameraCoords;
 	TQ3Point3D				currentCameraLookAt;
