@@ -452,27 +452,18 @@ int	anim;
 			
 	if (gPlayerMode == PLAYER_MODE_BALL)				// see if turn into bug
 	{
-		
 			/* SEE IF HEAD WILL MATERIALIZE IN ROCK */
-		
-		if (gDoCeiling)
-		{
-			float	y1,y2;
-			
-			y1 = GetTerrainHeightAtCoord(gMyCoord.x, gMyCoord.z, CEILING);	
-			y2 = GetTerrainHeightAtCoord(gMyCoord.x, gMyCoord.z, FLOOR);	
-			
-			if ((y1 - y2) <= (PLAYER_BUG_HEADOFFSET+10.0f))						// see if gap is too narrow
-				return;
-		}
-	
+
+		if (!BallHasHeadroomToMorphToBug())
+			return;
+
 		InitPlayer_Bug(gPlayerObj, &gMyCoord, gPlayerObj->Rot.y, PLAYER_ANIM_UNROLL);
 		PlayEffect3D(EFFECT_MORPH, &gMyCoord);
 	}
 	else												// turn into ball
 	{
 			/* CHECK BUG'S MODE AND SEE IF THIS IS ALLOWED */
-			
+
 		anim = gPlayerObj->Skeleton->AnimNum;
 		
 		switch(anim)

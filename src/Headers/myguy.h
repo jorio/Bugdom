@@ -73,6 +73,7 @@ void KillPlayer(Boolean changeAnims);
 		/* BALL */
 		
 void InitPlayer_Ball(ObjNode *oldObj, TQ3Point3D *where);
+bool BallHasHeadroomToMorphToBug(void);
 
 		/* BUG */
 		

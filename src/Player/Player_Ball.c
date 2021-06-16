@@ -392,6 +392,30 @@ float	d,fps = gFramesPerSecondFrac;
 }
 
 
+/******** DOES BALL HAVE ENOUGH HEADROOM TO MORPH BACK TO BUG *******/
+//
+// The ball's bounding box is shorter than the bug's,
+// so the ball can reach areas with lower ceilings than the bug can.
+//
+// Call this before morphing from ball to bug
+// to ensure the player's head won't materialize in the ceiling.
+//
+
+bool BallHasHeadroomToMorphToBug(void)
+{
+	if (gDoCeiling)
+	{
+		float y1 = GetTerrainHeightAtCoord(gMyCoord.x, gMyCoord.z, CEILING);
+		float y2 = GetTerrainHeightAtCoord(gMyCoord.x, gMyCoord.z, FLOOR);
+
+		if ((y1 - y2) <= (PLAYER_BUG_HEADOFFSET+10.0f))						// see if gap is too narrow
+			return false;
+	}
+
+	return true;
+}
+
+
 #pragma mark -
 
 /****************** START NITRO TRAIL *********************/

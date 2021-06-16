@@ -743,9 +743,12 @@ void LoseBallTime(float amount)
 	if (gBallTimer <= 0.0f)
 	{
 		gBallTimer = 0;
-		
-		if (gPlayerMode == PLAYER_MODE_BALL)
+
+		if (gPlayerMode == PLAYER_MODE_BALL &&
+			BallHasHeadroomToMorphToBug())			// extend ball mode as long as bug head would materialize in ceiling
+		{
 			InitPlayer_Bug(gPlayerObj, &gMyCoord, gPlayerObj->Rot.y, PLAYER_ANIM_UNROLL);
+		}
 	}
 	gInfobarUpdateBits |= UPDATE_TIMER;	
 }
