@@ -361,7 +361,7 @@ char		path[256];
 
 		for (int p = 0; p < header.width * header.height; p++)
 		{
-			gSpriteMasks[i][p] = 0xFFFFFFFF;
+			gSpriteMasks[i][p] = gSprites[i][p]==0x000000FF? 0x00000000: 0xFFFFFFFF;
 		}
 	}
 }
@@ -510,15 +510,22 @@ static void DrawSprite(int spriteNum, int x, int y)
 
 	uint32_t* out = (uint32_t*) GetInfobarTextureOffset(x, y);
 	const uint32_t* in = gSprites[spriteNum];
+	const uint32_t* inMask = gSpriteMasks[spriteNum];
 
 	const int spriteWidth = gSpriteWidths[spriteNum];
 	const int spriteHeight = gSpriteHeights[spriteNum];
 
 	for (int row = 0; row < spriteHeight; row++)
 	{
-		memcpy(out, in, 4*spriteWidth);
-		out += GAME_VIEW_WIDTH;
-		in += spriteWidth;
+		for (int x = 0; x < spriteWidth; x++)
+		{
+			*out = (*out & ~*inMask) | *in;
+			out++;
+			in++;
+			inMask++;
+		}
+
+		out += GAME_VIEW_WIDTH - spriteWidth;
 	}
 
 	GAME_ASSERT(out <= gInfobarTexture + GAME_VIEW_WIDTH * GAME_VIEW_HEIGHT);
