@@ -46,8 +46,6 @@ static void MoveHoneyTube(ObjNode *theNode);
 ObjNode	*gCurrentRope,*gPrevRope;
 short	gCurrentRopeJoint;
 
-float gHoneyTubeU,gHoneyTubeV;
-
 static float	gRootAnimTimeIndex[MAX_ROOT_SYNCS];
 
 #define	RootSync		SpecialL[0]
@@ -833,21 +831,25 @@ static void MoveHoneyTube(ObjNode *theNode)
 
 void UpdateHoneyTubeTextureAnimation(void)
 {
-	if (gLevelType == LEVEL_TYPE_HIVE)
+	if (gLevelType != LEVEL_TYPE_HIVE)
+		return;
+
+				/* MOVE UVS */
+
+	float du = 0.0f;
+	float dv = 0.6f * gFramesPerSecondFrac;
+
+
+	for (int type = HIVE_MObjType_BentTube; type <= HIVE_MObjType_TaperTube; type++)
 	{
-		printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-					/* MOVE UVS */
-					//
-					// NOTE: since all 4 tube types share the same shader object, we
-					// 		only need to scroll the uv's for one of the objects.
-					//
-					
-		QD3D_ScrollUVs(gObjectGroupList[MODEL_GROUP_LEVELSPECIFIC][HIVE_MObjType_BentTube],
-						gHoneyTubeU,gHoneyTubeV, 2);
-		
-		gHoneyTubeV -= .6f*gFramesPerSecondFrac;
-#endif
+		GAME_ASSERT_MESSAGE(
+				type == HIVE_MObjType_BentTube || type == HIVE_MObjType_SquiggleTube || type == HIVE_MObjType_StraightTube || type == HIVE_MObjType_TaperTube,
+				"Did Beehive tube object types get shuffled around in the enum?");
+
+		GAME_ASSERT(gObjectGroupList[MODEL_GROUP_LEVELSPECIFIC][type].numMeshes == 2);
+
+		// Mesh #0 is the lattice; Mesh #1 is the inner tube
+		QD3D_ScrollUVs(gObjectGroupList[MODEL_GROUP_LEVELSPECIFIC][type].meshes[1], du, dv);
 	}
 }
 

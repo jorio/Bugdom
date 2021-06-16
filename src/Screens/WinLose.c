@@ -43,6 +43,9 @@ enum
 
 #define	KINGANT_HEAD_LIMB	1
 
+#define LOSE_THRONE_LAVA_SUBMESH 5
+#define WIN_THRONE_WATER_SUBMESH 23
+
 /*********************/
 /*    VARIABLES      */
 /*********************/
@@ -51,7 +54,6 @@ static float gFireTimer = 0;
 static short	gFireGroup1,gFireGroup2;
 
 static ObjNode	*gThrone;
-static float gU = 0, gV = 0;
 
 #define	FireTimer	SpecialF[0]
 
@@ -536,18 +538,16 @@ float	fps;
 		
 		if (fire)
 		{
-			UpdateLoseFire();
-			gU += fps * .1f;
-			gV += fps * .05f;
-			printf("TODO NOQUESA: scroll throne room lava UVs\n");
-			QD3D_ScrollUVs(gThrone/*->BaseGroup*/, gU, gV, 6);
+ 			UpdateLoseFire();
+
+ 			GAME_ASSERT_MESSAGE(gThrone->NumMeshes > LOSE_THRONE_LAVA_SUBMESH, "lava mesh ID not found in lose throne");
+			QD3D_ScrollUVs(gThrone->MeshList[LOSE_THRONE_LAVA_SUBMESH], fps*.1f, -fps*.05f);
+			gThrone->MeshList[LOSE_THRONE_LAVA_SUBMESH]->hasVertexNormals = false;  // make it pop - don't shade lava
 		}
 		else
 		{
-			gU += fps * .1f;
-			gV += fps * .05f;
-			printf("TODO NOQUESA: scroll throne room water UVs\n");
-			QD3D_ScrollUVs(gThrone/*->BaseGroup*/, gU, gV, 6);
+			GAME_ASSERT_MESSAGE(gThrone->NumMeshes > WIN_THRONE_WATER_SUBMESH, "water mesh ID not found in win throne");
+			QD3D_ScrollUVs(gThrone->MeshList[WIN_THRONE_WATER_SUBMESH], fps*.1f, -fps*.05f);
 		}
 		
 	}while(duration > 0.0f);

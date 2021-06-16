@@ -73,8 +73,6 @@ void InitItemsManager(void)
 	gCurrentCarryingFireFly = gCurrentChasingFireFly = nil;
 	gCurrentDragonFly = gCurrentWaterBug = nil;
 
-	gHoneyTubeU = gHoneyTubeV = 0;					// for honey tubes
-	
 	gHiveObj = nil;
 }
 

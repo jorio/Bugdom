@@ -156,8 +156,6 @@ extern	float						gCheckPointRot;
 extern	float						gCycScale;
 extern	float						gFramesPerSecond;
 extern	float						gFramesPerSecondFrac;
-extern	float						gHoneyTubeU;
-extern	float						gHoneyTubeV;
 extern	float						gMyDistToFloor;
 extern	float						gMyHealth;
 extern	float						gPlayerCurrentWaterY;
