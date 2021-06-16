@@ -878,6 +878,7 @@ static void Render_EnterExit2D(bool enter)
 		DisableState(GL_FOG);
 		DisableState(GL_DEPTH_TEST);
 		DisableState(GL_ALPHA_TEST);
+		EnableState(GL_BLEND);
 //		DisableState(GL_TEXTURE_2D);
 //		DisableClientState(GL_TEXTURE_COORD_ARRAY);
 		DisableClientState(GL_COLOR_ARRAY);
@@ -890,6 +891,8 @@ static void Render_EnterExit2D(bool enter)
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
 		glLoadIdentity();
+
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 	else
 	{
@@ -902,10 +905,14 @@ static void Render_EnterExit2D(bool enter)
 		RestoreStateFromBackup(GL_FOG,			&backup3DState);
 		RestoreStateFromBackup(GL_DEPTH_TEST,	&backup3DState);
 		RestoreStateFromBackup(GL_ALPHA_TEST,	&backup3DState);
+		RestoreStateFromBackup(GL_BLEND,		&backup3DState);
 //		RestoreStateFromBackup(GL_TEXTURE_2D,	&backup3DState);
 //		RestoreClientStateFromBackup(GL_TEXTURE_COORD_ARRAY, &backup3DState);
 		RestoreClientStateFromBackup(GL_COLOR_ARRAY,	&backup3DState);
 		RestoreClientStateFromBackup(GL_NORMAL_ARRAY,	&backup3DState);
+
+		if (backup3DState.blendFuncIsAdditive)
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 	}
 }
 

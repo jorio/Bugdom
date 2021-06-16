@@ -251,7 +251,8 @@ void InitInfobar(void)
 
 			/* DO BOTTOM */
 
-	DrawSprite(SPRITE_INFOBARBOTTOM, 0, GAME_VIEW_HEIGHT - gSpriteHeights[SPRITE_INFOBARBOTTOM]);
+	if (gShowBottomBar)
+		DrawSprite(SPRITE_INFOBARBOTTOM, 0, GAME_VIEW_HEIGHT - gSpriteHeights[SPRITE_INFOBARBOTTOM]);
 
 			/* CREATE TEXTURE */
 
