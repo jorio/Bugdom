@@ -72,7 +72,8 @@ static uint8_t* ConvertColormappedToRGB(const uint8_t* in, const TGAHeader* head
 	const int bytesPerColor				= header->paletteBitsPerColor / 8;
 	const uint16_t paletteColorCount	= header->paletteColorCountLo	| ((uint16_t)header->paletteColorCountHi	<< 8);
 
-	uint8_t* out = (uint8_t*) NewPtr(pixelCount * (header->paletteBitsPerColor / 8));
+	uint8_t* remapped = (uint8_t*) NewPtr(pixelCount * (header->paletteBitsPerColor / 8));
+	uint8_t* out = remapped;
 
 	for (int i = 0; i < pixelCount; i++)
 	{
@@ -86,7 +87,7 @@ static uint8_t* ConvertColormappedToRGB(const uint8_t* in, const TGAHeader* head
 		out += bytesPerColor;
 	}
 
-	return out;
+	return remapped;
 }
 
 static void FlipPixelData(uint8_t* data, TGAHeader* header)
