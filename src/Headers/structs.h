@@ -268,7 +268,10 @@ struct ObjNode
 		
 	Byte			Kind;				// kind
 	signed char		Mode;				// mode
-	
+
+	bool			IsPickable;
+	int32_t			PickID;
+
 	signed char		Flag[6];
 	long			SpecialL[6];
 	float			SpecialF[6];

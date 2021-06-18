@@ -51,7 +51,7 @@ static double		gCamDX,gCamDY,gCamDZ;
 static TQ3Point3D	gCamCenter = { -10, 10, 250 };		// Source port change from {-40,40,250} (looks better in widescreen)
 ObjNode				*gMenuIcons[NUM_MENU_ICONS];
 static ObjNode		*gSpider;
-static TQ3Int32		gMenuSelection;
+static int32_t		gMenuSelection;
 
 /********************** DO MAIN MENU *************************/
 //
@@ -106,12 +106,7 @@ start_again:
 				
 		if (FlushMouseButtonPress())
 		{
-			TQ3Point2D	pt;
-			
-			pt.x = mouse.h;
-			pt.y = mouse.v;
-			
-			if (PickMainMenuIcon(pt, &gMenuSelection))
+			if (PickObject(mouse.h, mouse.v, &gMenuSelection))
 				break;
 		}
 		
@@ -336,8 +331,6 @@ ObjNode					*newObj;
 			
 	for (i = 0; i < NUM_MENU_ICONS; i++)
 	{
-		TQ3StyleObject	pick;
-		
 		static short iconType[NUM_MENU_ICONS] = {MENU_MObjType_AboutIcon,MENU_MObjType_ScoresIcon,
 									MENU_MObjType_PlayIcon,MENU_MObjType_QuitIcon,
 									MENU_MObjType_RestoreIcon,MENU_MObjType_SettingsIcon};
@@ -359,15 +352,8 @@ ObjNode					*newObj;
 		gNewObjectDefinition.rot 		= 0;
 		gNewObjectDefinition.scale 		= .25;
 		gMenuIcons[i] = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-
-					/* ADD PICK ID TO ICON */
-
-		printf("TODO NOQUESA: %s\n", __func__);
-#if 0
-		pick = Q3PickIDStyle_New(i);					
-		AttachGeometryToDisplayGroupObject(gMenuIcons[i], pick);
-		Q3Object_Dispose(pick);
-#endif
+		gMenuIcons[i]->IsPickable = true;
+		gMenuIcons[i]->PickID = i;
 	}
 	
 	MakeFadeEvent(true);
