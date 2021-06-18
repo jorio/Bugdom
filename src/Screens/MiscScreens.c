@@ -25,11 +25,15 @@ static void MoveLogoBG(ObjNode *theNode);
 /*    CONSTANTS             */
 /****************************/
 
+#define NUM_PAUSE_TEXTURES 4
 
 
 /*********************/
 /*    VARIABLES      */
 /*********************/
+
+TQ3TriMeshData* gPauseQuad = nil;
+RenderModifiers gPauseQuadRenderMods;
 
 
 
@@ -37,73 +41,71 @@ static void MoveLogoBG(ObjNode *theNode);
 
 void DoPaused(void)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-PicHandle	pict;
-Rect		r = { 0, 0, 0, 0 };
-int			windowW = -1;
-int			windowH = -1;
-int			pictW = -1;
-int			pictH = -1;
 float		dummy;
+const float imageAspectRatio = 200.0f/152.0f;
 
 	Pomme_PauseAllChannels(true);
 
-	Q3View_Sync(gGameViewInfoPtr->viewObject);					// make sure rendering is done before we do anything
-
-	SetPort(GetWindowPort(gCoverWindow));
-	
 	InitCursor();
-	
-	pict = GetPicture(1500);
-	GAME_ASSERT(pict);
-	HLock((Handle)pict);
-	r = (*pict)->picFrame;							// get size of pict
-	pictW = r.right - r.left;
-	pictH = r.bottom - r.top;
-	OffsetRect(&r, (GAME_VIEW_WIDTH - pictW) / 2, (GAME_VIEW_HEIGHT - pictH) / 2);
-	DrawPicture(pict, &r);							// draw pict
+
+			/* PRELOAD TEXTURES */
+
+	GLuint textures[NUM_PAUSE_TEXTURES];
+	for (int i = 0; i < NUM_PAUSE_TEXTURES; i++)
+		textures[i] = QD3D_NumberedTGAToTexture(1500+i, false, kRendererTextureFlags_ClampBoth);
+
+			/* CREATE MESH */
+
+	GAME_ASSERT_MESSAGE(!gPauseQuad, "Pause quad already created!");
+
+	gPauseQuad = MakeQuadMesh(1);
+	gPauseQuad->hasVertexNormals = false;
+	gPauseQuad->texturingMode = kQ3TexturingModeOpaque;
+	gPauseQuad->glTextureName = textures[3];
+
+	Render_SetDefaultModifiers(&gPauseQuadRenderMods);
+	gPauseQuadRenderMods.statusBits |= STATUS_BIT_NOFOG | STATUS_BIT_NULLSHADER;
+	//gPauseQuadRenderMods.diffuseColor.a = .66f;
 
 			/*******************/
 			/* LET USER SELECT */
 			/*******************/
-			
-	int curState = 0;
-	bool forceDraw = false;
+
+	int curState = 3;
 	while (1)
 	{
-		SDL_GetWindowSize(gSDLWindow, &windowW, &windowH);
+		int rawMouseX, rawMouseY;
+		SDL_GetMouseState(&rawMouseX, &rawMouseY);
 
-		Point	where;
-		GetMouse(&where);
-		
-		int scaledMouseX = GAME_VIEW_WIDTH * where.h / windowW;
-		int scaledMouseY = GAME_VIEW_HEIGHT * where.v / windowH;
+		float xs = 200.0f/640.0f;
+		float ys = xs*gGameViewInfoPtr->aspectRatio/imageAspectRatio;
+		if (ys > .5f)
+			ys = .5f;
 
-		int newState = -1;
-		if      (scaledMouseX < r.left     ) newState = -1;
-		else if (scaledMouseX > r.right    ) newState = -1;
-		else if (scaledMouseY < r.top +  64) newState = -1;
-		else if (scaledMouseY < r.top +  88) newState = 0;	// Resume
-		else if (scaledMouseY < r.top + 111) newState = 1;	// End Game
-		else if (scaledMouseY < r.top + 135) newState = 2;	// Quit
-		else newState = -1;
+		TQ3Point3D mouse = {rawMouseX, rawMouseY, 0};
+		Q3Point3D_Transform(&mouse, &gCameraWindowToFrustumMatrix, &mouse);
 
-		if (newState != -1 && curState != newState)
+		gPauseQuad->points[0] = (TQ3Point3D) { -xs, -ys, 0 };
+		gPauseQuad->points[1] = (TQ3Point3D) { +xs, -ys, 0 };
+		gPauseQuad->points[2] = (TQ3Point3D) { +xs, +ys, 0 };
+		gPauseQuad->points[3] = (TQ3Point3D) { -xs, +ys, 0 };
+
+		int newState = 3; // empty
+		if      (mouse.x < -xs) newState = 3;		// empty
+		else if (mouse.x > +xs) newState = 3;		// empty
+		else if (mouse.y > ys*+.15f) newState = 3;	// empty
+		else if (mouse.y > ys*-.17f) newState = 0;	// Resume
+		else if (mouse.y > ys*-.47f) newState = 1;	// End Game
+		else if (mouse.y > ys*-.81f) newState = 2;	// Quit
+		else newState = 3;
+
+		if (curState != newState)
 		{
 			curState = newState;
-			forceDraw = true;
-		}
-
-		if (forceDraw)
-		{
-			pict = GetPicture(1500+curState);				// load this pict
-			GAME_ASSERT(pict);
-			HLock((Handle)pict);
-			DrawPicture(pict, &r);							// draw pict
-			ReleaseResource((Handle)pict);					// nuke pict
-			PlayEffect(EFFECT_SELECT);				
-			forceDraw = false;
+			GAME_ASSERT(curState >= 0 && curState < NUM_PAUSE_TEXTURES);
+			gPauseQuad->glTextureName = textures[newState];
+			if (curState != 3)
+				PlayEffect(EFFECT_SELECT);
 		}
 
 		UpdateInput();
@@ -112,29 +114,30 @@ float		dummy;
 			curState = 0;
 			break;
 		}
+		if (GetNewKeyState_SDL(SDL_SCANCODE_F12))
+		{
+			gPauseQuadRenderMods.statusBits ^= STATUS_BIT_HIDDEN;
+		}
 
 		QD3D_DrawScene(gGameViewInfoPtr, DrawTerrain);
-		SubmitInfobarOverlay();
-		Overlay_SubmitQuad(
-				r.left, r.top, r.right-r.left, r.bottom-r.top,
-				(GAME_VIEW_WIDTH -pictW) / 2.0f / GAME_VIEW_WIDTH,
-				(GAME_VIEW_HEIGHT-pictH) / 2.0f / GAME_VIEW_HEIGHT,
-				pictW/640.0f,
-				pictH/480.0f
-		);
 		DoSDLMaintenance();
 		SDL_Delay(10);
 
-		if (FlushMouseButtonPress() && newState != -1)		// ensure mouse is within frame to proceed
+		if (FlushMouseButtonPress() && newState != 3)		// ensure mouse is within frame to proceed
 		{
 			break;
 		}
 	}
 	while(FlushMouseButtonPress());							// wait for button up
-	
+
+			/* FREE MESH/TEXTURES */
+
+	glDeleteTextures(NUM_PAUSE_TEXTURES, textures);
+	Q3TriMeshData_Dispose(gPauseQuad);
+	gPauseQuad = nil;
 
 			/* HANDLE RESULT */
-			
+
 	switch (curState)
 	{
 		case	1:
@@ -157,7 +160,6 @@ float		dummy;
 	GetMouseDelta(&dummy,&dummy);				// read this once to prevent mouse boom
 
 	Pomme_PauseAllChannels(false);
-#endif
 }
 
 

@@ -45,8 +45,6 @@ static const TQ3Matrix4x4 kIdentity4x4 =
 /*    VARIABLES      */
 /*********************/
 
-TQ3Matrix4x4 		gWorkMatrix;
-
 long				gNumParticles = 0;
 ParticleType		gParticles[MAX_PARTICLES2];
 
@@ -720,4 +718,37 @@ ObjNode* MakeNewDisplayGroupObject_TexturedQuad(TQ3SurfaceShaderObject surfaceSh
 
 	return newObj;
 #endif
+}
+
+
+
+
+TQ3TriMeshData* MakeQuadMesh(int numQuads)
+{
+	TQ3TriMeshData* mesh = Q3TriMeshData_New(2*numQuads, 4*numQuads, kQ3TriMeshDataFeatureVertexUVs);
+	mesh->texturingMode = kQ3TexturingModeOff;
+
+	for (int q = 0; q < numQuads; q++)
+	{
+		mesh->triangles[2 * q + 0].pointIndices[0] = 4 * q + 0;
+		mesh->triangles[2 * q + 0].pointIndices[1] = 4 * q + 1;
+		mesh->triangles[2 * q + 0].pointIndices[2] = 4 * q + 2;
+
+		mesh->triangles[2 * q + 1].pointIndices[0] = 4 * q + 0;
+		mesh->triangles[2 * q + 1].pointIndices[1] = 4 * q + 2;
+		mesh->triangles[2 * q + 1].pointIndices[2] = 4 * q + 3;
+
+		float extent = 1.0f;
+		mesh->points[4 * q + 0] = (TQ3Point3D) {-extent, -extent, 0 };
+		mesh->points[4 * q + 1] = (TQ3Point3D) {+extent, -extent, 0 };
+		mesh->points[4 * q + 2] = (TQ3Point3D) {+extent, +extent, 0 };
+		mesh->points[4 * q + 3] = (TQ3Point3D) {-extent, +extent, 0 };
+
+		mesh->vertexUVs[4 * q + 0] = (TQ3Param2D) { 0, 1 };
+		mesh->vertexUVs[4 * q + 1] = (TQ3Param2D) { 1, 1 };
+		mesh->vertexUVs[4 * q + 2] = (TQ3Param2D) { 1, 0 };
+		mesh->vertexUVs[4 * q + 3] = (TQ3Param2D) { 0, 0 };
+	}
+
+	return mesh;
 }

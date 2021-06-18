@@ -41,3 +41,5 @@ void ForEachTriMesh(TQ3Object root, void (*callback)(TQ3TriMeshData triMeshData,
 void QD3D_ClearDiffuseColor_TriMesh(TQ3TriMeshData triMeshData, void* userData_unused);
 
 ObjNode* MakeNewDisplayGroupObject_TexturedQuad(TQ3SurfaceShaderObject surfaceShader, float aspectRatio);
+
+TQ3TriMeshData* MakeQuadMesh(int numQuads);

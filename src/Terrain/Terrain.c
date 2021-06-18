@@ -1424,6 +1424,8 @@ void DrawTerrain(const QD3DSetupOutputType *setupInfo)
 
 	Render_EnterExit2D_NormalizedCoordinates(true);
 	DrawLensFlare(setupInfo);
+	if (gPauseQuad)
+		Render_SubmitMesh(gPauseQuad, NULL, &gPauseQuadRenderMods, NULL);
 	Render_FlushQueue();
 	Render_EnterExit2D_NormalizedCoordinates(false);
 }

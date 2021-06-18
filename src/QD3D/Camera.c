@@ -43,6 +43,7 @@ Boolean				gDrawLensFlare;
 TQ3Matrix4x4		gCameraWorldToFrustumMatrix;
 TQ3Matrix4x4		gCameraWorldToViewMatrix;
 TQ3Matrix4x4		gCameraViewToFrustumMatrix;
+TQ3Matrix4x4		gCameraWindowToFrustumMatrix;
 
 static float		gCameraLookAtAccel,gCameraFromAccelY,gCameraFromAccel;
 static float		gCameraDistFromMe, gCameraHeightFactor,gCameraLookAtYOff;
@@ -95,8 +96,6 @@ static RenderModifiers gFlareRenderMods;
 
 static void InitLensFlares(void)
 {
-static const TQ3Param2D uvs[4] = { {0,1}, {1,1}, {1,0}, {0,0} };
-
 		/******************************/
 		/* CREATE LENS FLARE TEXTURES */
 		/******************************/
@@ -133,20 +132,9 @@ static const TQ3Param2D uvs[4] = { {0,1}, {1,1}, {1,0}, {0,0} };
 	{
 		GAME_ASSERT_MESSAGE(!gFlareMeshes[i], "Flare mesh already allocated!");
 
-		TQ3TriMeshData* mesh = Q3TriMeshData_New(2, 4, kQ3TriMeshDataFeatureVertexUVs);
-		gFlareMeshes[i] = mesh;
-
-		mesh->texturingMode = kQ3TexturingModeAlphaBlend;
-		mesh->glTextureName = gLensFlareTextureNames[gFlareImageTable[i]];
-		memcpy(mesh->vertexUVs, uvs, sizeof(uvs));
-
-		mesh->triangles[0].pointIndices[0] = 0;
-		mesh->triangles[0].pointIndices[1] = 1;
-		mesh->triangles[0].pointIndices[2] = 2;
-
-		mesh->triangles[1].pointIndices[0] = 0;
-		mesh->triangles[1].pointIndices[1] = 2;
-		mesh->triangles[1].pointIndices[2] = 3;
+		gFlareMeshes[i] = MakeQuadMesh(1);
+		gFlareMeshes[i]->texturingMode = kQ3TexturingModeAlphaBlend;
+		gFlareMeshes[i]->glTextureName = gLensFlareTextureNames[gFlareImageTable[i]];
 	}
 
 			/* RENDERER BITS */
@@ -375,11 +363,26 @@ void CalcCameraMatrixInfo(QD3DSetupOutputType *setupInfo)
 
 
 			/* PREPARE FRUSTUM PLANES FOR SPHERE VISIBILITY CHECKS */
-			// (Source port addition)
 
 	UpdateFrustumPlanes(&gCameraWorldToFrustumMatrix);
 
 
+			/* PREPARE WINDOW-TO-FRUSTUM MATRIX */
+
+	{
+		TQ3Area viewportRect = Render_GetAdjustedViewportRect(setupInfo->paneClip, GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
+
+		float w = viewportRect.max.x - viewportRect.min.x;
+		float h = viewportRect.max.y - viewportRect.min.y;
+		if (w < .001f) w = .001f;						// avoid divide by zero
+		if (h < .001f) h = .001f;
+
+		TQ3Matrix4x4 windowToFrustumScale;
+		Q3Matrix4x4_SetScale(&windowToFrustumScale, 2.0f / w, -2.0f / h, 0);
+
+		Q3Matrix4x4_SetTranslate(&gCameraWindowToFrustumMatrix, -viewportRect.min.x - w * .5f, -viewportRect.min.y - h * .5f, 0);
+		Q3Matrix4x4_Multiply(&gCameraWindowToFrustumMatrix, &windowToFrustumScale, &gCameraWindowToFrustumMatrix);
+	}
 
 	CHECK_GL_ERROR();
 }
