@@ -165,11 +165,13 @@ void Render_SubmitMesh(
 
 #pragma mark -
 
-void Render_Enter2D(void);
+void Render_Enter2D_Full640x480(void);
 
-void Render_Exit2D(void);
+void Render_Exit2D_Full640x480(void);
 
-void Render_EnterExit2D_NormalizedCoordinates(bool enter);
+void Render_Enter2D_NormalizedCoordinates(float aspect);
+
+void Render_Exit2D_NormalizedCoordinates(void);
 
 #pragma mark -
 

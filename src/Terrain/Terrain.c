@@ -1422,12 +1422,12 @@ void DrawTerrain(const QD3DSetupOutputType *setupInfo)
 
 		/* DRAW IN-GAME 2D ELEMENTS */
 
-	Render_EnterExit2D_NormalizedCoordinates(true);
+	Render_Enter2D_NormalizedCoordinates(setupInfo->aspectRatio);
 	DrawLensFlare(setupInfo);
 	if (gPauseQuad)
 		Render_SubmitMesh(gPauseQuad, NULL, &gPauseQuadRenderMods, NULL);
 	Render_FlushQueue();
-	Render_EnterExit2D_NormalizedCoordinates(false);
+	Render_Exit2D_NormalizedCoordinates();
 }
 
 

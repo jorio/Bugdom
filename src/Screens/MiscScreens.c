@@ -63,6 +63,14 @@ const float imageAspectRatio = 200.0f/152.0f;
 	gPauseQuad->texturingMode = kQ3TexturingModeOpaque;
 	gPauseQuad->glTextureName = textures[3];
 
+	float xs = .4f;
+	float ys = xs/imageAspectRatio;
+
+	gPauseQuad->points[0] = (TQ3Point3D) { -xs, -ys, 0 };
+	gPauseQuad->points[1] = (TQ3Point3D) { +xs, -ys, 0 };
+	gPauseQuad->points[2] = (TQ3Point3D) { +xs, +ys, 0 };
+	gPauseQuad->points[3] = (TQ3Point3D) { -xs, +ys, 0 };
+
 	Render_SetDefaultModifiers(&gPauseQuadRenderMods);
 	gPauseQuadRenderMods.statusBits |= STATUS_BIT_NOFOG | STATUS_BIT_NULLSHADER;
 	//gPauseQuadRenderMods.diffuseColor.a = .66f;
@@ -77,18 +85,8 @@ const float imageAspectRatio = 200.0f/152.0f;
 		int rawMouseX, rawMouseY;
 		SDL_GetMouseState(&rawMouseX, &rawMouseY);
 
-		float xs = 200.0f/640.0f;
-		float ys = xs*gGameViewInfoPtr->aspectRatio/imageAspectRatio;
-		if (ys > .5f)
-			ys = .5f;
-
 		TQ3Point3D mouse = {rawMouseX, rawMouseY, 0};
-		Q3Point3D_Transform(&mouse, &gCameraWindowToFrustumMatrix, &mouse);
-
-		gPauseQuad->points[0] = (TQ3Point3D) { -xs, -ys, 0 };
-		gPauseQuad->points[1] = (TQ3Point3D) { +xs, -ys, 0 };
-		gPauseQuad->points[2] = (TQ3Point3D) { +xs, +ys, 0 };
-		gPauseQuad->points[3] = (TQ3Point3D) { -xs, +ys, 0 };
+		Q3Point3D_Transform(&mouse, &gWindowToFrustumCorrectAspect, &mouse);
 
 		int newState = 3; // empty
 		if      (mouse.x < -xs) newState = 3;		// empty

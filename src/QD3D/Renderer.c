@@ -667,6 +667,9 @@ static void DrawMeshList(int renderPass, const MeshQueueEntry* entry)
 	{
 		const TQ3TriMeshData* mesh = entry->meshPtrList[i];
 
+		if (entry->mods->statusBits & STATUS_BIT_HIDDEN)
+			continue;
+
 		bool meshIsTransparent = mesh->texturingMode == kQ3TexturingModeAlphaBlend
 				|| mesh->diffuseColor.a < .999f
 				|| entry->mods->diffuseColor.a < .999f
@@ -864,7 +867,7 @@ static void DrawMeshList(int renderPass, const MeshQueueEntry* entry)
 /*    2D    */
 /****************************/
 
-static void Render_EnterExit2D(bool enter)
+static void Render_EnterExit2D_Full640x480(bool enter)
 {
 	static RendererState backup3DState;
 
@@ -916,35 +919,33 @@ static void Render_EnterExit2D(bool enter)
 	}
 }
 
-void Render_Enter2D(void)
+void Render_Enter2D_Full640x480(void)
 {
-	Render_EnterExit2D(true);
+	Render_EnterExit2D_Full640x480(true);
 }
 
-void Render_Exit2D(void)
+void Render_Exit2D_Full640x480(void)
 {
-	Render_EnterExit2D(false);
+	Render_EnterExit2D_Full640x480(false);
 }
 
-void Render_EnterExit2D_NormalizedCoordinates(bool enter)
+void Render_Enter2D_NormalizedCoordinates(float aspect)
 {
-	if (enter)
-	{
-		glMatrixMode(GL_PROJECTION);
-		glPushMatrix();
-		glLoadIdentity();
-		glOrtho(-1, 1,  -1, 1, 0, 1000);
-		glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
-		glLoadIdentity();
-	}
-	else
-	{
-		glMatrixMode(GL_PROJECTION);
-		glPopMatrix();
-		glMatrixMode(GL_MODELVIEW);
-		glPopMatrix();
-	}
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho(-aspect, aspect, -1, 1, 0, 1000);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+}
+
+void Render_Exit2D_NormalizedCoordinates(void)
+{
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
 }
 
 void Render_Draw2DQuad(
@@ -1157,14 +1158,14 @@ void Render_Draw2DCover(int fit)
 static void DrawFadeOverlay(float opacity)
 {
 	glViewport(0, 0, gWindowWidth, gWindowHeight);
-	Render_Enter2D();
+	Render_Enter2D_Full640x480();
 	EnableState(GL_BLEND);
 	DisableState(GL_TEXTURE_2D);
 	DisableClientState(GL_TEXTURE_COORD_ARRAY);
 	glColor4f(0, 0, 0, opacity);
 	glVertexPointer(2, GL_FLOAT, 0, kFullscreenQuadPointsNDC);
 	__glDrawRangeElements(GL_TRIANGLES, 0, 3*2, 3*2, GL_UNSIGNED_BYTE, kFullscreenQuadTriangles);
-	Render_Exit2D();
+	Render_Exit2D_Full640x480();
 }
 
 #pragma mark -

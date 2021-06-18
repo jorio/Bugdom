@@ -6,6 +6,7 @@
 #include <SDL.h>
 
 // bogus types to ease noquesa transition
+// TODO NOQUESA: Nuke that when renderer rewrite is complete
 typedef void* TQ3StyleObject;
 typedef void* TQ3GroupObject;
 typedef void* TQ3CameraObject;
@@ -128,9 +129,10 @@ extern	SplineDefType				**gSplineList;
 extern	TQ3BoundingBox				gObjectGroupBBoxList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
 extern	TQ3BoundingSphere			gObjectGroupRadiusList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
 extern	TQ3Int32					gHoveredPick;
-extern	TQ3Matrix4x4				gCameraWindowToFrustumMatrix;
 extern	TQ3Matrix4x4				gCameraWorldToFrustumMatrix;
 extern	TQ3Matrix4x4				gCameraWorldToViewMatrix;
+extern	TQ3Matrix4x4				gWindowToFrustum;
+extern	TQ3Matrix4x4				gWindowToFrustumCorrectAspect;
 extern	TQ3Param2D					gEnvMapUVs[];
 extern	TQ3Point3D					gCoord;
 extern	TQ3Point3D					gMostRecentCheckPointCoord;

@@ -43,7 +43,8 @@ Boolean				gDrawLensFlare;
 TQ3Matrix4x4		gCameraWorldToFrustumMatrix;
 TQ3Matrix4x4		gCameraWorldToViewMatrix;
 TQ3Matrix4x4		gCameraViewToFrustumMatrix;
-TQ3Matrix4x4		gCameraWindowToFrustumMatrix;
+TQ3Matrix4x4		gWindowToFrustum;
+TQ3Matrix4x4		gWindowToFrustumCorrectAspect;
 
 static float		gCameraLookAtAccel,gCameraFromAccelY,gCameraFromAccel;
 static float		gCameraDistFromMe, gCameraHeightFactor,gCameraLookAtYOff;
@@ -289,6 +290,58 @@ float	fps = gFramesPerSecondFrac;
 	
 }
 
+
+/********************** FILL PROJECTION MATRIX ************************/
+//
+// Equivalent to gluPerspective
+//
+
+static void FillProjectionMatrix(TQ3Matrix4x4* m, float fov, float aspect, float hither, float yon)
+{
+	float f = 1.0f / tanf(fov/2.0f);
+
+#define M(x,y) m->value[x][y]
+	M(0,0) = f/aspect;		M(1,0) = 0;			M(2,0) = 0;							M(3,0) = 0;
+	M(0,1) = 0;				M(1,1) = f;			M(2,1) = 0;							M(3,1) = 0;
+	M(0,2) = 0;				M(1,2) = 0;			M(2,2) = (yon+hither)/(hither-yon);	M(3,2) = 2*yon*hither/(hither-yon);
+	M(0,3) = 0;				M(1,3) = 0;			M(2,3) = -1;						M(3,3) = 0;
+#undef M
+}
+
+/********************** FILL PROJECTION MATRIX ************************/
+//
+// Equivalent to gluLookAt
+//
+
+static void FillLookAtMatrix(
+		TQ3Matrix4x4* m,
+		const TQ3Point3D* eye,
+		const TQ3Point3D* target,
+		const TQ3Vector3D* upDir)
+{
+	TQ3Vector3D forward;
+	Q3Point3D_Subtract(eye, target, &forward);
+	Q3Vector3D_Normalize(&forward, &forward);
+
+	TQ3Vector3D left;
+	Q3Vector3D_Cross(upDir, &forward, &left);
+	Q3Vector3D_Normalize(&left, &left);
+
+	TQ3Vector3D up;
+	Q3Vector3D_Cross(&forward, &left, &up);
+
+	float tx = Q3Vector3D_Dot((TQ3Vector3D*)eye, &left);
+	float ty = Q3Vector3D_Dot((TQ3Vector3D*)eye, &up);
+	float tz = Q3Vector3D_Dot((TQ3Vector3D*)eye, &forward);
+
+#define M(x,y) m->value[x][y]
+	M(0,0) = left.x;	M(1,0) = left.y;	M(2,0) = left.z;		M(3,0) = -tx;
+	M(0,1) = up.x;		M(1,1) = up.y;		M(2,1) = up.z;			M(3,1) = -ty;
+	M(0,2) = forward.x;	M(1,2) = forward.y;	M(2,2) = forward.z;		M(3,2) = -tz;
+	M(0,3) = 0;			M(1,3) = 0;			M(2,3) = 0;				M(3,3) = 1;
+#undef M
+}
+
 /********************** CALC CAMERA MATRIX INFO ************************/
 //
 // Must be called inside render start/end loop!!!
@@ -299,25 +352,27 @@ void CalcCameraMatrixInfo(QD3DSetupOutputType *setupInfo)
 			/* INIT PROJECTION MATRIX */
 
 	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
 
-	gluPerspective(
-			Q3Math_RadiansToDegrees(setupInfo->fov),	// fov
-			setupInfo->aspectRatio,	// aspect
-			setupInfo->hither,		// hither
-			setupInfo->yon);		// yon
+	FillProjectionMatrix(
+			&gCameraViewToFrustumMatrix,
+			setupInfo->fov,
+			setupInfo->aspectRatio,
+			setupInfo->hither,
+			setupInfo->yon);
 
-
+	glLoadMatrixf((const GLfloat*) gCameraViewToFrustumMatrix.value);
 
 			/* INIT MODELVIEW MATRIX */
 
 	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	gluLookAt(
-			setupInfo->currentCameraCoords.x,	setupInfo->currentCameraCoords.y,	setupInfo->currentCameraCoords.z,
-			setupInfo->currentCameraLookAt.x,	setupInfo->currentCameraLookAt.y,	setupInfo->currentCameraLookAt.z,
-			setupInfo->currentCameraUpVector.x,	setupInfo->currentCameraUpVector.y,	setupInfo->currentCameraUpVector.z);
 
+	FillLookAtMatrix(
+			&gCameraWorldToViewMatrix,
+			&setupInfo->currentCameraCoords,
+			&setupInfo->currentCameraLookAt,
+			&setupInfo->currentCameraUpVector);
+
+	glLoadMatrixf((const GLfloat*) gCameraWorldToViewMatrix.value);
 
 			/* UPDATE LIGHT POSITIONS */
 
@@ -333,7 +388,6 @@ void CalcCameraMatrixInfo(QD3DSetupOutputType *setupInfo)
 	}
 
 
-
 			/* GET CAMERA VIEW MATRIX INFO */
 
 	/* // TODO NOQUESA: original QD3D version
@@ -345,9 +399,6 @@ void CalcCameraMatrixInfo(QD3DSetupOutputType *setupInfo)
 	Q3Camera_GetViewToFrustum(viewPtr->cameraObject, &gCameraViewToFrustumMatrix);
 	*/
 
-
-	glGetFloatv(GL_MODELVIEW_MATRIX, (GLfloat *)&gCameraWorldToViewMatrix);				// get camera's world to view matrix
-	glGetFloatv(GL_PROJECTION_MATRIX, (GLfloat *)&gCameraViewToFrustumMatrix);			// get camera's view to frustrum matrix (to calc screen coords)
 	Q3Matrix4x4_Multiply(&gCameraWorldToViewMatrix, &gCameraViewToFrustumMatrix, &gCameraWorldToFrustumMatrix);		// calc world to frustum matrix
 
 
@@ -367,7 +418,7 @@ void CalcCameraMatrixInfo(QD3DSetupOutputType *setupInfo)
 	UpdateFrustumPlanes(&gCameraWorldToFrustumMatrix);
 
 
-			/* PREPARE WINDOW-TO-FRUSTUM MATRIX */
+			/* PREPARE WINDOW TO CLIPPED NORMALIZED 2D MATRIX */
 
 	{
 		TQ3Area viewportRect = Render_GetAdjustedViewportRect(setupInfo->paneClip, GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
@@ -377,11 +428,14 @@ void CalcCameraMatrixInfo(QD3DSetupOutputType *setupInfo)
 		if (w < .001f) w = .001f;						// avoid divide by zero
 		if (h < .001f) h = .001f;
 
-		TQ3Matrix4x4 windowToFrustumScale;
-		Q3Matrix4x4_SetScale(&windowToFrustumScale, 2.0f / w, -2.0f / h, 0);
+		TQ3Matrix4x4 temp;
+		Q3Matrix4x4_SetScale(&temp, 2.0f / w, -2.0f / h, 0);
 
-		Q3Matrix4x4_SetTranslate(&gCameraWindowToFrustumMatrix, -viewportRect.min.x - w * .5f, -viewportRect.min.y - h * .5f, 0);
-		Q3Matrix4x4_Multiply(&gCameraWindowToFrustumMatrix, &windowToFrustumScale, &gCameraWindowToFrustumMatrix);
+		Q3Matrix4x4_SetTranslate(&gWindowToFrustum, -viewportRect.min.x - w * .5f, -viewportRect.min.y - h * .5f, 0);
+		Q3Matrix4x4_Multiply(&gWindowToFrustum, &temp, &gWindowToFrustum);
+
+		Q3Matrix4x4_SetScale(&temp, setupInfo->aspectRatio, 1, 1);
+		Q3Matrix4x4_Multiply(&gWindowToFrustum, &temp, &gWindowToFrustumCorrectAspect);
 	}
 
 	CHECK_GL_ERROR();
@@ -596,7 +650,7 @@ TQ3Point3D		from;
 TQ3Vector3D		axis,lookAtVector,sunVector;
 float			length;
 const bool doMoon = gMoonFlareTextureName != 0;
-const float invAspectRatio = 1.0f / setupInfo->aspectRatio;
+float aspect = setupInfo->aspectRatio;
 
 	if (!gDrawLensFlare)
 		return;
@@ -655,13 +709,12 @@ const float invAspectRatio = 1.0f / setupInfo->aspectRatio;
 		float x = axis.x * length * gFlareOffsetTable[i];
 		float y = axis.y * length * gFlareOffsetTable[i];
 
-		float yExtent = s * .5f;
-		float xExtent = yExtent * invAspectRatio;
+		float extent = s * .5f;
 
-		mesh->points[0] = (TQ3Point3D) { x - xExtent, y - yExtent, 0 };
-		mesh->points[1] = (TQ3Point3D) { x + xExtent, y - yExtent, 0 };
-		mesh->points[2] = (TQ3Point3D) { x + xExtent, y + yExtent, 0 };
-		mesh->points[3] = (TQ3Point3D) { x - xExtent, y + yExtent, 0 };
+		mesh->points[0] = (TQ3Point3D) { x*aspect - extent, y - extent, 0 };
+		mesh->points[1] = (TQ3Point3D) { x*aspect + extent, y - extent, 0 };
+		mesh->points[2] = (TQ3Point3D) { x*aspect + extent, y + extent, 0 };
+		mesh->points[3] = (TQ3Point3D) { x*aspect - extent, y + extent, 0 };
 
 		if (doMoon && (i == 0))							// see if do moon
 			mesh->glTextureName = gMoonFlareTextureName;
