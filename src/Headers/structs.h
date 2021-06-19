@@ -89,11 +89,7 @@ typedef struct
 typedef struct
 {
 	long 				parentBone;			 			// index to previous bone
-	TQ3GroupObject		ignored1;			
-	TQ3Matrix4x4		ignored2;	
-	TQ3TransformObject	ignored3;
-	unsigned char		ignored4[32];		
-	TQ3Point3D			coord;							// absolute coord (not relative to parent!) 
+	TQ3Point3D			coord;							// absolute coord (not relative to parent!)
 	u_short				numPointsAttachedToBone;		// # vertices/points that this bone has
 	u_short				*pointList;						// indecies into gDecomposedPointList
 	u_short				numNormalsAttachedToBone;		// # vertex normals this bone has
@@ -282,8 +278,6 @@ struct ObjNode
 	
 		
 	TQ3Matrix4x4		BaseTransformMatrix;	// matrix which contains all of the transforms for the object as a whole
-//	TQ3TransformObject	BaseTransformObject;	// extra LEGAL object ref to BaseTransformMatrix (other legal ref is kept in BaseGroup)
-//	TQ3Object			BaseGroup;				// group containing all geometry,etc. for this object (for drawing)
 	TQ3BoundingSphere	BoundingSphere;			// radius use for object culling calculation
 
 	int						NumMeshes;

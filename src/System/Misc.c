@@ -117,12 +117,6 @@ Boolean beenHere = false;
 
 		GameScreenToBlack();
 
-		printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-		if (gQD3DInitialized)
-			Q3Exit();
-#endif
-
 		FreeInfobarArt();
 	}
 

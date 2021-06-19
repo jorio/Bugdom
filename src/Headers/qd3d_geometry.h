@@ -30,16 +30,9 @@ typedef struct
 void QD3D_CalcObjectBoundingBox(int numMeshes, TQ3TriMeshData** meshList, TQ3BoundingBox* boundingBox);
 void QD3D_CalcObjectBoundingSphere(int numMeshes, TQ3TriMeshData** meshList, TQ3BoundingSphere* boundingSphere);
 void QD3D_ExplodeGeometry(ObjNode *theNode, float boomForce, Byte particleMode, int particleDensity, float particleDecaySpeed);
-extern	void QD3D_ReplaceGeometryTexture(TQ3Object obj, TQ3SurfaceShaderObject theShader);
 void QD3D_ScrollUVs(TQ3TriMeshData* meshList, float du, float dv);
 extern	void QD3D_InitParticles(void);
 extern	void QD3D_MoveParticles(void);
 void QD3D_DrawParticles(const QD3DSetupOutputType *setupInfo);
-
-void ForEachTriMesh(TQ3Object root, void (*callback)(TQ3TriMeshData triMeshData, void* userData), void* userData, uint64_t triMeshMask);
-
-void QD3D_ClearDiffuseColor_TriMesh(TQ3TriMeshData triMeshData, void* userData_unused);
-
-ObjNode* MakeNewDisplayGroupObject_TexturedQuad(TQ3SurfaceShaderObject surfaceShader, float aspectRatio);
 
 TQ3TriMeshData* MakeQuadMesh(int numQuads, float width, float height);

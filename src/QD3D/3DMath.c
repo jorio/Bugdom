@@ -49,8 +49,11 @@ void MatrixMultiplyFast(TQ3Matrix4x4 *a, TQ3Matrix4x4 *b, TQ3Matrix4x4 *result)
 {
 Byte	i,j;
 
+	GAME_ASSERT(a != result);
+	GAME_ASSERT(b != result);
+
 			/* DO IT */
-			
+
 	for (i = 0; i < 4; i++)
 	{
 		for (j = 0; j < 4; j++)

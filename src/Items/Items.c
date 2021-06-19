@@ -25,9 +25,6 @@ static void MoveStump(ObjNode *stump);
 /*    CONSTANTS             */
 /****************************/
 
-#define	DIST_TO_FRONT	36
-#define	DIST_TO_SIDE	21
-
 #define	TREE_SCALE		20.0f
 
 #define	HORIZ_PIPE_SCALE	.5f

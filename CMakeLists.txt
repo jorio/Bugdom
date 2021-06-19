@@ -159,7 +159,6 @@ set(GAME_HEADERS
 	${GAME_SRCDIR}/Headers/splineitems.h
 	${GAME_SRCDIR}/Headers/structs.h
 	${GAME_SRCDIR}/Headers/terrain.h
-	${GAME_SRCDIR}/Headers/title.h
 	${GAME_SRCDIR}/Headers/triggers.h
 	${GAME_SRCDIR}/Headers/window.h
 	${GAME_SRCDIR}/Headers/gamepatches.h

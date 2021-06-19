@@ -18,7 +18,6 @@
 
 
 static void MoveRipple(ObjNode *theNode);
-static void DeleteParticleGroup(int groupNum);
 
 
 

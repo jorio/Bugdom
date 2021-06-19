@@ -518,7 +518,7 @@ static void DrawSprite(int spriteNum, int x, int y)
 
 	for (int row = 0; row < spriteHeight; row++)
 	{
-		for (int x = 0; x < spriteWidth; x++)
+		for (int col = 0; col < spriteWidth; col++)
 		{
 			*out = (*out & ~*inMask) | *in;
 			out++;

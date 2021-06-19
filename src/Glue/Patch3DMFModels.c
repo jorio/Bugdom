@@ -128,8 +128,10 @@ static void SetAlphaTest(TQ3TriMeshData triMeshData, void* userData_thresholdFlo
 /*    PUBLIC FUNCTIONS      */
 /****************************/
 
-void PatchSkeleton3DMF(const char* cName, TQ3Object newModel)
+void PatchSkeleton3DMF(const char* cName, TQ3MetaFile* newModel)
 {
+	printf("TODO NOQUESA: %s\n", __func__);
+#if 0	// NOQUESA
 	// Discard transparent texels for performance
 	ForEachTriMesh(newModel, SetAlphaTest, (void *) &gTextureAlphaThreshold, ~0ull);
 
@@ -139,9 +141,10 @@ void PatchSkeleton3DMF(const char* cName, TQ3Object newModel)
 	{
 		ForEachTriMesh(newModel, SetUVClamp, (void *) SETUVCLAMP_CLAMP_BOTH, ~0ull);
 	}
+#endif
 }
 
-void PatchGrouped3DMF(const char* cName, TQ3Object* objects, int nObjects)
+void PatchGrouped3DMF(const char* cName, int nGroups, TQ3TriMeshFlatGroup* groups)
 {
 	printf("TODO NOQUESA: %s\n", __func__);
 #if 0	// NOQUESA

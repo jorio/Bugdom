@@ -223,7 +223,6 @@ short  PlayEffect_Parms(short effectNum, u_long leftVolume, u_long rightVolume, 
 void ChangeChannelVolume(short channel, float leftVol, float rightVol);
 short PlayEffect3D(short effectNum, TQ3Point3D *where);
 Boolean Update3DSoundChannel(short effectNum, short *channel, TQ3Point3D *where);
-void DoSSPConfig(void);
 Boolean IsEffectChannelPlaying(short chanNum);
 void UpdateListenerLocation(void);
 

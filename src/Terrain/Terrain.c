@@ -1326,16 +1326,8 @@ void DrawTerrain(const QD3DSetupOutputType *setupInfo)
 		
 	TQ3Point3D cameraCoord = setupInfo->currentCameraCoords;
 	
-			
+
 				/* DRAW STUFF */
-
-#if 0	// NOQUESA
-	//QD3D_SetTextureWrapMode(kQAGL_Clamp);								// clamp textures for nicer seams -- Source port removal: now set on the supertiles' TQ3SurfaceShaderObject
-	QD3D_SetTriangleCacheMode(false);
-	Q3Shader_Submit(setupInfo->nullShaderObject, view);					// use NULL shader to draw terrain
-	QD3D_SetMultisampling(true);										// set MSAA (only honored if prefs allow it)
-#endif
-
 
 	for (int i = 0; i < MAX_SUPERTILES; i++)
 	{
@@ -1403,15 +1395,9 @@ void DrawTerrain(const QD3DSetupOutputType *setupInfo)
 		}
 	}
 
-#if 0	// NOQUESA
-	//QD3D_SetTextureWrapMode(kQAGL_Repeat);							// let textures wrap/repeat -- Source port removal: now set on the supertiles' TQ3SurfaceShaderObject
-	Q3Shader_Submit(setupInfo->shaderObject, view);						// set the normal shader
-	QD3D_SetTriangleCacheMode(true);
-#endif
 
 		/* DRAW OBJECTS */
-		
-		
+
 	QD3D_SetMultisampling(false);										// disable MSAA for fences -- they use alpha testing so it wouldn't do much
 	DrawFences(setupInfo);												// draw these first
 	DrawObjects(setupInfo);												// draw objNodes

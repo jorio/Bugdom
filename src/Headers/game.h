@@ -5,18 +5,6 @@
 #include "QD3DMath.h"
 #include <SDL.h>
 
-// bogus types to ease noquesa transition
-// TODO NOQUESA: Nuke that when renderer rewrite is complete
-typedef void* TQ3StyleObject;
-typedef void* TQ3GroupObject;
-typedef void* TQ3CameraObject;
-typedef void* TQ3DrawContextObject;
-typedef void* TQ3AttributeSet;
-typedef void* TQ3Mipmap;
-typedef void* TQ3PickObject;
-typedef void* TQ3RendererObject;
-typedef void* TQ3DisplayGroupObject;
-
 #ifdef __cplusplus
 extern "C"
 {
@@ -49,7 +37,6 @@ extern "C"
 #include "qd3d_geometry.h"
 #include "environmentmap.h"
 #include "infobar.h"
-#include "title.h"
 #include "effects.h"
 #include "miscscreens.h"
 #include "fences.h"
@@ -66,6 +53,8 @@ extern "C"
 #include "tween.h"
 #include "mousesmoothing.h"
 #include "frustumculling.h"
+#include "gamepatches.h"
+#include "structformats.h"
 
 extern	Boolean						gAbortedFlag;
 extern	Boolean						gAreaCompleted;
@@ -83,7 +72,6 @@ extern	Boolean						gPlayerCanMove;
 extern	Boolean						gPlayerGotKilledFlag;
 extern	Boolean						gPlayerKnockOnButt;
 extern	Boolean						gPlayerUsingKeyControl;
-extern	Boolean						gQD3DInitialized;
 extern	Boolean						gResetSong;
 extern	Boolean						gRestoringSavedGame;
 extern	Boolean						gShowBottomBar;
@@ -225,10 +213,6 @@ extern	unsigned long 				gScore;
 #ifdef __cplusplus
 };
 #endif
-
-// C++
-#include "gamepatches.h"
-#include "structformats.h"
 
 #define GAME_ASSERT(condition) do { if (!(condition)) DoAssert(#condition, __func__, __LINE__); } while(0)
 #define GAME_ASSERT_MESSAGE(condition, message) do { if (!(condition)) DoAssert(message, __func__, __LINE__); } while(0)

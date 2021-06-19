@@ -17,8 +17,8 @@
 /****************************/
 
 static void FlushObjectDeleteQueue(void);
-static void DrawCollisionBoxes(ObjNode *theNode, TQ3ViewObject view);
-static void DrawBoundingSphere(ObjNode *theNode, TQ3ViewObject view);
+static void DrawCollisionBoxes(ObjNode *theNode);
+static void DrawBoundingSphere(ObjNode *theNode);
 
 
 /****************************/
@@ -272,18 +272,6 @@ TQ3Matrix4x4			transMatrix,scaleMatrix,rotMatrix;
 	MatrixMultiply(&theNode->BaseTransformMatrix,							// mult by trans matrix
 						 &transMatrix,
 						 &theNode->BaseTransformMatrix);
-
-#if 0	// NOQUESA
-					/* CREATE A MATRIX XFORM */
-
-	transObject = (TQ3TransformObject)Q3MatrixTransform_New(&theNode->BaseTransformMatrix);			// make matrix xform object
-	GAME_ASSERT(transObject);
-
-	myGroupPosition = (TQ3GroupPosition)Q3Group_AddObject(theNode->BaseGroup, transObject);		// add to base group
-	GAME_ASSERT(myGroupPosition);
-
-	theNode->BaseTransformObject = transObject;									// keep extra LEGAL ref (remember to dispose later)
-#endif
 }
 
 
@@ -350,16 +338,8 @@ ObjNode		*thisNodePtr;
 void DrawObjects(const QD3DSetupOutputType *setupInfo)
 {
 ObjNode		*theNode;
-TQ3Status	myStatus;
-short		i,numTriMeshes;
 unsigned long	statusBits;
-Boolean			noCache = false;
-Boolean			useNullShader = false;
-Boolean			noZWrites = false;
-Boolean			noFog = false;
 float			cameraX, cameraZ;
-static const TQ3ColorRGB	white = {1,1,1};	
-short			skelType;		
 
 	if (gFirstNodePtr == nil)									// see if there are any objects
 		return;
@@ -389,32 +369,12 @@ short			skelType;
 
 		if (statusBits & STATUS_BIT_ISCULLED)					// see if is culled
 			goto next;		
-		
+
 		if (statusBits & STATUS_BIT_HIDDEN)						// see if is hidden
 			goto next;		
 
 		if (theNode->CType == INVALID_NODE_FLAG)				// see if already deleted
 			goto next;		
-
-
-				/**************************/
-				/* CHECK TRIANGLE CACHING */
-				/**************************/
-				
-		if (statusBits & STATUS_BIT_NOTRICACHE)					// see if disable caching
-		{
-			if (!noCache)										// only disable if currently on
-			{
-				QD3D_SetTriangleCacheMode(false);
-				noCache = true;
-			}
-		}
-		else
-		if (noCache)											// if caching disabled, reenable it
-		{
-			QD3D_SetTriangleCacheMode(true);
-			noCache = false;
-		}
 
 
 			/******************/
@@ -443,70 +403,6 @@ short			skelType;
 			theNode->RenderModifiers.autoFadeFactor = 1.0f;
 		}
 
-
-			/*********************/
-			/* CHECK NULL SHADER */
-			/*********************/
-
-/* NOQUESA: rendermods should be enough
-		if (statusBits & STATUS_BIT_NULLSHADER)
-		{
-			if (!useNullShader)
-			{
-				Q3Shader_Submit(setupInfo->nullShaderObject, view);
-				useNullShader = true;
-			}
-		}
-		else
-		if (useNullShader)
-		{
-			useNullShader = false;
-			Q3Shader_Submit(setupInfo->shaderObject, view);
-		}
-*/
-		
-			/*********************/
-			/* CHECK NO Z-WRITES */
-			/*********************/
-
-/* NOQUESA: rendermods should be enough
-		if (statusBits & STATUS_BIT_NOZWRITE)
-		{
-			if (!noZWrites)
-			{
-				QD3D_SetZWrite(false);
-				noZWrites = true;
-			}
-		}
-		else
-		if (noZWrites)
-		{
-			noZWrites = false;
-			QD3D_SetZWrite(true);
-		}
-*/
-	
-			/****************/
-			/* CHECK NO FOG */
-			/****************/
-
-/* NOQUESA: rendermods should be enough
-		if (statusBits & STATUS_BIT_NOFOG)
-		{
-			if (!noFog)
-			{
-				QD3D_DisableFog(setupInfo);
-				noFog = true;
-			}
-		}
-		else
-		if (noFog)
-		{
-			noFog = false;
-			QD3D_ReEnableFog(setupInfo);
-		}
-*/
-
 			/************************/
 			/* SHOW COLLISION BOXES */
 			/************************/
@@ -529,8 +425,6 @@ short			skelType;
 		{
 			case	SKELETON_GENRE:
 					UpdateSkinnedGeometry(theNode);													// update skeleton geometry
-					numTriMeshes = theNode->Skeleton->skeletonDefinition->numDecomposedTriMeshes;
-					skelType = theNode->Type;
 					Render_SubmitMeshList(															// submit each trimesh of it
 							theNode->NumMeshes,
 							theNode->MeshList,
@@ -561,30 +455,6 @@ short			skelType;
 next:
 		theNode = (ObjNode *)theNode->NextNode;
 	}while (theNode != nil);
-
-
-				/*****************************/
-				/* RESET SETTINGS TO DEFAULT */
-				/*****************************/
-
-#if 0	// TODO NOQUESA
-	if (autoFade)
-		Q3Attribute_Submit(kQ3AttributeTypeTransparencyColor, &white, view);			
-
-	if (noCache)												// if caching disabled, reenable it
-		QD3D_SetTriangleCacheMode(true);
-
-	if (useNullShader)
-		Q3Shader_Submit(setupInfo->shaderObject, view);
-
-	if (noZWrites)
-		QD3D_SetZWrite(true);
-
-	if (noFog)
-		QD3D_ReEnableFog(setupInfo);
-
-	SubmitReflectionMapQueue(setupInfo);						// draw anything in the reflection map queue
-#endif
 }
 
 
@@ -990,7 +860,7 @@ void MakeObjectTransparent(ObjNode *theNode, float transPercent)
 
 /************************ DRAW COLLISION BOXES ****************************/
 
-static void DrawCollisionBoxes(ObjNode *theNode, TQ3ViewObject view)
+static void DrawCollisionBoxes(ObjNode *theNode)
 {
 	printf("TODO NOQUESA: %s\n", __func__);
 #if 0	// NOQUESA
@@ -1104,7 +974,7 @@ float			left,right,top,bottom,front,back;
 
 /************************ DRAW BOUNDING SPHERE (FOR CULLING) ****************************/
 
-static void DrawBoundingSphere(ObjNode* theNode, TQ3ViewObject view)
+static void DrawBoundingSphere(ObjNode* theNode)
 {
 	printf("TODO NOQUESA: %s\n", __func__);
 #if 0	// NOQUESA
