@@ -899,7 +899,7 @@ ObjNode	*newObj;
 	gNewObjectDefinition.coord.x 	= coord->x;
 	gNewObjectDefinition.coord.y 	= GetTerrainHeightAtCoord(coord->x,coord->z,FLOOR);
 	gNewObjectDefinition.coord.z 	= coord->z;
-	gNewObjectDefinition.flags 		= 0;
+	gNewObjectDefinition.flags 		= STATUS_BIT_NOZWRITE | STATUS_BIT_KEEPBACKFACES_2PASS;
 	gNewObjectDefinition.slot 		= SLOT_OF_DUMB-1;
 	gNewObjectDefinition.moveCall 	= MoveShockwave;
 	gNewObjectDefinition.rot 		= 0;
@@ -917,7 +917,6 @@ ObjNode	*newObj;
 
 	newObj->Health = .6;
 	MakeObjectTransparent(newObj, newObj->Health);
-	MakeObjectKeepBackfaces(newObj);
 }
 
 

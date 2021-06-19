@@ -376,8 +376,7 @@ EventRecord	theEvent;
 	gNewObjectDefinition.flags = STATUS_BIT_KEEPBACKFACES_2PASS;
 	gNewObjectDefinition.moveCall = MoveCursor;
 	gCursorObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-	MakeObjectKeepBackfaces(gCursorObj);
-	
+
 	for (i=0; i < MAX_NAME_LENGTH; i++)					// init name to blank
 	{
 		gNewName.name[i] = ' ';

@@ -573,7 +573,8 @@ ObjNode	*newObj;
 	gNewObjectDefinition.coord.x 	= theNode->Coord.x;
 	gNewObjectDefinition.coord.y 	= theNode->Coord.y + 100.0f + (RandomFloat()*120.0f);
 	gNewObjectDefinition.coord.z 	= theNode->Coord.z;
-	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER|STATUS_BIT_GLOW|STATUS_BIT_NOZWRITE|gAutoFadeStatusBits;
+	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER | STATUS_BIT_GLOW
+			| STATUS_BIT_NOZWRITE | STATUS_BIT_KEEPBACKFACES | gAutoFadeStatusBits;
 	gNewObjectDefinition.slot 		= 400;
 	gNewObjectDefinition.moveCall 	= MoveGasTrail;
 	gNewObjectDefinition.rot 		= RandomFloat()*PI2;
@@ -591,8 +592,6 @@ ObjNode	*newObj;
 	SetObjectCollisionBounds(newObj,90,-90,-100,100,100,-100);
 
 	newObj->Health = 5.0f + RandomFloat()*3.0f;
-
-	MakeObjectKeepBackfaces(newObj);
 
 	newObj->Delta.x = (RandomFloat()-.5f) * 50.0f;
 	newObj->Delta.z = (RandomFloat()-.5f) * 50.0f;

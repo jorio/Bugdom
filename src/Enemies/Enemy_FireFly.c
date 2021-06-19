@@ -140,13 +140,11 @@ ObjNode	*newObj,*glow;
 	gNewObjectDefinition.group 		= NIGHT_MGroupNum_FireFlyGlow;	
 	gNewObjectDefinition.type 		= NIGHT_MObjType_FireFlyGlow;
 	gNewObjectDefinition.coord		= newObj->Coord;
-	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER|STATUS_BIT_GLOW|STATUS_BIT_NOZWRITE|STATUS_BIT_NOFOG;
+	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER | STATUS_BIT_GLOW | STATUS_BIT_NOZWRITE | STATUS_BIT_NOFOG | STATUS_BIT_KEEPBACKFACES;
 	gNewObjectDefinition.slot		= SLOT_OF_DUMB+30;
 	gNewObjectDefinition.moveCall 	= nil;
 	gNewObjectDefinition.scale 		= FLARE_SCALE;
 	glow = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-
-	MakeObjectKeepBackfaces(glow);
 
 	newObj->ChainNode = glow;
 	

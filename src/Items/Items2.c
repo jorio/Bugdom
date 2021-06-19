@@ -787,7 +787,7 @@ int		n;
 	gNewObjectDefinition.coord.x 	= x;
 	gNewObjectDefinition.coord.y 	= GetTerrainHeightAtCoord(x,z,FLOOR);
 	gNewObjectDefinition.coord.z 	= z;
-	gNewObjectDefinition.flags 		= gAutoFadeStatusBits;
+	gNewObjectDefinition.flags 		= STATUS_BIT_KEEPBACKFACES | gAutoFadeStatusBits;
 	gNewObjectDefinition.slot 		= 550;
 	gNewObjectDefinition.moveCall 	= MoveHoneyTube;
 	gNewObjectDefinition.rot 		= (float)itemPtr->parm[1] * (PI2/4);
@@ -797,8 +797,6 @@ int		n;
 		return(false);
 
 	newObj->TerrainItemPtr = itemPtr;								// keep ptr to item list
-
-	MakeObjectKeepBackfaces(newObj);
 
 	newObj->CType = CTYPE_MISC;
 	newObj->CBits = CBITS_ALLSOLID;

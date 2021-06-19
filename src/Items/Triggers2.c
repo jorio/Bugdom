@@ -665,7 +665,7 @@ float	y;
 	gNewObjectDefinition.type 		= GLOBAL1_MObjType_LadyBugCage;	
 	gNewObjectDefinition.coord.x 	= x;
 	gNewObjectDefinition.coord.z 	= z;
-	gNewObjectDefinition.flags 		= gAutoFadeStatusBits;
+	gNewObjectDefinition.flags 		= STATUS_BIT_KEEPBACKFACES | gAutoFadeStatusBits;
 	gNewObjectDefinition.slot++;
 	gNewObjectDefinition.moveCall 	= nil;
 	gNewObjectDefinition.rot 		= 0;
@@ -683,10 +683,8 @@ float	y;
 	post[3]->ChainNode = cage;	
 	cage->ChainHead = post[0];
 
-	MakeObjectKeepBackfaces(cage);
-	
-	
-	
+
+
 			/****************/
 			/* MAKE LADYBUG */
 			/****************/

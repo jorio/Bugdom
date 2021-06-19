@@ -1058,18 +1058,17 @@ ObjNode	*letter,*chute;
 
 
 					/* CREATE PARACHUTE */
-		
+
 			gNewObjectDefinition.group 		= MODEL_GROUP_LEVELINTRO;	
 			gNewObjectDefinition.type 		= LINTRO_MObjType_Parachute;	
 			gNewObjectDefinition.coord.y	+= 100;
 			gNewObjectDefinition.slot++;
+			gNewObjectDefinition.flags 		= STATUS_BIT_KEEPBACKFACES;
 			gNewObjectDefinition.moveCall 	= nil;
 			gNewObjectDefinition.rot 		= 0;
 			gNewObjectDefinition.scale 		= .1;
 			chute = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-			
-			MakeObjectKeepBackfaces(chute);
-			
+
 			letter->ChainNode = chute;
 			
 		}
@@ -1388,7 +1387,7 @@ static Byte	letters[] = {LINTRO_MObjType_L, LINTRO_MObjType_E, LINTRO_MObjType_V
 		gNewObjectDefinition.coord.y 	= 75;
 		gNewObjectDefinition.coord.z 	= 0;
 		gNewObjectDefinition.slot 		= 200;
-		gNewObjectDefinition.flags 		= 0;
+		gNewObjectDefinition.flags 		= STATUS_BIT_KEEPBACKFACES_2PASS;
 		gNewObjectDefinition.moveCall 	= MoveAntHillLetter;
 		gNewObjectDefinition.rot 		= 0;
 		gNewObjectDefinition.scale 		= 1.2;
@@ -1396,7 +1395,6 @@ static Byte	letters[] = {LINTRO_MObjType_L, LINTRO_MObjType_E, LINTRO_MObjType_V
 
 		gLetterObj[i]->Health = -.5f - RandomFloat()*1.0f;
 		MakeObjectTransparent(gLetterObj[i], 0);
-		MakeObjectKeepBackfaces(gLetterObj[i]);
 
 		if (i == 4)					// spacing before number
 			x += 300;

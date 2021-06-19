@@ -830,16 +830,6 @@ TQ3Status 				error;
 #endif
 }
 
-/********************* MAKE OBJECT KEEP BACKFACES ***********************/
-//
-// Puts a backfacing style object in the base group.
-//
-
-void MakeObjectKeepBackfaces(ObjNode *theNode)
-{
-	theNode->StatusBits |= STATUS_BIT_KEEPBACKFACES;
-}
-
 
 
 

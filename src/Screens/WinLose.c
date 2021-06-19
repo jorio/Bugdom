@@ -249,11 +249,11 @@ static const TQ3Point2D po[4] =
 	gNewObjectDefinition.coord.x 	= CAGE_X;
 	gNewObjectDefinition.coord.y 	= CAGE_Y;
 	gNewObjectDefinition.coord.z 	= CAGE_Z;
+	gNewObjectDefinition.flags 		= STATUS_BIT_KEEPBACKFACES;
 	gNewObjectDefinition.moveCall 	= nil;
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= scale;
 	newObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-	MakeObjectKeepBackfaces(newObj);
 
 
 			/* 4 POSTS */
@@ -265,6 +265,7 @@ static const TQ3Point2D po[4] =
 		gNewObjectDefinition.coord.x 	= CAGE_X + (po[i].x * scale);
 		gNewObjectDefinition.coord.y 	= CAGE_Y;
 		gNewObjectDefinition.coord.z 	= CAGE_Z + (po[i].y * scale);
+		gNewObjectDefinition.flags 		= 0;
 		gNewObjectDefinition.rot 		= -PI/2 + (PI/2 * i);
 		MakeNewDisplayGroupObject(&gNewObjectDefinition);
 	}
@@ -476,11 +477,11 @@ static const TQ3Point2D po[4] =
 	gNewObjectDefinition.coord.x 	= CAGE_X;
 	gNewObjectDefinition.coord.y 	= CAGE_Y;
 	gNewObjectDefinition.coord.z 	= CAGE_Z;
+	gNewObjectDefinition.flags 		= STATUS_BIT_KEEPBACKFACES;
 	gNewObjectDefinition.moveCall 	= nil;
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= scale;
 	newObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-	MakeObjectKeepBackfaces(newObj);
 
 
 			/* 4 POSTS */
@@ -492,6 +493,7 @@ static const TQ3Point2D po[4] =
 		gNewObjectDefinition.coord.x 	= CAGE_X + (po[i].x * scale);
 		gNewObjectDefinition.coord.y 	= CAGE_Y;
 		gNewObjectDefinition.coord.z 	= CAGE_Z + (po[i].y * scale);
+		gNewObjectDefinition.flags 		= 0;
 		gNewObjectDefinition.rot 		= -PI/2 + (PI/2 * i);
 		MakeNewDisplayGroupObject(&gNewObjectDefinition);
 	}

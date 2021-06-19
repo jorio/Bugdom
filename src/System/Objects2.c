@@ -225,8 +225,6 @@ ObjNode	*shadowObj;
 	if (shadowObj == nil)
 		return(nil);
 
-//	MakeObjectKeepBackfaces(shadowObj);
-
 	theNode->ShadowNode = shadowObj;
 
 	shadowObj->SpecialF[0] = scaleX;							// need to remeber scales for update
