@@ -9,7 +9,6 @@
 
 #include "game.h"
 #include "version.h"
-#include <SDL_opengl.h>
 
 
 /****************************/
@@ -160,27 +159,28 @@ static void MakeAboutScreenObjects(int slideNumber)
 		{
 			TextMesh_Create(&tmd, "Controls");
 
-#if 1	// TODO NOQUESA
-			printf("TODO NOQUESA: Gamepad Diagram\n");
-			TQ3SurfaceShaderObject diagramSurfaceShader = 0;
-#else
-			FSSpec diagramSpec;
-			FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Images:GamepadDiagram.tga", &diagramSpec);
-			TQ3SurfaceShaderObject diagramSurfaceShader = QD3D_TGAToTexture(&diagramSpec);
-			GAME_ASSERT(diagramSurfaceShader);
-#endif
+			GLuint diagramTexture = QD3D_LoadTextureFile(3500, kRendererTextureFlags_ClampBoth | kRendererTextureFlags_SolidBlackIsAlpha);
 
 			float y = 25;
 
+			gNewObjectDefinition.genre		= DISPLAY_GROUP_GENRE;
+			gNewObjectDefinition.group 		= MODEL_GROUP_ILLEGAL;
 			gNewObjectDefinition.coord.x = 0;
 			gNewObjectDefinition.coord.y = y;
-			gNewObjectDefinition.coord.z = -3;
-			gNewObjectDefinition.flags 	= STATUS_BIT_NOTRICACHE|STATUS_BIT_NULLSHADER|STATUS_BIT_NOZWRITE;
+			gNewObjectDefinition.coord.z = 0;
+			gNewObjectDefinition.flags 	= STATUS_BIT_NULLSHADER|STATUS_BIT_NOZWRITE;
 			gNewObjectDefinition.slot 	= kAboutScreenObjNodeSlot;
 			gNewObjectDefinition.moveCall = nil;
 			gNewObjectDefinition.rot 	= 0;
-			gNewObjectDefinition.scale = 50.0f;
-			MakeNewDisplayGroupObject_TexturedQuad(diagramSurfaceShader, 750.0f/400.0f);
+			gNewObjectDefinition.scale = 2*50.0f;
+			ObjNode* diagramNode = MakeNewObject(&gNewObjectDefinition);
+
+			TQ3TriMeshData* diagramQuad = MakeQuadMesh(1, 754.0f/400.0f);
+			diagramQuad->texturingMode = kQ3TexturingModeAlphaTest;
+			diagramQuad->glTextureName = diagramTexture;
+			AttachGeometryToDisplayGroupObject(diagramNode, 1, &diagramQuad, true, true);
+
+			UpdateObjectTransforms(diagramNode);
 
 			tmd.scale = 0.2f;
 			tmd.align = TEXTMESH_ALIGN_LEFT;
@@ -264,14 +264,5 @@ static void AboutScreenDrawStuff(const QD3DSetupOutputType *setupInfo)
 {
 	DrawObjects(setupInfo);
 	QD3D_DrawParticles(setupInfo);
-
-
-
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-#if _DEBUG
-	PickableQuads_Draw(setupInfo->viewObject);
-#endif
-#endif
 }
 
