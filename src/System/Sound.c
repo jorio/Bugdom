@@ -396,7 +396,6 @@ SCStatus				theStatus;
 
 void PlaySong(short songNum, Boolean loopFlag)
 {
-Str255	errStr = "PlaySong: Couldnt Open Music AIFF File.";
 static	SndCommand 		mySndCmd;
 int		volume;
 OSErr	iErr;
@@ -420,78 +419,31 @@ OSErr	iErr;
 			/******************************/
 			/* OPEN APPROPRIATE AIFF FILE */
 			/******************************/
-			
+
+	const char* path = NULL;
 	switch(songNum)
 	{
-		case	SONG_MENU:
-				OpenGameFile(":audio:MenuSong.aiff",&gMusicFileRefNum,errStr);
-				volume = FULL_CHANNEL_VOLUME;
-				break;
-	
-		case	SONG_GARDEN:
-				OpenGameFile(":audio:LawnSong.aiff",&gMusicFileRefNum,errStr);
-				volume = FULL_CHANNEL_VOLUME;
-				break;
-
-		case	SONG_GARDEN_OLD:
-				OpenGameFile(":audio:LawnSongOld.aiff",&gMusicFileRefNum,errStr);
-				volume = FULL_CHANNEL_VOLUME;
-				break;
-
-		case	SONG_PANGEA:
-				OpenGameFile(":audio:song_pangea",&gMusicFileRefNum,errStr);
-				volume = FULL_CHANNEL_VOLUME;
-				break;
-			
-		case	SONG_HIGHSCORES:
-				OpenGameFile(":audio:HighScores.aiff",&gMusicFileRefNum,errStr);
-				volume = FULL_CHANNEL_VOLUME;
-				break;
-
-		case	SONG_NIGHT:
-				OpenGameFile(":audio:Night.aiff",&gMusicFileRefNum,errStr);
-				volume = FULL_CHANNEL_VOLUME;
-				break;
-
-		case	SONG_FOREST:
-				OpenGameFile(":audio:Forest.aiff",&gMusicFileRefNum,errStr);
-				volume = FULL_CHANNEL_VOLUME;
-				break;
-
-		case	SONG_POND:
-				OpenGameFile(":audio:PondSong.aiff",&gMusicFileRefNum,errStr);
-				volume = FULL_CHANNEL_VOLUME;
-				break;
-
-		case	SONG_ANTHILL:
-				OpenGameFile(":audio:AntHillSong.aiff",&gMusicFileRefNum,errStr);
-				volume = FULL_CHANNEL_VOLUME;
-				break;
-				
-		case	SONG_HIVE:
-				OpenGameFile(":audio:HiveLevel.aiff",&gMusicFileRefNum,errStr);
-				volume = FULL_CHANNEL_VOLUME;
-				break;
-				
-		case	SONG_WIN:
-				OpenGameFile(":audio:WinSong.aiff",&gMusicFileRefNum,errStr);
-				volume = FULL_CHANNEL_VOLUME;
-				break;
-
-		case	SONG_LOSE:
-				OpenGameFile(":audio:LoseSong.aiff",&gMusicFileRefNum,errStr);
-				volume = FULL_CHANNEL_VOLUME;
-				break;
-
-		case	SONG_BONUS:
-				OpenGameFile(":audio:BonusSong.aiff",&gMusicFileRefNum,errStr);
-				volume = FULL_CHANNEL_VOLUME;
-				break;
-
+		case	SONG_MENU:			path = ":audio:menusong.aiff";		break;
+		case	SONG_GARDEN:		path = ":audio:lawnsong.aiff";		break;
+		case	SONG_GARDEN_OLD:	path = ":audio:lawnsongold.aiff";	break;
+		case	SONG_PANGEA:		path = ":audio:song_pangea";		break;
+		case	SONG_HIGHSCORES:	path = ":audio:highscores.aiff";	break;
+		case	SONG_NIGHT:			path = ":audio:night.aiff";			break;
+		case	SONG_FOREST:		path = ":audio:forest.aiff";		break;
+		case	SONG_POND:			path = ":audio:pondsong.aiff";		break;
+		case	SONG_ANTHILL:		path = ":audio:anthillsong.aiff";	break;
+		case	SONG_HIVE:			path = ":audio:hivelevel.aiff";		break;
+		case	SONG_WIN:			path = ":audio:winsong.aiff";		break;
+		case	SONG_LOSE:			path = ":audio:losesong.aiff";		break;
+		case	SONG_BONUS:			path = ":audio:bonussong.aiff";		break;
 		default:
-				DoAlert("PlaySong: unknown song #");
-				return;
+			DoAlert("PlaySong: unknown song #");
+			return;
 	}
+
+	gMusicFileRefNum = OpenGameFile(path);
+	volume = FULL_CHANNEL_VOLUME;
+
 
 	gCurrentSong = songNum;
 	

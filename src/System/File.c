@@ -403,29 +403,32 @@ SkeletonFile_AnimHeader_Type	*animHeaderPtr;
 
 /**************** OPEN GAME FILE **********************/
 
-void OpenGameFile(const char* filename, short *fRefNumPtr, const char* errString)
+short OpenGameFile(const char* filename)
 {
 OSErr		iErr;
 FSSpec		spec;
 Str255		s;
+short		refNum;
 
 				/* FIRST SEE IF WE CAN GET IT OFF OF DEFAULT VOLUME */
 
 	iErr = FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, filename, &spec);
 	if (iErr == noErr)
 	{
-		iErr = FSpOpenDF(&spec, fsRdPerm, fRefNumPtr);
+		iErr = FSpOpenDF(&spec, fsRdPerm, &refNum);
 		if (iErr == noErr)
-			return;
+			return refNum;
 	}
 
 	if (iErr == fnfErr)
-		DoFatalAlert2(errString,"FILE NOT FOUND.");
+		DoFatalAlert2("FILE NOT FOUND.", filename);
 	else
 	{
-		NumToStringC(iErr,s);
-		DoFatalAlert2(errString,s);
+		NumToStringC(iErr, s);
+		DoFatalAlert2(filename, s);
 	}
+
+	return -1;
 }
 
 
