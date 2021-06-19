@@ -58,7 +58,7 @@ const float imageAspectRatio = 200.0f/152.0f;
 
 	GAME_ASSERT_MESSAGE(!gPauseQuad, "Pause quad already created!");
 
-	gPauseQuad = MakeQuadMesh(1);
+	gPauseQuad = MakeQuadMesh(1, 1.0f);
 	gPauseQuad->hasVertexNormals = false;
 	gPauseQuad->texturingMode = kQ3TexturingModeOpaque;
 	gPauseQuad->glTextureName = textures[3];

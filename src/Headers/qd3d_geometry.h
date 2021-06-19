@@ -42,4 +42,4 @@ void QD3D_ClearDiffuseColor_TriMesh(TQ3TriMeshData triMeshData, void* userData_u
 
 ObjNode* MakeNewDisplayGroupObject_TexturedQuad(TQ3SurfaceShaderObject surfaceShader, float aspectRatio);
 
-TQ3TriMeshData* MakeQuadMesh(int numQuads);
+TQ3TriMeshData* MakeQuadMesh(int numQuads, float aspectRatio);

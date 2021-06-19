@@ -13,18 +13,16 @@ typedef struct
 {
 	short			slot;
 	TQ3Point3D		coord;
-	TQ3ColorRGB		color;
+	TQ3ColorRGBA	color;
 	int 	 		align;
 	float 			scale;
-	float			lowercaseScale;
-	float			uppercaseScale;
-	float 			characterSpacing;
-	float 			spaceWidth;
+	float 			letterSpacing;
 	bool			withShadow;
-	TQ3ColorRGB		shadowColor;
+	TQ3ColorRGBA	shadowColor;
 	TQ3Vector2D		shadowOffset;
 } TextMeshDef;
 
-void TextMesh_Load(void);
+void TextMesh_Init(void);
+void TextMesh_Shutdown(void);
 void TextMesh_FillDef(TextMeshDef* def);
 void TextMesh_Create(const TextMeshDef* def, const char* text);

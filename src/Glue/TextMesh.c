@@ -4,225 +4,206 @@
 
 #include "game.h"
 
+typedef struct
+{
+	float x;
+	float y;
+	float w;
+	float h;
+	float xoff;
+	float yoff;
+	float xadv;
+} AtlasGlyph;
+
+static GLuint gFontTexture = 0;
+static int gNumGlyphs = 0;
+static float gLineHeight = 0;
+static AtlasGlyph* gAtlasGlyphs = NULL;
+
 static const TextMeshDef gDefaultTextMeshDef =
 {
 	.coord				= { 0, 0, 0 },
-	.scale				= 1.0f,
+	.scale				= .5f,
 	.withShadow			= true,
-	.color				= { 1, 1, 1 },
-	.shadowColor		= { 0, 0, 0 },
+	.color				= { 1, 1, 1, 1 },
+	.shadowColor		= { 0, 0, 0, 1 },
 	.slot				= 100,
 	.align				= TEXTMESH_ALIGN_CENTER,
 	.shadowOffset		= { 2, -2 },
-	.characterSpacing	= 2,
-	.spaceWidth			= 16,
-	.lowercaseScale		= 0.75f,
-	.uppercaseScale		= 1.0f,
+	.letterSpacing		= 0,
 };
-
-static void GetTriMeshBoundingBox(TQ3TriMeshData triMeshData, void* userData_outPtrBBox)
-{
-	TQ3BoundingBox* outBBox = (TQ3BoundingBox*) userData_outPtrBBox;
-	*outBBox = triMeshData.bBox;
-}
-
-static ObjNode* MakeDiacritic(
-		Byte type,
-		short slot,
-		float x,
-		float y,
-		float z,
-		float scale
-		)
-{
-	gNewObjectDefinition.group 		= MODEL_GROUP_TEXTMESH;
-	gNewObjectDefinition.type		= type;
-	gNewObjectDefinition.slot		= slot;
-	gNewObjectDefinition.coord.x 	= x;
-	gNewObjectDefinition.coord.y 	= y;
-	gNewObjectDefinition.coord.z 	= z;
-	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER;
-	gNewObjectDefinition.moveCall 	= nil;
-	gNewObjectDefinition.rot 		= 0.0f;
-	gNewObjectDefinition.scale 		= scale;
-
-	ObjNode* glyph = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-	return glyph;
-}
 
 static void MakeText(
 		const TextMeshDef* def,
 		const char* text,
 		bool isShadow)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-	float			x				= def->coord.x + (isShadow ? def->shadowOffset.x*def->scale : 0);
-	float 			y				= def->coord.y + (isShadow ? def->shadowOffset.y*def->scale : 0);
-	float 			z				= def->coord.z + (isShadow? -0.1f: 0);
-	float			startX			= x;
 
-	ObjNode*		firstTextNode	= nil;
-	ObjNode*		lastTextNode	= nil;
+	float x = 0;
+	float y = gLineHeight * .7f;
+	float spacing = def->letterSpacing;
 
-	TQ3AttributeSet attrs = Q3AttributeSet_New();
-	Q3AttributeSet_Add(attrs, kQ3AttributeTypeDiffuseColor, isShadow? &def->shadowColor: &def->color);
-
-	for (; *text; text++)
+	float lineWidth = 0;
+	int numQuads = 0;
+	for (const char* c = text; *c; c++)
 	{
-		char c = *text;
-		bool isLower = false;
-		int type = SCORES_ObjType_0;
-
-		switch (c)
-		{
-			case ' ':
-				x += def->spaceWidth * def->scale;
-				continue;
-
-			case '0':	case '1':	case '2':	case '3':	case '4':
-			case '5':	case '6':	case '7':	case '8':	case '9':
-				type = SCORES_ObjType_0 + (c - '0'); break;
-
-			case '.':	type = SCORES_ObjType_Period;		break;
-			case '#':	type = SCORES_ObjType_Pound;		break;
-			case '?':	type = SCORES_ObjType_Question;		break;
-			case '!':	type = SCORES_ObjType_Exclamation;	break;
-			case '-':	type = SCORES_ObjType_Dash;			break;
-			case ',':	type = SCORES_ObjType_Apostrophe;	break;
-			case '\'':	type = SCORES_ObjType_Apostrophe;	break;
-			case ':':	type = SCORES_ObjType_Colon;		break;
-			case '/':	type = SCORES_ObjType_I;			break;
-			case '(':	type = SCORES_ObjType_C;			break;
-			case ')':	type = SCORES_ObjType_C;			break;
-			case '&':	type = SCORES_ObjType_3;			break;
-
-			default:
-				if (c >= 'A' && c <= 'Z')
-				{
-					type = SCORES_ObjType_A + (c - 'A');
-				}
-				else if (c >= 'a' && c <= 'z')
-				{
-					type = SCORES_ObjType_A + (c - 'a');
-					isLower = true;
-				}
-				else
-				{
-					type = SCORES_ObjType_Question;
-				}
-				break;
-		}
-
-		float scale = def->scale * (isLower? def->lowercaseScale: def->uppercaseScale);
-
-		gNewObjectDefinition.group 		= MODEL_GROUP_TEXTMESH;
-		gNewObjectDefinition.type		= type;
-		gNewObjectDefinition.slot		= def->slot;
-		gNewObjectDefinition.coord.x 	= x;
-		gNewObjectDefinition.coord.y 	= y;
-		gNewObjectDefinition.coord.z 	= z;
-		gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER;
-		gNewObjectDefinition.moveCall 	= nil;
-		gNewObjectDefinition.rot 		= 0.0f;
-		gNewObjectDefinition.scale 		= scale;
-
-		ObjNode* glyph = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-
-		// Get glyph width via the bounding box of its mesh
-		TQ3BoundingBox glyphBBox;
-		glyphBBox.min.x = 0;
-		glyphBBox.max.x = 0;
-		ForEachTriMesh(glyph->BaseGroup, GetTriMeshBoundingBox, (void *) &glyphBBox, ~0ull);
-		float glyphWidth = glyphBBox.max.x - glyphBBox.min.x;
-
-		// Hack to create missing glyph from another with a little transform
-		if (c == ',')
-		{
-			glyph->Coord.y -= 22 * scale;
-			glyph->Rot.z = -0.4f;
-		}
-		else if (c == '/')
-		{
-			glyph->Scale.y *= 1.4f;
-			glyph->Rot.z = -0.4f;
-			glyphWidth *= 3.0f;
-		}
-		else if (c == '(')
-		{
-			glyph->Scale.x *= 0.35f;
-			glyph->Scale.y *= 1.9f;
-			glyph->Coord.y += 7 * scale;
-			glyphWidth *= 0.7f;
-		}
-		else if (c == ')')
-		{
-			glyph->Scale.x *= 0.35f;
-			glyph->Scale.y *= 1.9f;
-			glyph->Coord.y -= 7 * scale;
-			glyph->Rot.z = M_PI;
-			glyphWidth *= 0.7f;
-		}
-		else if (c == '&')
-		{
-			glyph->Rot.z = M_PI;
-
-			ObjNode* diacritic1 = MakeDiacritic(SCORES_ObjType_Apostrophe, def->slot, x + scale * glyphWidth * 0.4f + scale * glyphWidth / 2.0f, y + scale * 6.0f, z, scale);
-			ObjNode* diacritic2 = MakeDiacritic(SCORES_ObjType_Apostrophe, def->slot, x + scale * glyphWidth * 0.4f + scale * glyphWidth / 2.0f, y - scale * 19.5f, z, scale);
-			AttachGeometryToDisplayGroupObject(diacritic1, attrs);
-			AttachGeometryToDisplayGroupObject(diacritic2, attrs);
-		}
-
-		lastTextNode = glyph;
-		if (!firstTextNode)
-			firstTextNode = glyph;
-
-		AttachGeometryToDisplayGroupObject(glyph, attrs);
-
-		glyph->SpecialL[0] = 0;
-		glyph->SpecialF[0] = 0;
-
-		x = glyph->Coord.x
-			+ def->characterSpacing * scale
-			+ scale * glyphWidth;
-
-		glyph->Coord.x += scale * glyphWidth / 2.0f;
-		UpdateObjectTransforms(glyph);
+		GAME_ASSERT(*c >= ' ');
+		GAME_ASSERT(*c <= '~');
+		const AtlasGlyph g = gAtlasGlyphs[*c - ' '];
+		lineWidth += g.xadv + spacing;
+		if (*c != ' ')
+			numQuads++;
 	}
 
-	// Center text horizontally
-	if (def->align != TEXTMESH_ALIGN_LEFT)
+	// Adjust start x for text alignment
+	if (def->align == TEXTMESH_ALIGN_CENTER)
+		x -= lineWidth * .5f;
+	else if (def->align == TEXTMESH_ALIGN_RIGHT)
+		x -= lineWidth;
+
+	TQ3TriMeshData* mesh = MakeQuadMesh(numQuads, 1.0f);
+	mesh->texturingMode = kQ3TexturingModeAlphaBlend;
+	mesh->glTextureName = gFontTexture;
+
+	int p = 0;
+	for (const char* c = text; *c; c++)
 	{
-		float xAlignFactor = def->align == TEXTMESH_ALIGN_CENTER ? 0.5f : 1.0f;
-		float totalWidth = x - startX;
-		for (ObjNode* node = firstTextNode; node; node = node->NextNode)
+		GAME_ASSERT(*c >= ' ');
+		GAME_ASSERT(*c <= '~');
+		const AtlasGlyph g = gAtlasGlyphs[*c - ' '];
+
+		if (*c == ' ')
 		{
-			node->Coord.x -= (totalWidth - def->characterSpacing * def->scale) * xAlignFactor;
-			UpdateObjectTransforms(node);
-			if (node == lastTextNode)
-				break;
+			x += g.xadv + spacing;
+			continue;
 		}
+
+		float qx = x + g.xoff + g.w*.5f;
+		float qy = y - g.yoff - g.h*.5f;
+
+		mesh->points[p + 0] = (TQ3Point3D) { qx - g.w*.5f, qy - g.h*.5f, 0 };
+		mesh->points[p + 1] = (TQ3Point3D) { qx + g.w*.5f, qy - g.h*.5f, 0 };
+		mesh->points[p + 2] = (TQ3Point3D) { qx + g.w*.5f, qy + g.h*.5f, 0 };
+		mesh->points[p + 3] = (TQ3Point3D) { qx - g.w*.5f, qy + g.h*.5f, 0 };
+		mesh->vertexUVs[p + 0] = (TQ3Param2D) { g.x/512.0f,		(g.y+g.h)/256.0f };
+		mesh->vertexUVs[p + 1] = (TQ3Param2D) { (g.x+g.w)/512.0f,	(g.y+g.h)/256.0f };
+		mesh->vertexUVs[p + 2] = (TQ3Param2D) { (g.x+g.w)/512.0f,	g.y/256.0f };
+		mesh->vertexUVs[p + 3] = (TQ3Param2D) { g.x/512.0f,		g.y/256.0f };
+
+		x += g.xadv + spacing;
+		p += 4;
 	}
 
-	Q3Object_Dispose(attrs);
-#endif
+	GAME_ASSERT(p == mesh->numPoints);
+
+	gNewObjectDefinition.genre		= DISPLAY_GROUP_GENRE;
+	gNewObjectDefinition.group 		= MODEL_GROUP_ILLEGAL;
+	gNewObjectDefinition.slot		= def->slot;
+	gNewObjectDefinition.coord.x 	= def->coord.x + (isShadow ? def->shadowOffset.x*def->scale : 0);
+	gNewObjectDefinition.coord.y 	= def->coord.y + (isShadow ? def->shadowOffset.y*def->scale : 0);
+	gNewObjectDefinition.coord.z 	= def->coord.z + (isShadow? -0.1f: 0);
+	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER | STATUS_BIT_NOZWRITE;
+	gNewObjectDefinition.moveCall 	= nil;
+	gNewObjectDefinition.rot 		= 0.0f;
+	gNewObjectDefinition.scale 		= def->scale;
+	ObjNode* textNode = MakeNewObject(&gNewObjectDefinition);
+	AttachGeometryToDisplayGroupObject(textNode, 1, &mesh, true, false);
+	textNode->RenderModifiers.diffuseColor = isShadow? def->shadowColor: def->color;
+	textNode->BoundingSphere.isEmpty = kQ3False;
+	textNode->BoundingSphere.radius = def->scale * lineWidth / 2.0f;
+
+	UpdateObjectTransforms(textNode);
 }
 
-void TextMesh_Load(void)
+static void SkipLine(const char** dataPtr)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0
-	FSSpec spec;
+	const char* data = *dataPtr;
 
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:HighScores.3dmf", &spec);
-	LoadGrouped3DMF(&spec, MODEL_GROUP_TEXTMESH);
-
-	// Nuke color attribute from glyph models so we can draw them in whatever color we like later.
-	for (int i = SCORES_ObjType_0; i <= SCORES_ObjType_Colon; i++)
+	while (*data)
 	{
-		ForEachTriMesh(gObjectGroupList[MODEL_GROUP_TEXTMESH][i], QD3D_ClearDiffuseColor_TriMesh, NULL, ~0ull);
+		char c = data[0];
+		data++;
+		if (c == '\r' && *data != '\n')
+			break;
+		if (c == '\n')
+			break;
 	}
-#endif
+
+	GAME_ASSERT(*data);
+	*dataPtr = data;
+}
+
+static void ParseSFL(const char* data)
+{
+	int nArgs = 0;
+	int junk = 0;
+
+	SkipLine(&data);	// Skip font name
+
+	nArgs = sscanf(data, "%d %f", &junk, &gLineHeight);
+	GAME_ASSERT(nArgs == 2);
+	SkipLine(&data);
+
+	SkipLine(&data);	// Skip image filename
+
+	nArgs = sscanf(data, "%d", &gNumGlyphs);
+	GAME_ASSERT(nArgs == 1);
+	SkipLine(&data);
+
+	gAtlasGlyphs = (AtlasGlyph*) NewPtrClear(gNumGlyphs * sizeof(AtlasGlyph));
+
+	for (int i = 0; i < gNumGlyphs; i++)
+	{
+		nArgs = sscanf(
+				data,
+				"%d %f %f %f %f %f %f %f",
+				&junk,
+				&gAtlasGlyphs[i].x,
+				&gAtlasGlyphs[i].y,
+				&gAtlasGlyphs[i].w,
+				&gAtlasGlyphs[i].h,
+				&gAtlasGlyphs[i].xoff,
+				&gAtlasGlyphs[i].yoff,
+				&gAtlasGlyphs[i].xadv);
+		GAME_ASSERT(nArgs == 8);
+
+		SkipLine(&data);
+	}
+}
+
+void TextMesh_Init(void)
+{
+	OSErr err;
+
+	gFontTexture = QD3D_LoadTextureFile(3000, kRendererTextureFlags_GrayscaleIsAlpha);
+
+	short refNum = OpenGameFile(":images:textures:3000.sfl");
+
+	// Get number of bytes until EOF
+	long eof = 0;
+	GetEOF(refNum, &eof);
+
+	// Prep data buffer
+	Ptr data = NewPtrClear(eof+1);
+
+	// Read file into data buffer
+	err = FSRead(refNum, &eof, data);
+	GAME_ASSERT(err == noErr);
+	FSClose(refNum);
+
+	ParseSFL(data);
+}
+
+void TextMesh_Shutdown(void)
+{
+	DisposePtr((Ptr) gAtlasGlyphs);
+	gAtlasGlyphs = NULL;
+
+	if (gFontTexture)
+	{
+		glDeleteTextures(1, &gFontTexture);
+		gFontTexture = 0;
+	}
 }
 
 void TextMesh_FillDef(TextMeshDef* def)

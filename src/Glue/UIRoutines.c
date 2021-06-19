@@ -91,7 +91,7 @@ void SetupUIStuff(void)
 	/* LOAD ART */
 	/************/
 
-	TextMesh_Load();
+	TextMesh_Init();
 
 	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:BonusScreen.3dmf", &spec);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_BONUS);
@@ -127,6 +127,7 @@ void SetupUIStuff(void)
 void CleanupUIStuff()
 {
 	PickableQuads_DisposeAll();
+	TextMesh_Shutdown();
 	GammaFadeOut();
 	DeleteAllObjects();
 	FreeAllSkeletonFiles(-1);
@@ -190,7 +191,7 @@ void MakeSpiderButton(
 	tmd.coord = (TQ3Point3D){coord.x, coord.y-16, coord.z};
 	tmd.align = TEXTMESH_ALIGN_CENTER;
 	tmd.scale = 0.3f * gs;
-	tmd.color = (TQ3ColorRGB){ 190/255.0f,224/255.0f,0 };
+	tmd.color = TQ3ColorRGBA_FromInt(0xbee000ff);
 	TextMesh_Create(&tmd, caption);
 }
 

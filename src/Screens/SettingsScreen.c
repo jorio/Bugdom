@@ -22,7 +22,7 @@ static void SettingsScreenMainLoop(void);
 /*    CONSTANTS             */
 /****************************/
 
-static const TQ3ColorRGB gValueTextColor	= { 190/255.0f,224/255.0f,0 };
+static const TQ3ColorRGBA gValueTextColor	= TQ3ColorRGBA_FromInt(0xbee000ff);
 
 enum
 {
@@ -90,15 +90,15 @@ static SettingEntry gSettingEntries[] =
 {
 	{
 		&gGamePrefs.easyMode,
-		"KIDDIE MODE",
-		1, "PLAYER TAKES LESS DAMAGE",
+		"Kiddie mode",
+		1, "Player takes less damage",
 		NULL,
 		0, false, CHOICES_NO_YES,
 		0,
 	},
 	{
 		&gGamePrefs.mouseSensitivityLevel,
-		"MOUSE SENSITIVITY",
+		"Mouse sensitivity",
 		0, NULL,
 		NULL,
 		NUM_MOUSE_SENSITIVITY_LEVELS, true, { NULL },
@@ -106,7 +106,7 @@ static SettingEntry gSettingEntries[] =
 	},
 	{
 		&gGamePrefs.fullscreen,
-		"FULLSCREEN",
+		"Fullscreen",
 		0, NULL,
 		SetFullscreenMode,
 		0, false, CHOICES_NO_YES,
@@ -125,7 +125,7 @@ static SettingEntry gSettingEntries[] =
 #if _DEBUG
 	{
 		&gGamePrefs.vsync,
-		"V-SYNC",
+		"V-Sync",
 		0, NULL,
 		NULL,
 		0, false, CHOICES_NO_YES,
@@ -133,8 +133,8 @@ static SettingEntry gSettingEntries[] =
 	},
 	{
 		&gGamePrefs.useCyclorama,
-		"CYCLORAMA",
-		0, "THE ''ATI RAGE II'' LOOK",
+		"Cyclorama",
+		0, "The \"ATI Rage II\" look",
 		NULL,
 		0, false, CHOICES_NO_YES,
 		0,

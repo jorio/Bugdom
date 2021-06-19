@@ -133,7 +133,7 @@ static void InitLensFlares(void)
 	{
 		GAME_ASSERT_MESSAGE(!gFlareMeshes[i], "Flare mesh already allocated!");
 
-		gFlareMeshes[i] = MakeQuadMesh(1);
+		gFlareMeshes[i] = MakeQuadMesh(1, 1.0f);
 		gFlareMeshes[i]->texturingMode = kQ3TexturingModeAlphaBlend;
 		gFlareMeshes[i]->glTextureName = gLensFlareTextureNames[gFlareImageTable[i]];
 	}

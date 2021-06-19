@@ -140,7 +140,7 @@ float	rotY;
 
 				/* PUT TRIMESHES INTO STATIC DISPLAY GROUP */
 
-	AttachGeometryToDisplayGroupObject(newObj, oldObj->NumMeshes, oldObj->MeshList);//gLocalTriMeshesOfSkelType[SKELETON_TYPE_ME]);
+	AttachGeometryToDisplayGroupObject(newObj, oldObj->NumMeshes, oldObj->MeshList, false, false);
 
 				/* TRANSFER OWNERSHIP OF MESH MEMORY TO NEWOBJ */
 

@@ -171,7 +171,7 @@ Byte	group,type;
 	else
 	{
 		TQ3TriMeshFlatGroup* meshList = &gObjectGroupList[group][type];
-		AttachGeometryToDisplayGroupObject(newObj, meshList->numMeshes, meshList->meshes);
+		AttachGeometryToDisplayGroupObject(newObj, meshList->numMeshes, meshList->meshes, false, false);
 	}
 
 			/* CALC RADIUS */
@@ -211,7 +211,7 @@ ObjNode	*newObj;
 // called which made the group & transforms.
 //
 
-void AttachGeometryToDisplayGroupObject(ObjNode* theNode, int numMeshes, TQ3TriMeshData** meshList)
+void AttachGeometryToDisplayGroupObject(ObjNode* theNode, int numMeshes, TQ3TriMeshData** meshList, bool ownMeshes, bool ownTextures)
 {
 	for (int i = 0; i < numMeshes; i++)
 	{
@@ -221,8 +221,8 @@ void AttachGeometryToDisplayGroupObject(ObjNode* theNode, int numMeshes, TQ3TriM
 		GAME_ASSERT(theNode->NumMeshes <= MAX_DECOMPOSED_TRIMESHES);
 
 		theNode->MeshList[nodeMeshIndex] = meshList[i];
-		theNode->OwnsMeshMemory[nodeMeshIndex] = false;
-		theNode->OwnsMeshTexture[nodeMeshIndex] = false;
+		theNode->OwnsMeshMemory[nodeMeshIndex] = ownMeshes;
+		theNode->OwnsMeshTexture[nodeMeshIndex] = ownTextures;
 	}
 }
 

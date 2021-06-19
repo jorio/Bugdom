@@ -24,9 +24,9 @@ static void MakeAboutScreenObjects(int slideNumber);
 /*    CONSTANTS             */
 /****************************/
 
-static const TQ3ColorRGB kNameColor			= { 152/255.0f, 1.0f, 205/255.0f };
-static const TQ3ColorRGB kHeadingColor		= { 1,1,1 };
-static const TQ3ColorRGB kDimmedColor		= { .6f,.6f,.6f };
+static const TQ3ColorRGBA kNameColor		= TQ3ColorRGBA_FromInt(0x98ffcdff);
+static const TQ3ColorRGBA kHeadingColor		= TQ3ColorRGBA_FromInt(0xffffffff);
+static const TQ3ColorRGBA kDimmedColor		= TQ3ColorRGBA_FromInt(0x999999ff);
 
 static const short kAboutScreenObjNodeSlot = 1337;
 
@@ -97,8 +97,6 @@ static void MakeCreditPart(
 	tmd.slot = kAboutScreenObjNodeSlot;
 	tmd.scale = .25f;
 	tmd.coord = (TQ3Point3D) {x,y,0};
-	tmd.lowercaseScale = 1;
-	tmd.characterSpacing *= 1.33f;
 
 	tmd.color = kHeadingColor;
 	TextMesh_Create(&tmd, heading);
@@ -119,10 +117,7 @@ static void MakeAboutScreenObjects(int slideNumber)
 	tmd.slot = kAboutScreenObjNodeSlot;
 	tmd.coord.y += 110;
 	tmd.withShadow = false;
-	tmd.lowercaseScale = 1;
-	tmd.characterSpacing *= 1.33f;
 	tmd.color = kHeadingColor;
-	tmd.scale = .66f;
 
 	const float LH = 13;
 
@@ -130,9 +125,9 @@ static void MakeAboutScreenObjects(int slideNumber)
 	{
 		case 0:
 		{
-			TextMesh_Create(&tmd, "CREDITS");
+			TextMesh_Create(&tmd, "Credits");
 
-			float XSPREAD = 80;
+			float XSPREAD = 65;
 
 			tmd.scale = 0.25f;
 
@@ -156,14 +151,14 @@ static void MakeAboutScreenObjects(int slideNumber)
 			tmd.color = kDimmedColor;
 			TextMesh_Create(&tmd, "Copyright 1999 Pangea Software, Inc.");
 			tmd.coord.y -= LH * .66f;
-			TextMesh_Create(&tmd, "''Bugdom'' is a registered trademark of Pangea Software, Inc.");
+			TextMesh_Create(&tmd, "\"Bugdom\" is a registered trademark of Pangea Software, Inc.");
 
 			break;
 		}
 
 		case 1:
 		{
-			TextMesh_Create(&tmd, "CONTROLS");
+			TextMesh_Create(&tmd, "Controls");
 
 #if 1	// TODO NOQUESA
 			printf("TODO NOQUESA: Gamepad Diagram\n");
@@ -190,11 +185,11 @@ static void MakeAboutScreenObjects(int slideNumber)
 			tmd.scale = 0.2f;
 			tmd.align = TEXTMESH_ALIGN_LEFT;
 			tmd.coord.x =  95;
-			tmd.coord.y =  34+y; tmd.color = TQ3ColorRGB_FromInt(0x0599f8); TextMesh_Create(&tmd, "KICK");
-			tmd.coord.y =  22+y; tmd.color = TQ3ColorRGB_FromInt(0xfff139); TextMesh_Create(&tmd, "BUDDY");
-			tmd.coord.y =  10+y; tmd.color = TQ3ColorRGB_FromInt(0xdf2020); TextMesh_Create(&tmd, "MORPH");
-			tmd.coord.y =  -2+y; tmd.color = TQ3ColorRGB_FromInt(0x23ab23); TextMesh_Create(&tmd, "JUMP/BOOST");
-			tmd.coord.y = -24+y; tmd.color = TQ3ColorRGB_FromInt(0x7e7e7e); TextMesh_Create(&tmd, "CAMERA");
+			tmd.coord.y =  34+y; tmd.color = TQ3ColorRGBA_FromInt(0x0599f8ff); TextMesh_Create(&tmd, "KICK");
+			tmd.coord.y =  22+y; tmd.color = TQ3ColorRGBA_FromInt(0xfff139ff); TextMesh_Create(&tmd, "BUDDY");
+			tmd.coord.y =  10+y; tmd.color = TQ3ColorRGBA_FromInt(0xdf2020ff); TextMesh_Create(&tmd, "MORPH");
+			tmd.coord.y =  -2+y; tmd.color = TQ3ColorRGBA_FromInt(0x23ab23ff); TextMesh_Create(&tmd, "JUMP/BOOST");
+			tmd.coord.y = -24+y; tmd.color = TQ3ColorRGBA_FromInt(0x7e7e7eff); TextMesh_Create(&tmd, "CAMERA");
 			tmd.align = TEXTMESH_ALIGN_RIGHT;
 			tmd.coord.x = -95; tmd.coord.y = 10+y; TextMesh_Create(&tmd, "WALK/ROLL");
 
@@ -227,12 +222,12 @@ static void MakeAboutScreenObjects(int slideNumber)
 
 		case 2:
 		{
-			TextMesh_Create(&tmd, "INFO & UPDATES");
+			TextMesh_Create(&tmd, "Info & Updates");
 
 			float y = tmd.coord.y - LH*4;
 
 			MakeCreditPart(0, y-LH*0, "The Makers of Bugdom:", "www.pangeasoft.net", "");
-			MakeCreditPart(0, y-LH*4, "Get Updates at:", "github.com/jorio/bugdom", "");
+			MakeCreditPart(0, y-LH*4, "Get Updates At:", "github.com/jorio/bugdom", "");
 
 			char sdlVersionString[256];
 			SDL_version compiled;
@@ -246,7 +241,7 @@ static void MakeAboutScreenObjects(int slideNumber)
 
 			tmd.scale = 0.2f;
 			tmd.coord.x = -100;
-			tmd.coord.y = -75;
+			tmd.coord.y = -85;
 			tmd.color = kDimmedColor;
 			tmd.align = TEXTMESH_ALIGN_LEFT;
 #define MAKE_TECH_TEXT(key, caption) \
@@ -255,7 +250,6 @@ static void MakeAboutScreenObjects(int slideNumber)
 			MAKE_TECH_TEXT("Game ver:",	PROJECT_VERSION);
 			MAKE_TECH_TEXT("Renderer:",	(const char*)glGetString(GL_RENDERER));
 			MAKE_TECH_TEXT("OpenGL:",	(const char*)glGetString(GL_VERSION));
-			MAKE_TECH_TEXT("GLSL:",		(const char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
 			MAKE_TECH_TEXT("SDL:",		sdlVersionString);
 #undef MAKE_TECH_TEXT
 			break;
