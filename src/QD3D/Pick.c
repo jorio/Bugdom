@@ -6,6 +6,53 @@
 
 #define MAX_TRANSFORMED_POINTS 1024
 
+// Set to 1 to debug pickable quads
+#define DRAW_PICKABLE_QUADS 0
+
+/********** CREATE CLICKABLE RECTANGULAR OBJNODE **********/
+
+ObjNode* NewPickableQuad(TQ3Point3D coord, float width, float height, int32_t pickID)
+{
+	gNewObjectDefinition.genre	= DISPLAY_GROUP_GENRE;
+	gNewObjectDefinition.group 	= MODEL_GROUP_ILLEGAL;
+	gNewObjectDefinition.slot	= 0;
+	gNewObjectDefinition.coord	= coord;
+	gNewObjectDefinition.flags	= STATUS_BIT_NULLSHADER | STATUS_BIT_NOZWRITE | STATUS_BIT_HIDDEN;
+	gNewObjectDefinition.moveCall = nil;
+	gNewObjectDefinition.rot	= 0;
+	gNewObjectDefinition.scale = 1.0f;
+	ObjNode* quadNode = MakeNewObject(&gNewObjectDefinition);
+
+	TQ3TriMeshData* quadMesh = MakeQuadMesh(1, width, height);
+	quadMesh->texturingMode = kQ3TexturingModeOff;
+	AttachGeometryToDisplayGroupObject(quadNode, 1, &quadMesh, true, false);
+
+	UpdateObjectTransforms(quadNode);
+
+	quadNode->IsPickable = true;
+	quadNode->PickID = pickID;
+
+#if DRAW_PICKABLE_QUADS
+	quadNode->StatusBits &= ~STATUS_BIT_HIDDEN;
+#endif
+
+	return quadNode;
+}
+
+/********** NUKE ALL PICKABLE OBJNODE **********/
+
+void DisposePickableObjects(void)
+{
+	ObjNode* node = gFirstNodePtr;
+	while (node)
+	{
+		ObjNode* nextNode = node->NextNode;
+		if (node->IsPickable)
+			DeleteObject(node);
+		node = nextNode;
+	}
+}
+
 /******************** PICK OBJECT ********************/
 //
 // INPUT: mouseX, mouseY = point of click in screen space

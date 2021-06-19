@@ -60,13 +60,13 @@ static int32_t		gMenuSelection;
 
 Boolean DoMainMenu(void)
 {
-Point		mouse,oldMouse;
-float		timer;
-Boolean		loop = false;
+int			mouseX = 0;
+int			mouseY = 0;
+int			oldMouseX = 0;
+int			oldMouseY = 0;
+float		timer = 0;
+bool		loop = false;
 
-	mouse.h = 0;
-	mouse.v = 0;
-	
 start_again:
 
 	timer = 0;
@@ -96,17 +96,16 @@ start_again:
 		QD3D_DrawScene(gGameViewInfoPtr,DrawObjects);
 
 			/* UPDATE CURSOR */
-			
-		SetPort(GetWindowPort(gCoverWindow));
-		oldMouse = mouse;
-		GetMouse(&mouse);
 
-		
+		oldMouseX = mouseX;
+		oldMouseY = mouseY;
+		SDL_GetMouseState(&mouseX, &mouseY);
+
 				/* SEE IF USER CLICKED SOMETHING */
-				
+
 		if (FlushMouseButtonPress())
 		{
-			if (PickObject(mouse.h, mouse.v, &gMenuSelection))
+			if (PickObject(mouseX, mouseY, &gMenuSelection))
 				break;
 		}
 		
@@ -115,8 +114,8 @@ start_again:
 		UpdateInput();									// keys get us out
 		
 				/* UPDATE TIMER */
-				
-		if ((oldMouse.h != mouse.h) || (mouse.v != oldMouse.v))		// reset timer if mouse moved
+
+		if ((oldMouseX != mouseX) || (mouseY != oldMouseY))		// reset timer if mouse moved
 			timer = 0;
 		else
 		{

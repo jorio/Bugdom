@@ -165,7 +165,6 @@ set(GAME_HEADERS
 	${GAME_SRCDIR}/Headers/gamepatches.h
 	${GAME_SRCDIR}/Headers/textmesh.h
 	${GAME_SRCDIR}/Headers/tga.h
-	${GAME_SRCDIR}/Headers/pickablequads.h
 	${GAME_SRCDIR}/Headers/tween.h
 	${GAME_SRCDIR}/Headers/mousesmoothing.h
 	${GAME_SRCDIR}/Headers/killmacmouseacceleration.h
@@ -178,7 +177,6 @@ set(GAME_GLUE_SOURCES
 	${GAME_SRCDIR}/Glue/KillMacMouseAcceleration.c
 	${GAME_SRCDIR}/Glue/MouseSmoothing.c
 	${GAME_SRCDIR}/Glue/Patch3DMFModels.c
-	${GAME_SRCDIR}/Glue/PickableQuads.cpp
 	${GAME_SRCDIR}/Glue/SDLMaintenance.c
 	${GAME_SRCDIR}/Glue/TextMesh.c
 	${GAME_SRCDIR}/Glue/TGA.c

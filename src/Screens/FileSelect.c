@@ -353,15 +353,17 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 
 	if (createPickables)
 	{
+		// Floppy
 		{
 			TQ3Point3D quadCenter = {x, y, 0};
-			PickableQuads_NewQuad(quadCenter, 90, 90, kPickBits_Floppy | fileNumber);            // Floppy
+			NewPickableQuad(quadCenter, 90, 90, kPickBits_Floppy | fileNumber);
 		}
 
+		// Delete
 		if (canDelete)
 		{
 			TQ3Point3D quadCenter = { x+30*gs, y-65*gs, 0 };
-			PickableQuads_NewQuad(quadCenter, .3f*100*gs, deleteScale*50*gs, kPickBits_Delete | fileNumber);		// Delete
+			NewPickableQuad(quadCenter, .3f*100*gs, deleteScale*50*gs, kPickBits_Delete | fileNumber);
 		}
 	}
 }
@@ -415,7 +417,7 @@ static void SetupFileScreen(void)
 		// Make pickable quad
 		TQ3Point3D dontSaveQuadCenter = tmd.coord;
 		dontSaveQuadCenter.x -= 15;
-		PickableQuads_NewQuad(dontSaveQuadCenter, 100, 25, kPickBits_DontSave);
+		NewPickableQuad(dontSaveQuadCenter, 100, 25, kPickBits_DontSave);
 	}
 
 	for (int i = 0; i < NUM_SAVE_FILES; i++)

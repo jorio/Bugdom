@@ -128,7 +128,6 @@ extern	SDL_Window					*gSDLWindow;
 extern	SplineDefType				**gSplineList;
 extern	TQ3BoundingBox				gObjectGroupBBoxList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
 extern	TQ3BoundingSphere			gObjectGroupRadiusList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
-extern	TQ3Int32					gHoveredPick;
 extern	TQ3Matrix4x4				gCameraWorldToFrustumMatrix;
 extern	TQ3Matrix4x4				gCameraWorldToViewMatrix;
 extern	TQ3Matrix4x4				gWindowToFrustum;
@@ -176,6 +175,7 @@ extern	int							gWindowHeight;
 extern	int							gWindowWidth;
 extern	int 						gCurrentSaveSlot;
 extern	int8_t						gNumEnemyOfKind[];
+extern	int32_t						gHoveredPick;
 extern	long						gCurrentSuperTileCol;
 extern	long						gCurrentSuperTileRow;
 extern	long						gCurrentSystemVolume;
@@ -227,7 +227,6 @@ extern	unsigned long 				gScore;
 #endif
 
 // C++
-#include "pickablequads.h"
 #include "gamepatches.h"
 #include "structformats.h"
 

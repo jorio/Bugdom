@@ -14,7 +14,7 @@
 /*    VARIABLES      */
 /*********************/
 
-TQ3Int32			gHoveredPick = -1;
+int32_t				gHoveredPick = -1;
 
 static TQ3Point3D	gBonusCameraFrom = {0, 0, 250 };
 
@@ -52,7 +52,7 @@ void SetupUIStuff(void)
 
 
 	/* RESET PICKABLE ITEMS */
-	PickableQuads_DisposeAll();
+	DisposePickableObjects();
 
 	/*************/
 	/* MAKE VIEW */
@@ -126,7 +126,7 @@ void SetupUIStuff(void)
 
 void CleanupUIStuff()
 {
-	PickableQuads_DisposeAll();
+	DisposePickableObjects();
 	TextMesh_Shutdown();
 	GammaFadeOut();
 	DeleteAllObjects();
@@ -165,7 +165,7 @@ void MakeSpiderButton(
 	float gs = 0.95f;
 
 	// Create pickable quad
-	PickableQuads_NewQuad(coord, 45*gs, 45*gs, pickID);
+	NewPickableQuad(coord, 45*gs, 45*gs, pickID);
 
 	// Create spider button
 	gNewObjectDefinition.group 		= MODEL_GROUP_LEVELSPECIFIC;
@@ -197,27 +197,20 @@ void MakeSpiderButton(
 
 int UpdateHoveredPickID(void)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-	return -1;
-#if 0	// NOQUESA
 	gHoveredPick = -1;
 
-	Point		mouse;
-	TQ3Point2D	pt;
+	int mouseX, mouseY;
+	mouseX = 0;
+	mouseY = 0;
+	SDL_GetMouseState(&mouseX, &mouseY);
 
-	SetPort(GetWindowPort(gCoverWindow));
-	GetMouse(&mouse);
-	pt.x = mouse.h;
-	pt.y = mouse.v;
-
-	TQ3Int32 pickID;
-	if (PickableQuads_GetPick(gGameViewInfoPtr->viewObject, pt, &pickID))
+	int32_t pickID;
+	if (PickObject(mouseX, mouseY, &pickID))
 	{
 		gHoveredPick = pickID;
 	}
 
 	return gHoveredPick;
-#endif
 }
 
 void NukeObjectsInSlot(u_short objNodeSlotID)

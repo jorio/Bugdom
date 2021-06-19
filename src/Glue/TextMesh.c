@@ -61,7 +61,7 @@ static void MakeText(
 	else if (def->align == TEXTMESH_ALIGN_RIGHT)
 		x -= lineWidth;
 
-	TQ3TriMeshData* mesh = MakeQuadMesh(numQuads, 1.0f);
+	TQ3TriMeshData* mesh = MakeQuadMesh(numQuads, 1.0f, 1.0f);
 	mesh->texturingMode = kQ3TexturingModeAlphaBlend;
 	mesh->glTextureName = gFontTexture;
 

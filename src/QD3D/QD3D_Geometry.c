@@ -723,7 +723,7 @@ ObjNode* MakeNewDisplayGroupObject_TexturedQuad(TQ3SurfaceShaderObject surfaceSh
 
 
 
-TQ3TriMeshData* MakeQuadMesh(int numQuads, float aspectRatio)
+TQ3TriMeshData* MakeQuadMesh(int numQuads, float width, float height)
 {
 	TQ3TriMeshData* mesh = Q3TriMeshData_New(2*numQuads, 4*numQuads, kQ3TriMeshDataFeatureVertexUVs);
 	mesh->texturingMode = kQ3TexturingModeOff;
@@ -738,8 +738,8 @@ TQ3TriMeshData* MakeQuadMesh(int numQuads, float aspectRatio)
 		mesh->triangles[2 * q + 1].pointIndices[1] = 4 * q + 2;
 		mesh->triangles[2 * q + 1].pointIndices[2] = 4 * q + 3;
 
-		float xExtent = aspectRatio * .5f;
-		float yExtent = .5f;
+		float xExtent = width * .5f;
+		float yExtent = height * .5f;
 		mesh->points[4 * q + 0] = (TQ3Point3D) {-xExtent, -yExtent, 0 };
 		mesh->points[4 * q + 1] = (TQ3Point3D) {+xExtent, -yExtent, 0 };
 		mesh->points[4 * q + 2] = (TQ3Point3D) {+xExtent, +yExtent, 0 };

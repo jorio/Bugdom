@@ -247,7 +247,7 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 	if (firstTime)
 	{
 		// Create pickable quad
-		PickableQuads_NewQuad(
+		NewPickableQuad(
 				(TQ3Point3D) {x+XSPREAD/2, y, z},
 				XSPREAD*1.0f, LH*0.75f,
 				PICKID_SETTING_MASK | settingID);
@@ -338,14 +338,6 @@ static void SettingsScreenDrawStuff(const QD3DSetupOutputType *setupInfo)
 {
 	DrawObjects(setupInfo);
 	QD3D_DrawParticles(setupInfo);
-
-
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-#if _DEBUG
-	PickableQuads_Draw(setupInfo->viewObject);
-#endif
-#endif
 }
 
 static void SettingsScreenMainLoop()
