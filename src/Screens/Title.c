@@ -102,8 +102,7 @@ Byte					letters[] = {TITLE_MObjType_B, TITLE_MObjType_U,
 
 		/* INIT OTHER SYSTEMS */
 		
-	QD3D_InitParticles();	
-	InitParticleSystem();
+	QD3D_InitParticles();
 
 
 			/*************/
@@ -139,6 +138,8 @@ Byte					letters[] = {TITLE_MObjType_B, TITLE_MObjType_U,
 			/************/
 			/* LOAD ART */
 			/************/
+
+	InitParticleSystem();		// Must be once we have a valid GL context
 
 	LoadASkeleton(SKELETON_TYPE_ME);
 	LoadASkeleton(SKELETON_TYPE_FIREANT);

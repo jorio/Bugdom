@@ -112,6 +112,7 @@ extern	QD3DSetupOutputType			*gGameViewInfoPtr;
 extern	RenderModifiers				gPauseQuadRenderMods;
 extern	RenderStats					gRenderStats;
 extern	SDL_GameController*			gSDLController;
+extern	SDL_GLContext				gGLContext;
 extern	SDL_Window					*gSDLWindow;
 extern	SplineDefType				**gSplineList;
 extern	TQ3BoundingBox				gObjectGroupBBoxList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];

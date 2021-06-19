@@ -208,8 +208,7 @@ TQ3Vector3D				fillDirection2 = { -.7, -.2, -.9 };			// fill
 
 		/* INIT OTHER SYSTEMS */
 		
-	QD3D_InitParticles();	
-	InitParticleSystem();
+	QD3D_InitParticles();
 
 			/* LOAD SOUNDS */
 			
@@ -252,6 +251,8 @@ TQ3Vector3D				fillDirection2 = { -.7, -.2, -.9 };			// fill
 			/************/
 			/* LOAD ART */
 			/************/
+
+	InitParticleSystem();		// Must be once we have a valid GL context
 
 	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:LevelIntro.3dmf", &spec);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_LEVELINTRO);	

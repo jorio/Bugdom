@@ -32,7 +32,7 @@ static void DrawNormal(void);
 /*********************/
 
 
-SDL_GLContext					gGLContext;
+SDL_GLContext					gGLContext = NULL;
 RenderStats						gRenderStats;
 
 int								gWindowWidth				= GAME_VIEW_WIDTH;
@@ -146,6 +146,8 @@ QD3DSetupOutputType	*outputPtr;
 	GAME_ASSERT(outputPtr);
 
 				/* CREATE & SET DRAW CONTEXT */
+
+	GAME_ASSERT_MESSAGE(!gGLContext, "stale GL context not destroyed before calling SetupWindow");
 
 	gGLContext = SDL_GL_CreateContext(gSDLWindow);									// also makes it current
 	GAME_ASSERT(gGLContext);

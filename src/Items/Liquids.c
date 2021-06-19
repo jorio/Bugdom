@@ -168,7 +168,7 @@ static bool liquidMeshesAllocated = false;
 		if (!gLiquidOnThisLevel[gLevelType][i])
 			continue;
 
-		long textureFile;
+		int textureFile;
 		switch (i)
 		{
 			case LIQUID_WATER:	textureFile = gLevelType == LEVEL_TYPE_POND ? 129 : 128; break;

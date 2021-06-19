@@ -315,6 +315,8 @@ GLuint Render_LoadTexture(
 		const GLvoid* pixels,
 		RendererTextureFlags flags)
 {
+	GAME_ASSERT(gGLContext);
+
 	GLuint textureName;
 
 	glGenTextures(1, &textureName);

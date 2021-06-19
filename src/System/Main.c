@@ -829,7 +829,6 @@ unsigned long	someLong;
 	InitSoundTools();
 	Init3DMFManager();	
 	InitFenceManager();
-	InitParticleSystem();
 
 
 			/* INIT MORE MY STUFF */
