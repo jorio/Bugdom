@@ -111,8 +111,7 @@ extern	void QD3D_DrawScene(QD3DSetupOutputType *setupInfo, void (*drawRoutine)(c
 extern	void QD3D_UpdateCameraFrom(QD3DSetupOutputType *setupInfo, TQ3Point3D *from);
 extern	void QD3D_MoveCameraFromTo(QD3DSetupOutputType *setupInfo, TQ3Vector3D *moveVector, TQ3Vector3D *lookAtVector);
 extern	void	QD3D_CalcFramesPerSecond(void);
-GLuint QD3D_NumberedTGAToTexture(long textureRezID, bool blackIsAlpha, int flags);
-GLuint QD3D_TGAToTexture(FSSpec* spec, bool blackIsAlpha, int flags);
+GLuint QD3D_LoadTextureFile(int textureRezID, int flags);
 extern	TQ3GroupPosition QD3D_AddPointLight(QD3DSetupOutputType *setupInfo,TQ3Point3D *point, TQ3ColorRGB *color, float brightness);
 extern	void QD3D_SetPointLightCoords(QD3DSetupOutputType *setupInfo, TQ3GroupPosition lightPosition, TQ3Point3D *point);
 extern	void QD3D_SetPointLightBrightness(QD3DSetupOutputType *setupInfo, TQ3GroupPosition lightPosition, float bright);

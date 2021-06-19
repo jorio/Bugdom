@@ -63,6 +63,9 @@ typedef enum
 	kRendererTextureFlags_ClampU		= (1 << 0),
 	kRendererTextureFlags_ClampV		= (1 << 1),
 	kRendererTextureFlags_ClampBoth		= kRendererTextureFlags_ClampU | kRendererTextureFlags_ClampV,
+	kRendererTextureFlags_SolidBlackIsAlpha	= 1 << 4,
+	kRendererTextureFlags_GrayscaleIsAlpha	= 1 << 5,
+	kRendererTextureFlags_KeepOriginalAlpha	= 1 << 6,
 } RendererTextureFlags;
 
 #pragma mark -

@@ -217,7 +217,7 @@ FencePointType			*nubs;
 		{
 			// Create texture from :Data:Images:Textures:200X.tga.
 			// Clamp texture vertically to avoid ugly line at top.
-			gFenceTypeTextures[i] = QD3D_NumberedTGAToTexture(2000 + i, true, kRendererTextureFlags_ClampV);	// create shader object
+			gFenceTypeTextures[i] = QD3D_LoadTextureFile(2000 + i, kRendererTextureFlags_SolidBlackIsAlpha | kRendererTextureFlags_ClampV);	// create shader object
 			GAME_ASSERT(gFenceTypeTextures[i]);
 		}
 		else

@@ -178,7 +178,7 @@ static bool liquidMeshesAllocated = false;
 			default:			textureFile = 128; break;
 		}
 
-		gLiquidShaders[i] = QD3D_NumberedTGAToTexture(textureFile, false, kRendererTextureFlags_None);
+		gLiquidShaders[i] = QD3D_LoadTextureFile(textureFile, kRendererTextureFlags_None);
 	}
 }
 

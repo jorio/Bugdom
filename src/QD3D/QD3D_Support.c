@@ -1056,56 +1056,95 @@ TQ3Status				status;
 
 /**************** QD3D GET TEXTURE MAP ***********************/
 //
-// Loads a PICT resource and returns a shader object which is
-// based on the PICT converted to a texture map.
+// Loads a numbered TGA file inside :Data:Images:Textures as an OpenGL texture.
 //
-// INPUT: textureRezID = resource ID of texture PICT to get.
-//			blackIsAlpha = true if want to turn alpha on and to scan image for alpha pixels
+// INPUT: textureRezID = TGA file number to get.
+//			flags = see RendererTextureFlags
 //
-// OUTPUT: TQ3ShaderObject = shader object for texture map.  nil == error.
+// OUTPUT: OpenGL texture name.
 //
 
-GLuint QD3D_NumberedTGAToTexture(long textureRezID, bool blackIsAlpha, int flags)
+GLuint QD3D_LoadTextureFile(int textureRezID, int flags)
 {
-	char path[128];
-	FSSpec spec;
-
-	snprintf(path, sizeof(path), ":Images:Textures:%ld.tga", textureRezID);
-
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, path, &spec);
-
-	return QD3D_TGAToTexture(&spec, blackIsAlpha, flags);
-}
-
-GLuint QD3D_TGAToTexture(FSSpec* spec, bool blackIsAlpha, int flags)
-{
+char					path[128];
+FSSpec					spec;
 uint8_t*				pixelData = nil;
 TGAHeader				header;
 OSErr					err;
 
-	err = ReadTGA(spec, &pixelData, &header, false);
-	if (err != noErr)
+	snprintf(path, sizeof(path), ":Images:Textures:%d.tga", textureRezID);
+
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, path, &spec);
+
+			/* LOAD RAW ARGB DATA FROM TGA FILE */
+
+	err = ReadTGA(&spec, &pixelData, &header, true);
+	GAME_ASSERT(err == noErr);
+
+	GAME_ASSERT(header.bpp == 32);
+	GAME_ASSERT(header.imageType == TGA_IMAGETYPE_CONVERTED_ARGB);
+
+			/* PRE-PROCESS IMAGE */
+
+	int internalFormat = GL_RGB;
+
+	if (flags & kRendererTextureFlags_SolidBlackIsAlpha)
 	{
-		return 0;
+		for (int p = 0; p < 4 * header.width * header.height; p += 4)
+		{
+			bool isBlack = !pixelData[p+1] && !pixelData[p+2] && !pixelData[p+3];
+			pixelData[p+0] = isBlack? 0x00: 0xFF;
+		}
+
+		// Apply edge padding to avoid seams
+		TQ3Pixmap pm;
+		pm.image = pixelData;
+		pm.width = header.width;
+		pm.height = header.height;
+		pm.rowBytes = header.width * (header.bpp / 8);
+		pm.pixelSize = 0;
+		pm.pixelType = kQ3PixelTypeARGB32;
+		pm.bitOrder = kQ3EndianBig;
+		pm.byteOrder = kQ3EndianBig;
+		pm.glTextureName = 0;
+		Q3Pixmap_ApplyEdgePadding(&pm);
+
+		internalFormat = GL_RGBA;
+	}
+	else if (flags & kRendererTextureFlags_GrayscaleIsAlpha)
+	{
+		for (int p = 0; p < 4 * header.width * header.height; p += 4)
+		{
+			// put Blue into Alpha & leave map white
+			pixelData[p+0] = pixelData[p+3];	// put blue into alpha
+			pixelData[p+1] = 255;
+			pixelData[p+2] = 255;
+			pixelData[p+3] = 255;
+		}
+		internalFormat = GL_RGBA;
+	}
+	else if (flags & kRendererTextureFlags_KeepOriginalAlpha)
+	{
+		internalFormat = GL_RGBA;
+	}
+	else
+	{
+		internalFormat = GL_RGB;
 	}
 
-	GAME_ASSERT(header.bpp == 24 || header.bpp == 16);
-	GAME_ASSERT(header.imageType == TGA_IMAGETYPE_RAW_RGB);
-
-	if (blackIsAlpha)
-	{
-		printf("TODO NOQUESA: Black is alpha\n");
-	}
+			/* LOAD TEXTURE */
 
 	GLuint glTextureName = Render_LoadTexture(
-			GL_RGB,
+			internalFormat,
 			header.width,
 			header.height,
-			header.bpp == 16 ? GL_BGRA : GL_BGR,
-			header.bpp == 16 ? GL_UNSIGNED_SHORT_1_5_5_5_REV : GL_UNSIGNED_BYTE,
+			GL_BGRA,
+			GL_UNSIGNED_INT_8_8_8_8,
 			pixelData,
 			flags
 			);
+
+			/* CLEAN UP */
 
 	DisposePtr((Ptr) pixelData);
 

@@ -192,7 +192,7 @@ void InitParticleSystem(void)
 	{
 		for (int i = 0; i < NUM_PARTICLE_TEXTURES; i++)
 		{
-			gParticleTextureNames[i] = QD3D_NumberedTGAToTexture(130 + i, false, kRendererTextureFlags_ClampBoth);
+			gParticleTextureNames[i] = QD3D_LoadTextureFile(130 + i, kRendererTextureFlags_ClampBoth);
 		}
 
 		gParticleTexturesLoaded = true;

@@ -113,7 +113,7 @@ static void InitLensFlares(void)
 
 	if (gLevelType == LEVEL_TYPE_NIGHT)
 	{
-		gMoonFlareTextureName = QD3D_NumberedTGAToTexture(1004, false, kRendererTextureFlags_ClampBoth);
+		gMoonFlareTextureName = QD3D_LoadTextureFile(1004, kRendererTextureFlags_ClampBoth);
 		GAME_ASSERT(gMoonFlareTextureName);
 	}
 
@@ -123,7 +123,7 @@ static void InitLensFlares(void)
 	{
 		GAME_ASSERT_MESSAGE(!gLensFlareTextureNames[i], "Lens flare texture already loaded!");
 
-		gLensFlareTextureNames[i] = QD3D_NumberedTGAToTexture(1000+i, false, kRendererTextureFlags_ClampBoth);
+		gLensFlareTextureNames[i] = QD3D_LoadTextureFile(1000+i, kRendererTextureFlags_ClampBoth);
 		GAME_ASSERT(gLensFlareTextureNames[i]);
 	}
 

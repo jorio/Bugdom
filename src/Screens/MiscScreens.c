@@ -52,7 +52,7 @@ const float imageAspectRatio = 200.0f/152.0f;
 
 	GLuint textures[NUM_PAUSE_TEXTURES];
 	for (int i = 0; i < NUM_PAUSE_TEXTURES; i++)
-		textures[i] = QD3D_NumberedTGAToTexture(1500+i, false, kRendererTextureFlags_ClampBoth);
+		textures[i] = QD3D_LoadTextureFile(1500+i, kRendererTextureFlags_ClampBoth);
 
 			/* CREATE MESH */
 

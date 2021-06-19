@@ -66,7 +66,7 @@ static void DecompressRLE(short refNum, TGAHeader* header, uint8_t* out)
 	DisposePtr(compressedData);
 }
 
-static uint8_t* ConvertColormappedToRGB(const uint8_t* in, const TGAHeader* header, const uint8_t* palette)
+static uint8_t* ConvertColormappedToBGR(const uint8_t* in, const TGAHeader* header, const uint8_t* palette)
 {
 	const int pixelCount				= header->width * header->height;
 	const int bytesPerColor				= header->paletteBitsPerColor / 8;
@@ -75,19 +75,105 @@ static uint8_t* ConvertColormappedToRGB(const uint8_t* in, const TGAHeader* head
 	uint8_t* remapped = (uint8_t*) NewPtr(pixelCount * (header->paletteBitsPerColor / 8));
 	uint8_t* out = remapped;
 
+	GAME_ASSERT(bytesPerColor == 3);
+
 	for (int i = 0; i < pixelCount; i++)
 	{
 		uint8_t colorIndex = *in;
 
 		GAME_ASSERT(colorIndex < paletteColorCount);
 
-		BlockMove(palette + (colorIndex * bytesPerColor), out, bytesPerColor);
+		out[0] = palette[colorIndex*3+0];	// TGA stores its palette as BGR!
+		out[1] = palette[colorIndex*3+1];
+		out[2] = palette[colorIndex*3+2];
 
 		in++;
 		out += bytesPerColor;
 	}
 
 	return remapped;
+}
+
+static uint8_t* ConvertToARGB(const uint8_t* in, const TGAHeader* header)
+{
+	uint8_t* converted = (uint8_t*) NewPtr(header->width * header->height * 4);
+	uint8_t* argbOut = converted;
+
+	const int pixelCount = header->width * header->height;
+
+	switch (header->bpp)
+	{
+		case 32:	// BGRA -> ARGB
+		{
+			const uint8_t* inComponent = (const uint8_t*) in;
+			for (int p = 0; p < pixelCount; p++)
+			{
+				argbOut[0] = inComponent[3];
+				argbOut[1] = inComponent[2];
+				argbOut[2] = inComponent[1];
+				argbOut[3] = inComponent[0];
+
+				argbOut += 4;
+				inComponent += 4;
+			}
+			break;
+		}
+
+		case 24:	// BGR -> ARGB
+		{
+			const uint8_t* inComponent = (const uint8_t*) in;
+			for (int p = 0; p < pixelCount; p++)
+			{
+				argbOut[0] = 0xFF;
+				argbOut[1] = inComponent[2];
+				argbOut[2] = inComponent[1];
+				argbOut[3] = inComponent[0];
+
+				argbOut += 4;
+				inComponent += 3;
+			}
+			break;
+		}
+
+		case 16:	// RGB16 -> ARGB
+		{
+			const uint16_t* inPtr16 = (const uint16_t*) in;
+			for (int p = 0; p < pixelCount; p++)
+			{
+				uint16_t inRGB16 = *inPtr16;
+				argbOut[0] = 0xFF;
+				argbOut[1] = (((inRGB16 >> 10) & 0b11111) * 255) / 31;
+				argbOut[2] = (((inRGB16 >> 5) & 0b11111) * 255) / 31;
+				argbOut[3] = (((inRGB16 >> 0) & 0b11111) * 255) / 31;
+
+				argbOut += 4;
+				inPtr16++;
+			}
+			break;
+		}
+
+		case 8:		// grayscale -> ARGB
+		{
+			const uint8_t* inGray = (const uint8_t*) in;
+			for (int p = 0; p < pixelCount; p++)
+			{
+				argbOut[0] = 0xFF;
+				argbOut[1] = *inGray;
+				argbOut[2] = *inGray;
+				argbOut[3] = *inGray;
+
+				argbOut += 4;
+				inGray++;
+			}
+			break;
+		}
+
+		default:
+			GAME_ASSERT_MESSAGE(false, "TGA: Unsupported bpp for conversion to RGBA");
+			break;
+	}
+
+	return converted;
 }
 
 static void FlipPixelData(uint8_t* data, TGAHeader* header)
@@ -108,7 +194,7 @@ static void FlipPixelData(uint8_t* data, TGAHeader* header)
 	DisposePtr((Ptr) topRowCopy);
 }
 
-OSErr ReadTGA(const FSSpec* spec, uint8_t** outPtr, TGAHeader* outHeader, bool forceRGBA)
+OSErr ReadTGA(const FSSpec* spec, uint8_t** outPtr, TGAHeader* outHeader, bool forceARGB)
 {
 	short		refNum;
 	OSErr		err;
@@ -134,10 +220,10 @@ OSErr ReadTGA(const FSSpec* spec, uint8_t** outPtr, TGAHeader* outHeader, bool f
 	switch (header.imageType)
 	{
 		case TGA_IMAGETYPE_RAW_CMAP:
-		case TGA_IMAGETYPE_RAW_RGB:
+		case TGA_IMAGETYPE_RAW_BGR:
 		case TGA_IMAGETYPE_RAW_GRAYSCALE:
 		case TGA_IMAGETYPE_RLE_CMAP:
-		case TGA_IMAGETYPE_RLE_RGB:
+		case TGA_IMAGETYPE_RLE_BGR:
 		case TGA_IMAGETYPE_RLE_GRAYSCALE:
 			break;
 		default:
@@ -200,10 +286,10 @@ OSErr ReadTGA(const FSSpec* spec, uint8_t** outPtr, TGAHeader* outHeader, bool f
 		header.imageDescriptor |= (1u << 5u);
 	}
 
-	// If the image is color-mapped, map pixel data back to RGB
+	// If the image is color-mapped, map pixel data back to BGR
 	if (palette)
 	{
-		uint8_t* remapped = ConvertColormappedToRGB(pixelData, &header, palette);
+		uint8_t* remapped = ConvertColormappedToBGR(pixelData, &header, palette);
 
 		DisposePtr((Ptr) palette);
 		palette = nil;
@@ -211,41 +297,17 @@ OSErr ReadTGA(const FSSpec* spec, uint8_t** outPtr, TGAHeader* outHeader, bool f
 		DisposePtr((Ptr) pixelData);
 		pixelData = remapped;
 
-		// Update header to make it an RGB image
-		header.imageType = TGA_IMAGETYPE_RAW_RGB;
+		// Update header to make it an BGR image
+		header.imageType = TGA_IMAGETYPE_RAW_BGR;
 		header.bpp = header.paletteBitsPerColor;
 	}
 
-	if (forceRGBA && header.bpp != 32)
+	// Convert to ARGB if required
+	if (forceARGB)
 	{
-		uint8_t* converted = (uint8_t*) NewPtr(header.width * header.height * 4);
-		uint8_t* rgbaOut = converted;
+		uint8_t* converted = ConvertToARGB(pixelData, &header);
 
-		switch (header.bpp)
-		{
-			case 16:
-			{
-				const uint16_t* inPtr16 = (const uint16_t*) pixelData;
-				for (int p = 0; p < pixelDataLength/2; p++)
-				{
-					uint16_t inRGB16 = *inPtr16;
-					rgbaOut[0] = 0xFF;
-					rgbaOut[1] = ( ((inRGB16 >> 10) & 0b11111) * 255 ) / 31;
-					rgbaOut[2] = ( ((inRGB16 >>  5) & 0b11111) * 255 ) / 31;
-					rgbaOut[3] = ( ((inRGB16 >>  0) & 0b11111) * 255 ) / 31;
-
-					rgbaOut += 4;
-					inPtr16++;
-				}
-				break;
-			}
-
-			default:
-				GAME_ASSERT_MESSAGE(false, "TGA: Unsupported bpp for conversion to RGBA");
-				break;
-		}
-
-		header.imageType = TGA_IMAGETYPE_RAW_RGB;
+		header.imageType = TGA_IMAGETYPE_CONVERTED_ARGB;
 		header.bpp = 32;
 
 		DisposePtr((Ptr) pixelData);
