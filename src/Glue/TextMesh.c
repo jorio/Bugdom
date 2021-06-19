@@ -107,7 +107,7 @@ static void MakeText(
 	gNewObjectDefinition.rot 		= 0.0f;
 	gNewObjectDefinition.scale 		= def->scale;
 	ObjNode* textNode = MakeNewObject(&gNewObjectDefinition);
-	AttachGeometryToDisplayGroupObject(textNode, 1, &mesh, true, false);
+	AttachGeometryToDisplayGroupObject(textNode, 1, &mesh, kAttachGeometry_TransferMeshOwnership);
 	textNode->RenderModifiers.diffuseColor = isShadow? def->shadowColor: def->color;
 	textNode->BoundingSphere.isEmpty = kQ3False;
 	textNode->BoundingSphere.radius = def->scale * lineWidth / 2.0f;

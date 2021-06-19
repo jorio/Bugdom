@@ -163,16 +163,11 @@ Byte	group,type;
 	
 	GAME_ASSERT(type < gNumObjectsInGroupList[group]);					// see if illegal
 
-	if (newObjDef->flags & STATUS_BIT_CLONE)
-	{
-		DoFatalAlert("TODO NOQUESA: clone DGO\n");
-		//AttachGeometryToDisplayGroupObject(newObj, Q3Object_Duplicate(gObjectGroupList[group][type]));
-	}
-	else
-	{
-		TQ3TriMeshFlatGroup* meshList = &gObjectGroupList[group][type];
-		AttachGeometryToDisplayGroupObject(newObj, meshList->numMeshes, meshList->meshes, false, false);
-	}
+	TQ3TriMeshFlatGroup* meshList = &gObjectGroupList[group][type];
+	AttachGeometryToDisplayGroupObject(
+			newObj, meshList->numMeshes, meshList->meshes,
+			(newObjDef->flags & STATUS_BIT_CLONE) ? kAttachGeometry_CloneMeshes : 0);
+
 
 			/* CALC RADIUS */
 			
@@ -211,8 +206,11 @@ ObjNode	*newObj;
 // called which made the group & transforms.
 //
 
-void AttachGeometryToDisplayGroupObject(ObjNode* theNode, int numMeshes, TQ3TriMeshData** meshList, bool ownMeshes, bool ownTextures)
+void AttachGeometryToDisplayGroupObject(ObjNode* theNode, int numMeshes, TQ3TriMeshData** meshList, int flags)
 {
+	bool ownMeshes = flags & (kAttachGeometry_TransferMeshOwnership | kAttachGeometry_CloneMeshes);
+	bool ownTextures = flags & kAttachGeometry_TransferTextureOwnership;
+
 	for (int i = 0; i < numMeshes; i++)
 	{
 		int nodeMeshIndex = theNode->NumMeshes;
@@ -220,7 +218,15 @@ void AttachGeometryToDisplayGroupObject(ObjNode* theNode, int numMeshes, TQ3TriM
 		theNode->NumMeshes++;
 		GAME_ASSERT(theNode->NumMeshes <= MAX_DECOMPOSED_TRIMESHES);
 
-		theNode->MeshList[nodeMeshIndex] = meshList[i];
+		if (flags & kAttachGeometry_CloneMeshes)
+		{
+			theNode->MeshList[nodeMeshIndex] = Q3TriMeshData_Duplicate(meshList[i]);
+		}
+		else
+		{
+			theNode->MeshList[nodeMeshIndex] = meshList[i];
+		}
+
 		theNode->OwnsMeshMemory[nodeMeshIndex] = ownMeshes;
 		theNode->OwnsMeshTexture[nodeMeshIndex] = ownTextures;
 	}

@@ -140,7 +140,7 @@ float	rotY;
 
 				/* PUT TRIMESHES INTO STATIC DISPLAY GROUP */
 
-	AttachGeometryToDisplayGroupObject(newObj, oldObj->NumMeshes, oldObj->MeshList, false, false);
+	AttachGeometryToDisplayGroupObject(newObj, oldObj->NumMeshes, oldObj->MeshList, 0);
 
 				/* TRANSFER OWNERSHIP OF MESH MEMORY TO NEWOBJ */
 

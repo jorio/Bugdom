@@ -178,7 +178,8 @@ static void MakeAboutScreenObjects(int slideNumber)
 			TQ3TriMeshData* diagramQuad = MakeQuadMesh(1, 754.0f/400.0f, 400.0f/400.0f);
 			diagramQuad->texturingMode = kQ3TexturingModeAlphaTest;
 			diagramQuad->glTextureName = diagramTexture;
-			AttachGeometryToDisplayGroupObject(diagramNode, 1, &diagramQuad, true, true);
+			AttachGeometryToDisplayGroupObject(diagramNode, 1, &diagramQuad,
+					kAttachGeometry_TransferMeshOwnership | kAttachGeometry_TransferTextureOwnership);
 
 			UpdateObjectTransforms(diagramNode);
 

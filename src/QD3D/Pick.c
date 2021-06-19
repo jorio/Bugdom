@@ -25,7 +25,7 @@ ObjNode* NewPickableQuad(TQ3Point3D coord, float width, float height, int32_t pi
 
 	TQ3TriMeshData* quadMesh = MakeQuadMesh(1, width, height);
 	quadMesh->texturingMode = kQ3TexturingModeOff;
-	AttachGeometryToDisplayGroupObject(quadNode, 1, &quadMesh, true, false);
+	AttachGeometryToDisplayGroupObject(quadNode, 1, &quadMesh, kAttachGeometry_TransferMeshOwnership);
 
 	UpdateObjectTransforms(quadNode);
 

@@ -295,21 +295,9 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 
 	floppies[fileNumber] = newFloppy;
 
-	// Get path to floppy label image
-	snprintf(textBuffer, sizeof(textBuffer), ":Images:Floppy:%d.tga", saveDataValid? saveData.realLevel: 0);
-
 	// Set floppy label texture
-#if 0		// NOQUESA
-	FSSpec floppyLabelPictSpec;
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, textBuffer, &floppyLabelPictSpec);
-	TQ3ShaderObject shaderObject = QD3D_TGAToTexture(&floppyLabelPictSpec);
-	GAME_ASSERT(shaderObject);
-	QD3D_ReplaceGeometryTexture(newFloppy/*->BaseGroup*/, shaderObject);
-#else
-	printf("TODO NOQUESA: replace floppy texture\n");
-#endif
-
-//	gPickables[gNumPickables++] = newFloppy->BaseGroup;
+	GLuint labelTexture = QD3D_LoadTextureFile(3510 + (saveDataValid? saveData.realLevel: 0), 0);
+	newFloppy->MeshList[1]->glTextureName = labelTexture;
 
 	snprintf(textBuffer, sizeof(textBuffer), "File %c", 'A' + fileNumber);
 
@@ -389,7 +377,7 @@ static void SetupFileScreen(void)
 	{
 		//TextMesh_Create(&tmd, "Save where?");
 
-		snprintf(textBuffer, sizeof(textBuffer), "ENTERING LEVEL %d. SAVE WHERE?", gRealLevel+2);
+		snprintf(textBuffer, sizeof(textBuffer), "Entering level %d. Save where?", gRealLevel+2);
 		tmd.scale	= .33f;
 		tmd.color = gTitleTextColor;
 		TextMesh_Create(&tmd, textBuffer);
@@ -399,7 +387,7 @@ static void SetupFileScreen(void)
 		tmd.scale = .33f;
 		tmd.color = gDeleteColor;
 		tmd.align = TEXTMESH_ALIGN_RIGHT;
-		TextMesh_Create(&tmd, "DON'T SAVE");
+		TextMesh_Create(&tmd, "Don't save");
 
 		// Make floppy
 		gNewObjectDefinition.group 		= MODEL_GROUP_BONUS;
@@ -465,14 +453,6 @@ static void FileScreenDrawStuff(const QD3DSetupOutputType *setupInfo)
 {
 	DrawObjects(setupInfo);
 	QD3D_DrawParticles(setupInfo);
-
-
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-#if _DEBUG
-	PickableQuads_Draw(setupInfo->viewObject);
-#endif
-#endif
 }
 
 static int FileScreenMainLoop()
