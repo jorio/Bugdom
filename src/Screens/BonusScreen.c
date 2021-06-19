@@ -654,11 +654,7 @@ static void TallyTotalScore(void)
 
 static Boolean AskSaveGame(void)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-	return false;
-#if 0	// NOQUESA
-TQ3Int32		id;
-TQ3StyleObject	pick;
+int32_t id;
 
 		/*************************/
 		/* CREATE YES/NO OBJECTS */
@@ -677,10 +673,8 @@ TQ3StyleObject	pick;
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= .7;
 	gSaveYes = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-	pick = Q3PickIDStyle_New(0);
-	AttachGeometryToDisplayGroupObject(gSaveYes, pick);
-	Q3Object_Dispose(pick);
-	
+	gSaveYes->IsPickable = true;
+	gSaveYes->PickID = 0;
 
 				/* NO */
 				
@@ -695,9 +689,8 @@ TQ3StyleObject	pick;
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= .7;
 	gSaveNo = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-	pick = Q3PickIDStyle_New(1);
-	AttachGeometryToDisplayGroupObject(gSaveNo, pick);
-	Q3Object_Dispose(pick);
+	gSaveNo->IsPickable = true;
+	gSaveNo->PickID = 1;
 
 	gMoveTextUpwards = 0;
 	float moveTextUpwardsTween = 0;
@@ -717,21 +710,21 @@ TQ3StyleObject	pick;
 			tmd.scale = 0.2f;
 
 			tmd.coord = (TQ3Point3D) {-50,-100,0};
-			tmd.color = (TQ3ColorRGB) {0,.5,1.0f};
+			tmd.color = TQ3ColorRGBA_FromInt(0x0080FFFF);
 			if (gCurrentSaveSlot >= 0)
 			{
-				char message[] = "SAVE TO FILE 'X'";
-				message[sizeof(message)-3] = 'A' + gCurrentSaveSlot;
+				char message[] = "Save to file X";
+				message[sizeof(message)-2] = 'A' + gCurrentSaveSlot;
 				TextMesh_Create(&tmd, message);
 			}
 			else
 			{
-				TextMesh_Create(&tmd, "SAVE");
+				TextMesh_Create(&tmd, "Save");
 			}
 
 			tmd.coord = (TQ3Point3D) {50,-100,0};
-			tmd.color = (TQ3ColorRGB) {.9f,.3f,.1f};
-			TextMesh_Create(&tmd, "DON'T SAVE YET");
+			tmd.color = TQ3ColorRGBA_FromInt(0xe54c19ff);
+			TextMesh_Create(&tmd, "Don't save yet");
 
 			captionsCreatedYet = true;
 		}
@@ -744,24 +737,19 @@ TQ3StyleObject	pick;
 		
 		if (FlushMouseButtonPress())
 		{
-			Point		mouse;
-			TQ3Point2D	pt;
-			
-			SetPort(GetWindowPort(gCoverWindow));
-			GetMouse(&mouse);
-			pt.x = mouse.h;
-			pt.y = mouse.v;
-			
-			if (PickSaveGameIcon(pt, &id))
+			int mouseX = 0;
+			int mouseY = 0;
+			SDL_GetMouseState(&mouseX, &mouseY);
+
+			if (PickObject(mouseX, mouseY, &id))
 				break;
 		}
 	}
 	HideCursor();
 
 		/* SEE IF SAVE GAME */
-		
+
 	return id == 0;
-#endif
 }
 
 
@@ -770,6 +758,7 @@ TQ3StyleObject	pick;
 static void DrawBonusStuff(float duration)
 {
 #if _DEBUG
+	printf("Warning: speeding up bonus screen because this is a debug build\n");
 	duration = 0.05f;
 #endif
 	do
@@ -781,7 +770,4 @@ static void DrawBonusStuff(float duration)
 		DoSDLMaintenance();
 	}while((duration -= gFramesPerSecondFrac) > 0.0f);
 }
-
-
-
 
