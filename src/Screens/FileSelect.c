@@ -31,7 +31,7 @@ static int FileScreenMainLoop(void);
 /*    CONSTANTS             */
 /****************************/
 
-static const char* gLevelNames[NUM_LEVELS] =
+const char* kLevelNames[NUM_LEVELS] =
 {
 	"Training",
 	"Lawn",
@@ -102,7 +102,7 @@ int DoFileSelectScreen(int type)
 	/* SETUP */
 	/*********/
 
-	SetupUIStuff();
+	SetupUIStuff(kUIBackground_Cyclorama);
 	SetupFileScreen();
 
 	QD3D_CalcFramesPerSecond();
@@ -315,7 +315,7 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 
 	if (saveDataValid)
 	{
-		snprintf(textBuffer, sizeof(textBuffer), "Level %d: %s", 1 + saveData.realLevel, gLevelNames[saveData.realLevel]);
+		snprintf(textBuffer, sizeof(textBuffer), "Level %d: %s", 1 + saveData.realLevel, kLevelNames[saveData.realLevel]);
 
 		tmd.coord.y	= y+70*gs;
 		tmd.scale	= .25f * gs;

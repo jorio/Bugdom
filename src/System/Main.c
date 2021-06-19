@@ -277,7 +277,10 @@ static void PlayGame(void)
 	UpdateInput();
 	
 	if (GetKeyState_SDL(SDL_SCANCODE_F10))				// see if do level cheat
-		DoLevelCheatDialog();
+	{
+		if (!DoLevelSelect())
+			return;
+	}
 	else
 	if (!gRestoringSavedGame)							// otherwise start @ 0 if not restoring
 		gRealLevel = 0;

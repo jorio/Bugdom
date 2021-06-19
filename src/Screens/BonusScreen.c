@@ -80,7 +80,7 @@ Boolean wantToSave = false;
 			/* SETUP */
 			/*********/
 
-	SetupUIStuff();
+	SetupUIStuff(kUIBackground_Cyclorama);
 	SetupBonusScreen();
 
 	QD3D_CalcFramesPerSecond();

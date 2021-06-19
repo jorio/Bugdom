@@ -197,7 +197,7 @@ void DoSettingsScreen(void)
 	/* SETUP */
 	/*********/
 
-	SetupUIStuff();
+	SetupUIStuff(kUIBackground_Cyclorama);
 	SetupSettingsScreen();
 
 	QD3D_CalcFramesPerSecond();

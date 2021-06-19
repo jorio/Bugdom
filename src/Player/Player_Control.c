@@ -27,14 +27,14 @@
 
 #define	KEY_THRUST				3500.0f
 
+static const TQ3Vector2D	gZeroAccel = {0,0};
+
 /*********************/
 /*    VARIABLES      */
 /*********************/
 
-float	gMyMostRecentFloorY,gMyDistToFloor,gMyMostRecentCeilingY,gMyDistToCeiling;
-
+float	gMyDistToFloor;
 Boolean	gPlayerCanMove;
-static const TQ3Vector2D	gZeroAccel = {0,0};
 
 
 /******************* DO PLAYER MOVEMENT AND COLLISION DETECT *********************/

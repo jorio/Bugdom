@@ -93,6 +93,7 @@ set(GAME_SOURCES
 	${GAME_SRCDIR}/Screens/HighScores.c
 	${GAME_SRCDIR}/Screens/Infobar.c
 	${GAME_SRCDIR}/Screens/LevelIntro.c
+	${GAME_SRCDIR}/Screens/LevelSelect.c
 	${GAME_SRCDIR}/Screens/MainMenu.c
 	${GAME_SRCDIR}/Screens/MiscScreens.c
 	${GAME_SRCDIR}/Screens/ModelDebug.c

@@ -42,7 +42,7 @@ void DoAboutScreens(void)
 	/* SETUP */
 	/*********/
 
-	SetupUIStuff();
+	SetupUIStuff(kUIBackground_Black);
 	QD3D_CalcFramesPerSecond();
 
 	/**************/
@@ -53,7 +53,6 @@ void DoAboutScreens(void)
 
 	for (int i = 0; i < 3; i++)
 	{
-		NukeObjectsInSlot(999);							// hack to get rid of background
 		NukeObjectsInSlot(kAboutScreenObjNodeSlot);		// nuke text from previous slide
 
 		MakeAboutScreenObjects(i);

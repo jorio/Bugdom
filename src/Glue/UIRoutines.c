@@ -41,7 +41,7 @@ ObjNode* MakeBonusBackground(void)
 	return MakeNewDisplayGroupObject(&gNewObjectDefinition);
 }
 
-void SetupUIStuff(void)
+void SetupUIStuff(int backgroundType)
 {
 	FSSpec					spec;
 	QD3DSetupInputType		viewDef;
@@ -77,9 +77,11 @@ void SetupUIStuff(void)
 	viewDef.lights.fillBrightness[1] = .2;
 
 	viewDef.view.dontClear = false;
-	viewDef.view.clearColor.r =
-	viewDef.view.clearColor.g =
-	viewDef.view.clearColor.b = 0;
+
+	if (backgroundType == kUIBackground_White)
+		viewDef.view.clearColor = TQ3ColorRGBA_FromInt(0xFFFFFFFF);
+	else
+		viewDef.view.clearColor = TQ3ColorRGBA_FromInt(0x000000FF);
 
 
 	QD3D_SetupWindow(&viewDef, &gGameViewInfoPtr);
@@ -113,7 +115,8 @@ void SetupUIStuff(void)
 	/* MAKE BACKGROUND */
 	/*******************/
 
-	MakeBonusBackground();
+	if (backgroundType == kUIBackground_Cyclorama)
+		MakeBonusBackground();
 
 	/*******************/
 	/* START FADING IN */

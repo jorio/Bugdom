@@ -137,6 +137,7 @@ extern	TerrainItemEntryType 		**gMasterItemList;
 extern	TerrainYCoordType			**gMapYCoords;
 extern	WindowPtr					gCoverWindow;
 extern	char						gTypedAsciiKey;
+extern	const char					*kLevelNames[NUM_LEVELS];
 extern	const TQ3Float32			gTextureAlphaThreshold;
 extern	const TQ3Point3D			gBatMouthOff;
 extern	const TQ3Point3D			gPondFishMouthOff;
