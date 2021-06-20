@@ -286,9 +286,18 @@ static void DisposeSkeletonDefinitionMemory(SkeletonDefType *skeleton)
 
 	if (skeleton->associated3DMF)
 	{
-		Render_Dispose3DMFTextures(skeleton->associated3DMF);
 		Q3MetaFile_Dispose(skeleton->associated3DMF);
 		skeleton->associated3DMF = nil;
+	}
+
+			/* DISPOSE OF TEXTURES */
+
+	if (skeleton->textureNames)
+	{
+		glDeleteTextures(skeleton->numTextures, skeleton->textureNames);
+		DisposePtr((Ptr) skeleton->textureNames);
+		skeleton->numTextures = 0;
+		skeleton->textureNames = nil;
 	}
 
 			/* DISPOSE OF MASTER DEFINITION BLOCK */

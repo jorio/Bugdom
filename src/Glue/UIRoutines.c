@@ -34,7 +34,7 @@ ObjNode* MakeBonusBackground(void)
 	gNewObjectDefinition.type 		= BONUS_MObjType_Background;
 	gNewObjectDefinition.coord		= gBonusCameraFrom;
 	gNewObjectDefinition.slot 		= 999;
-	gNewObjectDefinition.flags 		= STATUS_BIT_NOFOG|STATUS_BIT_NULLSHADER;
+	gNewObjectDefinition.flags 		= STATUS_BIT_NOFOG | STATUS_BIT_NULLSHADER | STATUS_BIT_CLAMP_V;
 	gNewObjectDefinition.moveCall 	= MoveBonusBackground;
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= 30.0;

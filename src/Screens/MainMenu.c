@@ -303,7 +303,7 @@ ObjNode					*newObj;
 	gNewObjectDefinition.coord.z 	= 0;
 	gNewObjectDefinition.scale 		= .33f;		// Source port change from .3 (looks better in widescreen)
 	gNewObjectDefinition.type 		= MENU_MObjType_Cyc;	
-	gNewObjectDefinition.flags 		= STATUS_BIT_NOFOG|STATUS_BIT_NULLSHADER;
+	gNewObjectDefinition.flags 		= STATUS_BIT_NOFOG | STATUS_BIT_NULLSHADER | STATUS_BIT_CLAMP_V;
 	MakeNewDisplayGroupObject(&gNewObjectDefinition);
 	
 
@@ -341,7 +341,7 @@ ObjNode					*newObj;
 	
 		gNewObjectDefinition.type 		= iconType[i];	
 		gNewObjectDefinition.coord		= iconCoords[i];
-		gNewObjectDefinition.flags 		= 0;
+		gNewObjectDefinition.flags 		= STATUS_BIT_CLAMP_U | STATUS_BIT_CLAMP_V;
 		gNewObjectDefinition.moveCall 	= nil;
 		gNewObjectDefinition.rot 		= 0;
 		gNewObjectDefinition.scale 		= .25;

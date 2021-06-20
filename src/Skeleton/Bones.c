@@ -49,11 +49,17 @@ void LoadBonesReferenceModel(const FSSpec	*inSpec, SkeletonDefType *skeleton)
 	skeleton->associated3DMF = Q3MetaFile_Load3DMF(inSpec);
 	GAME_ASSERT(skeleton->associated3DMF);
 
-	PatchSkeleton3DMF(inSpec->cName, skeleton->associated3DMF);
+	Patch3DMF(inSpec->cName, skeleton->associated3DMF);
 
 			/* UPLOAD TEXTURES TO GPU */
 
-	Render_Load3DMFTextures(skeleton->associated3DMF);
+	GAME_ASSERT(skeleton->numTextures == 0);
+	GAME_ASSERT(!skeleton->textureNames);
+
+	skeleton->numTextures = skeleton->associated3DMF->numTextures;
+	skeleton->textureNames = (GLuint*) NewPtrClear(skeleton->numTextures * sizeof(GLuint));
+
+	Render_Load3DMFTextures(skeleton->associated3DMF, skeleton->textureNames);
 
 			/* DECOMPOSE REFERENCE MODEL */
 

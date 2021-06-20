@@ -176,7 +176,6 @@ set(GAME_GLUE_SOURCES
 	${GAME_SRCDIR}/Glue/FrustumCulling.c
 	${GAME_SRCDIR}/Glue/KillMacMouseAcceleration.c
 	${GAME_SRCDIR}/Glue/MouseSmoothing.c
-	${GAME_SRCDIR}/Glue/Patch3DMFModels.c
 	${GAME_SRCDIR}/Glue/SDLMaintenance.c
 	${GAME_SRCDIR}/Glue/TextMesh.c
 	${GAME_SRCDIR}/Glue/TGA.c

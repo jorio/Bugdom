@@ -390,12 +390,11 @@ void Render_UpdateTexture(
 	}
 }
 
-void Render_Load3DMFTextures(TQ3MetaFile* metaFile)
+void Render_Load3DMFTextures(TQ3MetaFile* metaFile, GLuint* outTextureNames)
 {
 	for (int i = 0; i < metaFile->numTextures; i++)
 	{
 		TQ3Pixmap* textureDef = metaFile->textures[i];
-		GAME_ASSERT_MESSAGE(textureDef->glTextureName == 0, "GL texture already allocated");
 
 		TQ3TexturingMode meshTexturingMode = kQ3TexturingModeOff;
 		GLenum internalFormat;
@@ -438,7 +437,7 @@ void Render_Load3DMFTextures(TQ3MetaFile* metaFile)
 				continue;
 		}
 
-		textureDef->glTextureName = Render_LoadTexture(
+		outTextureNames[i] = Render_LoadTexture(
 					 internalFormat,						// format in OpenGL
 					 textureDef->width,						// width in pixels
 					 textureDef->height,					// height in pixels
@@ -452,23 +451,9 @@ void Render_Load3DMFTextures(TQ3MetaFile* metaFile)
 		{
 			if (metaFile->meshes[j]->internalTextureID == i)
 			{
-				metaFile->meshes[j]->glTextureName = textureDef->glTextureName;
+				metaFile->meshes[j]->glTextureName = outTextureNames[i];
 				metaFile->meshes[j]->texturingMode = meshTexturingMode;
 			}
-		}
-	}
-}
-
-void Render_Dispose3DMFTextures(TQ3MetaFile* metaFile)
-{
-	for (int i = 0; i < metaFile->numTextures; i++)
-	{
-		TQ3Pixmap* textureDef = metaFile->textures[i];
-
-		if (textureDef->glTextureName != 0)
-		{
-			glDeleteTextures(1, &textureDef->glTextureName);
-			textureDef->glTextureName = 0;
 		}
 	}
 }
@@ -755,6 +740,11 @@ static void DrawMeshList(int renderPass, const MeshQueueEntry* entry)
 			EnableState(GL_TEXTURE_2D);
 			EnableClientState(GL_TEXTURE_COORD_ARRAY);
 			Render_BindTexture(mesh->glTextureName);
+
+			if (entry->mods->statusBits & STATUS_BIT_CLAMP_U)
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			if (entry->mods->statusBits & STATUS_BIT_CLAMP_V)
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 			glTexCoordPointer(2, GL_FLOAT, 0, applyEnvironmentMap ? gEnvMapUVs : mesh->vertexUVs);
 			CHECK_GL_ERROR();

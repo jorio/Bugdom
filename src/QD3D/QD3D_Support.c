@@ -457,7 +457,6 @@ OSErr					err;
 		pm.pixelType = kQ3PixelTypeARGB32;
 		pm.bitOrder = kQ3EndianBig;
 		pm.byteOrder = kQ3EndianBig;
-		pm.glTextureName = 0;
 		Q3Pixmap_ApplyEdgePadding(&pm);
 
 		internalFormat = GL_RGBA;
