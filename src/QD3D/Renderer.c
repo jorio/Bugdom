@@ -710,30 +710,13 @@ doRedraw:
 		}
 
 		// Cull backfaces or not
-		if ((entry->mods->statusBits & STATUS_BIT_KEEPBACKFACES) ||
-			(entry->mods->statusBits & STATUS_BIT_KEEPBACKFACES_2PASS))
-		{
-			if (meshIsTransparent && (entry->mods->statusBits & STATUS_BIT_KEEPBACKFACES_2PASS))
-			{
-				// If we want to keep backfaces on a transparent mesh, keep GL_CULL_FACE enabled,
-				// draw the backfaces first, then the frontfaces. This enhances the appearance of
-				// e.g. Nanosaur shield spheres, without the need to depth-sort individual faces.
+		SetState(GL_CULL_FACE, !(entry->mods->statusBits & STATUS_BIT_KEEPBACKFACES));
 
-				EnableState(GL_CULL_FACE);
-				glCullFace(GL_FRONT);		// Pass 1: draw backfaces (cull frontfaces)
-
-				// Pass 2 (at the end of the function) will draw the mesh again with backfaces culled.
-				// It will restore glCullFace to GL_BACK.
-			}
-			else
-			{
-				DisableState(GL_CULL_FACE);		// opaque mesh -- don't cull faces
-			}
-		}
-		else
-		{
-			EnableState(GL_CULL_FACE);
-		}
+		// To keep backfaces on a transparent mesh, draw backfaces first, then frontfaces.
+		// This enhances the appearance of e.g. translucent spheres,
+		// without the need to depth-sort individual faces.
+		if (entry->mods->statusBits & STATUS_BIT_KEEPBACKFACES_2PASS)
+			glCullFace(GL_FRONT);		// Pass 1: draw backfaces (cull frontfaces)
 
 		// Apply gouraud or null illumination
 		SetState(GL_LIGHTING, !(entry->mods->statusBits & STATUS_BIT_NULLSHADER));
@@ -861,11 +844,11 @@ doRedraw:
 		*/
 
 		// Pass 2 to draw transparent meshes without face culling (see above for an explanation)
-		if (meshIsTransparent && (entry->mods->statusBits & STATUS_BIT_KEEPBACKFACES_2PASS))
+		if (entry->mods->statusBits & STATUS_BIT_KEEPBACKFACES_2PASS)
 		{
+			// Restored glCullFace to GL_BACK, which is the default for all other meshes.
 			glCullFace(GL_BACK);	// pass 2: draw frontfaces (cull backfaces)
-			// We've restored glCullFace to GL_BACK, which is the default for all other meshes.
-			
+
 			// Draw the mesh again
 			__glDrawRangeElements(GL_TRIANGLES, 0, mesh->numPoints - 1, mesh->numTriangles * 3, GL_UNSIGNED_SHORT, mesh->triangles);
 			CHECK_GL_ERROR();
