@@ -654,6 +654,16 @@ static void DrawMeshList(int renderPass, const MeshQueueEntry* entry)
 	{
 		const TQ3TriMeshData* mesh = entry->meshPtrList[i];
 
+		bool depthDrawnAlready = false;
+		bool wantRedraw = false;
+		int redraws = 0;
+
+doRedraw:
+		redraws++;
+		wantRedraw = false;
+
+		GAME_ASSERT(redraws < 4);
+
 		if (entry->mods->statusBits & STATUS_BIT_HIDDEN)
 			continue;
 
@@ -733,6 +743,26 @@ static void DrawMeshList(int renderPass, const MeshQueueEntry* entry)
 
 		// Write geometry to depth buffer or not
 		SetFlag(glDepthMask, !(entry->mods->statusBits & STATUS_BIT_NOZWRITE));
+
+		if (depthDrawnAlready)
+		{
+			SetFlag(glDepthMask, false);
+			glDepthFunc(GL_LEQUAL);
+		}
+		else
+		{
+			glDepthFunc(GL_LESS);
+		}
+
+		if (mesh->texturingMode == kQ3TexturingModeAlphaTest && renderPass == kRenderPass_Opaque && !depthDrawnAlready)
+		{
+			SetFlag(glDepthMask, true);
+			depthDrawnAlready = true;
+			wantRedraw = true;
+			glColorMask(0,0,0,0);
+		}
+		else
+			glColorMask(1,1,1,1);
 
 		// Texture mapping
 		if (mesh->texturingMode != kQ3TexturingModeOff)
@@ -843,6 +873,9 @@ static void DrawMeshList(int renderPass, const MeshQueueEntry* entry)
 
 		// Update stats
 		gRenderStats.trianglesDrawn += mesh->numTriangles;
+
+		if (wantRedraw)
+			goto doRedraw;
 	}
 
 	if (matrixPushedYet)
