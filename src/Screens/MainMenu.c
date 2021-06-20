@@ -287,7 +287,7 @@ ObjNode					*newObj;
 	gNewObjectDefinition.group 		= MODEL_GROUP_MENU;	
 	gNewObjectDefinition.type 		= MENU_MObjType_Background;	
 	gNewObjectDefinition.coord.z 	= 0;
-	gNewObjectDefinition.flags 		= STATUS_BIT_NOTRICACHE; 
+	gNewObjectDefinition.flags 		= STATUS_BIT_NOTRICACHE | STATUS_BIT_NOZWRITE;
 	gNewObjectDefinition.moveCall 	= nil;
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= .35f;		// Source port change from .3 (looks better in widescreen)
@@ -341,7 +341,7 @@ ObjNode					*newObj;
 	
 		gNewObjectDefinition.type 		= iconType[i];	
 		gNewObjectDefinition.coord		= iconCoords[i];
-		gNewObjectDefinition.flags 		= STATUS_BIT_CLAMP_U | STATUS_BIT_CLAMP_V;
+		gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER | STATUS_BIT_CLAMP_U | STATUS_BIT_CLAMP_V;
 		gNewObjectDefinition.moveCall 	= nil;
 		gNewObjectDefinition.rot 		= 0;
 		gNewObjectDefinition.scale 		= .25;

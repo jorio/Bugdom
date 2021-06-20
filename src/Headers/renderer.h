@@ -12,12 +12,16 @@
 #define ALLOW_FADE		1
 #endif
 
+#if _DEBUG
 #define CHECK_GL_ERROR()												\
 	do {					 											\
 		GLenum err = glGetError();										\
 		if (err != GL_NO_ERROR)											\
 			DoFatalGLError(err, __func__, __LINE__);					\
 	} while(0)
+#else
+#define CHECK_GL_ERROR() do {} while(0)
+#endif
 
 #pragma mark -
 

@@ -1387,7 +1387,7 @@ static Byte	letters[] = {LINTRO_MObjType_L, LINTRO_MObjType_E, LINTRO_MObjType_V
 		gNewObjectDefinition.coord.y 	= 75;
 		gNewObjectDefinition.coord.z 	= 0;
 		gNewObjectDefinition.slot 		= 200;
-		gNewObjectDefinition.flags 		= STATUS_BIT_KEEPBACKFACES_2PASS;
+		gNewObjectDefinition.flags 		= STATUS_BIT_NOZWRITE | STATUS_BIT_KEEPBACKFACES_2PASS;
 		gNewObjectDefinition.moveCall 	= MoveAntHillLetter;
 		gNewObjectDefinition.rot 		= 0;
 		gNewObjectDefinition.scale 		= 1.2;
@@ -1416,8 +1416,14 @@ float fps = gFramesPerSecondFrac;
 	theNode->Health += fps * .5f;
 	
 	if (theNode->Health > 0.0f)
+	{
 		MakeObjectTransparent(theNode, theNode->Health);
 
+		if (theNode->Health >= 1.0f)
+		{
+			theNode->StatusBits &= ~STATUS_BIT_NOZWRITE;
+		}
+	}
 }
 
 

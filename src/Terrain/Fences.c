@@ -240,7 +240,10 @@ FencePointType			*nubs;
 
 		gFenceTriMeshDataPtrs[f] = tmd;
 
-		tmd->texturingMode = kQ3TexturingModeAlphaTest;
+		if (gAutoFadeStartDist != 0.0f)
+			tmd->texturingMode = kQ3TexturingModeAlphaBlend;		// Required for autofaded fences!
+		else
+			tmd->texturingMode = kQ3TexturingModeAlphaTest;
 
 				/* PREBUILD TRIANGLE INFO */
 

@@ -107,6 +107,7 @@ extern	ObjNode						*gPrevRope;
 extern	ObjNode						*gSaveNo;
 extern	ObjNode						*gSaveYes;
 extern	ObjNode						*gTheQueen;
+extern	ObjNode						*gCyclorama;
 extern	PrefsType					gGamePrefs;
 extern	QD3DSetupOutputType			*gGameViewInfoPtr;
 extern	RenderModifiers				gPauseQuadRenderMods;

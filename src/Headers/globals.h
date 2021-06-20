@@ -102,7 +102,7 @@ enum
 enum
 {
 	STATUS_BIT_ONGROUND		=	(1<<0),		// Player is on anything solid (terrain or objnode)
-	STATUS_BIT_ISCARRYING	=	(1<<1),		// Is Carrying Something
+	STATUS_BIT_MANUALDRAW	=	(1<<1),
 	STATUS_BIT_DONTCULL		=	(1<<2),		// set if don't want to perform custom culling on this object
 	STATUS_BIT_NOCOLLISION  = 	(1<<3),		// set if want collision code to skip testing against this object
 	STATUS_BIT_NOMOVE  		= 	(1<<4),		// dont call object's move function
@@ -129,5 +129,6 @@ enum
 	STATUS_BIT_KEEPBACKFACES_2PASS = (1<<25),	// draw backfaces and frontfaces separately (useful for transparent objects)
 	STATUS_BIT_CLAMP_U		=	(1<<26),
 	STATUS_BIT_CLAMP_V		=	(1<<27),
+	STATUS_BIT_DEBUGBREAKPOINT		= (1<<31),
 };
 

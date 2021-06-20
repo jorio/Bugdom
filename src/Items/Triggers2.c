@@ -103,7 +103,7 @@ int		checkpointNum = itemPtr->parm[0];
 		gNewObjectDefinition.type 		= GLOBAL1_MObjType_Droplet;	
 		gNewObjectDefinition.coord.x 	+= 192.0f * CHECKPOINT_SCALE;
 		gNewObjectDefinition.coord.y 	+= 224.0f * CHECKPOINT_SCALE;
-		gNewObjectDefinition.flags 		= gAutoFadeStatusBits;
+		gNewObjectDefinition.flags 		= gAutoFadeStatusBits | STATUS_BIT_NOZWRITE;
 		gNewObjectDefinition.slot++;
 		gNewObjectDefinition.moveCall 	= nil;
 		droplet = MakeNewDisplayGroupObject(&gNewObjectDefinition);

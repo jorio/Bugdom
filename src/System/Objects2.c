@@ -175,8 +175,8 @@ ObjNode	*shadowObj;
 	gNewObjectDefinition.type 		= GLOBAL1_MObjType_Shadow;	
 	gNewObjectDefinition.coord 		= theNode->Coord;
 	gNewObjectDefinition.coord.y 	+= SHADOW_Y_OFF;
-	gNewObjectDefinition.flags 		= STATUS_BIT_NOZWRITE|STATUS_BIT_NULLSHADER|STATUS_BIT_NOFOG|gAutoFadeStatusBits;
-									
+	gNewObjectDefinition.flags		= STATUS_BIT_NOZWRITE | STATUS_BIT_NULLSHADER | gAutoFadeStatusBits;
+
 	if (theNode->Slot >= SLOT_OF_DUMB+1)					// shadow *must* be after parent!
 		gNewObjectDefinition.slot 	= theNode->Slot+1;
 	else

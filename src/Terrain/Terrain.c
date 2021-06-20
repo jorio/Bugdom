@@ -1399,6 +1399,21 @@ void DrawTerrain(const QD3DSetupOutputType *setupInfo)
 		/* DRAW OBJECTS */
 
 	QD3D_SetMultisampling(false);										// disable MSAA for fences -- they use alpha testing so it wouldn't do much
+
+	if (gCyclorama)
+	{
+		gCyclorama->RenderModifiers.statusBits = gCyclorama->StatusBits;
+		Render_SubmitMeshList(
+				gCyclorama->NumMeshes,
+				gCyclorama->MeshList,
+				&gCyclorama->BaseTransformMatrix,
+				&gCyclorama->RenderModifiers,
+				&gCyclorama->Coord
+		);
+	}
+
+	Render_FlushQueue();
+
 	DrawFences(setupInfo);												// draw these first
 	DrawObjects(setupInfo);												// draw objNodes
 	QD3D_DrawParticles(setupInfo);

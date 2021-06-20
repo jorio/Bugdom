@@ -70,6 +70,8 @@ Boolean		gUseCyclorama;
 Boolean		gShowBottomBar;
 float		gCurrentYon;
 
+ObjNode		*gCyclorama;
+
 u_long		gAutoFadeStatusBits;
 short		gMainAppRezFile;
 Boolean		gGameOverFlag,gAbortedFlag,gAreaCompleted;
@@ -633,7 +635,9 @@ QD3DSetupInputType	viewDef;
 			/* INIT BACKGROUND */
 			
 	if (gUseCyclorama)
-		CreateCyclorama();
+		gCyclorama = CreateCyclorama();
+	else
+		gCyclorama = nil;
  }
 
 
@@ -644,6 +648,7 @@ static void CleanupLevel(void)
 	StopAllEffectChannels();
  	EmptySplineObjectList();
 	DeleteAllObjects();
+	gCyclorama = NULL;
 	FreeAllSkeletonFiles(-1);
 	DisposeSuperTileMemoryList();
 	DisposeTerrain();

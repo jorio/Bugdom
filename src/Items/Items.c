@@ -82,21 +82,19 @@ void InitItemsManager(void)
 
 /************************* CREATE CYCLORAMA *********************************/
 
-void CreateCyclorama(void)
+ObjNode* CreateCyclorama(void)
 {
-ObjNode *newObj;
-			
-	gNewObjectDefinition.group	= MODEL_GROUP_LEVELSPECIFIC;	
+	gNewObjectDefinition.group	= MODEL_GROUP_LEVELSPECIFIC;
 	gNewObjectDefinition.type 	= 0;						// cyc is always 1st in level-specific list
 	gNewObjectDefinition.coord 	= gMyCoord;
-	gNewObjectDefinition.flags 	= STATUS_BIT_DONTCULL | STATUS_BIT_NULLSHADER | STATUS_BIT_NOFOG | STATUS_BIT_NOZWRITE | STATUS_BIT_CLAMP_V;
+	gNewObjectDefinition.flags 	= STATUS_BIT_DONTCULL | STATUS_BIT_NULLSHADER | STATUS_BIT_NOFOG |
+			STATUS_BIT_NOZWRITE | STATUS_BIT_CLAMP_V | STATUS_BIT_MANUALDRAW;
 	gNewObjectDefinition.slot 	= 0;
 	gNewObjectDefinition.moveCall = MoveCyc;
 	gNewObjectDefinition.rot 	= 0;
 	gNewObjectDefinition.scale 	= gCycScale;
-	newObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-	if (newObj == nil)
-		return;
+	ObjNode* cyc = MakeNewDisplayGroupObject(&gNewObjectDefinition);
+	return cyc;
 }
 
 

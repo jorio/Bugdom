@@ -119,6 +119,7 @@ ObjNode	*newNodePtr;
 	newNodePtr->ParticleGroup = -1;						// no particle group
 	newNodePtr->SplineObjectIndex = -1;					// no index yet
 
+	Render_SetDefaultModifiers(&newNodePtr->RenderModifiers);
 	newNodePtr->RenderModifiers.statusBits = 0;
 	newNodePtr->RenderModifiers.diffuseColor = (TQ3ColorRGBA) { 1,1,1,1 };	// default diffuse color is opaque white
 
@@ -367,14 +368,11 @@ float			cameraX, cameraZ;
 
 		theNode->RenderModifiers.statusBits = statusBits;		// copy status bits to render mods
 
-		if (statusBits & STATUS_BIT_ISCULLED)					// see if is culled
-			goto next;		
-
-		if (statusBits & STATUS_BIT_HIDDEN)						// see if is hidden
-			goto next;		
-
 		if (theNode->CType == INVALID_NODE_FLAG)				// see if already deleted
-			goto next;		
+			goto next;
+
+		if (statusBits & (STATUS_BIT_ISCULLED | STATUS_BIT_HIDDEN | STATUS_BIT_MANUALDRAW))
+			goto next;
 
 
 			/******************/
