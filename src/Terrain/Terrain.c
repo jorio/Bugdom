@@ -1410,9 +1410,10 @@ void DrawTerrain(const QD3DSetupOutputType *setupInfo)
 				&gCyclorama->RenderModifiers,
 				&gCyclorama->Coord
 		);
+
+		Render_FlushQueue();	// flush here so autofaded fences will blend against cyclorama
 	}
 
-	Render_FlushQueue();
 
 	DrawFences(setupInfo);												// draw these first
 	DrawObjects(setupInfo);												// draw objNodes

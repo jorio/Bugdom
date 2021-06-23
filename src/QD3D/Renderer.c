@@ -291,8 +291,8 @@ void Render_EnableFog(
 {
 	glHint(GL_FOG_HINT,		GL_NICEST);
 	glFogi(GL_FOG_MODE,		GL_LINEAR);
-	glFogf(GL_FOG_START,	camHither + fogHither * (camYon - camHither));
-	glFogf(GL_FOG_END,		camHither + fogYon    * (camYon - camHither));
+	glFogf(GL_FOG_START,	fogHither * camYon);
+	glFogf(GL_FOG_END,		fogYon * camYon);
 	glFogfv(GL_FOG_COLOR,	(float *)&fogColor);
 	gState.wantFog = true;
 }

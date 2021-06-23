@@ -84,11 +84,14 @@ void InitItemsManager(void)
 
 ObjNode* CreateCyclorama(void)
 {
+	// Source port note: The original source code used to set STATUS_BIT_NOZWRITE on the cyc.
+	// But, the cyc does appear to clip through the terrain and fences on the OS 9 version.
+	// See: faraway fences seen from the starting position in level 4.
 	gNewObjectDefinition.group	= MODEL_GROUP_LEVELSPECIFIC;
 	gNewObjectDefinition.type 	= 0;						// cyc is always 1st in level-specific list
 	gNewObjectDefinition.coord 	= gMyCoord;
 	gNewObjectDefinition.flags 	= STATUS_BIT_DONTCULL | STATUS_BIT_NULLSHADER | STATUS_BIT_NOFOG |
-			STATUS_BIT_NOZWRITE | STATUS_BIT_CLAMP_V | STATUS_BIT_MANUALDRAW;
+			STATUS_BIT_CLAMP_V | STATUS_BIT_MANUALDRAW;
 	gNewObjectDefinition.slot 	= 0;
 	gNewObjectDefinition.moveCall = MoveCyc;
 	gNewObjectDefinition.rot 	= 0;
