@@ -673,11 +673,14 @@ Boolean	eraseBugStuff;
 			/* SEE IF NEED TO ERASE ARMS FIRST */
 			/***********************************/
 
-	if ((gOldLeftArmType != gLeftArmType) || eraseBugStuff)				// erase if changed
-		EraseSprite(gOldLeftArmType, HAND_X - GetSpriteWidth(gOldLeftArmType), HAND_Y);
+	if (!gBallIconIsDisplayed)
+	{
+		if ((gOldLeftArmType != gLeftArmType) || eraseBugStuff)				// erase if changed
+			EraseSprite(gOldLeftArmType, HAND_X - GetSpriteWidth(gOldLeftArmType), HAND_Y);
 
-	if ((gOldRightArmType != gRightArmType) || eraseBugStuff)
-		EraseSprite(gOldRightArmType, HAND_X, HAND_Y);
+		if ((gOldRightArmType != gRightArmType) || eraseBugStuff)
+			EraseSprite(gOldRightArmType, HAND_X, HAND_Y);
+	}
 
 
 			/* SEE IF ERASE BALL */
