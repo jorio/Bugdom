@@ -626,10 +626,8 @@ static const TQ3Vector3D up = {0,1,0};
 
 					/* CULL PARTICLE TO AVOID OVERDRAW (SOURCE PORT ADD) */
 
-			if (!IsSphereInFrustum_XYZ(coord, 0))		// radius 0: cull somewhat aggressively
-			{											// (use negative radius to cull even more)
+			if (!IsSphereInFrustum_XYZ(coord, pg->baseScale))
 				continue;
-			}
 
 					/* TRANSFORM PARTICLE VERTICES & ADD TO TRIMESH */
 

@@ -816,8 +816,7 @@ float	d;
 	theNode->PTimer -= gFramesPerSecondFrac;
 	if (theNode->PTimer < 0.0f)								// see if time to spew fire particles
 	{
-		theNode->PTimer = .12f;								// reset timer
-		// Source port mod: was .06f; that was a bit overkill and caused too much overdraw
+		theNode->PTimer = .06f;								// reset timer
 
 				/* SEE IF MAKE NEW GROUP */
 				
