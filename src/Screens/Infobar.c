@@ -1162,15 +1162,7 @@ int		w,x;
 			
 		/* FRAME */
 
-	{
-		const short thickness = 2;
-		Rect frameRect = r;
-		frameRect.left		-= thickness;
-		frameRect.top		-= thickness;
-		frameRect.right		+= thickness;
-		frameRect.bottom	+= thickness;
-		FillInfobarRect(frameRect, 0x000000FF);		// (BGRA)
-	}
+	FillInfobarRect(r, 0x000000FF);			// (BGRA)
 
 		/* METER */
 		
