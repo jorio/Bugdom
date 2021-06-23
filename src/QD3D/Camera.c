@@ -650,7 +650,6 @@ TQ3Point3D		from;
 TQ3Vector3D		axis,lookAtVector,sunVector;
 float			length;
 const bool doMoon = gMoonFlareTextureName != 0;
-float aspect = setupInfo->aspectRatio;
 
 	if (!gDrawLensFlare)
 		return;
@@ -683,6 +682,8 @@ float aspect = setupInfo->aspectRatio;
 
 	Q3Point3D_Transform(&sunCoord, &gCameraWorldToFrustumMatrix, &sunFrustumCoord);
 
+	sunFrustumCoord.x *= setupInfo->aspectRatio;
+
 			/* CALC VECTOR FROM CENTER TO LIGHT */
 
 	length = sqrtf(sunFrustumCoord.x*sunFrustumCoord.x + sunFrustumCoord.y*sunFrustumCoord.y);
@@ -706,15 +707,16 @@ float aspect = setupInfo->aspectRatio;
 		else
 			s = gFlareScaleTable[i];
 
-		float x = axis.x * length * gFlareOffsetTable[i];
-		float y = axis.y * length * gFlareOffsetTable[i];
+		o = 1.33f * gFlareOffsetTable[i] - 0.33f;
+		float x = axis.x * length * o;
+		float y = axis.y * length * o;
 
-		float extent = s * .5f;
+		float extent = s * .67f;
 
-		mesh->points[0] = (TQ3Point3D) { x*aspect - extent, y - extent, 0 };
-		mesh->points[1] = (TQ3Point3D) { x*aspect + extent, y - extent, 0 };
-		mesh->points[2] = (TQ3Point3D) { x*aspect + extent, y + extent, 0 };
-		mesh->points[3] = (TQ3Point3D) { x*aspect - extent, y + extent, 0 };
+		mesh->points[0] = (TQ3Point3D) { x - extent, y - extent, 0 };
+		mesh->points[1] = (TQ3Point3D) { x + extent, y - extent, 0 };
+		mesh->points[2] = (TQ3Point3D) { x + extent, y + extent, 0 };
+		mesh->points[3] = (TQ3Point3D) { x - extent, y + extent, 0 };
 
 		if (doMoon && (i == 0))							// see if do moon
 			mesh->glTextureName = gMoonFlareTextureName;
