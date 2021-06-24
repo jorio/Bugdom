@@ -765,12 +765,6 @@ static bool PreDrawMesh_DepthPass(int renderPass, const MeshQueueEntry* entry, i
 		EnableState(GL_TEXTURE_2D);
 		EnableClientState(GL_TEXTURE_COORD_ARRAY);
 		Render_BindTexture(mesh->glTextureName);
-
-		if (statusBits & STATUS_BIT_CLAMP_U)
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		if (statusBits & STATUS_BIT_CLAMP_V)
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
 		glTexCoordPointer(2, GL_FLOAT, 0, mesh->vertexUVs);
 		CHECK_GL_ERROR();
 	}
@@ -842,12 +836,6 @@ static bool PreDrawMesh_ColorPass(int renderPass, const MeshQueueEntry* entry, i
 		EnableState(GL_TEXTURE_2D);
 		EnableClientState(GL_TEXTURE_COORD_ARRAY);
 		Render_BindTexture(mesh->glTextureName);
-
-		if (statusBits & STATUS_BIT_CLAMP_U)
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		if (statusBits & STATUS_BIT_CLAMP_V)
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
 		glTexCoordPointer(2, GL_FLOAT, 0,
 				statusBits & STATUS_BIT_REFLECTIONMAP ? gEnvMapUVs : mesh->vertexUVs);
 		CHECK_GL_ERROR();

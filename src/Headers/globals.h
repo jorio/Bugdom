@@ -127,8 +127,6 @@ enum
 	STATUS_BIT_CLONE		=	(1<<23),	// set so Display Group node creates its own copy of model; then you can modify the model freely
 	STATUS_BIT_KEEPBACKFACES=	(1<<24),
 	STATUS_BIT_KEEPBACKFACES_2PASS = (1<<25),	// draw backfaces and frontfaces separately (useful for transparent objects)
-	STATUS_BIT_CLAMP_U		=	(1<<26),
-	STATUS_BIT_CLAMP_V		=	(1<<27),
 	STATUS_BIT_DEBUGBREAKPOINT		= (1<<31),
 };
 

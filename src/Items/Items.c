@@ -90,8 +90,7 @@ ObjNode* CreateCyclorama(void)
 	gNewObjectDefinition.group	= MODEL_GROUP_LEVELSPECIFIC;
 	gNewObjectDefinition.type 	= 0;						// cyc is always 1st in level-specific list
 	gNewObjectDefinition.coord 	= gMyCoord;
-	gNewObjectDefinition.flags 	= STATUS_BIT_DONTCULL | STATUS_BIT_NULLSHADER | STATUS_BIT_NOFOG |
-			STATUS_BIT_CLAMP_V | STATUS_BIT_MANUALDRAW;
+	gNewObjectDefinition.flags 	= STATUS_BIT_DONTCULL | STATUS_BIT_NULLSHADER | STATUS_BIT_NOFOG | STATUS_BIT_MANUALDRAW;
 	gNewObjectDefinition.slot 	= 0;
 	gNewObjectDefinition.moveCall = MoveCyc;
 	gNewObjectDefinition.rot 	= 0;
@@ -902,7 +901,7 @@ ObjNode	*newObj;
 	gNewObjectDefinition.coord.x 	= x;
 	gNewObjectDefinition.coord.y 	= WATER_Y;
 	gNewObjectDefinition.coord.z 	= z;
-	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER | STATUS_BIT_CLAMP_U | STATUS_BIT_CLAMP_V; // clamp U & V to avoid seam in middle
+	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER;
 	gNewObjectDefinition.slot 		= 211;
 	gNewObjectDefinition.moveCall 	= MoveStaticObject;
 	gNewObjectDefinition.rot 		= RandomFloat()*PI2;
