@@ -75,7 +75,7 @@ void LoadGrouped3DMF(FSSpec *spec, Byte groupNum)
 
 	gObjectGroupTextures[groupNum] = (GLuint*) NewPtrClear(the3DMFFile->numTextures * sizeof(GLuint));
 
-	Render_Load3DMFTextures(the3DMFFile, gObjectGroupTextures[groupNum]);
+	Render_Load3DMFTextures(the3DMFFile, gObjectGroupTextures[groupNum], false);
 
 			/* BUILD OBJECT LIST */
 

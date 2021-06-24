@@ -11,6 +11,12 @@
 
 #include "game.h"
 
+#include <string.h>				// strcasecmp
+#ifdef _MSC_VER
+	#define strncasecmp _strnicmp
+	#define strcasecmp _stricmp
+#endif
+
 
 /****************************/
 /*    PROTOTYPES            */
@@ -57,7 +63,11 @@ void LoadBonesReferenceModel(const FSSpec	*inSpec, SkeletonDefType *skeleton)
 	skeleton->numTextures = skeleton->associated3DMF->numTextures;
 	skeleton->textureNames = (GLuint*) NewPtrClear(skeleton->numTextures * sizeof(GLuint));
 
-	Render_Load3DMFTextures(skeleton->associated3DMF, skeleton->textureNames);
+	// We want to force clamp texture UVs on all skeleton models to avoid seams at the edges of
+	// alpha-tested textures. The only exception, which requires repeated texture UVs, is RootSwing.
+	bool forceClampUVs = 0 != strcasecmp("RootSwing.3dmf", inSpec->cName);
+
+	Render_Load3DMFTextures(skeleton->associated3DMF, skeleton->textureNames, forceClampUVs);
 
 			/* DECOMPOSE REFERENCE MODEL */
 

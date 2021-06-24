@@ -401,7 +401,7 @@ void Render_UpdateTexture(
 	}
 }
 
-void Render_Load3DMFTextures(TQ3MetaFile* metaFile, GLuint* outTextureNames)
+void Render_Load3DMFTextures(TQ3MetaFile* metaFile, GLuint* outTextureNames, bool forceClampUVs)
 {
 	for (int i = 0; i < metaFile->numTextures; i++)
 	{
@@ -450,9 +450,11 @@ void Render_Load3DMFTextures(TQ3MetaFile* metaFile, GLuint* outTextureNames)
 				continue;
 		}
 
-		int clampFlags = 0;
-		if (textureShader->boundaryU == kQ3ShaderUVBoundaryClamp) clampFlags |= 1;
-		if (textureShader->boundaryV == kQ3ShaderUVBoundaryClamp) clampFlags |= 2;
+		int clampFlags = forceClampUVs ? kRendererTextureFlags_ClampBoth : 0;
+		if (textureShader->boundaryU == kQ3ShaderUVBoundaryClamp)
+			clampFlags |= kRendererTextureFlags_ClampU;
+		if (textureShader->boundaryV == kQ3ShaderUVBoundaryClamp)
+			clampFlags |= kRendererTextureFlags_ClampV;
 
 		outTextureNames[i] = Render_LoadTexture(
 					 internalFormat,						// format in OpenGL

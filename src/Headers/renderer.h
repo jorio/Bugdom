@@ -127,7 +127,7 @@ void Render_UpdateTexture(
 // Uploads all textures from a 3DMF file to the GPU.
 // Requires an OpenGL context to be active.
 // outTextureNames is an array with enough capacity to hold `metaFile->numTextures` texture names.
-void Render_Load3DMFTextures(TQ3MetaFile* metaFile, GLuint* outTextureNames);
+void Render_Load3DMFTextures(TQ3MetaFile* metaFile, GLuint* outTextureNames, bool forceClampUVs);
 
 #pragma mark -
 
