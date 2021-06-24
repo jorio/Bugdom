@@ -49,8 +49,6 @@ void LoadBonesReferenceModel(const FSSpec	*inSpec, SkeletonDefType *skeleton)
 	skeleton->associated3DMF = Q3MetaFile_Load3DMF(inSpec);
 	GAME_ASSERT(skeleton->associated3DMF);
 
-	Patch3DMF(inSpec->cName, skeleton->associated3DMF);
-
 			/* UPLOAD TEXTURES TO GPU */
 
 	GAME_ASSERT(skeleton->numTextures == 0);
