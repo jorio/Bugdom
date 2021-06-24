@@ -405,13 +405,15 @@ void Render_Load3DMFTextures(TQ3MetaFile* metaFile, GLuint* outTextureNames)
 {
 	for (int i = 0; i < metaFile->numTextures; i++)
 	{
-		TQ3Pixmap* textureDef = metaFile->textures[i];
+		TQ3TextureShader* textureShader = &metaFile->textures[i];
+
+		GAME_ASSERT(textureShader->pixmap);
 
 		TQ3TexturingMode meshTexturingMode = kQ3TexturingModeOff;
 		GLenum internalFormat;
 		GLenum format;
 		GLenum type;
-		switch (textureDef->pixelType)
+		switch (textureShader->pixmap->pixelType)
 		{
 			case kQ3PixelTypeRGB32:
 				meshTexturingMode = kQ3TexturingModeOpaque;
@@ -448,14 +450,18 @@ void Render_Load3DMFTextures(TQ3MetaFile* metaFile, GLuint* outTextureNames)
 				continue;
 		}
 
+		int clampFlags = 0;
+		if (textureShader->boundaryU == kQ3ShaderUVBoundaryClamp) clampFlags |= 1;
+		if (textureShader->boundaryV == kQ3ShaderUVBoundaryClamp) clampFlags |= 2;
+
 		outTextureNames[i] = Render_LoadTexture(
 					 internalFormat,						// format in OpenGL
-					 textureDef->width,						// width in pixels
-					 textureDef->height,					// height in pixels
+					 textureShader->pixmap->width,			// width in pixels
+					 textureShader->pixmap->height,			// height in pixels
 					 format,								// what my format is
 					 type,									// size of each r,g,b
-					 textureDef->image,						// pointer to the actual texture pixels
-					 0);
+					 textureShader->pixmap->image,			// pointer to the actual texture pixels
+					 clampFlags);
 
 		// Set glTextureName on meshes
 		for (int j = 0; j < metaFile->numMeshes; j++)
