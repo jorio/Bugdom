@@ -242,7 +242,7 @@ if(WIN32)
     )
 elseif(APPLE)
 	# Add required frameworks for KillMacMouseAcceleration
-	list(APPEND GAME_LIBRARIES -framework Foundation -framework IOKit)
+	list(APPEND GAME_LIBRARIES "-framework Foundation" "-framework IOKit")
 
 	add_executable(${GAME_TARGET} MACOSX_BUNDLE
 		${GAME_ALL_SOURCES}
