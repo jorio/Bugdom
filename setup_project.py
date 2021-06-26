@@ -15,7 +15,7 @@ from dataclasses import dataclass
 libs_dir = os.path.abspath('extern')
 cache_dir = os.path.abspath('cache')
 
-game_ver = "1.3.0"
+game_ver = "1.3.1"
 sdl_ver = "2.0.14"
 
 #----------------------------------------------------------------

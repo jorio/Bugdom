@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.11" CACHE STRING "Minimum OS X deployment version")
 
 project(Bugdom
-	VERSION 1.3.0
+	VERSION 1.3.1
 	LANGUAGES C CXX
 )
 
