@@ -304,7 +304,7 @@ TQ3Vector3D				fillDirection2 = { -.7, -.2, -.9 };			// fill
 	if (gRealLevel != LEVEL_NUM_FLIGHT)
 	{
 				/* LOG */
-					
+
 		gNewObjectDefinition.group 		= MODEL_GROUP_LEVELINTRO;	
 		gNewObjectDefinition.type 		= LINTRO_MObjType_Log;	
 		gNewObjectDefinition.coord.x	= 0;
@@ -315,7 +315,18 @@ TQ3Vector3D				fillDirection2 = { -.7, -.2, -.9 };			// fill
 		gNewObjectDefinition.moveCall 	= nil;
 		gNewObjectDefinition.rot 		= 0;
 		gNewObjectDefinition.scale 		= 1.5;
-		MakeNewDisplayGroupObject(&gNewObjectDefinition);
+		ObjNode* log = MakeNewDisplayGroupObject(&gNewObjectDefinition);
+
+				/* MAKE EXTRA LOGS FOR ULTRA-WIDE DISPLAYS */
+
+		for (int i = 1; i < 4; i++)
+		{
+			gNewObjectDefinition.coord.x	= i*2.0f * gNewObjectDefinition.scale * log->MeshList[0]->bBox.max.x;
+			MakeNewDisplayGroupObject(&gNewObjectDefinition);
+
+			gNewObjectDefinition.coord.x	= -i*2.0f * gNewObjectDefinition.scale * log->MeshList[0]->bBox.max.x;
+			MakeNewDisplayGroupObject(&gNewObjectDefinition);
+		}
 	}
 
 		/* BACKGROUND CYC */
