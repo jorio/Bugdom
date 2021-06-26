@@ -107,6 +107,8 @@ Boolean beenHere = false;
 
 	if (!beenHere)
 	{
+		GammaFadeOut();
+
 		beenHere = true;
 
 		DeleteAll3DMFGroups();
@@ -124,8 +126,6 @@ Boolean beenHere = false;
 	KillSong();
 	UseResFile(gMainAppRezFile);
 
-	CleanupDisplay();								// unloads Draw Sprocket
-	
 	InitCursor();
 //	SetDefaultOutputVolume((gOriginalSystemVolume<<16)|gOriginalSystemVolume); // reset system volume
 	ExitToShell();		

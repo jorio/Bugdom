@@ -1,4 +1,4 @@
-# Bugdom 1.3.0 Cheats
+# Bugdom 1.3.1 Cheats
 
 ## In main menu
 
@@ -17,6 +17,7 @@ Tilde is the key above Tab on a US keyboard layout.
 - \` + F4 = full ball timer
 - \` + F5 = full inventory
 - \` + F6 = toggle liquid invincibility
+- \` + F7 = hurt player
 - \` + F9 = display debug
 - F11 (without tilde) = toggle fullscreen/windowed mode
 

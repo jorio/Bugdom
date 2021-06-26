@@ -352,7 +352,12 @@ void QD3D_DrawScene(QD3DSetupOutputType *setupInfo, void (*drawRoutine)(const QD
 
 	SubmitInfobarOverlay();			// draw 2D elements on top
 
-	// TODO: draw fade overlay here
+#if ALLOW_FADE
+	if (gGammaFadeFactor < 1.0f)
+	{
+		Render_DrawFadeOverlay(gGammaFadeFactor);
+	}
+#endif
 
 	SDL_GL_SwapWindow(gSDLWindow);
 }

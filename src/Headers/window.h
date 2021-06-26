@@ -8,7 +8,6 @@
 extern void	InitWindowStuff(void);
 extern	void MakeFadeEvent(Boolean	fadeIn);
 
-extern	void CleanupDisplay(void);
 extern	void GammaFadeOut(void);
 extern	void GammaOn(void);
 

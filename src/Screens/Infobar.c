@@ -1211,7 +1211,7 @@ void SubmitInfobarOverlay(void)
 	}
 
 	Render_Enter2D_Full640x480();
-	Render_Draw2DQuad(gInfobarTextureName);
+	Render_Draw2DQuad(gInfobarTextureName, false, 1.0f);
 	Render_Exit2D_Full640x480();
 #if 0
 	Overlay_SubmitQuad(0,	0,		640,	62,		0,	0,				1.0f,	62.0f/480.0f);

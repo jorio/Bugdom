@@ -62,7 +62,6 @@ static bool					gFrameStarted = false;
 static float				gBackupVertexColors[4*65536];
 
 static int DrawOrderComparator(void const* a_void, void const* b_void);
-static void DrawFadeOverlay(float opacity);
 
 static void DrawMesh(const MeshQueueEntry* entry, bool (*preDrawFunc)(const MeshQueueEntry* entry));
 static bool PreDrawMesh_DepthPass(const MeshQueueEntry* entry);
@@ -83,18 +82,12 @@ static const RenderModifiers kDefaultRenderMods =
 	.drawOrder = 0,
 };
 
-static const float kFreezeFrameFadeOutDuration = .33f;
-
-//		2----3
-//		| \  |
-//		|  \ |
-//		0----1
-static const TQ3Point2D kFullscreenQuadPointsNDC[4] =
+static const TQ3Point2D kFullscreenQuadPoints640x480[4] =
 {
-	{-1.0f, -1.0f},
-	{ 1.0f, -1.0f},
-	{-1.0f,  1.0f},
-	{ 1.0f,  1.0f},
+	{ 0,	480 },
+	{ 640,	480 },
+	{ 0,	0 },
+	{ 640,	0 },
 };
 
 static const uint8_t kFullscreenQuadTriangles[2][3] =
@@ -130,7 +123,7 @@ static RendererState gState;
 
 static PFNGLDRAWRANGEELEMENTSPROC __glDrawRangeElements;
 
-static	float			gFadeOverlayOpacity = 0;
+float gGammaFadeFactor = 1.0f;
 
 #pragma mark -
 
@@ -556,14 +549,6 @@ void Render_EndFrame(void)
 	Render_FlushQueue();
 
 	DisableState(GL_SCISSOR_TEST);
-
-#if ALLOW_FADE
-	// Draw fade overlay
-	if (gFadeOverlayOpacity > 0.01f)
-	{
-		DrawFadeOverlay(gFadeOverlayOpacity);
-	}
-#endif
 
 	gFrameStarted = false;
 }
@@ -997,115 +982,18 @@ void Render_Exit2D_NormalizedCoordinates(void)
 	glPopMatrix();
 }
 
-void Render_Draw2DQuad(
-		int texture)
+void Render_Draw2DQuad(GLuint texture, bool flipY, float brightness)
 {
-	float screenLeft   = 0.0f;
-	float screenRight  = (float)gWindowWidth;
-	float screenTop    = 0.0f;
-	float screenBottom = (float)gWindowHeight;
-
-
-
-	// Compute normalized device coordinates for the quad vertices.
-	float ndcLeft   = 2.0f * screenLeft  / gWindowWidth - 1.0f;
-	float ndcRight  = 2.0f * screenRight / gWindowWidth - 1.0f;
-	float ndcTop    = 1.0f - 2.0f * screenTop    / gWindowHeight;
-	float ndcBottom = 1.0f - 2.0f * screenBottom / gWindowHeight;
-
-
-
-	TQ3Point2D pts[4] =
-			{
-					//{ ndcLeft,	ndcBottom },		//		2----3
-					//{ ndcRight,	ndcBottom },		//		| \  |
-					//{ ndcLeft,	ndcTop },			//		|  \ |
-					//{ ndcRight,	ndcTop },			//		0----1
-					{ 0,	480 },	/*0*/	//		2----3
-					{ 640,	480 },	/*1*/	//		| \  |
-					{ 0,	0 },			/*2*/	//		|  \ |
-					{ 640,	0 },			/*3*/	//		0----1
-			};
-
-	glColor4f(1, 1, 1, 1);
+	glColor4f(brightness, brightness, brightness, 1);
 	EnableState(GL_TEXTURE_2D);
 	EnableClientState(GL_TEXTURE_COORD_ARRAY);
 	Render_BindTexture(texture);
 	EnableClientState(GL_VERTEX_ARRAY);
-	glVertexPointer(2, GL_FLOAT, 0, pts);
-	glTexCoordPointer(2, GL_FLOAT, 0, kFullscreenQuadUVs);
+	glVertexPointer(2, GL_FLOAT, 0, kFullscreenQuadPoints640x480);
+	glTexCoordPointer(2, GL_FLOAT, 0, flipY? kFullscreenQuadUVsFlipped: kFullscreenQuadUVs);
 
 	__glDrawRangeElements(GL_TRIANGLES, 0, 3*2, 3*2, GL_UNSIGNED_BYTE, kFullscreenQuadTriangles);
 }
-
-#if 0  // TODO: clean this up
-static void Render_Draw2DFullscreenQuad(int fit)
-{
-	//		2----3
-	//		| \  |
-	//		|  \ |
-	//		0----1
-	TQ3Point2D pts[4] = {
-			{-1,	-1},
-			{ 1,	-1},
-			{-1,	 1},
-			{ 1,	 1},
-	};
-
-	float screenLeft   = 0.0f;
-	float screenRight  = (float)gWindowWidth;
-	float screenTop    = 0.0f;
-	float screenBottom = (float)gWindowHeight;
-	bool needClear = false;
-
-	// Adjust screen coordinates if we want to pillarbox/letterbox the image.
-	if (fit & (kCoverQuadLetterbox | kCoverQuadPillarbox))
-	{
-		const float targetAspectRatio = (float) gWindowWidth / gWindowHeight;
-		const float sourceAspectRatio = (float) gCoverWindowTextureWidth / gCoverWindowTextureHeight;
-
-		if (fabsf(sourceAspectRatio - targetAspectRatio) < 0.1)
-		{
-			// source and window have nearly the same aspect ratio -- fit (no-op)
-		}
-		else if ((fit & kCoverQuadLetterbox) && sourceAspectRatio > targetAspectRatio)
-		{
-			// source is wider than window -- letterbox
-			needClear = true;
-			float letterboxedHeight = gWindowWidth / sourceAspectRatio;
-			screenTop = (gWindowHeight - letterboxedHeight) / 2;
-			screenBottom = screenTop + letterboxedHeight;
-		}
-		else if ((fit & kCoverQuadPillarbox) && sourceAspectRatio < targetAspectRatio)
-		{
-			// source is narrower than window -- pillarbox
-			needClear = true;
-			float pillarboxedWidth = sourceAspectRatio * gWindowWidth / targetAspectRatio;
-			screenLeft = (gWindowWidth / 2.0f) - (pillarboxedWidth / 2.0f);
-			screenRight = screenLeft + pillarboxedWidth;
-		}
-	}
-
-	// Compute normalized device coordinates for the quad vertices.
-	float ndcLeft   = 2.0f * screenLeft  / gWindowWidth - 1.0f;
-	float ndcRight  = 2.0f * screenRight / gWindowWidth - 1.0f;
-	float ndcTop    = 1.0f - 2.0f * screenTop    / gWindowHeight;
-	float ndcBottom = 1.0f - 2.0f * screenBottom / gWindowHeight;
-
-	pts[0] = (TQ3Point2D) { ndcLeft, ndcBottom };
-	pts[1] = (TQ3Point2D) { ndcRight, ndcBottom };
-	pts[2] = (TQ3Point2D) { ndcLeft, ndcTop };
-	pts[3] = (TQ3Point2D) { ndcRight, ndcTop };
-
-
-	glColor4f(1, 1, 1, 1);
-	EnableState(GL_TEXTURE_2D);
-	EnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glVertexPointer(2, GL_FLOAT, 0, pts);
-	glTexCoordPointer(2, GL_FLOAT, 0, kFullscreenQuadUVs);
-	__glDrawRangeElements(GL_TRIANGLES, 0, 3*2, 3*2, GL_UNSIGNED_BYTE, kFullscreenQuadTriangles);
-}
-#endif
 
 #pragma mark -
 
@@ -1115,116 +1003,22 @@ static void Render_Draw2DFullscreenQuad(int fit)
 /*    BACKDROP/OVERLAY (COVER WINDOW)      */
 /*******************************************/
 
-#if 0  // TODO: clean this up
-void Render_Alloc2DCover(int width, int height)
+void Render_DrawFadeOverlay(float opacity)
 {
-	GAME_ASSERT_MESSAGE(gCoverWindowTextureName == 0, "cover texture already allocated");
-
-	gCoverWindowTextureWidth = width;
-	gCoverWindowTextureHeight = height;
-
-	gCoverWindowTextureName = Render_LoadTexture(
-			GL_RGBA,
-			width,
-			height,
-			GL_BGRA,
-			GL_UNSIGNED_INT_8_8_8_8,
-			gCoverWindowPixPtr,
-			kRendererTextureFlags_ClampBoth
-	);
-
-	ClearPortDamage();
-}
-
-void Render_Dispose2DCover(void)
-{
-	if (gCoverWindowTextureName == 0)
-		return;
-
-	glDeleteTextures(1, &gCoverWindowTextureName);
-	gCoverWindowTextureName = 0;
-}
-
-void Render_Clear2DCover(UInt32 argb)
-{
-	UInt32 bgra = Byteswap32(&argb);
-
-	UInt32* backdropPixPtr = gCoverWindowPixPtr;
-
-	for (GLuint i = 0; i < gCoverWindowTextureWidth * gCoverWindowTextureHeight; i++)
-	{
-		*(backdropPixPtr++) = bgra;
-	}
-
-	GrafPtr port;
-	GetPort(&port);
-	DamagePortRegion(&port->portRect);
-}
-
-void Render_Draw2DCover(int fit)
-{
-	if (gCoverWindowTextureName == 0)
-		return;
-
-	Render_BindTexture(gCoverWindowTextureName);
-
-	// If the screen port has dirty pixels ("damaged"), update the texture
-	if (IsPortDamaged())
-	{
-		Rect damageRect;
-		GetPortDamageRegion(&damageRect);
-
-		// Set unpack row length to 640
-		GLint pUnpackRowLength;
-		glGetIntegerv(GL_UNPACK_ROW_LENGTH, &pUnpackRowLength);
-		glPixelStorei(GL_UNPACK_ROW_LENGTH, gCoverWindowTextureWidth);
-
-		glTexSubImage2D(
-				GL_TEXTURE_2D,
-				0,
-				damageRect.left,
-				damageRect.top,
-				damageRect.right - damageRect.left,
-				damageRect.bottom - damageRect.top,
-				GL_BGRA,
-				GL_UNSIGNED_INT_8_8_8_8,
-				gCoverWindowPixPtr + (damageRect.top * gCoverWindowTextureWidth + damageRect.left));
-		CHECK_GL_ERROR();
-
-		// Restore unpack row length
-		glPixelStorei(GL_UNPACK_ROW_LENGTH, pUnpackRowLength);
-
-		ClearPortDamage();
-	}
-
-	glViewport(0, 0, gWindowWidth, gWindowHeight);
-	Render_Enter2D();
-	Render_Draw2DFullscreenQuad(fit);
-	Render_Exit2D();
-}
-#endif
-
-static void DrawFadeOverlay(float opacity)
-{
-	glViewport(0, 0, gWindowWidth, gWindowHeight);
 	Render_Enter2D_Full640x480();
 	EnableState(GL_BLEND);
 	DisableState(GL_TEXTURE_2D);
+	DisableState(GL_ALPHA_TEST);
+	DisableState(GL_CULL_FACE);
 	DisableClientState(GL_TEXTURE_COORD_ARRAY);
-	glColor4f(0, 0, 0, opacity);
-	glVertexPointer(2, GL_FLOAT, 0, kFullscreenQuadPointsNDC);
+
+	glColor4f(0, 0, 0, 1.0f-opacity);
+	glVertexPointer(2, GL_FLOAT, 0, kFullscreenQuadPoints640x480);
 	__glDrawRangeElements(GL_TRIANGLES, 0, 3*2, 3*2, GL_UNSIGNED_BYTE, kFullscreenQuadTriangles);
 	Render_Exit2D_Full640x480();
 }
 
-#pragma mark -
-
-void Render_SetWindowGamma(float percent)
-{
-	gFadeOverlayOpacity = (100.0f - percent) / 100.0f;
-}
-
-void Render_FreezeFrameFadeOut(void)
+void Render_FreezeFrameFadeOut(float duration)
 {
 #if ALLOW_FADE
 	//-------------------------------------------------------------------------
@@ -1238,8 +1032,8 @@ void Render_FreezeFrameFadeOut(void)
 	char* textureData = NewPtrClear(textureWidth * textureHeight * 3);
 
 	//SDL_GL_SwapWindow(gSDLWindow);
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glPixelStorei(GL_UNPACK_ROW_LENGTH, textureWidth);
+//	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+//	glPixelStorei(GL_UNPACK_ROW_LENGTH, textureWidth);
 	glReadPixels(0, 0, textureWidth, textureHeight, GL_BGR, GL_UNSIGNED_BYTE, textureData);
 	CHECK_GL_ERROR();
 
@@ -1254,58 +1048,44 @@ void Render_FreezeFrameFadeOut(void)
 			);
 	CHECK_GL_ERROR();
 
+	DisposePtr(textureData);
+	textureData = NULL;
+
 	//-------------------------------------------------------------------------
 	// Set up 2D viewport
 
-	glViewport(0, 0, gWindowWidth, gWindowHeight);
-	Render_Enter2D();
-	DisableState(GL_BLEND);
-	EnableState(GL_TEXTURE_2D);
-	EnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glVertexPointer(2, GL_FLOAT, 0, kFullscreenQuadPointsNDC);
-	glTexCoordPointer(2, GL_FLOAT, 0, kFullscreenQuadUVsFlipped);
+	Render_Enter2D_Full640x480();
 
 	//-------------------------------------------------------------------------
 	// Fade out
 
 	Uint32 startTicks = SDL_GetTicks();
-	Uint32 endTicks = startTicks + kFreezeFrameFadeOutDuration * 1000.0f;
 
-	for (Uint32 ticks = startTicks; ticks <= endTicks; ticks = SDL_GetTicks())
+	gGammaFadeFactor = 1.0f;
+
+	while (gGammaFadeFactor > 0)
 	{
-		float gGammaFadePercent = 1.0f - ((ticks - startTicks) / 1000.0f / kFreezeFrameFadeOutDuration);
-		if (gGammaFadePercent < 0.0f)
-			gGammaFadePercent = 0.0f;
+		Uint32 ticks = SDL_GetTicks();
+		gGammaFadeFactor = 1.0f - ((ticks - startTicks) / 1000.0f / duration);
+		if (gGammaFadeFactor < 0.0f)
+			gGammaFadeFactor = 0.0f;
 
-		glColor4f(gGammaFadePercent, gGammaFadePercent, gGammaFadePercent, 1.0f);
-		__glDrawRangeElements(GL_TRIANGLES, 0, 3*2, 3*2, GL_UNSIGNED_BYTE, kFullscreenQuadTriangles);
+		Render_Draw2DQuad(textureName, true, gGammaFadeFactor);
 		CHECK_GL_ERROR();
 		SDL_GL_SwapWindow(gSDLWindow);
 		SDL_Delay(15);
 	}
 
-	//-------------------------------------------------------------------------
-	// Hold full blackness for a little bit
-
-	startTicks = SDL_GetTicks();
-	endTicks = startTicks + .1f * 1000.0f;
-	glClearColor(0,0,0,1);
-	for (Uint32 ticks = startTicks; ticks <= endTicks; ticks = SDL_GetTicks())
-	{
-		glClear(GL_COLOR_BUFFER_BIT);
-		SDL_GL_SwapWindow(gSDLWindow);
-		SDL_Delay(15);
-	}
+	SDL_Delay(100);			// Hold full blackness for a little bit
 
 	//-------------------------------------------------------------------------
 	// Clean up
 
-	Render_Exit2D();
+	Render_Exit2D_Full640x480();
 
-	DisposePtr(textureData);
 	glDeleteTextures(1, &textureName);
 
-	gFadeOverlayOpacity = 1;
+	gGammaFadeFactor = 1;
 #endif
 }
 

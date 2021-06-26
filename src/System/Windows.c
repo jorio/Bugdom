@@ -23,21 +23,10 @@ static void MoveFadeEvent(ObjNode *theNode);
 /*    CONSTANTS             */
 /****************************/
 
-#if _DEBUG
-#define	ALLOW_FADE		0
-#else
-#define	ALLOW_FADE		1
-#endif
-
 
 /**********************/
 /*     VARIABLES      */
 /**********************/
-
-extern WindowPtr		gCoverWindow;
-
-
-float		gGammaFadePercent;
 
 /****************  INIT WINDOW STUFF *******************/
 
@@ -51,8 +40,8 @@ void InitWindowStuff(void)
 void GammaFadeOut(void)
 {
 #if ALLOW_FADE
-	printf("TODO NOQUESA: fade out!\n");//Overlay_FadeOutFrozenFrame(.3f);
-	gGammaFadePercent = 0;
+	gGammaFadeFactor = 0;
+	Render_FreezeFrameFadeOut(.3f);
 #endif
 	FlushMouseButtonPress();
 }
@@ -62,17 +51,9 @@ void GammaFadeOut(void)
 void GammaOn(void)
 {
 	// Note: the game used to fade gamma in smoothly if it wasn't at 100% already. Changed to instant 100%.
-	gGammaFadePercent = 100;
+	gGammaFadeFactor = 1.0f;
 }
 
-
-
-/****************** CLEANUP DISPLAY *************************/
-
-void CleanupDisplay(void)
-{
-	GammaFadeOut();
-}
 
 
 /******************** MAKE FADE EVENT *********************/
@@ -115,6 +96,15 @@ ObjNode		*thisNodePtr;
 		return;
 
 	newObj->Flag[0] = fadeIn;
+
+	if (fadeIn)
+	{
+		gGammaFadeFactor = .01f;
+	}
+	else
+	{
+		gGammaFadeFactor = .99f;
+	}
 }
 
 
@@ -128,27 +118,29 @@ float	fps = gFramesPerSecondFrac;
 			
 	if (theNode->Flag[0])
 	{
-		if (gGammaFadePercent >= 100.0f)										// see if @ 100%
+		if (gGammaFadeFactor >= 1.0f)										// see if @ 100%
 		{
-			gGammaFadePercent = 100;
+			gGammaFadeFactor = 1.0f;
 			DeleteObject(theNode);
+			return;
 		}
-		gGammaFadePercent += 300.0f*fps;
-		if (gGammaFadePercent >= 100.0f)										// see if @ 100%
-			gGammaFadePercent = 100;
+		gGammaFadeFactor += 3.0f * fps;
+		if (gGammaFadeFactor >= 1.0f)										// see if @ 100%
+			gGammaFadeFactor = 1.0f;
 	}
 	
 			/* FADE OUT */
 	else
 	{
-		if (gGammaFadePercent <= 0.0f)													// see if @ 0%
+		if (gGammaFadeFactor <= 0.0f)													// see if @ 0%
 		{
-			gGammaFadePercent = 0;
+			gGammaFadeFactor = 0;
 			DeleteObject(theNode);
+			return;
 		}
-		gGammaFadePercent -= 300.0f*fps;
-		if (gGammaFadePercent <= 0.0f)													// see if @ 0%
-			gGammaFadePercent = 0;
+		gGammaFadeFactor -= 3.0f * fps;
+		if (gGammaFadeFactor <= 0.0f)													// see if @ 0%
+			gGammaFadeFactor = 0;
 	}
 }
 
@@ -157,15 +149,6 @@ float	fps = gFramesPerSecondFrac;
 
 void GameScreenToBlack(void)
 {
-	if (gCoverWindow)
-	{
-		Rect	r;
-		SetPort(GetWindowPort(gCoverWindow));
-		BackColor(blackColor);
-		GetPortBounds(GetWindowPort(gCoverWindow), &r);
-		EraseRect(&r);
-	}
-
 	FlushMouseButtonPress();
 }
 

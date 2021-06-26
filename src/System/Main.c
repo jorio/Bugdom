@@ -358,7 +358,8 @@ float fps;
 	QD3D_CalcFramesPerSecond();
 
 		/* PRIME 1ST FRAME & MADE FADE EVENT */
-	
+
+	gGammaFadeFactor = 0.0f;
 	QD3D_DrawScene(gGameViewInfoPtr,DrawTerrain);
 	MakeFadeEvent(true);
 
@@ -736,6 +737,11 @@ static void CheckForCheats(void)
 			gLiquidCheat = !gLiquidCheat;
 //			MoveTo(0, 12);
 //			DrawStringC(gLiquidCheat ? "Liquid cheat ON   " : "Liquid cheat OFF   ");
+		}
+
+		if (GetKeyState_SDL(SDL_SCANCODE_F7))		// hurt player
+		{
+			PlayerGotHurt(NULL, 1/60.0f, 1.0f, false, true, 1/60.0f);
 		}
 
 		if (GetNewKeyState_SDL(SDL_SCANCODE_F9))

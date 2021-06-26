@@ -8,8 +8,12 @@
 #include <GL/glu.h>			// gluErrorString, gluPerspective, gluLookAt
 #endif
 
-#if !defined(ALLOW_FADE) && !_DEBUG
-#define ALLOW_FADE		1
+#if !defined(ALLOW_FADE)
+	#if _DEBUG
+		#define ALLOW_FADE		0
+	#else
+		#define ALLOW_FADE		1
+	#endif
 #endif
 
 #if _DEBUG
@@ -50,15 +54,6 @@ typedef struct RenderModifiers
 	// and transparent meshes are drawn back-to-front.
 	int						drawOrder;
 } RenderModifiers;
-
-
-enum
-{
-	kCoverQuadFill						= 0,
-	kCoverQuadPillarbox					= 1,
-	kCoverQuadLetterbox					= 2,
-	kCoverQuadFit						= kCoverQuadPillarbox | kCoverQuadLetterbox,
-};
 
 typedef enum
 {
@@ -183,21 +178,11 @@ void Render_Exit2D_NormalizedCoordinates(void);
 
 #pragma mark -
 
-void Render_Alloc2DCover(int width, int height);
+void Render_Draw2DQuad(GLuint texture, bool flipY, float brightness);
 
-void Render_Dispose2DCover(void);
+void Render_DrawFadeOverlay(float opacity);
 
-void Render_Clear2DCover(uint32_t argb);
-
-void Render_Draw2DCover(int fit);
-
-void Render_Draw2DQuad(int texture);
-
-#pragma mark -
-
-void Render_SetWindowGamma(float percent);
-
-void Render_FreezeFrameFadeOut(void);
+void Render_FreezeFrameFadeOut(float duration);
 
 #pragma mark -
 
