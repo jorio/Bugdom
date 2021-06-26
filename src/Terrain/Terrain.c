@@ -1417,8 +1417,10 @@ void DrawTerrain(const QD3DSetupOutputType *setupInfo)
 
 	DrawFences(setupInfo);												// draw these first
 	DrawObjects(setupInfo);												// draw objNodes
-	QD3D_DrawParticles(setupInfo);
-	DrawParticleGroup(setupInfo);
+	QD3D_DrawParticles(setupInfo);										// draw "shard" particles
+
+	Render_FlushQueue();												// flush before alpha-blended particles so they always appear above water
+	DrawParticleGroup(setupInfo);										// draw alpha-blended particle groups
 
 	Render_FlushQueue();												// flush before drawing 2D stuff
 

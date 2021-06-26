@@ -92,6 +92,8 @@ ObjNode	*newObj;
 	if (newObj == nil)
 		return(nil);
 
+	newObj->RenderModifiers.sortPriority = -9999;				// draw ripples after water
+
 	newObj->Health = .8;										// transparency value
 	
 	MakeObjectTransparent(newObj, newObj->Health);

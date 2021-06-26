@@ -190,6 +190,8 @@ ObjNode	*shadowObj;
 
 	theNode->ShadowNode = shadowObj;
 
+	shadowObj->RenderModifiers.sortPriority = 9999;				// draw shadow below water
+
 	shadowObj->SpecialF[0] = scaleX;							// need to remeber scales for update
 	shadowObj->SpecialF[1] = scaleZ;
 
