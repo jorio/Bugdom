@@ -49,6 +49,9 @@ static void TallyBlueClovers(void);
 
 #define	MAX_DIGITS_IN_SCORE		8
 
+#define MAX_CLOVERS_PER_ROW		14
+#define MAX_CLOVERS_SHOWN		(MAX_CLOVERS_PER_ROW*7)
+
 
 
 /*********************/
@@ -422,25 +425,24 @@ ObjNode	*ladybugs[100];
 }
 
 
-/*************** TALLY GREEN CLOVERS *******************/
-
-static void TallyGreenClovers(void)
+static void TallyClovers(int n, Byte mobjtype, float xSpacing, float scale, int pointsPerClover, short sfx)
 {
 float	x,y;
-int		i,n,c;
-ObjNode	*clovers[100];
+int		i,c;
+ObjNode	*clovers[MAX_CLOVERS_SHOWN];
 
-	n = gNumGreenClovers;				// calc # clovers
 	if (n == 0)							// see if no clovers
 		return;
 
-	DrawBonusStuff(1);	
+	memset(clovers, 0, sizeof(clovers));	// clear clover pointers
 
-	if (n < 14)
-		x = -((float)(n-1)*(GREEN_CLOVER_WIDTH/2.0f));
+	DrawBonusStuff(1);
+
+	if (n < MAX_CLOVERS_PER_ROW)
+		x = -(float)(n-1) * xSpacing/2.0f;
 	else
-		x = -((float)(14-1)*(GREEN_CLOVER_WIDTH/2.0f));
-	
+		x = -(float)(MAX_CLOVERS_PER_ROW-1) * xSpacing/2.0f;
+
 	y = 20;
 
 		/*****************/
@@ -450,9 +452,9 @@ ObjNode	*clovers[100];
 	for (c = i = 0; i < n; i++)
 	{
 			/* GIMME A CLOVER */
-			
-		gNewObjectDefinition.group 		= MODEL_GROUP_BONUS;	
-		gNewObjectDefinition.type 		= BONUS_MObjType_GreenClover;	
+
+		gNewObjectDefinition.group 		= MODEL_GROUP_BONUS;
+		gNewObjectDefinition.type 		= mobjtype;
 		gNewObjectDefinition.coord.x 	= x;
 		gNewObjectDefinition.coord.y 	= y;
 		gNewObjectDefinition.coord.z 	= 0;
@@ -460,31 +462,49 @@ ObjNode	*clovers[100];
 		gNewObjectDefinition.flags 		= 0;
 		gNewObjectDefinition.moveCall 	= MoveBonusLadyBug;
 		gNewObjectDefinition.rot 		= PI+PI/2;
-		gNewObjectDefinition.scale 		= .05;
-		clovers[i] = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-			
-		x += GREEN_CLOVER_WIDTH;
-		gBonusValue += GREENCLOVER_BONUS_POINTS;
+		gNewObjectDefinition.scale 		= scale;
+
+		if (i < MAX_CLOVERS_SHOWN)
+			clovers[i] = MakeNewDisplayGroupObject(&gNewObjectDefinition);
+
+		x += xSpacing;
+		gBonusValue += pointsPerClover;
 		BuildBonusDigits();
 
-		PlayEffect(EFFECT_BONUSCLICK);
-		DrawBonusStuff(.2);	
-		
+		PlayEffect(sfx);
+		DrawBonusStuff(.2);
+
 		c++;
 		if (c >= 14)
 		{
 			c = 0;
 			y -= 15;
-			x = -((float)(14-1)*(GREEN_CLOVER_WIDTH/2.0f));
+			x = -(float)(MAX_CLOVERS_PER_ROW-1) * xSpacing/2.0f;
 		}
-	}	
+	}
 
-	DrawBonusStuff(1);	
+	DrawBonusStuff(1);
 
 			/* DELETE CLOVERS */
-			
-	for (i = 0; i < n; i++)
-		DeleteObject(clovers[i]);
+
+	for (i = 0; i < MAX_CLOVERS_SHOWN; i++)
+	{
+		if (clovers[i])
+			DeleteObject(clovers[i]);
+	}
+}
+
+/*************** TALLY GREEN CLOVERS *******************/
+
+static void TallyGreenClovers(void)
+{
+	TallyClovers(
+			gNumGreenClovers,
+			BONUS_MObjType_GreenClover,
+			GREEN_CLOVER_WIDTH,
+			.05f,
+			GREENCLOVER_BONUS_POINTS,
+			EFFECT_BONUSCLICK);
 }
 
 
@@ -492,52 +512,13 @@ ObjNode	*clovers[100];
 
 static void TallyBlueClovers(void)
 {
-float	x;
-int		i,n;
-ObjNode	*clovers[100];
-
-	n = gNumBlueClovers/4;				// calc # whole clovers
-	if (n == 0)							// see if no whole clovers
-		return;
-
-	DrawBonusStuff(1);	
-
-	x = -((float)(n-1)*(BLUE_CLOVER_WIDTH/2.0f));
-
-		/*****************/
-		/* COUNT CLOVERS */
-		/*****************/
-
-	for (i = 0; i < n; i++)
-	{
-			/* GIMME A CLOVER */
-			
-		gNewObjectDefinition.group 		= MODEL_GROUP_BONUS;	
-		gNewObjectDefinition.type 		= BONUS_MObjType_BlueClover;	
-		gNewObjectDefinition.coord.x 	= x;
-		gNewObjectDefinition.coord.y 	= 20;
-		gNewObjectDefinition.coord.z 	= 0;
-		gNewObjectDefinition.slot 		= 100;
-		gNewObjectDefinition.flags 		= 0;
-		gNewObjectDefinition.moveCall 	= MoveBonusLadyBug;
-		gNewObjectDefinition.rot 		= PI+PI/2;
-		gNewObjectDefinition.scale 		= .1;
-		clovers[i] = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-			
-		x += BLUE_CLOVER_WIDTH;
-		gBonusValue += BLUECLOVER_BONUS_POINTS;
-		BuildBonusDigits();
-
-		PlayEffect(EFFECT_BONUSBELL);
-		DrawBonusStuff(.2);	
-	}	
-
-	DrawBonusStuff(1);	
-
-			/* DELETE CLOVERS */
-			
-	for (i = 0; i < n; i++)
-		DeleteObject(clovers[i]);
+	TallyClovers(
+			gNumBlueClovers/4,			// calc # whole clovers
+			BONUS_MObjType_BlueClover,
+			BLUE_CLOVER_WIDTH,
+			.1f,
+			BLUECLOVER_BONUS_POINTS,
+			EFFECT_BONUSBELL);
 }
 
 
@@ -546,52 +527,13 @@ ObjNode	*clovers[100];
 
 static void TallyGoldClovers(void)
 {
-float	x;
-int		i,n;
-ObjNode	*clovers[100];
-
-	n = gNumGoldClovers/4;				// calc # whole clovers
-	if (n == 0)							// see if no whole clovers
-		return;
-
-	DrawBonusStuff(1);	
-
-	x = -((float)(n-1)*(GOLD_CLOVER_WIDTH/2.0f));
-
-		/*****************/
-		/* COUNT CLOVERS */
-		/*****************/
-
-	for (i = 0; i < n; i++)
-	{
-			/* GIMME A CLOVER */
-			
-		gNewObjectDefinition.group 		= MODEL_GROUP_BONUS;	
-		gNewObjectDefinition.type 		= BONUS_MObjType_GoldClover;	
-		gNewObjectDefinition.coord.x 	= x;
-		gNewObjectDefinition.coord.y 	= 20;
-		gNewObjectDefinition.coord.z 	= 0;
-		gNewObjectDefinition.slot 		= 100;
-		gNewObjectDefinition.flags 		= 0;
-		gNewObjectDefinition.moveCall 	= MoveBonusLadyBug;
-		gNewObjectDefinition.rot 		= PI+PI/2;
-		gNewObjectDefinition.scale 		= .1;
-		clovers[i] = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-			
-		x += GOLD_CLOVER_WIDTH;
-		gBonusValue += GOLDCLOVER_BONUS_POINTS;
-		BuildBonusDigits();
-
-		PlayEffect(EFFECT_BONUSBELL);
-		DrawBonusStuff(.2);	
-	}	
-
-	DrawBonusStuff(1);	
-
-			/* DELETE CLOVERS */
-			
-	for (i = 0; i < n; i++)
-		DeleteObject(clovers[i]);
+	TallyClovers(
+			gNumGoldClovers/4,			// calc # whole clovers
+			BONUS_MObjType_GoldClover,
+			GOLD_CLOVER_WIDTH,
+			.1f,
+			GOLDCLOVER_BONUS_POINTS,
+			EFFECT_BONUSBELL);
 }
 
 
