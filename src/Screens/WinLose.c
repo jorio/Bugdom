@@ -363,12 +363,15 @@ static const TQ3Point2D po[4] =
 	QD3D_NewViewDef(&viewDef, gCoverWindow);
 	
 	viewDef.camera.hither 			= 20;
-	viewDef.camera.yon 				= 3000;		// Source port mod (was 2000) so fog doesn't kick in
+	viewDef.camera.yon 				= 2000;
 	viewDef.camera.fov 				= 1.1;
 	viewDef.styles.usePhong 		= false;
 	viewDef.camera.from				= cameraFrom;
 	viewDef.camera.to	 			= cameraTo;
-	
+
+	viewDef.lights.fogStart			= .25f;				// source port note: these aren't original values,
+	viewDef.lights.fogEnd			= 1.5f;				// but they mimic the ominous red fog present in the OS9 version
+
 	viewDef.lights.numFillLights 	= 1;
 	viewDef.lights.ambientBrightness = 0.1;
 	viewDef.lights.fillDirection[0] = fillDirection1;
