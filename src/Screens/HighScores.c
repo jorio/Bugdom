@@ -104,7 +104,7 @@ TQ3Vector3D	camDelta = {0,0,0};
 		
 		gScoreCyc->Coord.y -= gFramesPerSecondFrac * 20.0f;
 		UpdateObjectTransforms(gScoreCyc);
-		
+
 		QD3D_DrawScene(gGameViewInfoPtr,DrawObjects);	
 		DoSDLMaintenance();
 
@@ -351,7 +351,8 @@ EventRecord	theEvent;
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= 2.5f;		// Source port change from 2.0 (works better in widescreen)
 	gScoreCyc = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-			
+	QD3D_MirrorMeshesZ(gScoreCyc);
+
 			/* MAKE NAME FRAME */
 			
 	gNewObjectDefinition.group = MODEL_GROUP_HIGHSCORES;
@@ -679,7 +680,8 @@ static const TQ3Point2D xyCoords[NUM_SCORES][2] =
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= 6.0;
 	gScoreCyc = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-	
+	QD3D_MirrorMeshesZ(gScoreCyc);
+
 			/**********************/
 			/* CREATE SCORES LIST */
 			/**********************/

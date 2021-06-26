@@ -221,6 +221,42 @@ void QD3D_ExplodeGeometry(
 }
 
 
+/************* MIRROR MESHES ON Z AXIS *************/
+//
+// Makes mirrored clones of an object's meshes on the Z axis.
+// This is meant to complete half-sphere or half-cylinder cycloramas
+// which don't cover the entire viewport when using an ultra-wide display.
+//
+
+void QD3D_MirrorMeshesZ(ObjNode* theNode)
+{
+	int numOriginalMeshes = theNode->NumMeshes;
+
+	AttachGeometryToDisplayGroupObject(theNode, numOriginalMeshes, theNode->MeshList, kAttachGeometry_CloneMeshes);
+
+	GAME_ASSERT(theNode->NumMeshes == numOriginalMeshes*2);
+
+	for (int meshID = numOriginalMeshes; meshID < theNode->NumMeshes; meshID++)
+	{
+		TQ3TriMeshData* mesh = theNode->MeshList[meshID];
+
+		for (int p = 0; p < mesh->numPoints; p++)
+		{
+			mesh->points[p].z = -mesh->points[p].z;
+		}
+
+		// Invert triangle winding
+		for (int t = 0; t < mesh->numTriangles; t++)
+		{
+			uint16_t* triPoints = theNode->MeshList[meshID]->triangles[t].pointIndices;
+			uint16_t temp = triPoints[0];
+			triPoints[0] = triPoints[2];
+			triPoints[2] = temp;
+		}
+	}
+}
+
+
 /********************** EXPLODE TRIMESH *******************************/
 //
 // INPUT: 	theTriMesh = trimesh object if input is object (nil if inData)

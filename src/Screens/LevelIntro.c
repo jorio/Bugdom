@@ -338,13 +338,14 @@ TQ3Vector3D				fillDirection2 = { -.7, -.2, -.9 };			// fill
 	gNewObjectDefinition.coord.y	= 0;
 	gNewObjectDefinition.coord.z	= 400;
 	gNewObjectDefinition.slot 		= 100;
-	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER|STATUS_BIT_NOFOG;
+	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER | STATUS_BIT_NOFOG | STATUS_BIT_NOZWRITE;
 	gNewObjectDefinition.moveCall 	= nil;
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= 6.0;
-	MakeNewDisplayGroupObject(&gNewObjectDefinition);
-	
-	
+	ObjNode* cyc = MakeNewDisplayGroupObject(&gNewObjectDefinition);
+	QD3D_MirrorMeshesZ(cyc);
+
+
 		/* FADE EVENT */
 		
 	GameScreenToBlack();

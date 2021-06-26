@@ -286,25 +286,26 @@ ObjNode					*newObj;
 	gNewObjectDefinition.flags 		= STATUS_BIT_NOTRICACHE | STATUS_BIT_NOZWRITE;
 	gNewObjectDefinition.moveCall 	= nil;
 	gNewObjectDefinition.rot 		= 0;
-	gNewObjectDefinition.scale 		= .35f;		// Source port change from .3 (looks better in widescreen)
+	gNewObjectDefinition.scale 		= .3f;
 	gNewObjectDefinition.slot 		= 1000;
 	newObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
 	MakeObjectTransparent(newObj, .4);
 
 			/* CYC */
-			
+
 	gNewObjectDefinition.slot 		= 100;
 	gNewObjectDefinition.coord.x 	= 0;
 	gNewObjectDefinition.coord.y 	= -6;		// Source port change from -40 (looks better in widescreen)
 	gNewObjectDefinition.coord.z 	= 0;
-	gNewObjectDefinition.scale 		= .33f;		// Source port change from .3 (looks better in widescreen)
+	gNewObjectDefinition.scale 		= .3f;
 	gNewObjectDefinition.type 		= MENU_MObjType_Cyc;	
 	gNewObjectDefinition.flags 		= STATUS_BIT_NOFOG | STATUS_BIT_NULLSHADER;
-	MakeNewDisplayGroupObject(&gNewObjectDefinition);
-	
+	ObjNode* cyc = MakeNewDisplayGroupObject(&gNewObjectDefinition);
+	QD3D_MirrorMeshesZ(cyc);
 
-			/* MAIN MENU TEXT */
-			
+		/* MAIN MENU TEXT */
+
+	gNewObjectDefinition.group 		= MODEL_GROUP_MENU;
 	gNewObjectDefinition.coord.x 	= 0;
 	gNewObjectDefinition.coord.y 	= 100;
 	gNewObjectDefinition.coord.z 	= 0;
@@ -312,8 +313,6 @@ ObjNode					*newObj;
 	gNewObjectDefinition.type 		= MENU_MObjType_MainMenu;	
 	gNewObjectDefinition.flags 		= 0; 
 	MakeNewDisplayGroupObject(&gNewObjectDefinition);
-
-
 
 			/**************/
 			/* MAKE ICONS */

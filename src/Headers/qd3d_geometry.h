@@ -30,6 +30,7 @@ typedef struct
 void QD3D_CalcObjectBoundingBox(int numMeshes, TQ3TriMeshData** meshList, TQ3BoundingBox* boundingBox);
 void QD3D_CalcObjectBoundingSphere(int numMeshes, TQ3TriMeshData** meshList, TQ3BoundingSphere* boundingSphere);
 void QD3D_ExplodeGeometry(ObjNode *theNode, float boomForce, Byte particleMode, int particleDensity, float particleDecaySpeed);
+void QD3D_MirrorMeshesZ(ObjNode *theNode);
 void QD3D_ScrollUVs(TQ3TriMeshData* meshList, float du, float dv);
 extern	void QD3D_InitParticles(void);
 extern	void QD3D_MoveParticles(void);

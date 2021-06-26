@@ -172,16 +172,18 @@ Byte					letters[] = {TITLE_MObjType_B, TITLE_MObjType_U,
 				
 	gNewObjectDefinition.group 		= MODEL_GROUP_TITLE;	
 	gNewObjectDefinition.type 		= TITLE_MObjType_Background;	
-	gNewObjectDefinition.coord.x	= 100;		// Source port note:
-	gNewObjectDefinition.coord.y	= 150;		//    X,Y,Z changed from 0,0,-600 to prevent east grass quad
-	gNewObjectDefinition.coord.z	= -650;		//    from clipping into sky sphere in widescreen
+	gNewObjectDefinition.coord.x	= 0;
+	gNewObjectDefinition.coord.y	= 0;
+	gNewObjectDefinition.coord.z	= -600;
 	gNewObjectDefinition.slot 		= 100;
-	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER|STATUS_BIT_NOFOG|STATUS_BIT_DONTCULL;
+	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER | STATUS_BIT_NOFOG | STATUS_BIT_DONTCULL | STATUS_BIT_NOZWRITE;
 	gNewObjectDefinition.moveCall 	= nil;
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= 2.7;
-	MakeNewDisplayGroupObject(&gNewObjectDefinition);
-	
+	gNewObjectDefinition.drawOrder	= kDrawOrder_Terrain-1;
+	ObjNode* cyc = MakeNewDisplayGroupObject(&gNewObjectDefinition);
+	QD3D_MirrorMeshesZ(cyc);
+
 	
 			/* LADYBUG */
 		
@@ -217,10 +219,10 @@ Byte					letters[] = {TITLE_MObjType_B, TITLE_MObjType_U,
 	gNewObjectDefinition.scale 		= 1.0;
 	ant1 = MakeNewSkeletonObject(&gNewObjectDefinition);			
 	ant1->Delta.y = -400;
-	
-			/**************/
-			/* BUDOM NAME */
-			/**************/
+
+			/***************/
+			/* BUGDOM NAME */
+			/***************/
 
 	gNewObjectDefinition.coord.x 	= 300;
 	gNewObjectDefinition.coord.y 	= 455;
