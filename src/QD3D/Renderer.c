@@ -756,8 +756,8 @@ static bool PreDrawMesh_DepthPass(int renderPass, const MeshQueueEntry* entry, i
 		return false;
 
 	// Texture mapping
-	if (mesh->texturingMode == kQ3TexturingModeAlphaTest ||
-		mesh->texturingMode == kQ3TexturingModeAlphaBlend)
+	if ((mesh->texturingMode & kQ3TexturingModeExt_OpacityModeMask) == kQ3TexturingModeAlphaTest ||
+		(mesh->texturingMode & kQ3TexturingModeExt_OpacityModeMask) == kQ3TexturingModeAlphaBlend)
 	{
 		GAME_ASSERT(mesh->vertexUVs);
 
@@ -784,7 +784,10 @@ static bool PreDrawMesh_ColorPass(int renderPass, const MeshQueueEntry* entry, i
 	const TQ3TriMeshData* mesh = entry->meshPtrList[nthMesh];
 	uint32_t statusBits = entry->mods->statusBits;
 
-	bool meshIsTransparent = mesh->texturingMode == kQ3TexturingModeAlphaBlend
+	TQ3TexturingMode texturingMode = (mesh->texturingMode & kQ3TexturingModeExt_OpacityModeMask);
+
+	bool meshIsTransparent
+			= texturingMode == kQ3TexturingModeAlphaBlend
 			|| mesh->diffuseColor.a < .999f
 			|| entry->mods->diffuseColor.a < .999f
 			|| (statusBits & STATUS_BIT_GLOW)
@@ -818,20 +821,21 @@ static bool PreDrawMesh_ColorPass(int renderPass, const MeshQueueEntry* entry, i
 	}
 
 	// Enable alpha testing if the mesh's texture calls for it
-	SetState(GL_ALPHA_TEST, !meshIsTransparent && mesh->texturingMode == kQ3TexturingModeAlphaTest);
+	SetState(GL_ALPHA_TEST, !meshIsTransparent && texturingMode == kQ3TexturingModeAlphaTest);
 
 	// Environment map effect
 	if (statusBits & STATUS_BIT_REFLECTIONMAP)
 		EnvironmentMapTriMesh(mesh, entry->transform);
 
 	// Apply gouraud or null illumination
-	SetState(GL_LIGHTING, !(statusBits & STATUS_BIT_NULLSHADER));
+	SetState(GL_LIGHTING,
+			!( (statusBits & STATUS_BIT_NULLSHADER) || (mesh->texturingMode & kQ3TexturingModeExt_NullShaderFlag) ));
 
 	// Apply fog or not
 	SetState(GL_FOG, gState.wantFog && !(statusBits & STATUS_BIT_NOFOG));
 
 	// Texture mapping
-	if (mesh->texturingMode != kQ3TexturingModeOff)
+	if (texturingMode != kQ3TexturingModeOff)
 	{
 		EnableState(GL_TEXTURE_2D);
 		EnableClientState(GL_TEXTURE_COORD_ARRAY);

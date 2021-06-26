@@ -60,6 +60,15 @@ void LoadASkeleton(Byte num)
 			gLoadedSkeletonsList[num]->decomposedTriMeshPtrs,
 			&gSkeletonBoundingSpheres[num]
 			);
+
+			/* IF ANT KING, MAKE FIERY TEXTURES NULL-SHADED */
+
+	if (num == SKELETON_TYPE_KINGANT)
+	{
+		gLoadedSkeletonsList[num]->decomposedTriMeshPtrs[3]->texturingMode |= kQ3TexturingModeExt_NullShaderFlag;	// eyebrows
+		gLoadedSkeletonsList[num]->decomposedTriMeshPtrs[8]->texturingMode |= kQ3TexturingModeExt_NullShaderFlag;	// hair
+		gLoadedSkeletonsList[num]->decomposedTriMeshPtrs[9]->texturingMode |= kQ3TexturingModeExt_NullShaderFlag;	// beard
+	}
 }
 
 

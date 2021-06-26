@@ -72,6 +72,11 @@ typedef enum
 	kRendererTextureFlags_KeepOriginalAlpha	= 1 << 6,
 } RendererTextureFlags;
 
+#define kQ3TexturingModeExt_OpacityModeMask		0x0000FFFF
+
+// OR this flag to a mesh's texturingMode to force the mesh to be NULL-shaded.
+#define kQ3TexturingModeExt_NullShaderFlag		0x00010000
+
 #pragma mark -
 
 void DoFatalGLError(GLenum error, const char* function, int line);
