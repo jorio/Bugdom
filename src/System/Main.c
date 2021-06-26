@@ -470,6 +470,7 @@ QD3DSetupInputType	viewDef;
 
 	gUseCyclorama			= gGamePrefs.useCyclorama && gLevelHasCyc[gLevelType];
 	gAutoFadeStartDist		= gUseCyclorama ? gLevelAutoFadeStart[gLevelType] : 0;
+	gDoAutoFade				= gAutoFadeStartDist > 0.0f;
 	gDrawLensFlare			= gLevelHasLensFlare[gLevelType];
 		
 	gDoCeiling				= gLevelHasCeiling[gLevelType];
@@ -498,7 +499,7 @@ QD3DSetupInputType	viewDef;
 
 
 
-	if (gAutoFadeStartDist != 0.0f)
+	if (gDoAutoFade)
 		gAutoFadeStatusBits = STATUS_BIT_AUTOFADE|STATUS_BIT_NOTRICACHE;
 	else
 		gAutoFadeStatusBits = 0;

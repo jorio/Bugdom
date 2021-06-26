@@ -235,12 +235,12 @@ FencePointType			*nubs;
 		TQ3TriMeshData* tmd = Q3TriMeshData_New(
 				MAX_NUBS_IN_FENCE * 2,
 				MAX_NUBS_IN_FENCE * 2,
-				kQ3TriMeshDataFeatureVertexUVs | kQ3TriMeshDataFeatureVertexColors
+				kQ3TriMeshDataFeatureVertexUVs | kQ3TriMeshDataFeatureVertexColors | kQ3TriMeshDataFeatureVertexNormals
 		);
 
 		gFenceTriMeshDataPtrs[f] = tmd;
 
-		if (gAutoFadeStartDist != 0.0f)
+		if (gDoAutoFade)
 			tmd->texturingMode = kQ3TexturingModeAlphaBlend;		// Required for autofaded fences!
 		else
 			tmd->texturingMode = kQ3TexturingModeAlphaTest;
@@ -562,6 +562,7 @@ TQ3TriMeshData			*tmd;
 
 	tmd->glTextureName = gFenceTypeTextures[type];
 
+	tmd->hasVertexColors = gDoAutoFade;					// use per-vertex colors only if auto-fade is enabled
 
 		/* SET TRIMESH POINT AND TRI INFO */
 
@@ -595,12 +596,11 @@ TQ3TriMeshData			*tmd;
 	}
 			
 	u = 0;
-	
+
 	for (i = j = 0; i < numNubs; i++, j+=2)
 	{
 		float		x,y,z,y2;
-		float		dist;
-		
+
 		x = nubs[i].x;
 		z = nubs[i].z;
 		
@@ -652,26 +652,57 @@ TQ3TriMeshData			*tmd;
 
 				/* CALC & SET TRANSPARENCY */
 
-		if (gAutoFadeStartDist != 0.0f)								// see if this level has xparency
+		if (gDoAutoFade)											// see if this level has xparency
 		{
-			dist = CalcQuickDistance(camX, camZ, x, z);				// see if in fade zone
+			float dist = CalcQuickDistance(camX, camZ, x, z);		// see if in fade zone
 			if (dist < gAutoFadeStartDist)	
 				dist = 1.0;
 			else
 			{
 				dist -= gAutoFadeStartDist;							// calc xparency %
-				dist = 1.0f - (dist * (1.0f/AUTO_FADE_RANGE));				
+				dist = 1.0f - (dist / AUTO_FADE_RANGE);
 				if (dist < 0.0f)
 					dist = 0;
-			}			
+			}
+			tmd->vertexColors[j+0].a = dist;						// set xparency value
+			tmd->vertexColors[j+1].a = dist;
 		}
-		else
-			dist = 1.0f;
-
-		tmd->vertexColors[j  ].a = dist;							// set xparency value
-		tmd->vertexColors[j+1].a = dist;
 	}
 
+			/**************************************************/
+			/* BUILD VERTEX NORMALS IF FENCE REQUIRES GOURAUD */
+			/**************************************************/
+
+	if (gFenceUsesNullShader[type])
+	{
+		tmd->hasVertexNormals = false;
+	}
+	else
+	{
+		GAME_ASSERT(tmd->vertexNormals != NULL);
+
+		tmd->hasVertexNormals = true;
+
+		memset(tmd->vertexNormals, 0, tmd->numPoints * sizeof(tmd->vertexNormals[0]));		// zero out all normals
+
+		for (i = j = 0; i < numNubs-1; i++, j+=2)
+		{
+			float faceNormalX = -(nubs[i+1].z - nubs[i].z);			// compute face normal
+			float faceNormalZ = -(nubs[i+1].x - nubs[i].x);			// (negated because that's how moss looks in OS9 Bugdom)
+			// assume face normal Y=0 because fences always sit straight up
+
+			for (int k = 0; k < 4; k++)								// add to normal of all 4 vertices making up the face
+			{
+				tmd->vertexNormals[j+k].x += faceNormalX;
+				tmd->vertexNormals[j+k].z += faceNormalZ;
+			}
+		}
+
+		for (j = 0; j < tmd->numPoints; j++)						// normalize vertex normals to unit length
+		{
+			Q3Vector3D_Normalize(&tmd->vertexNormals[j], &tmd->vertexNormals[j]);
+		}
+	}
 
 		/*******************/
 		/* SUBMIT GEOMETRY */

@@ -62,6 +62,7 @@ extern	Boolean						gBatExists;
 extern	Boolean						gDetonatorBlown[];
 extern	Boolean						gDisableAnimSounds;
 extern	Boolean						gDisableHiccupTimer;
+extern	Boolean						gDoAutoFade;
 extern	Boolean						gDoCeiling;
 extern	Boolean						gDrawLensFlare;
 extern	Boolean						gEnteringName;

@@ -46,6 +46,7 @@ TQ3Vector3D	gDelta;
 long		gNumObjsInDeleteQueue = 0;
 ObjNode		*gObjectDeleteQueue[OBJ_DEL_Q_SIZE];
 
+Boolean		gDoAutoFade;
 float		gAutoFadeStartDist;
 
 
@@ -379,7 +380,7 @@ float			cameraX, cameraZ;
 			/* CHECK AUTOFADE */
 			/******************/
 
-		if (statusBits & STATUS_BIT_AUTOFADE && gAutoFadeStartDist != 0.0f)		// see if this level has autofade
+		if (gDoAutoFade && (statusBits & STATUS_BIT_AUTOFADE))		// see if this level has autofade
 		{
 			// TODO: Move to renderer? We already compute the distance to the camera there.
 			float dist = CalcQuickDistance(cameraX, cameraZ, theNode->Coord.x, theNode->Coord.z);	// see if in fade zone
