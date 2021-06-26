@@ -96,6 +96,7 @@ ObjNode* CreateCyclorama(void)
 	gNewObjectDefinition.rot 	= 0;
 	gNewObjectDefinition.scale 	= gCycScale;
 	ObjNode* cyc = MakeNewDisplayGroupObject(&gNewObjectDefinition);
+	cyc->RenderModifiers.drawOrder = kDrawOrder_Cyclorama;
 	return cyc;
 }
 

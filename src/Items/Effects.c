@@ -92,7 +92,7 @@ ObjNode	*newObj;
 	if (newObj == nil)
 		return(nil);
 
-	newObj->RenderModifiers.sortPriority = -9999;				// draw ripples after water
+	newObj->RenderModifiers.drawOrder = kDrawOrder_Ripples;				// draw ripples after water
 
 	newObj->Health = .8;										// transparency value
 	
@@ -210,6 +210,7 @@ void InitParticleSystem(void)
 			| STATUS_BIT_NULLSHADER
 			| STATUS_BIT_GLOW
 			;
+	kParticleGroupRenderingMods.drawOrder = kDrawOrder_GlowyParticles;
 }
 
 

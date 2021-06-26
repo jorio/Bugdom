@@ -170,6 +170,8 @@ Byte	group,type;
 			newObj, meshList->numMeshes, meshList->meshes,
 			(newObjDef->flags & STATUS_BIT_CLONE) ? kAttachGeometry_CloneMeshes : 0);
 
+	newObj->RenderModifiers.drawOrder = newObjDef->drawOrder;
+
 
 			/* CALC RADIUS */
 			

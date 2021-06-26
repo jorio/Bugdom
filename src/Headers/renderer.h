@@ -27,9 +27,8 @@
 
 typedef struct RenderStats
 {
-	int			trianglesDrawn;
-	int			meshQueueSize;
-	int 		batchedStateChanges;
+	int			triangles;
+	int			meshes;
 } RenderStats;
 
 typedef struct RenderModifiers
@@ -44,12 +43,12 @@ typedef struct RenderModifiers
 	float					autoFadeFactor;
 
 	// Set this to override the order in which meshes are drawn.
-	// The default value is 0.
-	// Positive values will cause the mesh to be drawn as if it were further back in the scene than it really is.
-	// Negative values will cause the mesh to be drawn as if it were closer to the camera than it really is.
-	// When several meshes have the same priority, they are sorted according to their depth relative to the camera.
-	// Note that opaque meshes are drawn front-to-back, and transparent meshes are drawn back-to-front.
-	int						sortPriority;
+	// The default value for most objects is 0.
+	// Meshes are sorted by ascending draw order.
+	// Meshes with the same draw order are sorted according to their depth relative to the camera.
+	// Note that opaque meshes within the same draw order group are drawn front-to-back,
+	// and transparent meshes are drawn back-to-front.
+	int						drawOrder;
 } RenderModifiers;
 
 
@@ -153,9 +152,8 @@ void Render_SetViewport(bool scissor, int x, int y, int w, int h);
 
 // Submits a list of trimeshes for drawing.
 // Arguments transform and mods may be nil.
-// Rendering will actually occur in Render_EndFrame(), after all meshes have been submitted.
-// IMPORTANT: the pointers must remain valid until you call Render_EndFrame(),
-// INCLUDING THE POINTER TO THE LIST OF MESHES!
+// Rendering will actually occur in Render_FlushQueue(), after all meshes have been submitted.
+// IMPORTANT: the pointers must remain valid until Render_FlushQueue().
 void Render_SubmitMeshList(
 		int numMeshes,
 		TQ3TriMeshData** meshList,
@@ -165,10 +163,10 @@ void Render_SubmitMeshList(
 
 // Submits one trimesh for drawing.
 // Arguments transform and mods may be nil.
-// Rendering will actually occur in Render_EndFrame(), after all meshes have been submitted.
-// IMPORTANT: the pointers must remain valid until you call Render_EndFrame().
+// Rendering will actually occur in Render_FlushQueue(), after all meshes have been submitted.
+// IMPORTANT: the pointers must remain valid until Render_FlushQueue().
 void Render_SubmitMesh(
-		TQ3TriMeshData* mesh,
+		const TQ3TriMeshData* mesh,
 		const TQ3Matrix4x4* transform,
 		const RenderModifiers* mods,
 		const TQ3Point3D* centerCoord);

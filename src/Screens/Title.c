@@ -166,6 +166,7 @@ Byte					letters[] = {TITLE_MObjType_B, TITLE_MObjType_U,
 	gNewObjectDefinition.moveCall 	= nil;
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= 1;
+	gNewObjectDefinition.drawOrder	= kDrawOrder_Terrain;
 	MakeNewDisplayGroupObject(&gNewObjectDefinition);
 
 			/* SPHERE */
@@ -197,6 +198,7 @@ Byte					letters[] = {TITLE_MObjType_B, TITLE_MObjType_U,
 	gNewObjectDefinition.moveCall 	= nil;
 	gNewObjectDefinition.rot 		= 2.9;
 	gNewObjectDefinition.scale 		= .9;
+	gNewObjectDefinition.drawOrder	= kDrawOrder_Default;
 	gLadyBug = MakeNewSkeletonObject(&gNewObjectDefinition);			
 
 	AttachShadowToObject(gLadyBug, 6,6, false);

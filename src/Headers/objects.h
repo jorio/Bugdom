@@ -39,6 +39,24 @@ enum
 };
 
 
+enum
+{
+	kDrawOrder_Earliest			= -128,
+
+	kDrawOrder_Terrain,
+	kDrawOrder_Cyclorama,
+	kDrawOrder_Fences,
+	kDrawOrder_Shadows,
+
+	kDrawOrder_Default = 0,
+
+	kDrawOrder_Ripples,
+	kDrawOrder_GlowyParticles,
+
+	kDrawOrder_Last				= 127,
+};
+
+
 //========================================================
 
 extern	void InitObjectManager(void);

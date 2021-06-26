@@ -73,6 +73,7 @@ const float imageAspectRatio = 200.0f/152.0f;
 
 	Render_SetDefaultModifiers(&gPauseQuadRenderMods);
 	gPauseQuadRenderMods.statusBits |= STATUS_BIT_NOFOG | STATUS_BIT_NULLSHADER;
+	gPauseQuadRenderMods.drawOrder = kDrawOrder_Last;
 	//gPauseQuadRenderMods.diffuseColor.a = .66f;
 
 			/*******************/

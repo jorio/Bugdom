@@ -45,11 +45,11 @@ void DoSDLMaintenance()
 			float fps = 1000 * gDebugTextFrameAccumulator / (float)ticksElapsed;
 			snprintf(
 					gDebugTextBuffer, sizeof(gDebugTextBuffer),
-					"Bugdom %s - fps:%d tris:%d meshq:%d - x:%.0f z:%.0f",
+					"Bugdom %s - fps:%d tris:%d meshes:%d - x:%.0f z:%.0f",
 					PROJECT_VERSION,
 					(int)round(fps),
-					gRenderStats.trianglesDrawn,
-					gRenderStats.meshQueueSize,
+					gRenderStats.triangles,
+					gRenderStats.meshes,
 					gMyCoord.x,
 					gMyCoord.z
 			);

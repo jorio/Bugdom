@@ -190,7 +190,7 @@ ObjNode	*shadowObj;
 
 	theNode->ShadowNode = shadowObj;
 
-	shadowObj->RenderModifiers.sortPriority = 9999;				// draw shadow below water
+	shadowObj->RenderModifiers.drawOrder = kDrawOrder_Shadows;	// draw shadow below water (overridden in UpdateShadow)
 
 	shadowObj->SpecialF[0] = scaleX;							// need to remeber scales for update
 	shadowObj->SpecialF[1] = scaleZ;
@@ -267,9 +267,11 @@ float	dist;
 	}
 	else
 		shadowNode->StatusBits &= ~STATUS_BIT_HIDDEN;
-		
-		
-		
+
+
+	shadowNode->RenderModifiers.drawOrder = kDrawOrder_Shadows;			// reset default draw order for shadow
+
+
 	x = theNode->Coord.x;												// get integer copy for collision checks
 	y = theNode->Coord.y + theNode->BottomOff;
 	z = theNode->Coord.z;
@@ -303,6 +305,9 @@ float	dist;
 						goto next;
 
 						/* SHADOW IS ON OBJECT  */
+
+					// Use same draw order as object we're standing on top of
+					shadowNode->RenderModifiers.drawOrder = thisNodePtr->RenderModifiers.drawOrder;
 
 					shadowNode->Coord.y = thisNodePtr->CollisionBoxes[0].top + SHADOW_Y_OFF;
 					
