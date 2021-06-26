@@ -189,10 +189,7 @@ Boolean			fo = false;
 	viewDef.camera.yon 				= 2000;
 	viewDef.camera.fov 				= .9;
 	viewDef.camera.from				= cameraFrom;
-	viewDef.view.clearColor.r 		= 0;
-	viewDef.view.clearColor.g 		= 0;
-	viewDef.view.clearColor.b		= 0;
-	viewDef.view.clearColor.b		= 1;	// NOQUESA: FOR TESTING
+	viewDef.view.clearColor			= TQ3ColorRGBA_FromInt(0x000000FF);
 	viewDef.styles.usePhong 		= false;
 
 	viewDef.lights.numFillLights 	= 2;

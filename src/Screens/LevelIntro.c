@@ -82,6 +82,16 @@ enum
 	INTRO_CAM_MODE_PULLBACK
 };
 
+const TQ3ColorRGBA kIntroClearColors[NUM_LEVEL_TYPES] =
+{
+		[LEVEL_TYPE_LAWN	] = TQ3ColorRGBA_FromInt(0x427badFF),
+		[LEVEL_TYPE_POND	] = TQ3ColorRGBA_FromInt(0x427badFF),
+		[LEVEL_TYPE_FOREST	] = TQ3ColorRGBA_FromInt(0xff4a10ff),
+		[LEVEL_TYPE_HIVE	] = TQ3ColorRGBA_FromInt(0x427badff),
+		[LEVEL_TYPE_NIGHT	] = TQ3ColorRGBA_FromInt(0x000000ff),
+		[LEVEL_TYPE_ANTHILL	] = TQ3ColorRGBA_FromInt(0x427badFF),
+};
+
 /*********************/
 /*    VARIABLES      */
 /*********************/
@@ -239,13 +249,11 @@ TQ3Vector3D				fillDirection2 = { -.7, -.2, -.9 };			// fill
 	viewDef.lights.fillColor[1] 	= lightColor;
 	viewDef.lights.fillBrightness[0] = 1.3;
 	viewDef.lights.fillBrightness[1] = .2;
-	
-	
-	viewDef.view.clearColor.r = 
-	viewDef.view.clearColor.g = 
-	viewDef.view.clearColor.b = 1;
-		
-		
+
+
+	viewDef.view.clearColor = kIntroClearColors[gLevelType];
+
+
 	QD3D_SetupWindow(&viewDef, &gGameViewInfoPtr);
 
 			/************/

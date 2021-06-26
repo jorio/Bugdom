@@ -241,13 +241,9 @@ ObjNode					*newObj;
 	viewDef.lights.fillColor[1] 	= lightColor;
 	viewDef.lights.fillBrightness[0] = 1.1;
 	viewDef.lights.fillBrightness[1] = .2;
-	
-	
-	viewDef.view.clearColor.r = 
-	viewDef.view.clearColor.g = 
-	viewDef.view.clearColor.b = 1;
-	viewDef.view.dontClear = true;
-				
+
+	viewDef.view.clearColor = TQ3ColorRGBA_FromInt(0x5e63ffff);
+
 	QD3D_SetupWindow(&viewDef, &gGameViewInfoPtr);
 
 			/************/

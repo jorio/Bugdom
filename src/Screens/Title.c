@@ -126,13 +126,11 @@ Byte					letters[] = {TITLE_MObjType_B, TITLE_MObjType_U,
 	viewDef.lights.fillColor[1] 	= lightColor;
 	viewDef.lights.fillBrightness[0] = 1.1;
 	viewDef.lights.fillBrightness[1] = .2;
-	
-	
-	viewDef.view.clearColor.r = 
-	viewDef.view.clearColor.g = 
-	viewDef.view.clearColor.b = 0;
-		
-		
+
+
+	viewDef.view.clearColor = TQ3ColorRGBA_FromInt(0x295a8cff);
+
+
 	QD3D_SetupWindow(&viewDef, &gGameViewInfoPtr);
 
 			/************/
