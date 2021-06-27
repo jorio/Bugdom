@@ -12,7 +12,7 @@ project(Bugdom
 )
 
 set(GAME_TARGET ${PROJECT_NAME})
-set(GAME_ICNS cmake/Bugdom.icns)
+set(GAME_ICNS packaging/Bugdom.icns)
 
 #------------------------------------------------------------------------------
 # GLOBAL OPTIONS (BEFORE ADDING SUBDIRECTORIES)
@@ -211,7 +211,7 @@ if(WIN32)
 	# "WIN32" here is equivalent to /SUBSYSTEM:WINDOWS for MSVC
 	add_executable(${GAME_TARGET} WIN32
         ${GAME_ALL_SOURCES}
-        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/WindowsResources.rc"
+        "${CMAKE_CURRENT_SOURCE_DIR}/packaging/Bugdom.exe.rc"
     )
 elseif(APPLE)
 	# Add required frameworks for KillMacMouseAcceleration
@@ -345,7 +345,7 @@ if(WIN32)
 endif()
 
 # Copy documentation to output folder
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ReadMe.txt.in ${CMAKE_CURRENT_BINARY_DIR}/ReadMe.txt)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/packaging/ReadMe.txt.in ${CMAKE_CURRENT_BINARY_DIR}/ReadMe.txt)
 add_custom_command(TARGET ${GAME_TARGET} POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/ReadMe.txt ${APP_PARENT_DIR}/ReadMe.txt
 	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.md ${APP_PARENT_DIR}/License.txt
