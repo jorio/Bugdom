@@ -5,6 +5,10 @@
 #include "QD3DMath.h"
 #include <SDL.h>
 
+#if _MSC_VER
+#define _Static_assert static_assert
+#endif
+
 #ifdef __cplusplus
 extern "C"
 {

@@ -58,10 +58,10 @@ struct
 } fileInfos[NUM_SAVE_FILES];
 
 
-static const TQ3ColorRGBA gTextShadowColor	= TQ3ColorRGBA_FromInt(0x00004cff);
-static const TQ3ColorRGBA gTextColor		= TQ3ColorRGBA_FromInt(0xffe500ff);
-static const TQ3ColorRGBA gTitleTextColor	= TQ3ColorRGBA_FromInt(0xffe500ff);
-static const TQ3ColorRGBA gDeleteColor		= TQ3ColorRGBA_FromInt(0xe54c19ff);
+static const TQ3ColorRGBA gTextShadowColor	= {0.0f, 0.0f, 0.3f, 1.0f};
+static const TQ3ColorRGBA gTextColor		= {1.0f, 0.9f, 0.0f, 1.0f};
+static const TQ3ColorRGBA gTitleTextColor	= {1.0f, 0.9f, 0.0f, 1.0f};
+static const TQ3ColorRGBA gDeleteColor		= {0.9f, 0.3f, 0.1f, 1.0f};
 
 
 static char textBuffer[512];
@@ -430,7 +430,7 @@ static void PopFloppy(int fileNumber)
 }
 
 
-static void DeleteFile(int fileNumber)
+static void DeleteFileInSlot(int fileNumber)
 {
 	GAME_ASSERT(fileNumber >= 0 && fileNumber < NUM_SAVE_FILES);
 
@@ -494,7 +494,7 @@ static int FileScreenMainLoop()
 						break;
 
 					case kPickBits_Delete:
-						DeleteFile(pickID & kPickBits_FileNumberMask);
+						DeleteFileInSlot(pickID & kPickBits_FileNumberMask);
 						break;
 
 					case kPickBits_DontSave:

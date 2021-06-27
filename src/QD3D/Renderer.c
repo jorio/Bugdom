@@ -13,6 +13,7 @@
 #include <SDL_opengl_glext.h>
 #include <QD3D.h>
 #include <stdlib.h>		// qsort
+#include <stdio.h>
 
 
 #pragma mark -

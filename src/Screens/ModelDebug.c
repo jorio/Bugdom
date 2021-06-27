@@ -3,6 +3,7 @@
 // This file is part of Bugdom. https://github.com/jorio/bugdom
 
 #include "game.h"
+#include <stdio.h>
 
 static TQ3Point3D gModelDebug_modelCoord = { 0, 0, 0 };
 static float gCameraLookAtAccel = 9;

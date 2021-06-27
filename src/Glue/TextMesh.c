@@ -3,6 +3,7 @@
 // This file is part of Bugdom. https://github.com/jorio/bugdom
 
 #include "game.h"
+#include <stdio.h>
 
 typedef struct
 {

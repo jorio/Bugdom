@@ -22,7 +22,7 @@ static void SettingsScreenMainLoop(void);
 /*    CONSTANTS             */
 /****************************/
 
-static const TQ3ColorRGBA gValueTextColor	= TQ3ColorRGBA_FromInt(0xbee000ff);
+static const TQ3ColorRGBA kValueTextColor = {0.75f, 0.88f, 0.00f, 1.00f};
 
 enum
 {
@@ -256,7 +256,7 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 	}
 
 	// Create value text
-	tmd.color = gValueTextColor;
+	tmd.color = kValueTextColor;
 	tmd.coord.x = XSPREAD/2.0f;
 	tmd.slot = SLOTID_VALUE_MASK | settingID;
 	if (hasSubtitle)
@@ -303,7 +303,7 @@ static void SetupSettingsScreen(void)
 	TextMeshDef tmd;
 	TextMesh_FillDef(&tmd);
 	tmd.coord.y += 110;
-	tmd.color = gValueTextColor;
+	tmd.color = kValueTextColor;
 	TextMesh_Create(&tmd, "Settings");
 
 	for (int i = 0; gSettingEntries[i].ptr; i++)

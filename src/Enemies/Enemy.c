@@ -356,7 +356,7 @@ void MoveEnemy(ObjNode *theNode)
 // OUTPUT: true if was on spline, false if wasnt
 //
 
-Boolean DetachEnemyFromSpline(ObjNode *theNode, void *moveCall)
+Boolean DetachEnemyFromSpline(ObjNode *theNode, void (*moveCall)(ObjNode*))
 {
 		/* MAKE SURE ALL COMPONENTS ARE IN LINKED LIST */
 

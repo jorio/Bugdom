@@ -5,6 +5,7 @@
 #include "game.h"
 #include "killmacmouseacceleration.h"
 #include "version.h"
+#include <stdio.h>
 
 char						gTypedAsciiKey = '\0';
 

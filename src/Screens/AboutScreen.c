@@ -9,6 +9,7 @@
 
 #include "game.h"
 #include "version.h"
+#include <stdio.h>
 
 
 /****************************/
@@ -23,9 +24,9 @@ static void MakeAboutScreenObjects(int slideNumber);
 /*    CONSTANTS             */
 /****************************/
 
-static const TQ3ColorRGBA kNameColor		= TQ3ColorRGBA_FromInt(0x98ffcdff);
-static const TQ3ColorRGBA kHeadingColor		= TQ3ColorRGBA_FromInt(0xffffffff);
-static const TQ3ColorRGBA kDimmedColor		= TQ3ColorRGBA_FromInt(0x999999ff);
+static const TQ3ColorRGBA kNameColor		= {0.6f, 1.0f, 0.8f, 1.0f};
+static const TQ3ColorRGBA kHeadingColor		= {1.0f, 1.0f, 1.0f, 1.0f};
+static const TQ3ColorRGBA kDimmedColor		= {0.6f, 0.6f, 0.6f, 1.0f};
 
 static const short kAboutScreenObjNodeSlot = 1337;
 

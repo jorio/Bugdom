@@ -84,12 +84,12 @@ enum
 
 const TQ3ColorRGBA kIntroClearColors[NUM_LEVEL_TYPES] =
 {
-		[LEVEL_TYPE_LAWN	] = TQ3ColorRGBA_FromInt(0x427badFF),
-		[LEVEL_TYPE_POND	] = TQ3ColorRGBA_FromInt(0x427badFF),
-		[LEVEL_TYPE_FOREST	] = TQ3ColorRGBA_FromInt(0xff4a10ff),
-		[LEVEL_TYPE_HIVE	] = TQ3ColorRGBA_FromInt(0x427badff),
-		[LEVEL_TYPE_NIGHT	] = TQ3ColorRGBA_FromInt(0x000000ff),
-		[LEVEL_TYPE_ANTHILL	] = TQ3ColorRGBA_FromInt(0x427badFF),
+		[LEVEL_TYPE_LAWN	] = {0.259f, 0.482f, 0.678f, 1.000f},
+		[LEVEL_TYPE_POND	] = {0.259f, 0.482f, 0.678f, 1.000f},
+		[LEVEL_TYPE_FOREST	] = {1.000f, 0.290f, 0.063f, 1.000f},
+		[LEVEL_TYPE_HIVE	] = {0.259f, 0.482f, 0.678f, 1.000f},
+		[LEVEL_TYPE_NIGHT	] = {0.000f, 0.000f, 0.000f, 1.000f},
+		[LEVEL_TYPE_ANTHILL	] = {0.259f, 0.482f, 0.678f, 1.000f},
 };
 
 /*********************/
