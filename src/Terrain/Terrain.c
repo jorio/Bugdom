@@ -1413,6 +1413,7 @@ void DrawTerrain(const QD3DSetupOutputType *setupInfo)
 
 
 	DrawFences(setupInfo);												// draw these first
+	Render_FlushQueue();												// flush here so xparent objs can appear above autofaded fences
 	DrawObjects(setupInfo);												// draw objNodes
 	QD3D_DrawParticles(setupInfo);										// draw "shard" particles
 	DrawParticleGroup(setupInfo);										// draw alpha-blended particle groups
