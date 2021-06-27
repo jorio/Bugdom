@@ -103,11 +103,8 @@ int CommonMain(int argc, const char** argv)
 	// Uncomment to dump the game's resources to a temporary directory.
 	//Pomme_StartDumpingResources("/tmp/BugdomRezDump");
 
-	// Set up globals that the game expects
+	// Find path to game data folder
 	fs::path dataPath = FindGameData();
-#if !(__APPLE__)
-	Pomme::Graphics::SetWindowIconFromIcl8Resource(gSDLWindow, 128);
-#endif
 
 	// Init joystick subsystem
 	{
