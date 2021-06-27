@@ -67,7 +67,6 @@ u_short		gLevelTypeMask = 0;
 Boolean		gShowDebug = false;
 Boolean		gLiquidCheat = false;
 Boolean		gUseCyclorama;
-Boolean		gShowBottomBar;
 float		gCurrentYon;
 
 ObjNode		*gCyclorama;
@@ -241,7 +240,7 @@ void ToolBoxInit(void)
 	gGamePrefs.antiAliasing			= true;
 	gGamePrefs.textureFiltering		= true;
 	gGamePrefs.mouseSensitivityLevel= DEFAULT_MOUSE_SENSITIVITY_LEVEL;
-	gGamePrefs.hideBottomBarInNonBossLevels = true;
+	gGamePrefs.showBottomBar		= true;
 	gGamePrefs.useCyclorama			= true;
 	gGamePrefs.terrainTextureDetail = TERRAIN_TEXTURE_PREF_1_LOD_160;
 				
@@ -495,10 +494,6 @@ QD3DSetupInputType	viewDef;
 		gAutoFadeStatusBits = 0;
 
 
-	// Source port addition: let user hide bottom bar when it's not needed (i.e. outside boss levels)
-	gShowBottomBar = !gGamePrefs.hideBottomBarInNonBossLevels || gLevelTable[gRealLevel].isBossLevel;
-		
-
 			/*************/
 			/* MAKE VIEW */
 			/*************/
@@ -516,7 +511,7 @@ QD3DSetupInputType	viewDef;
 	viewDef.camera.fov 				= 1.1;
 	
 	viewDef.view.paneClip.top		=	62;
-	viewDef.view.paneClip.bottom	=	gShowBottomBar? 60: 0;
+	viewDef.view.paneClip.bottom	=	gGamePrefs.showBottomBar ? 60 : 0;
 	viewDef.view.paneClip.left		=	0;
 	viewDef.view.paneClip.right		=	0;
 

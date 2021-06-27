@@ -162,6 +162,7 @@ static Byte		gLeftArmType, gRightArmType;
 static Byte		gOldLeftArmType, gOldRightArmType;
 
 static Boolean	gBallIconIsDisplayed;
+static Boolean	gBossHealthWasUpdated;
 
 static const int	gNitroGaugeMaxSkipsPerRow = 8;
 static Rect			gNitroGaugeRect;
@@ -208,7 +209,9 @@ TerrainItemEntryType	*itemPtr;
 		{
 			gNumLadyBugsOnThisLevel++;
 		}
-	
+
+
+	gBossHealthWasUpdated = false;
 }
 
 
@@ -282,14 +285,17 @@ void InitInfobar(void)
 
 			/* CREATE TOP MESH */
 
+	float uMult = 1.0f / INFOBAR_TEXTURE_WIDTH;
+	float vMult = 1.0f / INFOBAR_TEXTURE_HEIGHT;
+
 	GAME_ASSERT_MESSAGE(!gInfobarTopMesh, "infobar top mesh already created");
 
 	gInfobarTopMesh = MakeQuadMesh_UI(
 			0, 0, 640, 62,
 			0,
 			0,
-			(float)(640) / INFOBAR_TEXTURE_WIDTH,
-			(float)(62) / INFOBAR_TEXTURE_HEIGHT
+			uMult * 640,
+			vMult * 62
 	);
 	gInfobarTopMesh->texturingMode = kQ3TexturingModeOpaque;
 	gInfobarTopMesh->glTextureName = gInfobarTextureName;
@@ -298,13 +304,25 @@ void InitInfobar(void)
 
 	GAME_ASSERT_MESSAGE(!gInfobarBottomMesh, "infobar bottom mesh already created");
 
-	gInfobarBottomMesh = MakeQuadMesh_UI(
-			0, 420, 640, 480,
-			0,
-			(float)(BOTTOM_BAR_Y_IN_TEXTURE) / INFOBAR_TEXTURE_HEIGHT,
-			(float)(640) / INFOBAR_TEXTURE_WIDTH,
-			(float)(BOTTOM_BAR_Y_IN_TEXTURE + 60) / INFOBAR_TEXTURE_HEIGHT
-	);
+	if (!gGamePrefs.showBottomBar)
+	{
+		// Make a mesh that only shows the boss's health
+		gInfobarBottomMesh = MakeQuadMesh_UI(
+				(640-BOSS_WIDTH)/2, 420+20, (640+BOSS_WIDTH)/2, 420+40,
+				uMult * ((640-BOSS_WIDTH)/2 + 0.5f),
+				vMult * (BOTTOM_BAR_Y_IN_TEXTURE + 20 + 0.5f),
+				uMult * ((640+BOSS_WIDTH)/2 - 0.5f),
+				vMult * (BOTTOM_BAR_Y_IN_TEXTURE + 40 - 0.5f));
+	}
+	else
+	{
+		gInfobarBottomMesh = MakeQuadMesh_UI(
+				0, 420, 640, 480,
+				uMult * 0,
+				vMult * BOTTOM_BAR_Y_IN_TEXTURE,
+				uMult * 640,
+				vMult * (BOTTOM_BAR_Y_IN_TEXTURE + 60));
+	}
 	gInfobarBottomMesh->texturingMode = kQ3TexturingModeOpaque;
 	gInfobarBottomMesh->glTextureName = gInfobarTextureName;
 
@@ -1226,6 +1244,9 @@ int		w,x;
 		r.right = x-2;
 		FillInfobarRect(r, 0x000000FF);		// (BGRA)
 	}
+
+
+	gBossHealthWasUpdated = true;
 }
 
 
@@ -1254,6 +1275,6 @@ void SubmitInfobarOverlay(void)
 
 	Render_SubmitMesh(gInfobarTopMesh, NULL, &kDefaultRenderMods_UI, &kQ3Point3D_Zero);
 
-	if (gShowBottomBar)
+	if (gGamePrefs.showBottomBar || gBossHealthWasUpdated)
 		Render_SubmitMesh(gInfobarBottomMesh, NULL, &kDefaultRenderMods_UI, &kQ3Point3D_Zero);
 }

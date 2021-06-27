@@ -112,6 +112,14 @@ static SettingEntry gSettingEntries[] =
 		0, false, CHOICES_NO_YES,
 		0,
 	},
+	{
+		&gGamePrefs.showBottomBar,
+		"Show bottom bar",
+		0, NULL,
+		NULL,
+		0, false, CHOICES_NO_YES,
+		0,
+	},
 #if ALLOW_MSAA
 	{
 		&gGamePrefs.antiAliasing,
@@ -156,14 +164,6 @@ static SettingEntry gSettingEntries[] =
 		NULL,
 		0,
 		{ "LOW (VANILLA)", "MEDIUM", "HIGH" },
-	},
-	{
-		&gGamePrefs.hideBottomBarInNonBossLevels,
-		"BOTTOM BAR",
-		0, NULL,
-		NULL,
-		0, false, {"ALWAYS SHOWN","ONLY WHEN NEEDED",NULL},
-		0,
 	},
 	{
 		&gGamePrefs.playerRelativeKeys,

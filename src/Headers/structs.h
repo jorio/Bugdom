@@ -336,7 +336,7 @@ typedef struct
 	Boolean textureFiltering;
 	Byte	mouseSensitivityLevel;
 	Byte	terrainTextureDetail;
-	Boolean	hideBottomBarInNonBossLevels;
+	Boolean	showBottomBar;
 	Boolean useCyclorama;
 }PrefsType;
 
