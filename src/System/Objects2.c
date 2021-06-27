@@ -170,7 +170,9 @@ void SetObjectCollisionBounds(ObjNode *theNode, short top, short bottom, short l
 ObjNode	*AttachShadowToObject(ObjNode *theNode, float scaleX, float scaleZ, Boolean checkBlockers)
 {
 ObjNode	*shadowObj;
-									
+
+	GAME_ASSERT_MESSAGE(!theNode->ShadowNode, "Node already had a shadow");
+
 	gNewObjectDefinition.group 		= GLOBAL1_MGroupNum_Shadow;	
 	gNewObjectDefinition.type 		= GLOBAL1_MObjType_Shadow;	
 	gNewObjectDefinition.coord 		= theNode->Coord;
