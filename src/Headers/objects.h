@@ -95,9 +95,4 @@ ObjNode	*AttachGlowShadowToObject(ObjNode *theNode, float scaleX, float scaleZ, 
 extern	void StopObjectStreamEffect(ObjNode *theNode);
 extern	void KeepOldCollisionBoxes(ObjNode *theNode);
 
-
-
-
-
-
-
+void DrawCollisionBoxes(const ObjNode* theNode);

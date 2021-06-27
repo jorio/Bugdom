@@ -17,8 +17,6 @@
 /****************************/
 
 static void FlushObjectDeleteQueue(void);
-static void DrawCollisionBoxes(ObjNode *theNode);
-static void DrawBoundingSphere(ObjNode *theNode);
 
 
 /****************************/
@@ -404,17 +402,6 @@ float			cameraX, cameraZ;
 			theNode->RenderModifiers.autoFadeFactor = 1.0f;
 		}
 
-			/************************/
-			/* SHOW COLLISION BOXES */
-			/************************/
-			
-		if (gShowDebug)
-		{
-			DrawCollisionBoxes(theNode);
-			DrawBoundingSphere(theNode);
-		}
-
-				
 			/***********************/
 			/* SUBMIT THE GEOMETRY */
 			/***********************/
@@ -819,21 +806,17 @@ void MakeObjectTransparent(ObjNode *theNode, float transPercent)
 
 /************************ DRAW COLLISION BOXES ****************************/
 
-static void DrawCollisionBoxes(ObjNode *theNode)
+void DrawCollisionBoxes(const ObjNode* theNode)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
 int	n,i;
 CollisionBoxType	*c;
-TQ3PolyLineData	line;
-TQ3Vertex3D		v[5];
 float			left,right,top,bottom,front,back;
 
 	n = theNode->NumCollisionBoxes;							// get # collision boxes	
 	c = theNode->CollisionBoxes;							// pt to array
 	if (c == nil)
 		return;
-		
+
 	for (i = 0; i < n; i++)
 	{
 		left 	= c[i].left;
@@ -843,132 +826,38 @@ float			left,right,top,bottom,front,back;
 		front 	= c[i].front;
 		back 	= c[i].back;
 
-			/* SETUP */
-			
-		line.numVertices = 5;
-		line.vertices = &v[0];
-		line.segmentAttributeSet = nil;
-		line.polyLineAttributeSet = nil;
-		v[0].attributeSet = nil;
-		v[1].attributeSet = nil;
-		v[2].attributeSet = nil;
-		v[3].attributeSet = nil;
-		v[4].attributeSet = nil;
-	
+
 			/* DRAW TOP */
-			
-		v[0].point.x = left;
-		v[0].point.y = top;
-		v[0].point.z = back;
-		v[1].point.x = left;
-		v[1].point.y = top;
-		v[1].point.z = front;
-		v[2].point.x = right;
-		v[2].point.y = top;
-		v[2].point.z = front;
-		v[3].point.x = right;
-		v[3].point.y = top;
-		v[3].point.z = back;
-		v[4].point.x = left;
-		v[4].point.y = top;
-		v[4].point.z = back;
-		Q3PolyLine_Submit(&line, view);
+
+		glBegin(GL_LINE_STRIP);
+		glVertex3f(left,		top,		back);
+		glVertex3f(left,		top,		front);
+		glVertex3f(right,		top,		front);
+		glVertex3f(right,		top,		back);
+		glVertex3f(left,		top,		back);
+		glEnd();
 
 			/* DRAW BOTTOM */
-			
-		v[0].point.x = left;
-		v[0].point.y = bottom;
-		v[0].point.z = back;
-		v[1].point.x = left;
-		v[1].point.y = bottom;
-		v[1].point.z = front;
-		v[2].point.x = right;
-		v[2].point.y = bottom;
-		v[2].point.z = front;
-		v[3].point.x = right;
-		v[3].point.y = bottom;
-		v[3].point.z = back;
-		v[4].point.x = left;
-		v[4].point.y = bottom;
-		v[4].point.z = back;
-		Q3PolyLine_Submit(&line, view);
 
-			/* DRAW LEFT */
-			
-		line.numVertices = 2;
-		v[0].point.x = left;
-		v[0].point.y = top;
-		v[0].point.z = back;
-		v[1].point.x = left;
-		v[1].point.y = bottom;
-		v[1].point.z = back;
-		Q3PolyLine_Submit(&line, view);
-		v[0].point.x = left;
-		v[0].point.y = top;
-		v[0].point.z = front;
-		v[1].point.x = left;
-		v[1].point.y = bottom;
-		v[1].point.z = front;
-		Q3PolyLine_Submit(&line, view);
+		glBegin(GL_LINE_STRIP);
+		glVertex3f(left,		bottom,		back);
+		glVertex3f(left,		bottom,		front);
+		glVertex3f(right,		bottom,		front);
+		glVertex3f(right,		bottom,		back);
+		glVertex3f(left,		bottom,		back);
+		glEnd();
 
-			/* DRAW RIGHT */
-			
-		v[0].point.x = right;
-		v[0].point.y = top;
-		v[0].point.z = back;
-		v[1].point.x = right;
-		v[1].point.y = bottom;
-		v[1].point.z = back;
-		Q3PolyLine_Submit(&line, view);
-		v[0].point.x = right;
-		v[0].point.y = top;
-		v[0].point.z = front;
-		v[1].point.x = right;
-		v[1].point.y = bottom;
-		v[1].point.z = front;
-		Q3PolyLine_Submit(&line, view);
+			/* DRAW LEFT & RIGHT */
+
+		glBegin(GL_LINES);
+		glVertex3f(left,		top,		back);
+		glVertex3f(left,		bottom,		back);
+		glVertex3f(left,		top,		front);
+		glVertex3f(left,		bottom,		front);
+		glVertex3f(right,		top,		back);
+		glVertex3f(right,		bottom,		back);
+		glVertex3f(right,		top,		front);
+		glVertex3f(right,		bottom,		front);
+		glEnd();
 	}
-#endif
 }
-
-/************************ DRAW BOUNDING SPHERE (FOR CULLING) ****************************/
-
-static void DrawBoundingSphere(ObjNode* theNode)
-{
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-	static TQ3SubdivisionStyleData sub;
-	sub.method = kQ3SubdivisionMethodConstant;
-	sub.c1 = 64;
-	sub.c2 = 64;
-	Q3SubdivisionStyle_Submit(&sub, view);
-
-	TQ3Point3D C = theNode->Coord;
-	C.x += theNode->BoundingSphere.origin.x;
-	C.y += theNode->BoundingSphere.origin.y;
-	C.z += theNode->BoundingSphere.origin.z;
-	float R = theNode->BoundingSphere.radius;
-	static const TQ3Vector3D up = {0,1,0};
-	TQ3Matrix4x4 m;
-	SetLookAtMatrix(&m, &up, &C, &gGameViewInfoPtr->currentCameraCoords);
-
-	TQ3Vector3D majorV = {R,0,0};
-	TQ3Vector3D minorV = {0,R,0};
-	Q3Point3D_Transform((TQ3Point3D*) &majorV, &m, (TQ3Point3D*) &majorV);
-	Q3Vector3D_Normalize(&majorV, &majorV);
-	majorV.x *= R;
-	majorV.y *= R;
-	majorV.z *= R;
-
-	TQ3EllipseData ellipseData;
-	ellipseData.uMin = 0;
-	ellipseData.uMax = 1;
-	ellipseData.ellipseAttributeSet = nil;
-	ellipseData.origin = C;
-	ellipseData.majorRadius = majorV;
-	ellipseData.minorRadius = minorV;
-	Q3Ellipse_Submit(&ellipseData, view);
-#endif
-}
-
-

@@ -18,7 +18,6 @@
 /****************************/
 
 static void CreateLights(QD3DLightDefType *lightDefPtr);
-static void DrawNormal(void);
 
 
 /****************************/
@@ -566,23 +565,11 @@ void ShowNormal(TQ3Point3D *where, TQ3Vector3D *normal)
 
 /********************* DRAW NORMAL **************************/
 
-static void DrawNormal(void)
+void DrawNormal(void)
 {
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-TQ3LineData	line;
-
-	line.lineAttributeSet = nil;
-
-	line.vertices[0].attributeSet = nil;
-	line.vertices[0].point = gNormalWhere;
-
-	line.vertices[1].attributeSet = nil;
-	line.vertices[1].point.x = gNormalWhere.x + gNormal.x * 400.0f;
-	line.vertices[1].point.y = gNormalWhere.y + gNormal.y * 400.0f;
-	line.vertices[1].point.z = gNormalWhere.z + gNormal.z * 400.0f;
-
-	Q3Line_Submit(&line, view);
-#endif
+	glBegin(GL_LINES);
+	glVertex3f(gNormalWhere.x, gNormalWhere.y, gNormalWhere.z);
+	glVertex3f(gNormalWhere.x + gNormal.x * 400.0f, gNormalWhere.y + gNormal.y * 400.0f, gNormalWhere.z + gNormal.z * 400.0f);
+	glEnd();
 }
 

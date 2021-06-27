@@ -893,6 +893,17 @@ static bool PreDrawMesh_ColorPass(const MeshQueueEntry* entry)
 	return true;
 }
 
+void Render_ResetColor(void)
+{
+	DisableState(GL_BLEND);
+	DisableState(GL_ALPHA_TEST);
+	DisableState(GL_LIGHTING);
+	DisableState(GL_TEXTURE_2D);
+	DisableClientState(GL_NORMAL_ARRAY);
+	DisableClientState(GL_COLOR_ARRAY);
+	glColor4f(1, 1, 1, 1);
+}
+
 #pragma mark -
 
 //=======================================================================================================

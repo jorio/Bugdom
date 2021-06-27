@@ -1419,6 +1419,14 @@ void DrawTerrain(const QD3DSetupOutputType *setupInfo)
 
 	Render_FlushQueue();												// flush before drawing 2D stuff
 
+	if (gShowDebug)
+	{
+		Render_ResetColor();
+		for (ObjNode* node = gFirstNodePtr; node; node = node->NextNode)
+			DrawCollisionBoxes(node);
+		DrawNormal();
+	}
+
 		/* DRAW IN-GAME 2D ELEMENTS */
 
 	Render_Enter2D_NormalizedCoordinates(setupInfo->aspectRatio);

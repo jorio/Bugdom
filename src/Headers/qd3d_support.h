@@ -99,6 +99,7 @@ void QD3D_NewViewDef(QD3DSetupInputType *viewDef);
 void QD3D_SetMultisampling(Boolean enable);		// source port add
 
 void ShowNormal(TQ3Point3D *where, TQ3Vector3D *normal);
+void DrawNormal(void);
 
 #define TQ3ColorRGB_FromInt(c) (TQ3ColorRGB){ (((c)>>16)&0xFF)/255.0f, (((c)>>8)&0xFF)/255.0f, ((c)&0xFF)/255.0f }
 #define TQ3ColorRGBA_FromInt(c) (TQ3ColorRGBA){ (((c)>>24)&0xFF)/255.0f, (((c)>>16)&0xFF)/255.0f, (((c)>>8)&0xFF)/255.0f, ((c)&0xFF)/255.0f }

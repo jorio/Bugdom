@@ -143,6 +143,8 @@ void Render_EndFrame(void);
 
 void Render_SetViewport(bool scissor, int x, int y, int w, int h);
 
+void Render_ResetColor(void);
+
 #pragma mark -
 
 // Submits a list of trimeshes for drawing.
