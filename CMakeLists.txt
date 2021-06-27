@@ -267,8 +267,6 @@ if(NOT MSVC)
 		$<$<CXX_COMPILER_ID:GNU>:-Wno-unused-but-set-variable>
 		-Werror=return-type
 		-Wno-unused-parameter
-		-Wno-unused-variable	# TODO NOQUESA: remove me when new renderer is done
-		-Wno-unused-function	# TODO NOQUESA: remove me when new renderer is done
 	)
 else()
 	# By default, MSVC may add /EHsc to CMAKE_CXX_FLAGS, which we don't want (we use /EHs below)

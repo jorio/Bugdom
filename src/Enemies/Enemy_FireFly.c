@@ -519,7 +519,6 @@ ObjNode		*glow;
 		SetLookAtMatrixAndTranslate(&m, &up, &gCoord,  &gGameViewInfoPtr->currentCameraCoords);
 		Q3Matrix4x4_SetScale(&m2, s, s, s);
 		MatrixMultiplyFast(&m2,&m, &glow->BaseTransformMatrix);
-		SetObjectTransformMatrix(glow);
 
 		glow->Coord = theNode->Coord;									// update true coord for culling
 	}				

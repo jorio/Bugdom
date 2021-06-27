@@ -10,10 +10,6 @@
 
 typedef	struct
 {
-	Boolean					useWindow;			// true if render to window, false if render to pixmap
-	WindowPtr				displayWindow;
-	GWorldPtr				gworld;
-	TQ3ObjectType			rendererType;
 	Boolean					dontClear;
 	TQ3ColorRGBA			clearColor;
 	Rect					paneClip;			// not pane size, but clip:  left = amount to clip off left
@@ -75,7 +71,6 @@ typedef struct
 typedef struct
 {
 	Boolean					isActive;
-	WindowPtr				window;
 	Rect					paneClip;			// not pane size, but clip:  left = amount to clip off left
 	float					aspectRatio;
 	bool					needScissorTest;
@@ -91,7 +86,6 @@ typedef struct
 
 //===========================================================
 
-extern	void QD3D_Boot(void);
 extern	void QD3D_SetupWindow(QD3DSetupInputType *setupDefPtr, QD3DSetupOutputType **outputHandle);
 extern	void QD3D_DisposeWindowSetup(QD3DSetupOutputType **dataHandle);
 extern	void QD3D_UpdateCameraFromTo(QD3DSetupOutputType *setupInfo, TQ3Point3D *from, TQ3Point3D *to);
@@ -100,7 +94,7 @@ extern	void QD3D_UpdateCameraFrom(QD3DSetupOutputType *setupInfo, TQ3Point3D *fr
 extern	void QD3D_MoveCameraFromTo(QD3DSetupOutputType *setupInfo, TQ3Vector3D *moveVector, TQ3Vector3D *lookAtVector);
 extern	void	QD3D_CalcFramesPerSecond(void);
 GLuint QD3D_LoadTextureFile(int textureRezID, int flags);
-extern	void QD3D_NewViewDef(QD3DSetupInputType *viewDef, WindowPtr theWindow);
+void QD3D_NewViewDef(QD3DSetupInputType *viewDef);
 
 void QD3D_SetMultisampling(Boolean enable);		// source port add
 

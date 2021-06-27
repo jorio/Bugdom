@@ -693,8 +693,7 @@ TQ3Matrix4x4	m,m2,m3;
 	FindJointFullMatrix(bee, WORKERBEE_JOINT_BUTT, &m2);
 
 	MatrixMultiplyFast(&m, &m2, &stinger->BaseTransformMatrix);
-	SetObjectTransformMatrix(stinger);
-	
+
 			/* CALC COORD OF STINGER */
 			
 	Q3Point3D_Transform(&zero, &stinger->BaseTransformMatrix, &stinger->Coord);

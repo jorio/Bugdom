@@ -22,7 +22,6 @@
 extern "C"
 {
 	// bare minimum to satisfy externs in game code
-	WindowPtr gCoverWindow = nullptr;
 	SDL_Window* gSDLWindow = nullptr;
 
 	// Tell Windows graphics driver that we prefer running on a dedicated GPU if available
@@ -105,18 +104,6 @@ int CommonMain(int argc, const char** argv)
 	//Pomme_StartDumpingResources("/tmp/BugdomRezDump");
 
 	// Set up globals that the game expects
-	// TODO: Nuke this
-	gCoverWindow = Pomme::Graphics::GetScreenPort();
-
-	// Clear window
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-	Overlay_BeginExclusive();
-	Overlay_Clear(0xFFA5A5A5);
-	Overlay_Flush();
-	Overlay_EndExclusive();
-#endif
-
 	fs::path dataPath = FindGameData();
 #if !(__APPLE__)
 	Pomme::Graphics::SetWindowIconFromIcl8Resource(gSDLWindow, 128);
@@ -131,16 +118,6 @@ int CommonMain(int argc, const char** argv)
 			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING, "Bugdom", "Couldn't load gamecontrollerdb.txt!", gSDLWindow);
 		}
 	}
-
-	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-	// Initialize Quesa
-	auto qd3dStatus = Q3Initialize();
-	if (qd3dStatus != kQ3Success)
-	{
-		throw std::runtime_error("Couldn't initialize Quesa.");
-	}
-#endif
 
 	// Start the game
 	try

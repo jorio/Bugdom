@@ -140,7 +140,7 @@ const float imageAspectRatio = 200.0f/152.0f;
 	switch (curState)
 	{
 		case	1:
-				gGameOverFlag = gAbortedFlag = true;
+				gGameOverFlag = true;
 				break;
 				
 		case	2:
@@ -185,7 +185,7 @@ Boolean			fo = false;
 
 			/* MAKE VIEW */
 
-	QD3D_NewViewDef(&viewDef, gCoverWindow);
+	QD3D_NewViewDef(&viewDef);
 	viewDef.camera.hither 			= 10;
 	viewDef.camera.yon 				= 2000;
 	viewDef.camera.fov 				= .9;

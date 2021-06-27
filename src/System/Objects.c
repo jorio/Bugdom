@@ -410,11 +410,8 @@ float			cameraX, cameraZ;
 			
 		if (gShowDebug)
 		{
-			printf("TODO NOQUESA: gShowDebug\n");
-			/*
-			DrawCollisionBoxes(theNode,view);
-			DrawBoundingSphere(theNode, view);
-			 */
+			DrawCollisionBoxes(theNode);
+			DrawBoundingSphere(theNode);
 		}
 
 				
@@ -800,35 +797,6 @@ TQ3Matrix4x4	m,m2;
 	m2.value[3][2] = theNode->Coord.z;
 	
 	MatrixMultiplyFast(&m,&m2, &theNode->BaseTransformMatrix);
-
-
-				/* UPDATE TRANSFORM OBJECT */
-				
-	SetObjectTransformMatrix(theNode);
-}
-
-
-/***************** SET OBJECT TRANSFORM MATRIX *******************/
-//
-// This call simply resets the base transform object so that it uses the latest
-// base transform matrix
-//
-
-void SetObjectTransformMatrix(ObjNode *theNode)
-{
-//	printf("TODO NOQUESA: %s\n", __func__);
-#if 0	// NOQUESA
-TQ3Status 				error;
-
-	if (theNode->CType == INVALID_NODE_FLAG)		// see if invalid
-		return;
-		
-	if (theNode->BaseTransformObject)				// see if this has a trans obj
-	{
-		error = Q3MatrixTransform_Set(theNode->BaseTransformObject,&theNode->BaseTransformMatrix);
-		GAME_ASSERT(error);
-	}
-#endif
 }
 
 

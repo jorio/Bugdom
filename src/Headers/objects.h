@@ -73,7 +73,6 @@ extern	ObjNode *MakeNewDisplayGroupObject(NewObjectDefinitionType *newObjDef);
 void AttachGeometryToDisplayGroupObject(ObjNode* theNode, int numMeshes, TQ3TriMeshData** meshList, int flags);
 extern	void CreateBaseGroup(ObjNode *theNode);
 extern	void UpdateObjectTransforms(ObjNode *theNode);
-extern	void SetObjectTransformMatrix(ObjNode *theNode);
 extern	void MakeObjectTransparent(ObjNode *theNode, float transPercent);
 void AttachObject(ObjNode *theNode);
 

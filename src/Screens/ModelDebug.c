@@ -235,7 +235,7 @@ void DoModelDebug(void)
 
 	/* MAKE VIEW */
 
-	QD3D_NewViewDef(&viewDef, gCoverWindow);
+	QD3D_NewViewDef(&viewDef);
 	viewDef.camera.hither 			= 10;
 	viewDef.camera.yon 				= 2000;
 	viewDef.camera.fov 				= .9;
@@ -302,8 +302,6 @@ void DoModelDebug(void)
 
 //		CalcEnvironmentMappingCoords(&gGameViewInfoPtr->currentCameraCoords);
 
-//		Overlay_RenderQuad(OVERLAY_FILL);
-		
 		QD3D_DrawScene(gGameViewInfoPtr,DrawObjects);
 
 		DoSDLMaintenance();

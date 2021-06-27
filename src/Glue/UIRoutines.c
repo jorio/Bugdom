@@ -58,7 +58,7 @@ void SetupUIStuff(int backgroundType)
 	/* MAKE VIEW */
 	/*************/
 
-	QD3D_NewViewDef(&viewDef, gCoverWindow);
+	QD3D_NewViewDef(&viewDef);
 
 	viewDef.camera.hither 			= 40;
 	viewDef.camera.yon 				= 2000;

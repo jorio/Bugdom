@@ -109,7 +109,7 @@ Byte					letters[] = {TITLE_MObjType_B, TITLE_MObjType_U,
 			/* MAKE VIEW */
 			/*************/
 
-	QD3D_NewViewDef(&viewDef, gCoverWindow);
+	QD3D_NewViewDef(&viewDef);
 	
 	viewDef.camera.hither 			= 50;
 	viewDef.camera.yon 				= 3000;

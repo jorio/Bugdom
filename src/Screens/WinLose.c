@@ -135,7 +135,7 @@ static const TQ3Point2D po[4] =
 			/* MAKE VIEW */
 			/*************/
 
-	QD3D_NewViewDef(&viewDef, gCoverWindow);
+	QD3D_NewViewDef(&viewDef);
 	
 	viewDef.camera.hither 			= 20;
 	viewDef.camera.yon 				= 3000;		// Source port mod (was 2000) so fog doesn't kick in
@@ -360,7 +360,7 @@ static const TQ3Point2D po[4] =
 			/* MAKE VIEW */
 			/*************/
 
-	QD3D_NewViewDef(&viewDef, gCoverWindow);
+	QD3D_NewViewDef(&viewDef);
 	
 	viewDef.camera.hither 			= 20;
 	viewDef.camera.yon 				= 2000;

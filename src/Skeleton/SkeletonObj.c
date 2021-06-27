@@ -238,7 +238,6 @@ static void DisposeSkeletonDefinitionMemory(SkeletonDefType *skeleton)
 	if (skeleton == nil)
 		return;
 
-	int numAnims = skeleton->NumAnims;									// get # anims in skeleton
 	int numJoints = skeleton->NumBones;
 
 			/* NUKE THE SKELETON BONE POINT & NORMAL INDEX ARRAYS */

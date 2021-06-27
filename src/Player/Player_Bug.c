@@ -667,8 +667,7 @@ float			s;
 	
 	Q3Matrix4x4_SetTranslate(&m, 0, 30, 40);				// set offset translation matrix for point on waterbug's back
 	MatrixMultiplyFast(&m,&m3,&gPlayerObj->BaseTransformMatrix);			
-	SetObjectTransformMatrix(gPlayerObj);
-	
+
 			/* CALC PLAYER'S COORD */
 			
 	Q3Point3D_Transform(&zero, &gPlayerObj->BaseTransformMatrix, &gMyCoord);
@@ -715,7 +714,6 @@ hop_off:
 	
 	Q3Matrix4x4_SetTranslate(&m, 0, 8, 55);								// set offset translation matrix for point on waterbug's back
 	MatrixMultiplyFast(&m,&m3,&gPlayerObj->BaseTransformMatrix);			
-	SetObjectTransformMatrix(gPlayerObj);
 
 			
 		/* CALC WORLD COORD & DELTA OF BUG */
@@ -802,8 +800,6 @@ int		j;
 	off.z *= enemy->Scale.z;
 	Q3Matrix4x4_SetTranslate(&m, off.x, off.y, off.z);  // get mouth offset	
 	MatrixMultiplyFast(&m,&m3,&gPlayerObj->BaseTransformMatrix);		
-	
-	SetObjectTransformMatrix(gPlayerObj);					// set player's matrix
 
 			/* ON FLIGHT LEVEL, THE CAMERA TRACKS BAT */
 			
@@ -926,8 +922,7 @@ float			dx,dy;
 								 gRopeSwingOffset.y,
 								 gRopeSwingOffset.z);	
 	MatrixMultiplyFast(&m,&m2,&gPlayerObj->BaseTransformMatrix);			
-	SetObjectTransformMatrix(gPlayerObj);
-			
+
 			/* UPDATE IT */
 			
 	FindCoordOnJoint(gCurrentRope, gCurrentRopeJoint, &gRopeSwingOffset, &gMyCoord);	// est. coord of joint	

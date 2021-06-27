@@ -623,8 +623,7 @@ float					s;
 	m.value[3][1] = -40;
 	m.value[3][2] = -130;
 	MatrixMultiplyFast(&m,&m3,&staff->BaseTransformMatrix);			
-	SetObjectTransformMatrix(staff);
-	
+
 			/* CALC STAFF'S COORD */
 			
 	Q3Point3D_Transform(&zero, &staff->BaseTransformMatrix, &staff->Coord);

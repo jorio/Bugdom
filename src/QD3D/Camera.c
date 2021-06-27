@@ -390,27 +390,7 @@ void CalcCameraMatrixInfo(QD3DSetupOutputType *setupInfo)
 
 			/* GET CAMERA VIEW MATRIX INFO */
 
-	/* // TODO NOQUESA: original QD3D version
-	Q3View_GetWorldToFrustumMatrixState(viewPtr->viewObject, &gCameraWorldToFrustumMatrix);
-	Q3View_GetFrustumToWindowMatrixState(viewPtr->viewObject, &gCameraFrustumToWindowMatrix);
-	MatrixMultiplyFast(&gCameraWorldToFrustumMatrix, &gCameraFrustumToWindowMatrix, &gCameraWorldToWindowMatrix);
-	
-	Q3Camera_GetWorldToView(viewPtr->cameraObject, &gCameraWorldToViewMatrix);	
-	Q3Camera_GetViewToFrustum(viewPtr->cameraObject, &gCameraViewToFrustumMatrix);
-	*/
-
 	Q3Matrix4x4_Multiply(&gCameraWorldToViewMatrix, &gCameraViewToFrustumMatrix, &gCameraWorldToFrustumMatrix);		// calc world to frustum matrix
-
-
-#if 0 // TODO NOQUESA
-			/* CALCULATE THE ADJUSTMENT MATRIX */
-			//
-			// this gets a view->world matrix for putting stuff in the infobar.
-			//
-
-	//Q3Matrix4x4_Invert(&gCameraWorldToWindowMatrix,&gCameraWindowToWorldMatrix);  // Original QD3D version
-	Q3Matrix4x4_Invert(&gCameraWorldToViewMatrix,&gCameraWindowToWorldMatrix);
-#endif
 
 
 			/* PREPARE FRUSTUM PLANES FOR SPHERE VISIBILITY CHECKS */

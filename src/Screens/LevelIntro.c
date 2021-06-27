@@ -230,7 +230,7 @@ TQ3Vector3D				fillDirection2 = { -.7, -.2, -.9 };			// fill
 			/* MAKE VIEW */
 			/*************/
 
-	QD3D_NewViewDef(&viewDef, gCoverWindow);
+	QD3D_NewViewDef(&viewDef);
 	
 	viewDef.camera.hither 			= 70;
 	viewDef.camera.yon 				= 4000;
@@ -853,7 +853,6 @@ ObjNode	*l;
 
 		Q3Matrix4x4_SetTranslate(&m, 0, 100, 0); 				// get mouth offset	
 		MatrixMultiplyFast(&m,&m3,&l->BaseTransformMatrix);		
-		SetObjectTransformMatrix(l);							// set player's matrix
 	}
 }
 

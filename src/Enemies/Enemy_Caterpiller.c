@@ -69,7 +69,6 @@ float			x,z,placement;
 	DetachObject(newObj);									// detach this object from the linked list
 	
 	Q3Matrix4x4_SetIdentity(&newObj->BaseTransformMatrix);	// we are going to do some manual transforms on the skeleton joints
-	SetObjectTransformMatrix(newObj);
 	newObj->Skeleton->JointsAreGlobal = true;
 		
 	newObj->SplineItemPtr = itemPtr;

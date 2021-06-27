@@ -56,7 +56,6 @@ extern "C"
 #include "gamepatches.h"
 #include "structformats.h"
 
-extern	Boolean						gAbortedFlag;
 extern	Boolean						gAreaCompleted;
 extern	Boolean						gBatExists;
 extern	Boolean						gDetonatorBlown[];
@@ -138,10 +137,8 @@ extern	TerrainInfoMatrixType		**gMapInfoMatrix;
 extern	TerrainItemEntryType		**gTerrainItemLookupTableX;
 extern	TerrainItemEntryType 		**gMasterItemList;
 extern	TerrainYCoordType			**gMapYCoords;
-extern	WindowPtr					gCoverWindow;
 extern	char						gTypedAsciiKey;
 extern	const char					*kLevelNames[NUM_LEVELS];
-extern	const TQ3Float32			gTextureAlphaThreshold;
 extern	const TQ3Point3D			gBatMouthOff;
 extern	const TQ3Point3D			gPondFishMouthOff;
 extern	const float					gLiquidCollisionTopOffset[NUM_LIQUID_TYPES];

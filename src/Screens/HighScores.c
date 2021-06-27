@@ -148,7 +148,7 @@ QD3DSetupInputType		viewDef;
 			/* SET QD3D PARAMETERS */
 			/***********************/
 			
-	QD3D_NewViewDef(&viewDef, gCoverWindow);			
+	QD3D_NewViewDef(&viewDef);
 	viewDef.view.clearColor 		= clearColor;
 		
 	viewDef.camera.from 			= cameraFrom;
@@ -660,10 +660,6 @@ static const TQ3Point2D xyCoords[NUM_SCORES][2] =
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= 1.0;
 	newObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-	// Source port removal: is there any reason why the game used to keep backfaces on this model?
-	// With Quesa this yields massive z-fighting on the sunflower leaves.
-	// TODO: Check how this model used to look on a real mac.
-	//MakeObjectKeepBackfaces(newObj);
 
 			/*************************/
 			/* CREATE THE BACKGROUND */

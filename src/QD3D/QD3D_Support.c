@@ -50,19 +50,6 @@ static TQ3Vector3D		gNormal;
 
 
 
-
-/******************** QD3D: BOOT ******************************/
-//
-// NOTE: The QuickDraw3D libraries should be included in the project as a "WEAK LINK" so that I can
-// 		get an error if the library can't load.  Otherwise, the Finder reports a useless error to the user.
-//
-
-void QD3D_Boot(void)
-{
-}
-
-
-
 //=======================================================================================================
 //=============================== VIEW WINDOW SETUP STUFF ===============================================
 //=======================================================================================================
@@ -73,7 +60,7 @@ void QD3D_Boot(void)
 // fills a view def structure with default values.
 //
 
-void QD3D_NewViewDef(QD3DSetupInputType *viewDef, WindowPtr theWindow)
+void QD3D_NewViewDef(QD3DSetupInputType *viewDef)
 {
 TQ3ColorRGBA		clearColor = {0,0,0,1};
 TQ3Point3D			cameraFrom = { 0, 40, 200.0 };
@@ -86,12 +73,6 @@ TQ3Vector3D			fillDirection2 = { -.8, .8, -.2 };
 	Q3Vector3D_Normalize(&fillDirection1,&fillDirection1);
 	Q3Vector3D_Normalize(&fillDirection2,&fillDirection2);
 
-	if (theWindow == nil)
-		viewDef->view.useWindow 	=	false;							// assume going to pixmap
-	else
-		viewDef->view.useWindow 	=	true;							// assume going to window
-	viewDef->view.displayWindow 	= theWindow;
-//	viewDef->view.rendererType 		= kQ3RendererTypeOpenGL;
 	viewDef->view.clearColor 		= clearColor;
 	viewDef->view.paneClip.left 	= 0;
 	viewDef->view.paneClip.right 	= 0;
@@ -154,7 +135,6 @@ QD3DSetupOutputType	*outputPtr;
 
 				/* PASS BACK INFO */
 
-	outputPtr->window 				= setupDefPtr->view.displayWindow;	// remember which window
 	outputPtr->paneClip 			= setupDefPtr->view.paneClip;
 	outputPtr->aspectRatio			= 1.0f;								// aspect ratio is set at every frame depending on window size
 	outputPtr->needScissorTest 		= setupDefPtr->view.paneClip.left != 0 || setupDefPtr->view.paneClip.right != 0
@@ -195,7 +175,6 @@ QD3DSetupOutputType	*outputPtr;
 	glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
 
 	Render_InitState();
-//	Render_Alloc2DCover(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
 
 	if (setupDefPtr->lights.useFog)
 	{
@@ -228,8 +207,6 @@ QD3DSetupOutputType	*data;
 
 	data = *dataHandle;
 	GAME_ASSERT(data);										// see if this setup exists
-
-//	Render_Dispose2DCover(); // Source port addition - release backdrop GL texture
 
 	SDL_GL_DeleteContext(gGLContext);						// dispose GL context
 	gGLContext = nil;
@@ -539,9 +516,8 @@ static	unsigned long then = 0;
 	else
 		gFramesPerSecond = DEFAULT_FPS;
 		
-//	gFramesPerSecondFrac = 1/gFramesPerSecond;		// calc fractional for multiplication
-	gFramesPerSecondFrac = __fres(gFramesPerSecond);	
-	
+	gFramesPerSecondFrac = 1.0f/gFramesPerSecond;	// calc fractional for multiplication
+
 	then = now;										// remember time	
 }
 

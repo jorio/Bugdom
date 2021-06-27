@@ -305,9 +305,7 @@ int	i;
 void CreateSuperTileMemoryList(void)
 {
 long							u,v,i,maxSuperTilesNeeded,numLayers;
-static 	TQ3Point3D				p[NUM_VERTICES_IN_SUPERTILE];
 static 	TQ3TriMeshTriangleData	newTriangle[NUM_TRIS_IN_SUPERTILE];
-static	TQ3Vector3D				faceNormals[NUM_TRIS_IN_SUPERTILE];
 static  TQ3ColorRGB				vertexColors[NUM_VERTICES_IN_SUPERTILE];
 static	TQ3Param2D				uvs[NUM_VERTICES_IN_SUPERTILE];
 
@@ -564,7 +562,6 @@ TQ3Vector3D			*vertexNormalList;
 u_short				tile;
 TQ3Point3D			*pointList;
 TQ3TriMeshTriangleData	*triangleList;
-unsigned char		*buffer;
 SuperTileMemoryType	*superTilePtr;
 TQ3ColorRGBA		*vertexColorList;
 float				brightness;
@@ -652,7 +649,6 @@ static TQ3Vector3D	faceNormal[NUM_TRIS_IN_SUPERTILE];
 		triangleList = triMeshData->triangles;								// get ptr to triangle index list
 		vertexColorList = triMeshData->vertexColors;						// get ptr to vertex color
 		vertexNormalList = triMeshData->vertexNormals;						// get ptr to vertex normals
-//TODO: do we need face normals?		faceNormal = triMeshData->triangleAttributeTypes->data;				// get ptr to face normals
 
 		miny = 1000000;														// init bbox counters
 		maxy = -miny;

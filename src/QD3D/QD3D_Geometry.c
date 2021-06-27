@@ -29,8 +29,6 @@ static void ExplodeTriMesh(
 /*    CONSTANTS             */
 /****************************/
 
-const TQ3Float32 gTextureAlphaThreshold = 0.501111f;		// We really want 0.5, but the weird number makes it easier to spot when debugging Quesa.
-
 static const TQ3Matrix4x4 kIdentity4x4 =
 {{
 	{1, 0, 0, 0},

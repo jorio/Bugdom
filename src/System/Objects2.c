@@ -350,8 +350,6 @@ float	dist;
 	
 	shadowNode->Scale.x = dist * shadowNode->SpecialF[0];				// this scale wont get updated until next frame (RotateOnTerrain).
 	shadowNode->Scale.z = dist * shadowNode->SpecialF[1];
-	
-	SetObjectTransformMatrix(shadowNode);								// update transforms
 }
 
 
@@ -388,8 +386,7 @@ ObjNode				*theNode;
 			goto draw_off;
 
 		if (0 == theNode->NumMeshes)							// quick check if any geometry at all
-			if (theNode->Genre != SKELETON_GENRE)				// TODO NOQUESA: i don't think this condition still matters with new renderer
-				goto next;
+			goto next;
 
 		if (theNode->StatusBits & STATUS_BIT_DONTCULL)			// see if dont want to use our culling
 			goto draw_on;

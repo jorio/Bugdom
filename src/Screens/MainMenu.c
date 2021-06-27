@@ -222,7 +222,7 @@ ObjNode					*newObj;
 			/* MAKE VIEW */
 			/*************/
 
-	QD3D_NewViewDef(&viewDef, gCoverWindow);
+	QD3D_NewViewDef(&viewDef);
 	
 	viewDef.camera.hither 			= 20;
 	viewDef.camera.yon 				= 1000;

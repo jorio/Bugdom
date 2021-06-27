@@ -403,9 +403,6 @@ TQ3Matrix4x4	*m,m2;
 							 	theNode->Scale.y,			
 							 	theNode->Scale.z);
 	MatrixMultiply(&m2, m, m);
-
-
-	SetObjectTransformMatrix(theNode);							// update the matrix
 }
 
 

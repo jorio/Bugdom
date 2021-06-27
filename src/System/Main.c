@@ -74,7 +74,7 @@ ObjNode		*gCyclorama;
 
 u_long		gAutoFadeStatusBits;
 short		gMainAppRezFile;
-Boolean		gGameOverFlag,gAbortedFlag,gAreaCompleted;
+Boolean		gGameOverFlag,gAreaCompleted;
 Boolean		gPlayerGotKilledFlag,gWonGameFlag,gRestoringSavedGame = false;
 
 QD3DSetupOutputType		*gGameViewInfoPtr = nil;
@@ -224,21 +224,11 @@ static const TQ3ColorRGBA	gLevelClearColorWithCyc[NUM_LEVEL_TYPES] =
 
 void ToolBoxInit(void)
 {
-FSSpec		spec;
-OSErr		err;
-	
 	gMainAppRezFile = CurResFile();
 
 		/* FIRST VERIFY SYSTEM BEFORE GOING TOO FAR */
 				
 	VerifySystem();
-
-
-			/* BOOT QD3D */
-			
-	QD3D_Boot();
-
-
 
 
 			/* INIT PREFERENCES */
@@ -396,7 +386,6 @@ float fps;
 
 		DoMyTerrainUpdate();
 		QD3D_DrawScene(gGameViewInfoPtr,DrawTerrain);
-//		SubmitInfobarOverlay();
 
 		QD3D_CalcFramesPerSecond();
 		DoSDLMaintenance();
@@ -519,7 +508,7 @@ QD3DSetupInputType	viewDef;
 
 			/* SETUP VIEW DEF */
 			
-	QD3D_NewViewDef(&viewDef, gCoverWindow);
+	QD3D_NewViewDef(&viewDef);
 	
 	viewDef.camera.hither 			= HITHER_DISTANCE;
 	viewDef.camera.yon 				= gCurrentYon;
