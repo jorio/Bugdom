@@ -141,6 +141,7 @@ extern	char						gTypedAsciiKey;
 extern	const char					*kLevelNames[NUM_LEVELS];
 extern	const TQ3Point3D			gBatMouthOff;
 extern	const TQ3Point3D			gPondFishMouthOff;
+extern	const TQ3Point3D			kQ3Point3D_Zero;
 extern	const float					gLiquidCollisionTopOffset[NUM_LIQUID_TYPES];
 extern	float						gAutoFadeStartDist;
 extern	float						gBallTimer;

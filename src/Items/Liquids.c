@@ -597,7 +597,7 @@ TQ3Point3D		*p;
 			/* SUBMIT IT */
 			/*************/
 
-	Render_SubmitMesh(tmd, nil, &theNode->RenderModifiers, nil);
+	Render_SubmitMesh(tmd, nil, &theNode->RenderModifiers, &theNode->Coord);
 }
 
 /********************* DRAW WATER PATCH TESSELATED **********************/
@@ -736,7 +736,7 @@ TQ3TriMeshTriangleData	*t;
 			/* SUBMIT IT */
 			/*************/
 
-	Render_SubmitMesh(tmd, nil, &theNode->RenderModifiers, nil);
+	Render_SubmitMesh(tmd, nil, &theNode->RenderModifiers, &theNode->Coord);
 }
 
 
@@ -1038,7 +1038,7 @@ TQ3TriMeshTriangleData	*t;
 			/* SUBMIT IT */
 			/*************/
 
-	Render_SubmitMesh(tmd, nil, &theNode->RenderModifiers, nil);
+	Render_SubmitMesh(tmd, nil, &theNode->RenderModifiers, &theNode->Coord);
 }
 
 

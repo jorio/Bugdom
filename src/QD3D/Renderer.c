@@ -46,9 +46,9 @@ typedef struct RendererState
 typedef struct MeshQueueEntry
 {
 	const TQ3TriMeshData*	mesh;
-	const TQ3Matrix4x4*		transform;
-	const RenderModifiers*	mods;
-	float					depthSortZ;
+	const TQ3Matrix4x4*		transform;	// may be NULL
+	const RenderModifiers*	mods;		// may be NULL
+	float					depth;		// used to determine draw order
 	bool					meshIsTransparent;
 } MeshQueueEntry;
 
@@ -73,6 +73,8 @@ static bool PreDrawMesh_ColorPass(const MeshQueueEntry* entry);
 /****************************/
 /*    CONSTANTS             */
 /****************************/
+
+const TQ3Point3D kQ3Point3D_Zero = {0, 0, 0};
 
 static const RenderModifiers kDefaultRenderMods =
 {
@@ -555,30 +557,42 @@ void Render_EndFrame(void)
 
 #pragma mark -
 
-static float GetDepthSortZ(
+static inline float WorldPointToDepth(const TQ3Point3D p)
+{
+	// This is a simplification of:
+	//
+	//     Q3Point3D_Transform(&p, &gCameraWorldToFrustumMatrix, &p);
+	//     return p.z;
+	//
+	// This is enough to give us an idea of the depth of a point relative to another.
+
+#define M(x,y) gCameraWorldToFrustumMatrix.value[x][y]
+	return p.x*M(0,2) + p.y*M(1,2) + p.z*M(2,2);
+#undef M
+}
+
+static float GetDepth(
 		int						numMeshes,
 		TQ3TriMeshData**		meshList,
 		const TQ3Point3D*		centerCoord)
 {
-	TQ3Point3D altCenter;
-
-	if (!centerCoord)
+	if (centerCoord)
 	{
+		return WorldPointToDepth(*centerCoord);
+	}
+	else
+	{
+		// Average centers of all bounding boxes
 		float mult = (float) numMeshes / 2.0f;
-		altCenter = (TQ3Point3D) { 0, 0, 0 };
+		TQ3Point3D center = (TQ3Point3D) { 0, 0, 0 };
 		for (int i = 0; i < numMeshes; i++)
 		{
-			altCenter.x += (meshList[i]->bBox.min.x + meshList[i]->bBox.max.x) * mult;
-			altCenter.y += (meshList[i]->bBox.min.y + meshList[i]->bBox.max.y) * mult;
-			altCenter.z += (meshList[i]->bBox.min.z + meshList[i]->bBox.max.z) * mult;
+			center.x += (meshList[i]->bBox.min.x + meshList[i]->bBox.max.x) * mult;
+			center.y += (meshList[i]->bBox.min.y + meshList[i]->bBox.max.y) * mult;
+			center.z += (meshList[i]->bBox.min.z + meshList[i]->bBox.max.z) * mult;
 		}
-		centerCoord = &altCenter;
+		return WorldPointToDepth(center);
 	}
-
-	TQ3Point3D coordInFrustum;
-	Q3Point3D_Transform(centerCoord, &gCameraWorldToFrustumMatrix, &coordInFrustum);
-
-	return coordInFrustum.z;
 }
 
 static bool IsMeshTransparent(const TQ3TriMeshData* mesh, const RenderModifiers* mods)
@@ -604,7 +618,7 @@ void Render_SubmitMeshList(
 	GAME_ASSERT(gFrameStarted);
 	GAME_ASSERT(gMeshQueueSize + numMeshes <= MESHQUEUE_MAX_SIZE);
 
-	float depthSortZ = GetDepthSortZ(numMeshes, meshList, centerCoord);
+	float depth = GetDepth(numMeshes, meshList, centerCoord);
 
 	for (int i = 0; i < numMeshes; i++)
 	{
@@ -612,7 +626,7 @@ void Render_SubmitMeshList(
 		entry->mesh				= meshList[i];
 		entry->transform		= transform;
 		entry->mods				= mods ? mods : &kDefaultRenderMods;
-		entry->depthSortZ		= depthSortZ;
+		entry->depth			= depth;
 		entry->meshIsTransparent= IsMeshTransparent(entry->mesh, entry->mods);
 
 		gRenderStats.meshes++;
@@ -633,7 +647,7 @@ void Render_SubmitMesh(
 	entry->mesh				= mesh;
 	entry->transform		= transform;
 	entry->mods				= mods ? mods : &kDefaultRenderMods;
-	entry->depthSortZ		= GetDepthSortZ(1, (TQ3TriMeshData**) &mesh, centerCoord);
+	entry->depth			= GetDepth(1, (TQ3TriMeshData **) &mesh, centerCoord);
 	entry->meshIsTransparent= IsMeshTransparent(entry->mesh, entry->mods);
 
 	gRenderStats.meshes++;
@@ -668,22 +682,22 @@ static int DrawOrderComparator(const void* a_void, const void* b_void)
 	}
 
 	// A and B have the same manual priority AND transparency
-	// Compare their depth coordinate
+	// Compare their depths
 
 	if (!a->meshIsTransparent)					// both A and B are OPAQUE meshes: order them front-to-back
 	{
-		if (a->depthSortZ < b->depthSortZ)		// A is closer to the camera, draw it first
+		if (a->depth < b->depth)				// A is closer to the camera, draw it first
 			return AFirst;
 
-		if (a->depthSortZ > b->depthSortZ)		// B is closer to the camera, draw it first
+		if (a->depth > b->depth)				// B is closer to the camera, draw it first
 			return BFirst;
 	}
 	else										// both A and B are TRANSPARENT meshes: order them back-to-front
 	{
-		if (a->depthSortZ < b->depthSortZ)		// A is closer to the camera, draw it last
+		if (a->depth < b->depth)				// A is closer to the camera, draw it last
 			return BFirst;
 
-		if (a->depthSortZ > b->depthSortZ)		// B is closer to the camera, draw it last
+		if (a->depth > b->depth)				// B is closer to the camera, draw it last
 			return AFirst;
 	}
 

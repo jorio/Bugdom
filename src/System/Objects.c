@@ -382,7 +382,6 @@ float			cameraX, cameraZ;
 
 		if (gDoAutoFade && (statusBits & STATUS_BIT_AUTOFADE))		// see if this level has autofade
 		{
-			// TODO: Move to renderer? We already compute the distance to the camera there.
 			float dist = CalcQuickDistance(cameraX, cameraZ, theNode->Coord.x, theNode->Coord.z);	// see if in fade zone
 			if (dist >= gAutoFadeStartDist)
 			{
