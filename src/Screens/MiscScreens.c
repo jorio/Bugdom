@@ -47,6 +47,8 @@ const float imageAspectRatio = 200.0f/152.0f;
 
 	InitCursor();
 
+	gGammaFadeFactor = 1.0f;
+
 			/* PRELOAD TEXTURES */
 
 	GLuint textures[NUM_PAUSE_TEXTURES];
