@@ -211,6 +211,8 @@ QD3DSetupOutputType	*data;
 	gGLContext = nil;
 
 	data->isActive = false;									// now inactive
+
+	Render_Shutdown();
 	
 		/* FREE MEMORY & NIL POINTER */
 		
@@ -324,16 +326,16 @@ void QD3D_DrawScene(QD3DSetupOutputType *setupInfo, void (*drawRoutine)(const QD
 			/* DONE RENDERING */
 			/*****************/
 
-	Render_EndFrame();
+	Render_FlushQueue();
 
+	Render_Enter2D_Full640x480();
 	SubmitInfobarOverlay();			// draw 2D elements on top
-
-#if ALLOW_FADE
 	if (gGammaFadeFactor < 1.0f)
-	{
 		Render_DrawFadeOverlay(gGammaFadeFactor);
-	}
-#endif
+	Render_FlushQueue();
+	Render_Exit2D();
+
+	Render_EndFrame();
 
 	SDL_GL_SwapWindow(gSDLWindow);
 }

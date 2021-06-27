@@ -33,7 +33,6 @@ static void MoveLogoBG(ObjNode *theNode);
 /*********************/
 
 TQ3TriMeshData* gPauseQuad = nil;
-RenderModifiers gPauseQuadRenderMods;
 
 
 
@@ -71,11 +70,6 @@ const float imageAspectRatio = 200.0f/152.0f;
 	gPauseQuad->points[2] = (TQ3Point3D) { +xs, +ys, 0 };
 	gPauseQuad->points[3] = (TQ3Point3D) { -xs, +ys, 0 };
 
-	Render_SetDefaultModifiers(&gPauseQuadRenderMods);
-	gPauseQuadRenderMods.statusBits |= STATUS_BIT_NOFOG | STATUS_BIT_NULLSHADER;
-	gPauseQuadRenderMods.drawOrder = kDrawOrder_Last;
-	//gPauseQuadRenderMods.diffuseColor.a = .66f;
-
 			/*******************/
 			/* LET USER SELECT */
 			/*******************/
@@ -112,10 +106,6 @@ const float imageAspectRatio = 200.0f/152.0f;
 		{
 			curState = 0;
 			break;
-		}
-		if (GetNewKeyState_SDL(SDL_SCANCODE_F12))
-		{
-			gPauseQuadRenderMods.statusBits ^= STATUS_BIT_HIDDEN;
 		}
 
 		QD3D_DrawScene(gGameViewInfoPtr, DrawTerrain);

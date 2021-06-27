@@ -63,6 +63,10 @@ static void ShowBossHealth(void);
 #define	BLUE_CLOVER_X		196
 #define	BLUE_CLOVER_Y		0
 
+#define	INFOBAR_TEXTURE_WIDTH	1024
+#define	INFOBAR_TEXTURE_HEIGHT	128
+#define	BOTTOM_BAR_Y_IN_TEXTURE	64
+
 
 		/* INFOBAR OBJTYPES */
 enum
@@ -146,6 +150,9 @@ static uint32_t*	gSpriteMasks[MAX_SPRITES];
 static int			gSpriteWidths[MAX_SPRITES];
 static int			gSpriteHeights[MAX_SPRITES];
 
+static TQ3TriMeshData*	gInfobarTopMesh = nil;
+static TQ3TriMeshData*	gInfobarBottomMesh = nil;
+
 static uint32_t*	gInfobarTexture = nil;
 static GLuint		gInfobarTextureName = 0;
 static Rect			gInfobarTextureDirtyRect;
@@ -220,6 +227,18 @@ void DisposeInfobarTexture(void)
 		gInfobarTextureName = 0;
 	}
 
+	if (gInfobarTopMesh)
+	{
+		Q3TriMeshData_Dispose(gInfobarTopMesh);
+		gInfobarTopMesh = nil;
+	}
+
+	if (gInfobarBottomMesh)
+	{
+		Q3TriMeshData_Dispose(gInfobarBottomMesh);
+		gInfobarBottomMesh = nil;
+	}
+
 	gInfobarTextureIsDirty = true;
 }
 
@@ -238,12 +257,7 @@ void InitInfobar(void)
 
 			/* CREATE TEXTURE BUFFER */
 
-	gInfobarTexture = (uint32_t*) NewPtrClear(sizeof(uint32_t) * GAME_VIEW_WIDTH * GAME_VIEW_HEIGHT);
-
-			/* FILL TEXTURE WITH DUMMY PATTERN */
-
-	//for (int i = 0; i < GAME_VIEW_WIDTH * GAME_VIEW_HEIGHT; i++)
-	//	gInfobarTexture[i] = i;
+	gInfobarTexture = (uint32_t*) NewPtrClear(sizeof(uint32_t) * 1024 * 128);
 
 			/* DO TOP */
 
@@ -251,21 +265,49 @@ void InitInfobar(void)
 
 			/* DO BOTTOM */
 
-	if (gShowBottomBar)
-		DrawSprite(SPRITE_INFOBARBOTTOM, 0, GAME_VIEW_HEIGHT - gSpriteHeights[SPRITE_INFOBARBOTTOM]);
+	DrawSprite(SPRITE_INFOBARBOTTOM, 0, BOTTOM_BAR_Y_IN_TEXTURE);
 
 			/* CREATE TEXTURE */
 
 	gInfobarTextureName = Render_LoadTexture(
-			GL_RGBA,
-			GAME_VIEW_WIDTH,
-			GAME_VIEW_HEIGHT,
+			GL_RGB,
+			1024,
+			128,
 			GL_BGRA,
 			GL_UNSIGNED_INT_8_8_8_8,
 			gInfobarTexture,
 			kRendererTextureFlags_ClampBoth
 	);
 	CHECK_GL_ERROR();
+
+			/* CREATE TOP MESH */
+
+	GAME_ASSERT_MESSAGE(!gInfobarTopMesh, "infobar top mesh already created");
+
+	gInfobarTopMesh = MakeQuadMesh_UI(
+			0, 0, 640, 62,
+			0,
+			0,
+			(float)(640) / INFOBAR_TEXTURE_WIDTH,
+			(float)(62) / INFOBAR_TEXTURE_HEIGHT
+	);
+	gInfobarTopMesh->texturingMode = kQ3TexturingModeOpaque;
+	gInfobarTopMesh->glTextureName = gInfobarTextureName;
+
+			/* CREATE BOTTOM MESH */
+
+	GAME_ASSERT_MESSAGE(!gInfobarBottomMesh, "infobar bottom mesh already created");
+
+	gInfobarBottomMesh = MakeQuadMesh_UI(
+			0, 420, 640, 480,
+			0,
+			(float)(BOTTOM_BAR_Y_IN_TEXTURE) / INFOBAR_TEXTURE_HEIGHT,
+			(float)(640) / INFOBAR_TEXTURE_WIDTH,
+			(float)(BOTTOM_BAR_Y_IN_TEXTURE + 60) / INFOBAR_TEXTURE_HEIGHT
+	);
+	gInfobarBottomMesh->texturingMode = kQ3TexturingModeOpaque;
+	gInfobarBottomMesh->glTextureName = gInfobarTextureName;
+
 
 			/* PRIME SCREEN */
 
@@ -465,9 +507,9 @@ void FreeInfobarArt(void)
 
 static uint32_t* GetInfobarTextureOffset(int x, int y)
 {
-	uint32_t* out = gInfobarTexture + (y * GAME_VIEW_WIDTH + x);
+	uint32_t* out = gInfobarTexture + (y * INFOBAR_TEXTURE_WIDTH + x);
 	GAME_ASSERT(out >= gInfobarTexture);
-	GAME_ASSERT(out < gInfobarTexture + 4 * GAME_VIEW_WIDTH * GAME_VIEW_HEIGHT);
+	GAME_ASSERT(out < gInfobarTexture + 4 * INFOBAR_TEXTURE_WIDTH * INFOBAR_TEXTURE_HEIGHT);
 	return out;
 }
 
@@ -526,10 +568,10 @@ static void DrawSprite(int spriteNum, int x, int y)
 			inMask++;
 		}
 
-		out += GAME_VIEW_WIDTH - spriteWidth;
+		out += INFOBAR_TEXTURE_WIDTH - spriteWidth;
 	}
 
-	GAME_ASSERT(out <= gInfobarTexture + GAME_VIEW_WIDTH * GAME_VIEW_HEIGHT);
+	GAME_ASSERT(out <= gInfobarTexture + INFOBAR_TEXTURE_WIDTH * INFOBAR_TEXTURE_HEIGHT);
 
 	DamageInfobarTextureRect(x, y, spriteWidth, spriteHeight);
 }
@@ -555,11 +597,11 @@ static void EraseSprite(int spriteNum, int x, int y)
 	for (int row = 0; row < spriteHeight; row++)
 	{
 		memcpy(out, in, 4*spriteWidth);
-		out += GAME_VIEW_WIDTH;
+		out += INFOBAR_TEXTURE_WIDTH;
 		in += backgroundWidth;
 	}
 
-	GAME_ASSERT(out <= gInfobarTexture + (GAME_VIEW_WIDTH * GAME_VIEW_HEIGHT * 4));
+	GAME_ASSERT(out <= gInfobarTexture + (INFOBAR_TEXTURE_WIDTH * INFOBAR_TEXTURE_HEIGHT * 4));
 
 	DamageInfobarTextureRect(x, y, spriteWidth, spriteHeight);
 }
@@ -627,7 +669,7 @@ static void DrawNitroGauge(int arcSpan)
 		}
 
 		templateRow += nitroGaugeWidth;
-		outRow += GAME_VIEW_WIDTH;
+		outRow += INFOBAR_TEXTURE_WIDTH;
 	}
 
 	DamageInfobarTextureRect(gNitroGaugeRect.left, gNitroGaugeRect.top, nitroGaugeWidth, nitroGaugeHeight);
@@ -971,7 +1013,7 @@ static void FillInfobarRect(const Rect r, uint32_t fillColor)
 		{
 			dst[x] = fillColor;
 		}
-		dst += GAME_VIEW_WIDTH;
+		dst += INFOBAR_TEXTURE_WIDTH;
 	}
 
 	DamageInfobarTextureRect(r.left, r.top, r.right - r.left, r.bottom - r.top);
@@ -1155,7 +1197,7 @@ int		w,x;
 		/* DRAW IT */
 		/***********/
 			
-	r.top = 440;
+	r.top = BOTTOM_BAR_Y_IN_TEXTURE + 20;
 	r.bottom = r.top + 20;
 	r.left = 320-(BOSS_WIDTH/2);
 	x = r.right = r.left + BOSS_WIDTH;
@@ -1204,20 +1246,14 @@ void SubmitInfobarOverlay(void)
 				GL_BGRA,
 				GL_UNSIGNED_INT_8_8_8_8,
 				GetInfobarTextureOffset(gInfobarTextureDirtyRect.left, gInfobarTextureDirtyRect.top),
-				GAME_VIEW_WIDTH);
+				INFOBAR_TEXTURE_WIDTH);
 
 		// Clear damage
 		gInfobarTextureIsDirty = false;
 	}
 
-	Render_Enter2D_Full640x480();
-	Render_Draw2DQuad(gInfobarTextureName, false, 1.0f);
-	Render_Exit2D_Full640x480();
-#if 0
-	Overlay_SubmitQuad(0,	0,		640,	62,		0,	0,				1.0f,	62.0f/480.0f);
+	Render_SubmitMesh(gInfobarTopMesh, NULL, &kDefaultRenderMods_UI, &kQ3Point3D_Zero);
+
 	if (gShowBottomBar)
-	{
-		Overlay_SubmitQuad(0,	420,	640,	60,		0,	420.0f/480.0f,	1.0f,	60.0f/480.0f);
-	}
-#endif
+		Render_SubmitMesh(gInfobarBottomMesh, NULL, &kDefaultRenderMods_UI, &kQ3Point3D_Zero);
 }

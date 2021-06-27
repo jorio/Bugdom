@@ -552,3 +552,31 @@ TQ3TriMeshData* MakeQuadMesh(int numQuads, float width, float height)
 
 	return mesh;
 }
+
+TQ3TriMeshData* MakeQuadMesh_UI(
+		float xyLeft, float xyTop, float xyRight, float xyBottom,
+		float uvLeft, float uvTop, float uvRight, float uvBottom)
+{
+	TQ3TriMeshData* mesh = Q3TriMeshData_New(2, 4, kQ3TriMeshDataFeatureVertexUVs);
+	mesh->texturingMode = kQ3TexturingModeOff;
+
+	mesh->triangles[0].pointIndices[0] = 0;
+	mesh->triangles[0].pointIndices[1] = 1;
+	mesh->triangles[0].pointIndices[2] = 2;
+
+	mesh->triangles[1].pointIndices[0] = 0;
+	mesh->triangles[1].pointIndices[1] = 2;
+	mesh->triangles[1].pointIndices[2] = 3;
+
+	mesh->points[0] = (TQ3Point3D) {xyLeft,		xyBottom,	0};
+	mesh->points[1] = (TQ3Point3D) {xyRight,	xyBottom,	0};
+	mesh->points[2] = (TQ3Point3D) {xyRight,	xyTop,		0};
+	mesh->points[3] = (TQ3Point3D) {xyLeft,		xyTop,		0};
+
+	mesh->vertexUVs[0] = (TQ3Param2D) {uvLeft,	uvBottom};
+	mesh->vertexUVs[1] = (TQ3Param2D) {uvRight,	uvBottom};
+	mesh->vertexUVs[2] = (TQ3Param2D) {uvRight,	uvTop};
+	mesh->vertexUVs[3] = (TQ3Param2D) {uvLeft,	uvTop};
+
+	return mesh;
+}

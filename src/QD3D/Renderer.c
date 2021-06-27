@@ -84,36 +84,21 @@ static const RenderModifiers kDefaultRenderMods =
 	.drawOrder = 0,
 };
 
-static const TQ3Point2D kFullscreenQuadPoints640x480[4] =
+const RenderModifiers kDefaultRenderMods_UI =
 {
-	{ 0,	480 },
-	{ 640,	480 },
-	{ 0,	0 },
-	{ 640,	0 },
+	.statusBits = STATUS_BIT_NULLSHADER | STATUS_BIT_NOFOG | STATUS_BIT_NOZWRITE,
+	.diffuseColor = {1,1,1,1},
+	.autoFadeFactor = 1.0f,
+	.drawOrder = kDrawOrder_UI
 };
 
-static const uint8_t kFullscreenQuadTriangles[2][3] =
+static const RenderModifiers kDefaultRenderMods_FadeOverlay =
 {
-	{0, 1, 2},
-	{1, 3, 2},
+	.statusBits = STATUS_BIT_NULLSHADER | STATUS_BIT_NOFOG | STATUS_BIT_NOZWRITE,
+	.diffuseColor = {1,1,1,1},
+	.autoFadeFactor = 1.0f,
+	.drawOrder = kDrawOrder_FadeOverlay
 };
-
-static const TQ3Param2D kFullscreenQuadUVs[4] =
-{
-	{0, 1},
-	{1, 1},
-	{0, 0},
-	{1, 0},
-};
-
-static const TQ3Param2D kFullscreenQuadUVsFlipped[4] =
-{
-	{0, 0},
-	{1, 0},
-	{0, 1},
-	{1, 1},
-};
-
 
 #pragma mark -
 
@@ -126,6 +111,8 @@ static RendererState gState;
 static PFNGLDRAWRANGEELEMENTSPROC __glDrawRangeElements;
 
 float gGammaFadeFactor = 1.0f;
+
+static TQ3TriMeshData* gFullscreenQuad = nil;
 
 #pragma mark -
 
@@ -261,6 +248,18 @@ void Render_InitState(void)
 	gMeshQueueSize = 0;
 	for (int i = 0; i < MESHQUEUE_MAX_SIZE; i++)
 		gMeshQueuePtrs[i] = &gMeshQueueBuffer[i];
+
+	if (!gFullscreenQuad)
+		gFullscreenQuad = MakeQuadMesh_UI(0, 0, 640, 480, 0, 0, 1, 1);
+}
+
+void Render_Shutdown(void)
+{
+	if (gFullscreenQuad)
+	{
+		Q3TriMeshData_Dispose(gFullscreenQuad);
+		gFullscreenQuad = NULL;
+	}
 }
 
 void Render_EnableFog(
@@ -926,66 +925,18 @@ void Render_ResetColor(void)
 /*    2D    */
 /****************************/
 
-static void Render_EnterExit2D_Full640x480(bool enter)
-{
-	static RendererState backup3DState;
-
-	if (enter)
-	{
-		backup3DState = gState;
-		glViewport(0, 0, gWindowWidth, gWindowHeight);
-		DisableState(GL_SCISSOR_TEST);
-
-		DisableState(GL_LIGHTING);
-		DisableState(GL_FOG);
-		DisableState(GL_DEPTH_TEST);
-		DisableState(GL_ALPHA_TEST);
-		EnableState(GL_BLEND);
-//		DisableState(GL_TEXTURE_2D);
-//		DisableClientState(GL_TEXTURE_COORD_ARRAY);
-		DisableClientState(GL_COLOR_ARRAY);
-		DisableClientState(GL_NORMAL_ARRAY);
-		glMatrixMode(GL_PROJECTION);
-		glPushMatrix();
-		glLoadIdentity();
-		//glOrtho(-1, 1,  -1, 1, 0, 1000);
-		glOrtho(0,640,480,0,0,1000);
-		glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
-		glLoadIdentity();
-
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	}
-	else
-	{
-		glMatrixMode(GL_PROJECTION);
-		glPopMatrix();
-		glMatrixMode(GL_MODELVIEW);
-		glPopMatrix();
-		RestoreStateFromBackup(GL_SCISSOR_TEST,	&backup3DState);
-		RestoreStateFromBackup(GL_LIGHTING,		&backup3DState);
-		RestoreStateFromBackup(GL_FOG,			&backup3DState);
-		RestoreStateFromBackup(GL_DEPTH_TEST,	&backup3DState);
-		RestoreStateFromBackup(GL_ALPHA_TEST,	&backup3DState);
-		RestoreStateFromBackup(GL_BLEND,		&backup3DState);
-//		RestoreStateFromBackup(GL_TEXTURE_2D,	&backup3DState);
-//		RestoreClientStateFromBackup(GL_TEXTURE_COORD_ARRAY, &backup3DState);
-		RestoreClientStateFromBackup(GL_COLOR_ARRAY,	&backup3DState);
-		RestoreClientStateFromBackup(GL_NORMAL_ARRAY,	&backup3DState);
-
-		if (backup3DState.blendFuncIsAdditive)
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-	}
-}
-
 void Render_Enter2D_Full640x480(void)
 {
-	Render_EnterExit2D_Full640x480(true);
-}
+	DisableState(GL_SCISSOR_TEST);
+	glViewport(0, 0, gWindowWidth, gWindowHeight);
 
-void Render_Exit2D_Full640x480(void)
-{
-	Render_EnterExit2D_Full640x480(false);
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho(0,640,480,0,0,1000);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
 }
 
 void Render_Enter2D_NormalizedCoordinates(float aspect)
@@ -999,25 +950,12 @@ void Render_Enter2D_NormalizedCoordinates(float aspect)
 	glLoadIdentity();
 }
 
-void Render_Exit2D_NormalizedCoordinates(void)
+void Render_Exit2D(void)
 {
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
-}
-
-void Render_Draw2DQuad(GLuint texture, bool flipY, float brightness)
-{
-	glColor4f(brightness, brightness, brightness, 1);
-	EnableState(GL_TEXTURE_2D);
-	EnableClientState(GL_TEXTURE_COORD_ARRAY);
-	Render_BindTexture(texture);
-	EnableClientState(GL_VERTEX_ARRAY);
-	glVertexPointer(2, GL_FLOAT, 0, kFullscreenQuadPoints640x480);
-	glTexCoordPointer(2, GL_FLOAT, 0, flipY? kFullscreenQuadUVsFlipped: kFullscreenQuadUVs);
-
-	__glDrawRangeElements(GL_TRIANGLES, 0, 3*2, 3*2, GL_UNSIGNED_BYTE, kFullscreenQuadTriangles);
 }
 
 #pragma mark -
@@ -1030,25 +968,16 @@ void Render_Draw2DQuad(GLuint texture, bool flipY, float brightness)
 
 void Render_DrawFadeOverlay(float opacity)
 {
-	Render_Enter2D_Full640x480();
-	EnableState(GL_BLEND);
-	DisableState(GL_TEXTURE_2D);
-	DisableState(GL_ALPHA_TEST);
-	DisableState(GL_CULL_FACE);
-	DisableClientState(GL_TEXTURE_COORD_ARRAY);
+	GAME_ASSERT(gFullscreenQuad);
 
-	glColor4f(0, 0, 0, 1.0f-opacity);
-	glVertexPointer(2, GL_FLOAT, 0, kFullscreenQuadPoints640x480);
-	__glDrawRangeElements(GL_TRIANGLES, 0, 3*2, 3*2, GL_UNSIGNED_BYTE, kFullscreenQuadTriangles);
-	Render_Exit2D_Full640x480();
+	gFullscreenQuad->texturingMode = kQ3TexturingModeOff;
+	gFullscreenQuad->diffuseColor = (TQ3ColorRGBA) { 0,0,0,1.0f-opacity };
+
+	Render_SubmitMesh(gFullscreenQuad, NULL, &kDefaultRenderMods_FadeOverlay, &kQ3Point3D_Zero);
 }
 
-void Render_FreezeFrameFadeOut(float duration)
+GLuint Render_CaptureFrameIntoTexture(int* outTextureWidth, int* outTextureHeight)
 {
-#if ALLOW_FADE
-	//-------------------------------------------------------------------------
-	// Capture window contents into texture
-
 	int width4rem = gWindowWidth % 4;
 	int width4ceil = gWindowWidth - width4rem + (width4rem == 0? 0: 4);
 
@@ -1070,16 +999,38 @@ void Render_FreezeFrameFadeOut(float duration)
 			GL_UNSIGNED_BYTE,
 			textureData,
 			kRendererTextureFlags_ClampBoth
-			);
+	);
 	CHECK_GL_ERROR();
 
 	DisposePtr(textureData);
 	textureData = NULL;
 
-	//-------------------------------------------------------------------------
-	// Set up 2D viewport
+	if (outTextureWidth)
+		*outTextureWidth = textureWidth;
 
-	Render_Enter2D_Full640x480();
+	if (outTextureHeight)
+		*outTextureHeight = textureHeight;
+
+	return textureName;
+}
+
+void Render_FreezeFrameFadeOut(float duration)
+{
+#if ALLOW_FADE
+	//-------------------------------------------------------------------------
+	// Capture window contents into texture
+
+	int textureWidth, textureHeight;
+
+	GLuint textureName = Render_CaptureFrameIntoTexture(&textureWidth, &textureHeight);
+
+	gFullscreenQuad->texturingMode = kQ3TexturingModeOpaque;
+	gFullscreenQuad->glTextureName = textureName;
+
+	gFullscreenQuad->vertexUVs[0] = (TQ3Param2D) { 0, 0 };
+	gFullscreenQuad->vertexUVs[1] = (TQ3Param2D) { (float)gWindowWidth/textureWidth, 0 };
+	gFullscreenQuad->vertexUVs[2] = (TQ3Param2D) { (float)gWindowWidth/textureWidth, (float)gWindowHeight/textureHeight };
+	gFullscreenQuad->vertexUVs[3] = (TQ3Param2D) { 0, (float)gWindowHeight/textureHeight };
 
 	//-------------------------------------------------------------------------
 	// Fade out
@@ -1095,7 +1046,15 @@ void Render_FreezeFrameFadeOut(float duration)
 		if (gGammaFadeFactor < 0.0f)
 			gGammaFadeFactor = 0.0f;
 
-		Render_Draw2DQuad(textureName, true, gGammaFadeFactor);
+		gFullscreenQuad->diffuseColor = (TQ3ColorRGBA) { gGammaFadeFactor, gGammaFadeFactor, gGammaFadeFactor, 1.0f };
+
+		Render_StartFrame();
+		Render_Enter2D_Full640x480();
+		Render_SubmitMesh(gFullscreenQuad, NULL, &kDefaultRenderMods_FadeOverlay, &kQ3Point3D_Zero);
+		Render_FlushQueue();
+		Render_Exit2D();
+		Render_EndFrame();
+
 		CHECK_GL_ERROR();
 		SDL_GL_SwapWindow(gSDLWindow);
 		SDL_Delay(15);
@@ -1105,8 +1064,6 @@ void Render_FreezeFrameFadeOut(float duration)
 
 	//-------------------------------------------------------------------------
 	// Clean up
-
-	Render_Exit2D_Full640x480();
 
 	glDeleteTextures(1, &textureName);
 

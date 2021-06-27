@@ -37,3 +37,7 @@ extern	void QD3D_MoveParticles(void);
 void QD3D_DrawParticles(const QD3DSetupOutputType *setupInfo);
 
 TQ3TriMeshData* MakeQuadMesh(int numQuads, float width, float height);
+TQ3TriMeshData* MakeQuadMesh_UI(
+		float xyLeft, float xyTop, float xyRight, float xyBottom,
+		float uvLeft, float uvTop, float uvRight, float uvBottom);
+

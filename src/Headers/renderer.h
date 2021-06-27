@@ -84,6 +84,8 @@ void Render_SetDefaultModifiers(RenderModifiers* dest);
 // Call this function after creating the OpenGL context.
 void Render_InitState(void);
 
+void Render_Shutdown(void);
+
 void Render_EnableFog(
 		float camHither,
 		float camYon,
@@ -172,15 +174,13 @@ void Render_SubmitMesh(
 
 void Render_Enter2D_Full640x480(void);
 
-void Render_Exit2D_Full640x480(void);
-
 void Render_Enter2D_NormalizedCoordinates(float aspect);
 
-void Render_Exit2D_NormalizedCoordinates(void);
+void Render_Exit2D(void);
 
 #pragma mark -
 
-void Render_Draw2DQuad(GLuint texture, bool flipY, float brightness);
+GLuint Render_CaptureFrameIntoTexture(int* outTextureWidth, int* outTextureHeight);
 
 void Render_DrawFadeOverlay(float opacity);
 

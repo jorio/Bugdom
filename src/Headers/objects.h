@@ -41,9 +41,7 @@ enum
 
 enum
 {
-	kDrawOrder_Earliest			= -128,
-
-	kDrawOrder_Terrain,
+	kDrawOrder_Terrain		= -128,
 	kDrawOrder_Cyclorama,
 	kDrawOrder_Fences,
 	kDrawOrder_Shadows,
@@ -53,7 +51,8 @@ enum
 	kDrawOrder_Ripples,
 	kDrawOrder_GlowyParticles,
 
-	kDrawOrder_Last				= 127,
+	kDrawOrder_UI,
+	kDrawOrder_FadeOverlay,
 };
 
 
