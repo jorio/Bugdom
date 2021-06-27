@@ -238,11 +238,9 @@ void ToolBoxInit(void)
 	gGamePrefs.fullscreen			= true;
 	gGamePrefs.vsync				= true;
 	gGamePrefs.antiAliasing			= true;
-	gGamePrefs.textureFiltering		= true;
+	gGamePrefs.lowDetail			= false;
 	gGamePrefs.mouseSensitivityLevel= DEFAULT_MOUSE_SENSITIVITY_LEVEL;
 	gGamePrefs.showBottomBar		= true;
-	gGamePrefs.useCyclorama			= true;
-	gGamePrefs.terrainTextureDetail = TERRAIN_TEXTURE_PREF_1_LOD_160;
 				
 	LoadPrefs(&gGamePrefs);							// attempt to read from prefs file		
 	
@@ -457,11 +455,11 @@ QD3DSetupInputType	viewDef;
 	gPlayerMode 			= PLAYER_MODE_BUG;						// init this here so infobar looks correct
 	gPlayerObj 				= nil;
 
-	gUseCyclorama			= gGamePrefs.useCyclorama && gLevelHasCyc[gLevelType];
+	gUseCyclorama			= !gGamePrefs.lowDetail && gLevelHasCyc[gLevelType];
 	gAutoFadeStartDist		= gUseCyclorama ? gLevelAutoFadeStart[gLevelType] : 0;
 	gDoAutoFade				= gAutoFadeStartDist > 0.0f;
-	gDrawLensFlare			= gLevelHasLensFlare[gLevelType];
-		
+	gDrawLensFlare			= !gGamePrefs.lowDetail && gLevelHasLensFlare[gLevelType];
+
 	gDoCeiling				= gLevelHasCeiling[gLevelType];
 	gSuperTileActiveRange	= gLevelSuperTileActiveRange[gLevelType];
 	

@@ -84,7 +84,7 @@ static void SettingEntry_Cycle(SettingEntry* entry, int delta)
 }
 
 
-#define CHOICES_NO_YES {"NO","YES",NULL}
+#define CHOICES_NO_YES {"No", "Yes", NULL}
 
 static SettingEntry gSettingEntries[] =
 {
@@ -120,6 +120,14 @@ static SettingEntry gSettingEntries[] =
 		0, false, CHOICES_NO_YES,
 		0,
 	},
+	{
+		&gGamePrefs.lowDetail,
+		"Level of detail",
+		1, "The \"ATI Rage II\" look",
+		NULL,
+		0, false, {"High", "Low"},
+		0,
+	},
 #if ALLOW_MSAA
 	{
 		&gGamePrefs.antiAliasing,
@@ -131,6 +139,7 @@ static SettingEntry gSettingEntries[] =
 	},
 #endif
 #if _DEBUG
+/*
 	{
 		&gGamePrefs.vsync,
 		"V-Sync",
@@ -138,32 +147,6 @@ static SettingEntry gSettingEntries[] =
 		NULL,
 		0, false, CHOICES_NO_YES,
 		0,
-	},
-	{
-		&gGamePrefs.useCyclorama,
-		"Cyclorama",
-		0, "The \"ATI Rage II\" look",
-		NULL,
-		0, false, CHOICES_NO_YES,
-		0,
-	},
-	/*
-	{
-		&gGamePrefs.textureFiltering,
-		"TEXTURE FILTERING",
-		0, NULL,
-		NULL,
-		0,
-		CHOICES_NO_YES,
-		0,
-	},
-	{
-		&gGamePrefs.terrainTextureDetail,
-		"TERRAIN QUALITY",
-		"3 LODs, 128x128 MAX",
-		NULL,
-		0,
-		{ "LOW (VANILLA)", "MEDIUM", "HIGH" },
 	},
 	{
 		&gGamePrefs.playerRelativeKeys,
@@ -241,7 +224,7 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 
 	tmd.coord = (TQ3Point3D) {x,y,z};
 	tmd.align = TEXTMESH_ALIGN_LEFT;
-	tmd.scale = 0.3f;
+	tmd.scale = 0.25f;
 	tmd.slot = SLOTID_CAPTION_MASK | settingID;
 
 	if (firstTime)
@@ -255,7 +238,7 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 		// Create grass blade
 		gNewObjectDefinition.group 		= MODEL_GROUP_LEVELSPECIFIC2;
 		gNewObjectDefinition.type 		= LAWN2_MObjType_Grass2;
-		gNewObjectDefinition.coord		= (TQ3Point3D){x+XSPREAD, y-1, z-1};
+		gNewObjectDefinition.coord		= (TQ3Point3D){x+XSPREAD+5, y-1, z-1};
 		gNewObjectDefinition.slot 		= SLOTID_CAPTION_MASK | settingID;
 		gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER;
 		gNewObjectDefinition.moveCall 	= nil;
@@ -321,7 +304,7 @@ static void SetupSettingsScreen(void)
 	TextMesh_FillDef(&tmd);
 	tmd.coord.y += 110;
 	tmd.color = gValueTextColor;
-	TextMesh_Create(&tmd, "Bugdom Settings");
+	TextMesh_Create(&tmd, "Settings");
 
 	for (int i = 0; gSettingEntries[i].ptr; i++)
 	{

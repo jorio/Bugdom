@@ -47,7 +47,7 @@ static void BuildSuperTileLOD(SuperTileMemoryType *superTilePtr, short lod);
 /*     VARIABLES      */
 /**********************/
 
-
+int				gTerrainTextureDetail = TERRAIN_TEXTURE_PREF_1_LOD_160;
 int				gSuperTileActiveRange;
 
 Boolean			gDoCeiling;
@@ -321,8 +321,10 @@ static	TQ3Param2D				uvs[NUM_VERTICES_IN_SUPERTILE];
 			/* PREPARE TEXTURE DETAIL CONSTANTS ACCORDING TO USER PREFS */
 
 	// Fill out gNumLODs and textureSize[] according to user pref for texture detail (source port addition)
+	gTerrainTextureDetail = gGamePrefs.lowDetail? TERRAIN_TEXTURE_PREF_3_LOD_128: TERRAIN_TEXTURE_PREF_1_LOD_160;
+
 retryParseLODPref:
-	switch (gGamePrefs.terrainTextureDetail)
+	switch (gTerrainTextureDetail)
 	{
 	case TERRAIN_TEXTURE_PREF_3_LOD_128:
 		gNumLODs = 3;
@@ -343,10 +345,10 @@ retryParseLODPref:
 		
 	default:
 		DoAlert("Unknown terrain texture detail pref!");
-		ShowSystemErr_NonFatal(gGamePrefs.terrainTextureDetail);
+		ShowSystemErr_NonFatal(gTerrainTextureDetail);
 
 		// Set a sane fallback value and try again
-		gGamePrefs.terrainTextureDetail = TERRAIN_TEXTURE_PREF_3_LOD_128;
+		gTerrainTextureDetail = TERRAIN_TEXTURE_PREF_3_LOD_128;
 		goto retryParseLODPref;
 	}
 
@@ -891,7 +893,7 @@ static TQ3Vector3D	faceNormal[NUM_TRIS_IN_SUPERTILE];
 				//
 
 		{
-			if (gGamePrefs.terrainTextureDetail == TERRAIN_TEXTURE_PREF_1_LOD_160)
+			if (gTerrainTextureDetail == TERRAIN_TEXTURE_PREF_1_LOD_160)
 			{
 				memcpy(superTilePtr->textureData[layer][0], gTempTextureBuffer, sizeof(gTempTextureBuffer[0]) * gTextureSizePerLOD[0] * gTextureSizePerLOD[0]);
 			}
@@ -989,8 +991,8 @@ static void BuildSuperTileLOD(SuperTileMemoryType *superTilePtr, short lod)
 				superTilePtr->glTextureName[j][lod],
 				0,
 				0,
-				gTextureSizePerLOD[0],
-				gTextureSizePerLOD[0],
+				gTextureSizePerLOD[lod],
+				gTextureSizePerLOD[lod],
 				TILE_TEXTURE_FORMAT,
 				TILE_TEXTURE_TYPE,
 				newBuffer,
@@ -1354,7 +1356,7 @@ void DrawTerrain(const QD3DSetupOutputType *setupInfo)
 
 			int lod = 0;
 
-			if (gGamePrefs.terrainTextureDetail == TERRAIN_TEXTURE_PREF_3_LOD_128)
+			if (gTerrainTextureDetail == TERRAIN_TEXTURE_PREF_3_LOD_128)
 			{
 						/* SEE WHICH LOD TO USE */
 

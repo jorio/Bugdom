@@ -312,8 +312,8 @@ GLuint Render_LoadTexture(
 	Render_BindTexture(textureName);				// this is now the currently active texture
 	CHECK_GL_ERROR();
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gGamePrefs.textureFiltering? GL_LINEAR: GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gGamePrefs.textureFiltering? GL_LINEAR: GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, !gGamePrefs.lowDetail? GL_LINEAR: GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, !gGamePrefs.lowDetail? GL_LINEAR: GL_NEAREST);
 
 	if (flags & kRendererTextureFlags_ClampU)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
