@@ -728,9 +728,6 @@ static void CheckForCheats(void)
 
 		if (GetNewKeyState_SDL(SDL_SCANCODE_F9))
 			gShowDebug = !gShowDebug;
-
-		if (GetNewKeyState_SDL(SDL_SCANCODE_F10))
-			CaptureMouse(false);
 	}
 }
 
