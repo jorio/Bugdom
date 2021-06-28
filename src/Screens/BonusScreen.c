@@ -649,6 +649,7 @@ int32_t id;
 		{
 			TextMeshDef tmd;
 			TextMesh_FillDef(&tmd);
+			tmd.align = TEXTMESH_ALIGN_CENTER;
 			tmd.scale = 0.2f;
 
 			tmd.coord = (TQ3Point3D) {-50,-100,0};

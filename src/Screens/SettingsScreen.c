@@ -302,6 +302,7 @@ static void SetupSettingsScreen(void)
 {
 	TextMeshDef tmd;
 	TextMesh_FillDef(&tmd);
+	tmd.align = TEXTMESH_ALIGN_CENTER;
 	tmd.coord.y += 110;
 	tmd.color = kValueTextColor;
 	TextMesh_Create(&tmd, "Settings");

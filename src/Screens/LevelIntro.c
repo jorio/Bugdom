@@ -422,6 +422,7 @@ float	x;
 		
 	if (d1 != 0)
 	{
+		gNewObjectDefinition.group 		= MODEL_GROUP_LEVELINTRO;
 		gNewObjectDefinition.type 		= LINTRO_MObjType_0 + d1;	
 		gNewObjectDefinition.coord.x	= x;
 		obj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
@@ -432,7 +433,8 @@ float	x;
 	}
 	
 		/* 2ND DIGIT */
-		
+
+	gNewObjectDefinition.group 		= MODEL_GROUP_LEVELINTRO;
 	gNewObjectDefinition.type 		= LINTRO_MObjType_0 + d2;	
 	gNewObjectDefinition.coord.x	= x;
 	obj = MakeNewDisplayGroupObject(&gNewObjectDefinition);

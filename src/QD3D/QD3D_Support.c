@@ -193,6 +193,10 @@ QD3DSetupOutputType	*outputPtr;
 
 	CHECK_GL_ERROR();
 
+
+				/* INIT TEXT SYSTEM SO WE CAN DRAW TEXT ANYWHERE IN THE GAME */
+
+	TextMesh_Init();
 }
 
 
@@ -207,6 +211,8 @@ QD3DSetupOutputType	*data;
 
 	data = *dataHandle;
 	GAME_ASSERT(data);										// see if this setup exists
+
+	TextMesh_Shutdown();
 
 	SDL_GL_DeleteContext(gGLContext);						// dispose GL context
 	gGLContext = nil;

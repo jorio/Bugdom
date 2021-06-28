@@ -304,6 +304,7 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 
 	TextMeshDef tmd;
 	TextMesh_FillDef(&tmd);
+	tmd.align			= TEXTMESH_ALIGN_CENTER;
 	tmd.color			= gTextColor;
 	tmd.shadowColor		= gTextShadowColor;
 	tmd.slot			= objNodeSlotID;
@@ -365,6 +366,7 @@ static void SetupFileScreen(void)
 
 	TextMeshDef tmd;
 	TextMesh_FillDef(&tmd);
+	tmd.align		= TEXTMESH_ALIGN_CENTER;
 	tmd.coord.y		= 110.0f;
 	tmd.color		= gTitleTextColor;
 	tmd.shadowColor	= gTextShadowColor;

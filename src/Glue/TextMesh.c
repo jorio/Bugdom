@@ -24,30 +24,49 @@ static AtlasGlyph* gAtlasGlyphs = NULL;
 static const TextMeshDef gDefaultTextMeshDef =
 {
 	.coord				= { 0, 0, 0 },
+	.meshOrigin			= { 0, 0, 0 },
+	.shadowOffset		= { 2, -2 },
 	.scale				= .5f,
-	.withShadow			= true,
 	.color				= { 1, 1, 1, 1 },
 	.shadowColor		= { 0, 0, 0, 1 },
+	.withShadow			= true,
 	.slot				= 100,
-	.align				= TEXTMESH_ALIGN_CENTER,
-	.shadowOffset		= { 2, -2 },
+	.align				= TEXTMESH_ALIGN_LEFT,
 	.letterSpacing		= 0,
 };
 
-static void MakeText(
-		const TextMeshDef* def,
-		const char* text,
-		bool isShadow)
+TQ3TriMeshData* TextMesh_CreateMesh(const TextMeshDef* def, const char* text)
 {
+	return TextMesh_SetMesh(def, text, NULL);
+}
 
-	float x = 0;
-	float y = gLineHeight * .7f;
-	float spacing = def->letterSpacing;
+TQ3TriMeshData* TextMesh_SetMesh(const TextMeshDef* def, const char* text, TQ3TriMeshData* recycleMesh)
+{
+	float x = gDefaultTextMeshDef.meshOrigin.x;
+	float y = gDefaultTextMeshDef.meshOrigin.y;
+	float z = gDefaultTextMeshDef.meshOrigin.z;
+	int align = gDefaultTextMeshDef.align;
+	float spacing = gDefaultTextMeshDef.letterSpacing;
+	if (def)
+	{
+		x = def->meshOrigin.x;
+		y = def->meshOrigin.y;
+		z = def->meshOrigin.z;
+		align = def->align;
+		spacing = def->letterSpacing;
+	}
 
+	GAME_ASSERT(gAtlasGlyphs);
+	GAME_ASSERT(gFontTexture);
+
+	// Compute number of quads and line width
 	float lineWidth = 0;
 	int numQuads = 0;
 	for (const char* c = text; *c; c++)
 	{
+		if (*c == '\n')		// TODO: line widths for strings containing line breaks aren't supported yet
+			continue;
+
 		GAME_ASSERT(*c >= ' ');
 		GAME_ASSERT(*c <= '~');
 		const AtlasGlyph g = gAtlasGlyphs[*c - ' '];
@@ -57,18 +76,46 @@ static void MakeText(
 	}
 
 	// Adjust start x for text alignment
-	if (def->align == TEXTMESH_ALIGN_CENTER)
+	if (align == TEXTMESH_ALIGN_CENTER)
 		x -= lineWidth * .5f;
-	else if (def->align == TEXTMESH_ALIGN_RIGHT)
+	else if (align == TEXTMESH_ALIGN_RIGHT)
 		x -= lineWidth;
 
-	TQ3TriMeshData* mesh = MakeQuadMesh(numQuads, 1.0f, 1.0f);
+	float x0 = x;
+
+	// Adjust y for ascender
+	y += gLineHeight * .7f;
+
+	// Create the mesh
+	TQ3TriMeshData* mesh;
+	if (recycleMesh)
+	{
+		mesh = recycleMesh;
+		GAME_ASSERT(mesh->numTriangles >= numQuads*2);
+		GAME_ASSERT(mesh->numPoints >= numQuads*4);
+		GAME_ASSERT(mesh->vertexUVs);
+		mesh->numTriangles = numQuads*2;
+		mesh->numPoints = numQuads*4;
+	}
+	else
+	{
+		mesh = Q3TriMeshData_New(numQuads*2, numQuads*4, kQ3TriMeshDataFeatureVertexUVs);
+	}
 	mesh->texturingMode = kQ3TexturingModeAlphaBlend;
 	mesh->glTextureName = gFontTexture;
 
+	// Create a quad for each character
+	int t = 0;
 	int p = 0;
 	for (const char* c = text; *c; c++)
 	{
+		if (*c == '\n')
+		{
+			x = x0;
+			y -= gLineHeight;
+			continue;
+		}
+
 		GAME_ASSERT(*c >= ' ');
 		GAME_ASSERT(*c <= '~');
 		const AtlasGlyph g = gAtlasGlyphs[*c - ' '];
@@ -82,38 +129,29 @@ static void MakeText(
 		float qx = x + g.xoff + g.w*.5f;
 		float qy = y - g.yoff - g.h*.5f;
 
-		mesh->points[p + 0] = (TQ3Point3D) { qx - g.w*.5f, qy - g.h*.5f, 0 };
-		mesh->points[p + 1] = (TQ3Point3D) { qx + g.w*.5f, qy - g.h*.5f, 0 };
-		mesh->points[p + 2] = (TQ3Point3D) { qx + g.w*.5f, qy + g.h*.5f, 0 };
-		mesh->points[p + 3] = (TQ3Point3D) { qx - g.w*.5f, qy + g.h*.5f, 0 };
-		mesh->vertexUVs[p + 0] = (TQ3Param2D) { g.x/512.0f,		(g.y+g.h)/256.0f };
+		mesh->triangles[t + 0].pointIndices[0] = p + 0;
+		mesh->triangles[t + 0].pointIndices[1] = p + 1;
+		mesh->triangles[t + 0].pointIndices[2] = p + 2;
+		mesh->triangles[t + 1].pointIndices[0] = p + 0;
+		mesh->triangles[t + 1].pointIndices[1] = p + 2;
+		mesh->triangles[t + 1].pointIndices[2] = p + 3;
+		mesh->points[p + 0] = (TQ3Point3D) { qx - g.w*.5f, qy - g.h*.5f, z };
+		mesh->points[p + 1] = (TQ3Point3D) { qx + g.w*.5f, qy - g.h*.5f, z };
+		mesh->points[p + 2] = (TQ3Point3D) { qx + g.w*.5f, qy + g.h*.5f, z };
+		mesh->points[p + 3] = (TQ3Point3D) { qx - g.w*.5f, qy + g.h*.5f, z };
+		mesh->vertexUVs[p + 0] = (TQ3Param2D) { g.x/512.0f,			(g.y+g.h)/256.0f };
 		mesh->vertexUVs[p + 1] = (TQ3Param2D) { (g.x+g.w)/512.0f,	(g.y+g.h)/256.0f };
 		mesh->vertexUVs[p + 2] = (TQ3Param2D) { (g.x+g.w)/512.0f,	g.y/256.0f };
-		mesh->vertexUVs[p + 3] = (TQ3Param2D) { g.x/512.0f,		g.y/256.0f };
+		mesh->vertexUVs[p + 3] = (TQ3Param2D) { g.x/512.0f,			g.y/256.0f };
 
 		x += g.xadv + spacing;
+		t += 2;
 		p += 4;
 	}
 
 	GAME_ASSERT(p == mesh->numPoints);
 
-	gNewObjectDefinition.genre		= DISPLAY_GROUP_GENRE;
-	gNewObjectDefinition.group 		= MODEL_GROUP_ILLEGAL;
-	gNewObjectDefinition.slot		= def->slot;
-	gNewObjectDefinition.coord.x 	= def->coord.x + (isShadow ? def->shadowOffset.x*def->scale : 0);
-	gNewObjectDefinition.coord.y 	= def->coord.y + (isShadow ? def->shadowOffset.y*def->scale : 0);
-	gNewObjectDefinition.coord.z 	= def->coord.z + (isShadow? -0.1f: 0);
-	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER | STATUS_BIT_NOZWRITE;
-	gNewObjectDefinition.moveCall 	= nil;
-	gNewObjectDefinition.rot 		= 0.0f;
-	gNewObjectDefinition.scale 		= def->scale;
-	ObjNode* textNode = MakeNewObject(&gNewObjectDefinition);
-	AttachGeometryToDisplayGroupObject(textNode, 1, &mesh, kAttachGeometry_TransferMeshOwnership);
-	textNode->RenderModifiers.diffuseColor = isShadow? def->shadowColor: def->color;
-	textNode->BoundingSphere.isEmpty = kQ3False;
-	textNode->BoundingSphere.radius = def->scale * lineWidth / 2.0f;
-
-	UpdateObjectTransforms(textNode);
+	return mesh;
 }
 
 static void SkipLine(const char** dataPtr)
@@ -134,6 +172,7 @@ static void SkipLine(const char** dataPtr)
 	*dataPtr = data;
 }
 
+// Parse an SFL file produced by fontbuilder
 static void ParseSFL(const char* data)
 {
 	int nArgs = 0;
@@ -151,6 +190,7 @@ static void ParseSFL(const char* data)
 	GAME_ASSERT(nArgs == 1);
 	SkipLine(&data);
 
+	GAME_ASSERT_MESSAGE(!gAtlasGlyphs, "atlas glyphs were already loaded");
 	gAtlasGlyphs = (AtlasGlyph*) NewPtrClear(gNumGlyphs * sizeof(AtlasGlyph));
 
 	for (int i = 0; i < gNumGlyphs; i++)
@@ -212,9 +252,40 @@ void TextMesh_FillDef(TextMeshDef* def)
 	*def = gDefaultTextMeshDef;
 }
 
-void TextMesh_Create(const TextMeshDef* def, const char* text)
+ObjNode* TextMesh_Create(const TextMeshDef* def, const char* text)
 {
-	MakeText(def, text, false);
+	TQ3TriMeshData* mesh = TextMesh_CreateMesh(def, text);
+	mesh->diffuseColor = def->color;
+
+	gNewObjectDefinition.genre		= DISPLAY_GROUP_GENRE;
+	gNewObjectDefinition.group		= MODEL_GROUP_ILLEGAL;
+	gNewObjectDefinition.slot		= def->slot;
+	gNewObjectDefinition.coord		= def->coord;
+	gNewObjectDefinition.flags		= STATUS_BIT_NULLSHADER | STATUS_BIT_NOZWRITE | STATUS_BIT_NOFOG;
+	gNewObjectDefinition.moveCall 	= nil;
+	gNewObjectDefinition.rot		= 0.0f;
+	gNewObjectDefinition.scale		= def->scale;
+	ObjNode* textNode = MakeNewObject(&gNewObjectDefinition);
+
+	// Attach shadow mesh first
 	if (def->withShadow)
-		MakeText(def, text, true);
+	{
+		TextMeshDef shadowDef = *def;
+		shadowDef.meshOrigin.x += shadowDef.shadowOffset.x;
+		shadowDef.meshOrigin.y += shadowDef.shadowOffset.y;
+		shadowDef.meshOrigin.z += -0.1f;
+		TQ3TriMeshData* shadowMesh = TextMesh_CreateMesh(&shadowDef, text);
+		shadowMesh->diffuseColor = def->shadowColor;
+		AttachGeometryToDisplayGroupObject(textNode, 1, &shadowMesh, kAttachGeometry_TransferMeshOwnership);
+	}
+
+	// Attach color mesh
+	AttachGeometryToDisplayGroupObject(textNode, 1, &mesh, kAttachGeometry_TransferMeshOwnership);
+
+	//textNode->BoundingSphere.isEmpty = kQ3False;
+	//textNode->BoundingSphere.radius = def->scale * lineWidth / 2.0f;
+
+	UpdateObjectTransforms(textNode);
+
+	return textNode;
 }

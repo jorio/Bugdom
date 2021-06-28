@@ -110,6 +110,7 @@ static void MakeLevelSelectObjects(void)
 {
 	TextMeshDef tmd;
 	TextMesh_FillDef(&tmd);
+	tmd.align = TEXTMESH_ALIGN_CENTER;
 	tmd.slot = 0;
 	tmd.coord.y += 110;
 	tmd.withShadow = false;

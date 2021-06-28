@@ -93,8 +93,6 @@ void SetupUIStuff(int backgroundType)
 	/* LOAD ART */
 	/************/
 
-	TextMesh_Init();
-
 	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:BonusScreen.3dmf", &spec);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_BONUS);
 

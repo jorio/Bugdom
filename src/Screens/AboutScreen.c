@@ -96,6 +96,7 @@ static void MakeCreditPart(
 	tmd.slot = kAboutScreenObjNodeSlot;
 	tmd.scale = .25f;
 	tmd.coord = (TQ3Point3D) {x,y,0};
+	tmd.align = TEXTMESH_ALIGN_CENTER;
 
 	tmd.color = kHeadingColor;
 	TextMesh_Create(&tmd, heading);
@@ -113,6 +114,7 @@ static void MakeAboutScreenObjects(int slideNumber)
 {
 	TextMeshDef tmd;
 	TextMesh_FillDef(&tmd);
+	tmd.align = TEXTMESH_ALIGN_CENTER;
 	tmd.slot = kAboutScreenObjNodeSlot;
 	tmd.coord.y += 110;
 	tmd.withShadow = false;
