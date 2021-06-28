@@ -142,6 +142,7 @@ extern	TerrainYCoordType			**gMapYCoords;
 extern	char						gTypedAsciiKey;
 extern	const char					*kLevelNames[NUM_LEVELS];
 extern	const RenderModifiers		kDefaultRenderMods_UI;
+extern	const RenderModifiers		kDefaultRenderMods_DebugUI;
 extern	const TQ3Point3D			gBatMouthOff;
 extern	const TQ3Point3D			gPondFishMouthOff;
 extern	const TQ3Point3D			kQ3Point3D_Zero;

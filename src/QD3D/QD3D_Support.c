@@ -25,6 +25,7 @@ static void CreateLights(QD3DLightDefType *lightDefPtr);
 /*    CONSTANTS             */
 /****************************/
 
+static const int kDebugTextMeshQuadCapacity = 1024;
 
 
 /*********************/
@@ -47,6 +48,8 @@ float	gFramesPerSecondFrac = 1/DEFAULT_FPS;
 		
 static TQ3Point3D		gNormalWhere;
 static TQ3Vector3D		gNormal;
+
+static TQ3TriMeshData*	gDebugTextMesh = nil;
 
 
 
@@ -212,6 +215,7 @@ QD3DSetupOutputType	*data;
 	data = *dataHandle;
 	GAME_ASSERT(data);										// see if this setup exists
 
+	QD3D_UpdateDebugTextMesh(nil);							// dispose debug text mesh
 	TextMesh_Shutdown();
 
 	SDL_GL_DeleteContext(gGLContext);						// dispose GL context
@@ -339,6 +343,7 @@ void QD3D_DrawScene(QD3DSetupOutputType *setupInfo, void (*drawRoutine)(const QD
 	SubmitInfobarOverlay();			// draw 2D elements on top
 	if (gGammaFadeFactor < 1.0f)
 		Render_DrawFadeOverlay(gGammaFadeFactor);
+	QD3D_DrawDebugTextMesh();
 	Render_FlushQueue();
 	Render_Exit2D();
 
@@ -582,3 +587,60 @@ void DrawNormal(void)
 	glEnd();
 }
 
+/************ LAY OUT TEXT IN DEBUG TEXT MESH *****************/
+//
+// Pass in NULL or empty string to destroy the mesh.
+//
+
+void QD3D_UpdateDebugTextMesh(const char* text)
+{
+	// If passing in NULL or an empty string, clear the mesh
+	if (!text || !text[0])
+	{
+		if (gDebugTextMesh)
+		{
+			Q3TriMeshData_Dispose(gDebugTextMesh);
+			gDebugTextMesh = nil;
+		}
+		return;
+	}
+
+	int numTriangles	= kDebugTextMeshQuadCapacity * 2;
+	int numPoints		= kDebugTextMeshQuadCapacity * 4;
+
+	// Create the mesh if needed
+	if (!gDebugTextMesh)
+	{
+		gDebugTextMesh = Q3TriMeshData_New(numTriangles, numPoints, kQ3TriMeshDataFeatureVertexUVs);
+	}
+
+	// Reset triangle & point count in mesh so TextMesh_SetMesh knows the mesh's capacity
+	gDebugTextMesh->numTriangles	= numTriangles;
+	gDebugTextMesh->numPoints		= numPoints;
+
+	// Lay out the text
+	TextMesh_SetMesh(nil, text, gDebugTextMesh);
+}
+
+/************ SUBMIT DEBUG TEXT MESH FOR DRAWING *****************/
+//
+// Must be in 640x480 2D mode.
+// Does nothing if there's no text to draw.
+//
+
+void QD3D_DrawDebugTextMesh(void)
+{
+	// Static because matrix must survive beyond this call
+	static TQ3Matrix4x4 m;
+
+	// No text to draw
+	if (!gDebugTextMesh)
+		return;
+
+	float s = .33f;
+	Q3Matrix4x4_SetScale(&m, s * 1.333f * gWindowHeight / gWindowWidth, -s, 1.0f);
+	m.value[3][0] = 2;
+	m.value[3][1] = 72;
+	m.value[3][2] = 0;
+	Render_SubmitMesh(gDebugTextMesh, &m, &kDefaultRenderMods_DebugUI, &kQ3Point3D_Zero);
+}

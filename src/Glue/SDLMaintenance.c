@@ -9,12 +9,10 @@
 
 char						gTypedAsciiKey = '\0';
 
-#if _DEBUG
 static const uint32_t	kDebugTextUpdateInterval = 50;
 static uint32_t			gDebugTextFrameAccumulator = 0;
 static uint32_t			gDebugTextLastUpdatedAt = 0;
 static char				gDebugTextBuffer[1024];
-#endif
 
 void DoSDLMaintenance()
 {
@@ -32,8 +30,6 @@ void DoSDLMaintenance()
 		holdFramerateCap--;
 	}
 
-#if _DEBUG
-	//if (gGamePrefs.debugInfoInTitleBar)
 	{
 		uint32_t ticksNow = SDL_GetTicks();
 		uint32_t ticksElapsed = ticksNow - gDebugTextLastUpdatedAt;
@@ -42,21 +38,23 @@ void DoSDLMaintenance()
 			float fps = 1000 * gDebugTextFrameAccumulator / (float)ticksElapsed;
 			snprintf(
 					gDebugTextBuffer, sizeof(gDebugTextBuffer),
-					"Bugdom %s - fps:%d tris:%d meshes:%d - x:%.0f z:%.0f",
-					PROJECT_VERSION,
-					(int)round(fps),
+					"fps: %d\ntris: %d\nmeshes: %d\n\nx: %d\nz: %d\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nBugdom %s\n%s @ %dx%d",
+					(int)roundf(fps),
 					gRenderStats.triangles,
 					gRenderStats.meshes,
-					gMyCoord.x,
-					gMyCoord.z
+					(int)gMyCoord.x,
+					(int)gMyCoord.z,
+					PROJECT_VERSION,
+					glGetString(GL_RENDERER),
+					gWindowWidth,
+					gWindowHeight
 			);
-			SDL_SetWindowTitle(gSDLWindow, gDebugTextBuffer);
+			QD3D_UpdateDebugTextMesh(gDebugTextBuffer);
 			gDebugTextFrameAccumulator = 0;
 			gDebugTextLastUpdatedAt = ticksNow;
 		}
 		gDebugTextFrameAccumulator++;
 	}
-#endif
 
 	// Reset these on every new frame
 	gTypedAsciiKey = '\0';

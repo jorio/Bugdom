@@ -53,6 +53,7 @@ enum
 
 	kDrawOrder_UI,
 	kDrawOrder_FadeOverlay,
+	kDrawOrder_DebugUI,
 };
 
 

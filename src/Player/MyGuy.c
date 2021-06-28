@@ -47,7 +47,7 @@ enum
 /*********************/
 
 long		gMyStartX,gMyStartZ;
-TQ3Point3D	gMyCoord;
+TQ3Point3D	gMyCoord = {0,0,0};
 ObjNode		*gPlayerObj,*gMyBuddy;
 float		gShieldTimer = 0,gShieldRingTick = 0;
 short		gShieldParticleGroupA,gShieldParticleGroupB;

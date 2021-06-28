@@ -101,6 +101,14 @@ static const RenderModifiers kDefaultRenderMods_FadeOverlay =
 	.drawOrder = kDrawOrder_FadeOverlay
 };
 
+const RenderModifiers kDefaultRenderMods_DebugUI =
+{
+	.statusBits = STATUS_BIT_NULLSHADER | STATUS_BIT_NOFOG | STATUS_BIT_NOZWRITE | STATUS_BIT_KEEPBACKFACES | STATUS_BIT_DONTCULL,
+	.diffuseColor = {1,1,1,1},
+	.autoFadeFactor = 1.0f,
+	.drawOrder = kDrawOrder_DebugUI
+};
+
 #pragma mark -
 
 /****************************/
