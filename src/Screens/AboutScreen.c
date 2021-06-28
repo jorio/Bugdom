@@ -52,7 +52,7 @@ void DoAboutScreens(void)
 
 	MakeFadeEvent(true);
 
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 4; i++)
 	{
 		NukeObjectsInSlot(kAboutScreenObjNodeSlot);		// nuke text from previous slide
 
@@ -157,11 +157,11 @@ static void MakeAboutScreenObjects(int slideNumber)
 
 		case 1:
 		{
-			TextMesh_Create(&tmd, "Controls");
+			TextMesh_Create(&tmd, "Gamepad Controls");
 
 			GLuint diagramTexture = QD3D_LoadTextureFile(3500, kRendererTextureFlags_ClampBoth | kRendererTextureFlags_SolidBlackIsAlpha);
 
-			float y = 25;
+			float y = -10;
 
 			gNewObjectDefinition.genre		= DISPLAY_GROUP_GENRE;
 			gNewObjectDefinition.group 		= MODEL_GROUP_ILLEGAL;
@@ -186,42 +186,63 @@ static void MakeAboutScreenObjects(int slideNumber)
 			tmd.scale = 0.2f;
 			tmd.align = TEXTMESH_ALIGN_LEFT;
 			tmd.coord.x =  95;
-			tmd.coord.y =  34+y; tmd.color = TQ3ColorRGBA_FromInt(0x0599f8ff); TextMesh_Create(&tmd, "KICK");
-			tmd.coord.y =  22+y; tmd.color = TQ3ColorRGBA_FromInt(0xfff139ff); TextMesh_Create(&tmd, "BUDDY");
-			tmd.coord.y =  10+y; tmd.color = TQ3ColorRGBA_FromInt(0xdf2020ff); TextMesh_Create(&tmd, "MORPH");
-			tmd.coord.y =  -2+y; tmd.color = TQ3ColorRGBA_FromInt(0x23ab23ff); TextMesh_Create(&tmd, "JUMP/BOOST");
-			tmd.coord.y = -24+y; tmd.color = TQ3ColorRGBA_FromInt(0x7e7e7eff); TextMesh_Create(&tmd, "CAMERA");
+			tmd.coord.y =  34+y; tmd.color = TQ3ColorRGBA_FromInt(0x0599f8ff); TextMesh_Create(&tmd, "Kick");
+			tmd.coord.y =  22+y; tmd.color = TQ3ColorRGBA_FromInt(0xfff139ff); TextMesh_Create(&tmd, "Buddy Bug");
+			tmd.coord.y =  10+y; tmd.color = TQ3ColorRGBA_FromInt(0xdf2020ff); TextMesh_Create(&tmd, "Morph");
+			tmd.coord.y =  -2+y; tmd.color = TQ3ColorRGBA_FromInt(0x23ab23ff); TextMesh_Create(&tmd, "Jump/Boost");
+			tmd.coord.y = -24+y; tmd.color = TQ3ColorRGBA_FromInt(0xFFFFFFff); TextMesh_Create(&tmd, "Camera");
 			tmd.align = TEXTMESH_ALIGN_RIGHT;
-			tmd.coord.x = -95; tmd.coord.y = 10+y; TextMesh_Create(&tmd, "WALK/ROLL");
-
-			tmd.scale = 0.2f;
-			tmd.align = TEXTMESH_ALIGN_LEFT;
-			tmd.coord.x = -12-60;
-			tmd.coord.y -= LH*6;
-			TextMesh_Create(&tmd, "MOUSE & KEYBOARD:");
-
-#define MAKE_CONTROL_TEXT(key, caption) \
-			tmd.coord.y -= 11;                   \
-			tmd.coord.x = -12;		tmd.color = kNameColor;		TextMesh_Create(&tmd, key); \
-			tmd.coord.x = -12-60;	tmd.color = kHeadingColor;	TextMesh_Create(&tmd, caption);
-
-			MAKE_CONTROL_TEXT("Mouse / Arrows"			, "WALK/ROLL");
-#if __APPLE__
-			MAKE_CONTROL_TEXT("Left Click / Option"		, "KICK/BOOST");
-			MAKE_CONTROL_TEXT("Right Click / Command"	, "JUMP");
-#else
-			MAKE_CONTROL_TEXT("Left Click / Ctrl"		, "KICK/BOOST");
-			MAKE_CONTROL_TEXT("Right Click / Alt"		, "JUMP");
-#endif
-			MAKE_CONTROL_TEXT("Middle Click / Space"	, "MORPH");
-			MAKE_CONTROL_TEXT("Shift"					, "AUTO-WALK");
-			MAKE_CONTROL_TEXT("Tab"						, "BUDDY");
-			MAKE_CONTROL_TEXT("ESC"						, "PAUSE");
-#undef MAKE_CONTROL_TEXT
+			tmd.coord.x = -95; tmd.coord.y = 10+y; TextMesh_Create(&tmd, "Walk/Roll");
+			tmd.align = TEXTMESH_ALIGN_CENTER;
+			tmd.coord.x = -40; tmd.coord.y = 57+y; tmd.color = TQ3ColorRGBA_FromInt(0x3e4642ff); TextMesh_Create(&tmd, "Zoom in");
+			tmd.coord.x =  40; tmd.coord.y = 57+y; tmd.color = TQ3ColorRGBA_FromInt(0x3e4642ff); TextMesh_Create(&tmd, "Zoom out");
 			break;
 		}
 
 		case 2:
+		{
+			TextMesh_Create(&tmd, "Mouse & Keyboard Controls");
+
+			tmd.scale = 0.2f;
+			tmd.align = TEXTMESH_ALIGN_LEFT;
+			float x = 0;
+			tmd.coord.x = -20;
+			tmd.coord.y = 75;
+
+#define MAKE_CONTROL_TEXT(key, mouse, caption) \
+			tmd.coord.y -= 14;                   \
+			tmd.coord.x = x-12;		tmd.color = kNameColor;		TextMesh_Create(&tmd, key); \
+			tmd.coord.x = x-12+40;	tmd.color = kNameColor;		TextMesh_Create(&tmd, mouse); \
+			tmd.coord.x = x-12-80;	tmd.color = kHeadingColor;	TextMesh_Create(&tmd, caption);
+
+			MAKE_CONTROL_TEXT("Shift (when using mouse)"		, ""				, "Auto-Walk");
+			MAKE_CONTROL_TEXT("Arrows"		, "or     Mouse"	, "Walk/Roll");
+#if __APPLE__
+			MAKE_CONTROL_TEXT("Option"		, "or     Left click"		, "Kick/Boost");
+			MAKE_CONTROL_TEXT("Command"		, "or     Right click"		, "Jump");
+#else
+			MAKE_CONTROL_TEXT("Ctrl"		, "or     Left click"		, "Kick/Boost");
+			MAKE_CONTROL_TEXT("Alt"			, "or     Right click"		, "Jump");
+#endif
+			MAKE_CONTROL_TEXT("Space"		, "or     Middle click"	, "Morph");
+			MAKE_CONTROL_TEXT("Tab"			, ""				, "Buddy Bug");
+			MAKE_CONTROL_TEXT("< / >"		, ""				, "Turn Camera");
+			MAKE_CONTROL_TEXT("1 / 2"		, ""				, "Zoom in/out");
+			MAKE_CONTROL_TEXT("ESC"			, ""				, "Pause");
+#undef MAKE_CONTROL_TEXT
+
+			tmd.coord.y -= 45;
+
+			tmd.align = TEXTMESH_ALIGN_CENTER;
+			tmd.coord.x = 0;
+			tmd.color = TQ3ColorRGBA_FromInt(0xE0B000FF);
+			TextMesh_Create(&tmd, "We strongly recommend using the mouse and the shift key for motion.");
+			tmd.coord.y -= 14;
+			TextMesh_Create(&tmd, "This combo gives you the most accurate control over the player.");
+			break;
+		}
+
+		case 3:
 		{
 			TextMesh_Create(&tmd, "Info & Updates");
 
