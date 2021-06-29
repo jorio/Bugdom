@@ -205,7 +205,6 @@ void InitParticleSystem(void)
 	Render_SetDefaultModifiers(&kParticleGroupRenderingMods);
 	kParticleGroupRenderingMods.statusBits
 			|= STATUS_BIT_NOFOG
-			| STATUS_BIT_NOAA
 			| STATUS_BIT_NOZWRITE
 			| STATUS_BIT_NULLSHADER
 			| STATUS_BIT_GLOW

@@ -514,8 +514,6 @@ QD3DSetupInputType	viewDef;
 	viewDef.view.paneClip.right		=	0;
 
 	viewDef.view.clearColor 	= gLevelFogColor[gLevelType];	// set clear & fog color
-	
-	viewDef.enableMultisamplingByDefault = false;		// we want full control over what objects get MSAA
 
 	
 			/* SET LIGHTS */

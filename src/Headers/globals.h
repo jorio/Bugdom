@@ -117,7 +117,7 @@ enum
 	STATUS_BIT_NULLSHADER	 =  (1<<13),	// used when want to render object will NULL shading (no lighting)
 	STATUS_BIT_ALWAYSCULL	 =  (1<<14),	// to force a cull-check
 	STATUS_BIT_NOTRICACHE 	 =  (1<<15), 	// set if want to disable triangle caching when drawing this xparent obj
-	STATUS_BIT_NOAA			=	(1<<16),	// disable antialiasing for object
+	// 1<<16 unused
 	STATUS_BIT_NOZWRITE		=	(1<<17),	// set when want to turn off z buffer writes
 	STATUS_BIT_NOFOG		=	(1<<18),
 	STATUS_BIT_AUTOFADE		=	(1<<19),	// calculate fade xparency value for object when rendering

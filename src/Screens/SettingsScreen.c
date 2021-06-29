@@ -128,16 +128,6 @@ static SettingEntry gSettingEntries[] =
 		0, false, {"High", "Low"},
 		0,
 	},
-#if ALLOW_MSAA
-	{
-		&gGamePrefs.antiAliasing,
-		"ANTI-ALIASING",
-		0, NULL,
-		NULL,
-		0, false, {"NO","YES",NULL},
-		0,
-	},
-#endif
 #if _DEBUG
 /*
 	{

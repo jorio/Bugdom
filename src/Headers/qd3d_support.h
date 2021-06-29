@@ -62,7 +62,6 @@ typedef struct
 	QD3DStyleDefType		styles;
 	QD3DCameraDefType		camera;
 	QD3DLightDefType		lights;
-	Boolean					enableMultisamplingByDefault;		// source port add
 }QD3DSetupInputType;
 
 
@@ -80,7 +79,6 @@ typedef struct
 	float					fov;
 	float					hither,yon;
 	QD3DLightDefType		lightList;			// a copy of the input light data from the SetupInputType
-	Boolean					enableMultisamplingByDefault;		// source port add
 }QD3DSetupOutputType;
 
 
@@ -95,8 +93,6 @@ extern	void QD3D_MoveCameraFromTo(QD3DSetupOutputType *setupInfo, TQ3Vector3D *m
 extern	void	QD3D_CalcFramesPerSecond(void);
 GLuint QD3D_LoadTextureFile(int textureRezID, int flags);
 void QD3D_NewViewDef(QD3DSetupInputType *viewDef);
-
-void QD3D_SetMultisampling(Boolean enable);		// source port add
 
 void ShowNormal(TQ3Point3D *where, TQ3Vector3D *normal);
 void DrawNormal(void);

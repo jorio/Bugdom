@@ -112,8 +112,6 @@ TQ3Vector3D			fillDirection2 = { -.8, .8, -.2 };
 	viewDef->lights.fogMode		= kQ3FogModePlaneBasedLinear;
 	viewDef->lights.useCustomFogColor = false;
 	viewDef->lights.fogColor	= clearColor;
-	
-	viewDef->enableMultisamplingByDefault = true;
 }
 
 /************** SETUP QD3D WINDOW *******************/
@@ -145,7 +143,6 @@ QD3DSetupOutputType	*outputPtr;
 	outputPtr->hither 				= setupDefPtr->camera.hither;		// remember hither/yon
 	outputPtr->yon 					= setupDefPtr->camera.yon;
 	outputPtr->fov					= setupDefPtr->camera.fov;
-	outputPtr->enableMultisamplingByDefault = setupDefPtr->enableMultisamplingByDefault;
 
 	outputPtr->currentCameraUpVector	= setupDefPtr->camera.up;
 	outputPtr->currentCameraLookAt		= setupDefPtr->camera.to;
@@ -329,8 +326,6 @@ void QD3D_DrawScene(QD3DSetupOutputType *setupInfo, void (*drawRoutine)(const QD
 
 	if (drawRoutine)
 		drawRoutine(setupInfo);
-	
-	QD3D_SetMultisampling(false);
 
 
 			/******************/
@@ -534,36 +529,6 @@ static	unsigned long then = 0;
 	then = now;										// remember time	
 }
 
-
-#pragma mark -
-
-
-/************************ SET MULTISAMPLING ************************/
-
-void QD3D_SetMultisampling(Boolean enable)
-{
-#if ALLOW_MSAA
-	static bool multisamplingEnabled = false;
-	
-	if (multisamplingEnabled == enable)
-	{
-		// no-op
-	}
-	else if (!enable && multisamplingEnabled)			// If we want to disable, always do it if MSAA was currently active
-	{
-		glDisable(GL_MULTISAMPLE);
-		multisamplingEnabled = false;
-	}
-	else if (gGamePrefs.antiAliasing)				// otherwise only honor request if prefs allow MSAA
-	{
-		if (enable)
-			glEnable(GL_MULTISAMPLE);
-		else
-			glDisable(GL_MULTISAMPLE);
-		multisamplingEnabled = enable;
-	}
-#endif
-}
 
 
 #pragma mark -
