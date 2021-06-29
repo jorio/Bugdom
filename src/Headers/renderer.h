@@ -33,6 +33,7 @@ typedef struct RenderStats
 {
 	int			triangles;
 	int			meshes;
+	int			meshesSeparateZ;
 } RenderStats;
 
 typedef struct RenderModifiers

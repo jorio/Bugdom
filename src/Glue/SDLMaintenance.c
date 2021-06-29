@@ -38,10 +38,11 @@ void DoSDLMaintenance()
 			float fps = 1000 * gDebugTextFrameAccumulator / (float)ticksElapsed;
 			snprintf(
 					gDebugTextBuffer, sizeof(gDebugTextBuffer),
-					"fps: %d\ntris: %d\nmeshes: %d\n\nx: %d\nz: %d\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nBugdom %s\n%s @ %dx%d",
+					"fps: %d\ntris: %d\nmeshes: %d (sepZ:%d)\n\nx: %d\nz: %d\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nBugdom %s\n%s @ %dx%d",
 					(int)roundf(fps),
 					gRenderStats.triangles,
 					gRenderStats.meshes,
+					gRenderStats.meshesSeparateZ,
 					(int)gMyCoord.x,
 					(int)gMyCoord.z,
 					PROJECT_VERSION,

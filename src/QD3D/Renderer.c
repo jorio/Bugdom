@@ -51,6 +51,7 @@ typedef struct MeshQueueEntry
 	const RenderModifiers*	mods;		// may be NULL
 	float					depth;		// used to determine draw order
 	bool					meshIsTransparent;
+	bool					needSeparateZ;
 } MeshQueueEntry;
 
 #define MESHQUEUE_MAX_SIZE 4096
@@ -474,6 +475,7 @@ void Render_StartFrame(void)
 
 	// Clear stats
 	gRenderStats.meshes = 0;
+	gRenderStats.meshesSeparateZ = 0;
 	gRenderStats.triangles = 0;
 
 	// Clear color & depth buffers.
@@ -524,22 +526,29 @@ void Render_FlushQueue(void)
 
 	// PASS 1: build depth buffer
 	glColor4f(1,1,1,1);
-	glDepthMask(true);
+	SetFlag(glDepthMask, true);
 	glDepthFunc(GL_LESS);
 	glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_FALSE);
 	DisableClientState(GL_COLOR_ARRAY);
 	DisableClientState(GL_NORMAL_ARRAY);
 	EnableState(GL_DEPTH_TEST);
 	for (int i = 0; i < gMeshQueueSize; i++)
-		DrawMesh(gMeshQueuePtrs[i], PreDrawMesh_DepthPass);
+	{
+		if (gMeshQueuePtrs[i]->needSeparateZ)
+		{
+			DrawMesh(gMeshQueuePtrs[i], PreDrawMesh_DepthPass);
+			gRenderStats.meshesSeparateZ++;
+		}
+	}
 
 	// PASS 2: draw opaque then transparent meshes
 	// (pre-sorted in the most efficient way by DrawOrderComparator)
-	glDepthMask(false);
 	glDepthFunc(GL_LEQUAL);
 	glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);
 	for (int i = 0; i < gMeshQueueSize; i++)
+	{
 		DrawMesh(gMeshQueuePtrs[i], PreDrawMesh_ColorPass);
+	}
 
 	// Clear mesh draw queue
 	gMeshQueueSize = 0;
@@ -636,6 +645,7 @@ void Render_SubmitMeshList(
 		entry->mods				= mods ? mods : &kDefaultRenderMods;
 		entry->depth			= depth;
 		entry->meshIsTransparent= IsMeshTransparent(entry->mesh, entry->mods);
+		entry->needSeparateZ	= entry->meshIsTransparent && !(mods->statusBits & STATUS_BIT_NOZWRITE);
 
 		gRenderStats.meshes++;
 		gRenderStats.triangles += entry->mesh->numTriangles;
@@ -657,6 +667,7 @@ void Render_SubmitMesh(
 	entry->mods				= mods ? mods : &kDefaultRenderMods;
 	entry->depth			= GetDepth(1, (TQ3TriMeshData **) &mesh, centerCoord);
 	entry->meshIsTransparent= IsMeshTransparent(entry->mesh, entry->mods);
+	entry->needSeparateZ	= entry->meshIsTransparent && !(mods->statusBits & STATUS_BIT_NOZWRITE);
 
 	gRenderStats.meshes++;
 	gRenderStats.triangles += entry->mesh->numTriangles;
@@ -777,12 +788,10 @@ static bool PreDrawMesh_DepthPass(const MeshQueueEntry* entry)
 	const TQ3TriMeshData* mesh = entry->mesh;
 	uint32_t statusBits = entry->mods->statusBits;
 
-	if (statusBits & STATUS_BIT_NOZWRITE)
-		return false;
+	GAME_ASSERT(!(statusBits & STATUS_BIT_NOZWRITE));		// assume nozwrite objects were filtered out
 
 	// Texture mapping
-	if ((mesh->texturingMode & kQ3TexturingModeExt_OpacityModeMask) == kQ3TexturingModeAlphaTest ||
-		(mesh->texturingMode & kQ3TexturingModeExt_OpacityModeMask) == kQ3TexturingModeAlphaBlend)
+	if ((mesh->texturingMode & kQ3TexturingModeExt_OpacityModeMask) != kQ3TexturingModeOff)
 	{
 		GAME_ASSERT(mesh->vertexUVs);
 
@@ -862,6 +871,9 @@ static bool PreDrawMesh_ColorPass(const MeshQueueEntry* entry)
 		DisableClientState(GL_TEXTURE_COORD_ARRAY);
 		CHECK_GL_ERROR();
 	}
+
+	// write to z
+	SetFlag(glDepthMask, !(statusBits & STATUS_BIT_NOZWRITE) && !(entry->needSeparateZ));
 
 	// Per-vertex colors (unused in Nanosaur, will be in Bugdom)
 	if (mesh->hasVertexColors)
