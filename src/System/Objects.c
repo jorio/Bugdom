@@ -370,7 +370,7 @@ float			cameraX, cameraZ;
 		if (theNode->CType == INVALID_NODE_FLAG)				// see if already deleted
 			goto next;
 
-		if (statusBits & (STATUS_BIT_ISCULLED | STATUS_BIT_HIDDEN | STATUS_BIT_MANUALDRAW))
+		if (statusBits & (STATUS_BIT_ISCULLED | STATUS_BIT_HIDDEN))
 			goto next;
 
 

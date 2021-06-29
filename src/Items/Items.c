@@ -90,7 +90,7 @@ ObjNode* CreateCyclorama(void)
 	gNewObjectDefinition.group	= MODEL_GROUP_LEVELSPECIFIC;
 	gNewObjectDefinition.type 	= 0;						// cyc is always 1st in level-specific list
 	gNewObjectDefinition.coord 	= gMyCoord;
-	gNewObjectDefinition.flags 	= STATUS_BIT_DONTCULL | STATUS_BIT_NULLSHADER | STATUS_BIT_NOFOG | STATUS_BIT_MANUALDRAW;
+	gNewObjectDefinition.flags 	= STATUS_BIT_DONTCULL | STATUS_BIT_NULLSHADER | STATUS_BIT_NOFOG;
 	gNewObjectDefinition.slot 	= 0;
 	gNewObjectDefinition.moveCall = MoveCyc;
 	gNewObjectDefinition.rot 	= 0;

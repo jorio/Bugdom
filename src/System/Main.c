@@ -69,8 +69,6 @@ Boolean		gLiquidCheat = false;
 Boolean		gUseCyclorama;
 float		gCurrentYon;
 
-ObjNode		*gCyclorama;
-
 u_long		gAutoFadeStatusBits;
 short		gMainAppRezFile;
 Boolean		gGameOverFlag,gAreaCompleted;
@@ -617,9 +615,7 @@ QD3DSetupInputType	viewDef;
 			/* INIT BACKGROUND */
 			
 	if (gUseCyclorama)
-		gCyclorama = CreateCyclorama();
-	else
-		gCyclorama = nil;
+		CreateCyclorama();
  }
 
 
@@ -630,7 +626,6 @@ static void CleanupLevel(void)
 	StopAllEffectChannels();
  	EmptySplineObjectList();
 	DeleteAllObjects();
-	gCyclorama = NULL;
 	FreeAllSkeletonFiles(-1);
 	DisposeSuperTileMemoryList();
 	DisposeTerrain();

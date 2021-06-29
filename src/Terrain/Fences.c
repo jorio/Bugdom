@@ -123,7 +123,7 @@ void InitFenceManager(void)
 	{
 		gFenceTriMeshDataPtrs[f] = nil;
 		Render_SetDefaultModifiers(&gFenceRenderMods[f]);
-		gFenceRenderMods->drawOrder = kDrawOrder_Fences;
+		gFenceRenderMods[f].drawOrder = kDrawOrder_Fences;
 	}
 }
 

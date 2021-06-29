@@ -1397,23 +1397,7 @@ void DrawTerrain(const QD3DSetupOutputType *setupInfo)
 
 		/* DRAW OBJECTS */
 
-	if (gCyclorama)
-	{
-		gCyclorama->RenderModifiers.statusBits = gCyclorama->StatusBits;
-		Render_SubmitMeshList(
-				gCyclorama->NumMeshes,
-				gCyclorama->MeshList,
-				&gCyclorama->BaseTransformMatrix,
-				&gCyclorama->RenderModifiers,
-				&gCyclorama->Coord
-		);
-
-		Render_FlushQueue();	// flush here so autofaded fences will blend against cyclorama
-	}
-
-
 	DrawFences(setupInfo);												// draw these first
-	Render_FlushQueue();												// flush here so xparent objs can appear above autofaded fences
 	DrawObjects(setupInfo);												// draw objNodes
 	QD3D_DrawParticles(setupInfo);										// draw "shard" particles
 	DrawParticleGroup(setupInfo);										// draw alpha-blended particle groups

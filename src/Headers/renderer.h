@@ -56,6 +56,20 @@ typedef struct RenderModifiers
 	int						drawOrder;
 } RenderModifiers;
 
+enum
+{
+	kDrawOrder_Terrain = -128,
+	kDrawOrder_Cyclorama,
+	kDrawOrder_Fences,
+	kDrawOrder_Shadows,
+	kDrawOrder_Default = 0,
+	kDrawOrder_Ripples,
+	kDrawOrder_GlowyParticles,
+	kDrawOrder_UI,
+	kDrawOrder_FadeOverlay,
+	kDrawOrder_DebugUI,
+};
+
 typedef enum
 {
 	kRendererTextureFlags_None			= 0,

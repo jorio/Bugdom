@@ -41,6 +41,7 @@ typedef struct RendererState
 	bool		hasFlag_glDepthMask;
 	bool		blendFuncIsAdditive;
 	bool		wantFog;
+	GLboolean	wantColorMask;
 	const TQ3Matrix4x4*	currentTransform;
 } RendererState;
 
@@ -56,7 +57,7 @@ typedef struct MeshQueueEntry
 
 #define MESHQUEUE_MAX_SIZE 4096
 
-static MeshQueueEntry		gMeshQueueBuffer[MESHQUEUE_MAX_SIZE];
+static MeshQueueEntry		gMeshQueueEntryPool[MESHQUEUE_MAX_SIZE];
 static MeshQueueEntry*		gMeshQueuePtrs[MESHQUEUE_MAX_SIZE];
 static int					gMeshQueueSize = 0;
 static bool					gFrameStarted = false;
@@ -200,6 +201,14 @@ static inline void __SetClientState(GLenum stateEnum, bool* stateFlagPtr, bool e
 		gState.hasFlag_##glFunction = (value);		\
 	} } while(0)
 
+static inline void SetColorMask(GLboolean enable)
+{
+	if (enable != gState.wantColorMask)
+	{
+		glColorMask(enable, enable, enable, enable);
+		gState.wantColorMask = enable;
+	}
+}
 
 #pragma mark -
 
@@ -251,13 +260,15 @@ void Render_InitState(void)
 
 	gState.hasFlag_glDepthMask = true;		// initially active on a fresh context
 
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	gState.wantColorMask = true;
+
 	gState.boundTexture = 0;
 	gState.wantFog = false;
 	gState.currentTransform = NULL;
 
 	gMeshQueueSize = 0;
-	for (int i = 0; i < MESHQUEUE_MAX_SIZE; i++)
-		gMeshQueuePtrs[i] = &gMeshQueueBuffer[i];
+	memset(gMeshQueuePtrs, 0, sizeof(gMeshQueuePtrs));
 
 	if (!gFullscreenQuad)
 		gFullscreenQuad = MakeQuadMesh_UI(0, 0, 640, 480, 0, 0, 1, 1);
@@ -510,13 +521,14 @@ void Render_FlushQueue(void)
 {
 	GAME_ASSERT(gFrameStarted);
 
-	// Flush mesh draw queue
+	// Nothing to draw?
 	if (gMeshQueueSize == 0)
 		return;
 
-	// Sort mesh draw queue.
-	// Note that this sorts the opaque meshes front-to-back,
-	// then the transparent meshes back-to-front.
+	//--------------------------------------------------------------
+	// SORT DRAW QUEUE ENTRIES
+	// Opaque meshes are sorted front-to-back,
+	// followed by transparent meshes, sorted back-to-front.
 	qsort(
 			gMeshQueuePtrs,
 			gMeshQueueSize,
@@ -524,31 +536,54 @@ void Render_FlushQueue(void)
 			DrawOrderComparator
 	);
 
-	// PASS 1: build depth buffer
-	glColor4f(1,1,1,1);
-	SetFlag(glDepthMask, true);
+	//--------------------------------------------------------------
+	// PASS 1: OPAQUE COLOR + DEPTH
+	// - Draw opaque meshes (pre-sorted front-to-back) to color AND depth buffers.
+	// - Draw transparent meshes (pre-sorted back-to-front after opaque meshes) to depth buffer only.
+
+	int numDeferredColorMeshes = 0;
+
 	glDepthFunc(GL_LESS);
-	glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_FALSE);
-	DisableClientState(GL_COLOR_ARRAY);
-	DisableClientState(GL_NORMAL_ARRAY);
-	EnableState(GL_DEPTH_TEST);
+
 	for (int i = 0; i < gMeshQueueSize; i++)
 	{
-		if (gMeshQueuePtrs[i]->needSeparateZ)
+		MeshQueueEntry* entry = gMeshQueuePtrs[i];
+
+		if (!entry->meshIsTransparent)
 		{
-			DrawMesh(gMeshQueuePtrs[i], PreDrawMesh_DepthPass);
-			gRenderStats.meshesSeparateZ++;
+			// If the mesh is opaque, draw it now
+			DrawMesh(entry, PreDrawMesh_ColorPass);
+		}
+		else
+		{
+			// The mesh is transparent -- defer its color pass
+			GAME_ASSERT(numDeferredColorMeshes <= i);
+			gMeshQueuePtrs[numDeferredColorMeshes++] = entry;		// shoot back to start of queue for next pass
+
+			// If a transparent mesh wants to write to the Z-buffer, do it now
+			if (!(entry->mods->statusBits & STATUS_BIT_NOZWRITE))
+			{
+				DrawMesh(entry, PreDrawMesh_DepthPass);
+				gRenderStats.meshesSeparateZ++;
+			}
 		}
 	}
 
-	// PASS 2: draw opaque then transparent meshes
-	// (pre-sorted in the most efficient way by DrawOrderComparator)
-	glDepthFunc(GL_LEQUAL);
-	glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);
-	for (int i = 0; i < gMeshQueueSize; i++)
+	//--------------------------------------------------------------
+	// PASS 2: ALPHA-BLENDED COLOR
+	// - Draw transparent meshes to color buffer only
+
+	if (numDeferredColorMeshes > 0)
 	{
-		DrawMesh(gMeshQueuePtrs[i], PreDrawMesh_ColorPass);
+		glDepthFunc(GL_LEQUAL);
+		for (int i = 0; i < numDeferredColorMeshes; i++)
+		{
+			DrawMesh(gMeshQueuePtrs[i], PreDrawMesh_ColorPass);
+		}
 	}
+
+	//--------------------------------------------------------------
+	// CLEAN UP
 
 	// Clear mesh draw queue
 	gMeshQueueSize = 0;
@@ -622,6 +657,14 @@ static bool IsMeshTransparent(const TQ3TriMeshData* mesh, const RenderModifiers*
 	;
 }
 
+static MeshQueueEntry* NewMeshQueueEntry(void)
+{
+	MeshQueueEntry* entry = &gMeshQueueEntryPool[gMeshQueueSize];
+	gMeshQueuePtrs[gMeshQueueSize] = entry;
+	gMeshQueueSize++;
+	return entry;
+}
+
 void Render_SubmitMeshList(
 		int						numMeshes,
 		TQ3TriMeshData**		meshList,
@@ -639,7 +682,7 @@ void Render_SubmitMeshList(
 
 	for (int i = 0; i < numMeshes; i++)
 	{
-		MeshQueueEntry* entry = gMeshQueuePtrs[gMeshQueueSize++];
+		MeshQueueEntry* entry = NewMeshQueueEntry();
 		entry->mesh				= meshList[i];
 		entry->transform		= transform;
 		entry->mods				= mods ? mods : &kDefaultRenderMods;
@@ -661,7 +704,7 @@ void Render_SubmitMesh(
 	GAME_ASSERT(gFrameStarted);
 	GAME_ASSERT(gMeshQueueSize < MESHQUEUE_MAX_SIZE);
 
-	MeshQueueEntry* entry = gMeshQueuePtrs[gMeshQueueSize++];
+	MeshQueueEntry* entry = NewMeshQueueEntry();
 	entry->mesh				= mesh;
 	entry->transform		= transform;
 	entry->mods				= mods ? mods : &kDefaultRenderMods;
@@ -780,7 +823,6 @@ static void DrawMesh(const MeshQueueEntry* entry, bool (*preDrawFunc)(const Mesh
 		__glDrawRangeElements(GL_TRIANGLES, 0, mesh->numPoints - 1, mesh->numTriangles * 3, GL_UNSIGNED_SHORT, mesh->triangles);
 		CHECK_GL_ERROR();
 	}
-
 }
 
 static bool PreDrawMesh_DepthPass(const MeshQueueEntry* entry)
@@ -789,6 +831,21 @@ static bool PreDrawMesh_DepthPass(const MeshQueueEntry* entry)
 	uint32_t statusBits = entry->mods->statusBits;
 
 	GAME_ASSERT(!(statusBits & STATUS_BIT_NOZWRITE));		// assume nozwrite objects were filtered out
+
+	// Never write to color buffer in this pass
+	SetColorMask(GL_FALSE);
+
+	// Always write to depth buffer in this pass
+	SetFlag(glDepthMask, true);
+
+	glColor4f(1,1,1,1);
+	DisableClientState(GL_COLOR_ARRAY);
+	DisableClientState(GL_NORMAL_ARRAY);
+	EnableState(GL_DEPTH_TEST);
+
+	DisableState(GL_BLEND);
+	DisableState(GL_LIGHTING);
+	DisableState(GL_FOG);
 
 	// Texture mapping
 	if ((mesh->texturingMode & kQ3TexturingModeExt_OpacityModeMask) != kQ3TexturingModeOff)
@@ -819,6 +876,9 @@ static bool PreDrawMesh_ColorPass(const MeshQueueEntry* entry)
 	uint32_t statusBits = entry->mods->statusBits;
 
 	TQ3TexturingMode texturingMode = (mesh->texturingMode & kQ3TexturingModeExt_OpacityModeMask);
+
+	// Always write to color mask in this pass
+	SetColorMask(GL_TRUE);
 
 	// Set alpha blending according to mesh transparency
 	if (entry->meshIsTransparent)

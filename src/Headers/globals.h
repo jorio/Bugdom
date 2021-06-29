@@ -102,7 +102,7 @@ enum
 enum
 {
 	STATUS_BIT_ONGROUND		=	(1<<0),		// Player is on anything solid (terrain or objnode)
-	STATUS_BIT_MANUALDRAW	=	(1<<1),
+	// 1<<1 unused
 	STATUS_BIT_DONTCULL		=	(1<<2),		// set if don't want to perform custom culling on this object
 	STATUS_BIT_NOCOLLISION  = 	(1<<3),		// set if want collision code to skip testing against this object
 	STATUS_BIT_NOMOVE  		= 	(1<<4),		// dont call object's move function
