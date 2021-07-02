@@ -899,8 +899,7 @@ static void BeginShadingPass(const MeshQueueEntry* entry)
 		EnableState(GL_TEXTURE_2D);
 		EnableClientState(GL_TEXTURE_COORD_ARRAY);
 		Render_BindTexture(mesh->glTextureName);
-		glTexCoordPointer(2, GL_FLOAT, 0,
-				statusBits & STATUS_BIT_REFLECTIONMAP ? gEnvMapUVs : mesh->vertexUVs);
+		glTexCoordPointer(2, GL_FLOAT, 0, (statusBits & STATUS_BIT_REFLECTIONMAP) ? gEnvMapUVs: mesh->vertexUVs);
 		CHECK_GL_ERROR();
 	}
 	else
