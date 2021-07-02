@@ -23,7 +23,6 @@ static void PlayArea(void);
 static void DoDeathReset(void);
 static void PlayGame(void);
 static void CheckForCheats(void);
-static void ShowDebug(void);
 
 
 /****************************/
@@ -387,13 +386,6 @@ float fps;
 		DoSDLMaintenance();
 		gDisableHiccupTimer = false;
 
-
-		/* SHOW DEBUG */
-		
-		if (gShowDebug)
-			ShowDebug();
-		
-
 			/* SEE IF PAUSE GAME */
 
 		if (GetNewKeyState(kKey_Pause))				// see if pause/abort
@@ -730,12 +722,6 @@ static void CheckForCheats(void)
 }
 
 #pragma mark -
-
-/********************* SHOW DEBUG ***********************/
-
-static void ShowDebug(void)
-{
-}
 
 /********************* DEBUG SHORTCUT KEYS ON BOOT ***********************/
 
