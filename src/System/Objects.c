@@ -312,8 +312,8 @@ ObjNode		*thisNodePtr;
 
 
 					/* NEXT TRY TO MOVE IT */
-					
-		if ((!(thisNodePtr->StatusBits & STATUS_BIT_NOMOVE)) &&	(thisNodePtr->MoveCall != nil))
+
+		if (thisNodePtr->MoveCall != nil)
 		{
 			thisNodePtr->MoveCall(thisNodePtr);				// call object's move routine
 		}
