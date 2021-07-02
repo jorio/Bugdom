@@ -29,7 +29,9 @@ Boolean AddLilyPad(TerrainItemEntryType *itemPtr, long  x, long z);
 Boolean AddPondGrass(TerrainItemEntryType *itemPtr, long  x, long z);
 Boolean AddReed(TerrainItemEntryType *itemPtr, long  x, long z);
 
-ObjNode* CreateCyclorama(void);
+void CreateCyclorama(void);
+void DrawCyclorama(void);
+
 Boolean AddRockLedge(TerrainItemEntryType *itemPtr, long  x, long z);
 Boolean AddStump(TerrainItemEntryType *itemPtr, long  x, long z);
 void RattleHive(ObjNode *hive);

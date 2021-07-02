@@ -52,7 +52,6 @@ typedef struct MeshQueueEntry
 	const RenderModifiers*	mods;		// may be NULL
 	float					depth;		// used to determine draw order
 	bool					meshIsTransparent;
-	bool					needSeparateZ;
 } MeshQueueEntry;
 
 #define MESHQUEUE_MAX_SIZE 4096
@@ -66,9 +65,11 @@ static float				gBackupVertexColors[4*65536];
 
 static int DrawOrderComparator(void const* a_void, void const* b_void);
 
-static void DrawMesh(const MeshQueueEntry* entry, bool (*preDrawFunc)(const MeshQueueEntry* entry));
-static bool PreDrawMesh_DepthPass(const MeshQueueEntry* entry);
-static bool PreDrawMesh_ColorPass(const MeshQueueEntry* entry);
+static void BeginDepthPass(const MeshQueueEntry* entry);
+static void BeginShadingPass(const MeshQueueEntry* entry);
+static void PrepareOpaqueShading(const MeshQueueEntry* entry);
+static void PrepareAlphaShading(const MeshQueueEntry* entry);
+static void SendGeometry(const MeshQueueEntry* entry);
 
 
 #pragma mark -
@@ -485,8 +486,8 @@ void Render_StartFrame(void)
 	gMeshQueueSize = 0;
 
 	// Clear stats
-	gRenderStats.meshes = 0;
-	gRenderStats.meshesSeparateZ = 0;
+	gRenderStats.meshesPass1 = 0;
+	gRenderStats.meshesPass2 = 0;
 	gRenderStats.triangles = 0;
 
 	// Clear color & depth buffers.
@@ -544,6 +545,7 @@ void Render_FlushQueue(void)
 	int numDeferredColorMeshes = 0;
 
 	glDepthFunc(GL_LESS);
+	DisableState(GL_BLEND);
 
 	for (int i = 0; i < gMeshQueueSize; i++)
 	{
@@ -552,7 +554,9 @@ void Render_FlushQueue(void)
 		if (!entry->meshIsTransparent)
 		{
 			// If the mesh is opaque, draw it now
-			DrawMesh(entry, PreDrawMesh_ColorPass);
+			BeginShadingPass(entry);
+			PrepareOpaqueShading(entry);
+			SendGeometry(entry);
 		}
 		else
 		{
@@ -563,8 +567,8 @@ void Render_FlushQueue(void)
 			// If a transparent mesh wants to write to the Z-buffer, do it now
 			if (!(entry->mods->statusBits & STATUS_BIT_NOZWRITE))
 			{
-				DrawMesh(entry, PreDrawMesh_DepthPass);
-				gRenderStats.meshesSeparateZ++;
+				BeginDepthPass(entry);
+				SendGeometry(entry);
 			}
 		}
 	}
@@ -573,12 +577,21 @@ void Render_FlushQueue(void)
 	// PASS 2: ALPHA-BLENDED COLOR
 	// - Draw transparent meshes to color buffer only
 
+	gRenderStats.meshesPass2 += numDeferredColorMeshes;
+
 	if (numDeferredColorMeshes > 0)
 	{
 		glDepthFunc(GL_LEQUAL);
+		EnableState(GL_BLEND);
+		DisableState(GL_ALPHA_TEST);
+		SetFlag(glDepthMask, false);	// don't write to z buffer
+
 		for (int i = 0; i < numDeferredColorMeshes; i++)
 		{
-			DrawMesh(gMeshQueuePtrs[i], PreDrawMesh_ColorPass);
+			const MeshQueueEntry* entry = gMeshQueuePtrs[i];
+			BeginShadingPass(entry);
+			PrepareAlphaShading(entry);
+			SendGeometry(entry);
 		}
 	}
 
@@ -688,10 +701,11 @@ void Render_SubmitMeshList(
 		entry->mods				= mods ? mods : &kDefaultRenderMods;
 		entry->depth			= depth;
 		entry->meshIsTransparent= IsMeshTransparent(entry->mesh, entry->mods);
-		entry->needSeparateZ	= entry->meshIsTransparent && !(mods->statusBits & STATUS_BIT_NOZWRITE);
 
-		gRenderStats.meshes++;
+		gRenderStats.meshesPass1++;
 		gRenderStats.triangles += entry->mesh->numTriangles;
+
+		GAME_ASSERT(!(entry->mods->statusBits & STATUS_BIT_HIDDEN));
 	}
 }
 
@@ -710,10 +724,11 @@ void Render_SubmitMesh(
 	entry->mods				= mods ? mods : &kDefaultRenderMods;
 	entry->depth			= GetDepth(1, (TQ3TriMeshData **) &mesh, centerCoord);
 	entry->meshIsTransparent= IsMeshTransparent(entry->mesh, entry->mods);
-	entry->needSeparateZ	= entry->meshIsTransparent && !(mods->statusBits & STATUS_BIT_NOZWRITE);
 
-	gRenderStats.meshes++;
+	gRenderStats.meshesPass1++;
 	gRenderStats.triangles += entry->mesh->numTriangles;
+
+	GAME_ASSERT(!(entry->mods->statusBits & STATUS_BIT_HIDDEN));
 }
 
 #pragma mark -
@@ -768,19 +783,11 @@ static int DrawOrderComparator(const void* a_void, const void* b_void)
 
 #pragma mark -
 
-static void DrawMesh(const MeshQueueEntry* entry, bool (*preDrawFunc)(const MeshQueueEntry* entry))
+static void SendGeometry(const MeshQueueEntry* entry)
 {
 	uint32_t statusBits = entry->mods->statusBits;
 
 	const TQ3TriMeshData* mesh = entry->mesh;
-
-	// Skip if hidden
-	if (statusBits & STATUS_BIT_HIDDEN)
-		return;
-
-	// Call the preDraw function for this pass
-	if (!preDrawFunc(entry))
-		return;
 
 	// Cull backfaces or not
 	SetState(GL_CULL_FACE, !(statusBits & STATUS_BIT_KEEPBACKFACES));
@@ -825,7 +832,7 @@ static void DrawMesh(const MeshQueueEntry* entry, bool (*preDrawFunc)(const Mesh
 	}
 }
 
-static bool PreDrawMesh_DepthPass(const MeshQueueEntry* entry)
+static void BeginDepthPass(const MeshQueueEntry* entry)
 {
 	const TQ3TriMeshData* mesh = entry->mesh;
 	uint32_t statusBits = entry->mods->statusBits;
@@ -843,7 +850,6 @@ static bool PreDrawMesh_DepthPass(const MeshQueueEntry* entry)
 	DisableClientState(GL_NORMAL_ARRAY);
 	EnableState(GL_DEPTH_TEST);
 
-	DisableState(GL_BLEND);
 	DisableState(GL_LIGHTING);
 	DisableState(GL_FOG);
 
@@ -866,43 +872,15 @@ static bool PreDrawMesh_DepthPass(const MeshQueueEntry* entry)
 		DisableClientState(GL_TEXTURE_COORD_ARRAY);
 		CHECK_GL_ERROR();
 	}
-
-	return true;
 }
 
-static bool PreDrawMesh_ColorPass(const MeshQueueEntry* entry)
+static void BeginShadingPass(const MeshQueueEntry* entry)
 {
 	const TQ3TriMeshData* mesh = entry->mesh;
 	uint32_t statusBits = entry->mods->statusBits;
 
-	TQ3TexturingMode texturingMode = (mesh->texturingMode & kQ3TexturingModeExt_OpacityModeMask);
-
 	// Always write to color mask in this pass
 	SetColorMask(GL_TRUE);
-
-	// Set alpha blending according to mesh transparency
-	if (entry->meshIsTransparent)
-	{
-		EnableState(GL_BLEND);
-		DisableState(GL_ALPHA_TEST);
-
-		bool wantAdditive = !!(entry->mods->statusBits & STATUS_BIT_GLOW);
-		if (gState.blendFuncIsAdditive != wantAdditive)
-		{
-			if (wantAdditive)
-				glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-			else
-				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			gState.blendFuncIsAdditive = wantAdditive;
-		}
-	}
-	else
-	{
-		DisableState(GL_BLEND);
-
-		// Enable alpha testing if the mesh's texture calls for it
-		SetState(GL_ALPHA_TEST, texturingMode == kQ3TexturingModeAlphaTest);
-	}
 
 	// Environment map effect
 	if (statusBits & STATUS_BIT_REFLECTIONMAP)
@@ -916,7 +894,7 @@ static bool PreDrawMesh_ColorPass(const MeshQueueEntry* entry)
 	SetState(GL_FOG, gState.wantFog && !(statusBits & STATUS_BIT_NOFOG));
 
 	// Texture mapping
-	if (texturingMode != kQ3TexturingModeOff)
+	if ((mesh->texturingMode & kQ3TexturingModeExt_OpacityModeMask) != kQ3TexturingModeOff)
 	{
 		EnableState(GL_TEXTURE_2D);
 		EnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -932,47 +910,6 @@ static bool PreDrawMesh_ColorPass(const MeshQueueEntry* entry)
 		CHECK_GL_ERROR();
 	}
 
-	// write to z
-	SetFlag(glDepthMask, !(statusBits & STATUS_BIT_NOZWRITE) && !(entry->needSeparateZ));
-
-	// Per-vertex colors (unused in Nanosaur, will be in Bugdom)
-	if (mesh->hasVertexColors)
-	{
-		EnableClientState(GL_COLOR_ARRAY);
-
-		if (entry->mods->autoFadeFactor < .999f)
-		{
-			// Old-school OpenGL will ignore the diffuse color (used for transparency) if we also send
-			// per-vertex colors. So, apply transparency to the per-vertex color array.
-			GAME_ASSERT(4 * mesh->numPoints <= (int)(sizeof(gBackupVertexColors) / sizeof(gBackupVertexColors[0])));
-			int j = 0;
-			for (int v = 0; v < mesh->numPoints; v++)
-			{
-				gBackupVertexColors[j++] = mesh->vertexColors[v].r;
-				gBackupVertexColors[j++] = mesh->vertexColors[v].g;
-				gBackupVertexColors[j++] = mesh->vertexColors[v].b;
-				gBackupVertexColors[j++] = mesh->vertexColors[v].a * entry->mods->autoFadeFactor;
-			}
-			glColorPointer(4, GL_FLOAT, 0, gBackupVertexColors);
-		}
-		else
-		{
-			glColorPointer(4, GL_FLOAT, 0, mesh->vertexColors);
-		}
-	}
-	else
-	{
-		DisableClientState(GL_COLOR_ARRAY);
-
-		// Apply diffuse color for the entire mesh
-		glColor4f(
-			mesh->diffuseColor.r * entry->mods->diffuseColor.r,
-			mesh->diffuseColor.g * entry->mods->diffuseColor.g,
-			mesh->diffuseColor.b * entry->mods->diffuseColor.b,
-			mesh->diffuseColor.a * entry->mods->diffuseColor.a * entry->mods->autoFadeFactor
-		);
-	}
-
 	// Submit normal data if any
 	if (mesh->hasVertexNormals && !(statusBits & STATUS_BIT_NULLSHADER))
 	{
@@ -983,8 +920,87 @@ static bool PreDrawMesh_ColorPass(const MeshQueueEntry* entry)
 	{
 		DisableClientState(GL_NORMAL_ARRAY);
 	}
+}
 
-	return true;
+static void PrepareOpaqueShading(const MeshQueueEntry* entry)
+{
+	const TQ3TriMeshData* mesh = entry->mesh;
+	const uint32_t statusBits = entry->mods->statusBits;
+
+	TQ3TexturingMode texturingMode = (mesh->texturingMode & kQ3TexturingModeExt_OpacityModeMask);
+
+	// Write to z-buffer
+	SetFlag(glDepthMask, !(statusBits & STATUS_BIT_NOZWRITE));
+
+	// Enable alpha testing if the mesh's texture calls for it
+	SetState(GL_ALPHA_TEST, texturingMode == kQ3TexturingModeAlphaTest);
+
+	// Per-vertex colors
+	if (mesh->hasVertexColors)
+	{
+		EnableClientState(GL_COLOR_ARRAY);
+
+		glColorPointer(4, GL_FLOAT, 0, mesh->vertexColors);
+	}
+	else
+	{
+		DisableClientState(GL_COLOR_ARRAY);
+
+		// Apply diffuse color for the entire mesh
+		glColor4f(
+				mesh->diffuseColor.r * entry->mods->diffuseColor.r,
+				mesh->diffuseColor.g * entry->mods->diffuseColor.g,
+				mesh->diffuseColor.b * entry->mods->diffuseColor.b,
+				1.0f);
+	}
+}
+
+static void PrepareAlphaShading(const MeshQueueEntry* entry)
+{
+	const TQ3TriMeshData* mesh = entry->mesh;
+	const uint32_t statusBits = entry->mods->statusBits;
+
+	// Set additive alpha blending or not
+	bool wantAdditive = !!(statusBits & STATUS_BIT_GLOW);
+	if (gState.blendFuncIsAdditive != wantAdditive)
+	{
+		if (wantAdditive)
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		else
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		gState.blendFuncIsAdditive = wantAdditive;
+	}
+
+	// Per-vertex colors
+	if (mesh->hasVertexColors)
+	{
+		EnableClientState(GL_COLOR_ARRAY);
+
+		// OpenGL ignores diffuse color (used for transparency) if we also send
+		// per-vertex colors. So, apply transparency to the per-vertex color array.
+		GAME_ASSERT(4 * mesh->numPoints <= (int)(sizeof(gBackupVertexColors) / sizeof(gBackupVertexColors[0])));
+		int j = 0;
+		for (int v = 0; v < mesh->numPoints; v++)
+		{
+			gBackupVertexColors[j++] = mesh->vertexColors[v].r;
+			gBackupVertexColors[j++] = mesh->vertexColors[v].g;
+			gBackupVertexColors[j++] = mesh->vertexColors[v].b;
+			gBackupVertexColors[j++] = mesh->vertexColors[v].a * entry->mods->autoFadeFactor;
+		}
+
+		glColorPointer(4, GL_FLOAT, 0, gBackupVertexColors);
+	}
+	else
+	{
+		DisableClientState(GL_COLOR_ARRAY);
+
+		// Apply diffuse color for the entire mesh
+		glColor4f(
+				mesh->diffuseColor.r * entry->mods->diffuseColor.r,
+				mesh->diffuseColor.g * entry->mods->diffuseColor.g,
+				mesh->diffuseColor.b * entry->mods->diffuseColor.b,
+				mesh->diffuseColor.a * entry->mods->diffuseColor.a * entry->mods->autoFadeFactor);
+	}
 }
 
 void Render_ResetColor(void)

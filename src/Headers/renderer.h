@@ -32,8 +32,8 @@
 typedef struct RenderStats
 {
 	int			triangles;
-	int			meshes;
-	int			meshesSeparateZ;
+	int			meshesPass1;
+	int			meshesPass2;
 } RenderStats;
 
 typedef struct RenderModifiers

@@ -626,6 +626,7 @@ static void CleanupLevel(void)
 	StopAllEffectChannels();
  	EmptySplineObjectList();
 	DeleteAllObjects();
+	gCyclorama = nil;
 	FreeAllSkeletonFiles(-1);
 	DisposeSuperTileMemoryList();
 	DisposeTerrain();

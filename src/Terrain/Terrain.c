@@ -1394,10 +1394,14 @@ void DrawTerrain(const QD3DSetupOutputType *setupInfo)
 		}
 	}
 
-
 		/* DRAW OBJECTS */
 
+	DrawCyclorama();
 	DrawFences(setupInfo);												// draw these first
+
+	if (gDoAutoFade)													// avoid clover-shaped holes in fences
+		Render_FlushQueue();
+
 	DrawObjects(setupInfo);												// draw objNodes
 	QD3D_DrawParticles(setupInfo);										// draw "shard" particles
 	DrawParticleGroup(setupInfo);										// draw alpha-blended particle groups

@@ -99,6 +99,7 @@ extern	ObjNode						*gCurrentEatingFish;
 extern	ObjNode						*gCurrentNode;
 extern	ObjNode						*gCurrentRope;
 extern	ObjNode						*gCurrentWaterBug;
+extern	ObjNode						*gCyclorama;
 extern	ObjNode						*gFirstNodePtr;
 extern	ObjNode						*gHiveObj;
 extern	ObjNode						*gMenuIcons[NUM_MENU_ICONS];
