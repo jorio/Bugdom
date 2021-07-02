@@ -16,20 +16,6 @@ static char				gDebugTextBuffer[1024];
 
 void DoSDLMaintenance()
 {
-	static int holdFramerateCap = 0;
-
-	// Cap frame rate.
-	if (gFramesPerSecond > 200 || holdFramerateCap > 0)
-	{
-		SDL_Delay(5);
-		// Keep framerate cap for a while to avoid jitter in game physics
-		holdFramerateCap = 10;
-	}
-	else
-	{
-		holdFramerateCap--;
-	}
-
 	{
 		uint32_t ticksNow = SDL_GetTicks();
 		uint32_t ticksElapsed = ticksNow - gDebugTextLastUpdatedAt;
