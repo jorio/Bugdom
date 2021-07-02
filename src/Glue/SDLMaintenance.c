@@ -16,6 +16,7 @@ static char				gDebugTextBuffer[1024];
 
 void DoSDLMaintenance()
 {
+	if (gShowDebugStats)
 	{
 		uint32_t ticksNow = SDL_GetTicks();
 		uint32_t ticksElapsed = ticksNow - gDebugTextLastUpdatedAt;
@@ -24,13 +25,14 @@ void DoSDLMaintenance()
 			float fps = 1000 * gDebugTextFrameAccumulator / (float)ticksElapsed;
 			snprintf(
 					gDebugTextBuffer, sizeof(gDebugTextBuffer),
-					"fps: %d\ntris: %d\nmeshes: %d (sepZ:%d)\n\nx: %d\nz: %d\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nBugdom %s\n%s @ %dx%d",
+					"fps: %d\ntris: %d\nmeshes: %d+%d\n\nx: %d\nz: %d\n\n%s\n\n\n\n\n\n\n\n\n\n\n\n\nBugdom %s\n%s @ %dx%d",
 					(int)roundf(fps),
 					gRenderStats.triangles,
 					gRenderStats.meshesPass1,
 					gRenderStats.meshesPass2,
 					(int)gMyCoord.x,
 					(int)gMyCoord.z,
+					gLiquidCheat? "Liquid cheat ON": "",
 					PROJECT_VERSION,
 					glGetString(GL_RENDERER),
 					gWindowWidth,

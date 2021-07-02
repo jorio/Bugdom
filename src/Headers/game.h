@@ -78,6 +78,7 @@ extern	Boolean						gPlayerKnockOnButt;
 extern	Boolean						gPlayerUsingKeyControl;
 extern	Boolean						gResetSong;
 extern	Boolean						gRestoringSavedGame;
+extern	Boolean						gShowDebugStats;
 extern	Boolean						gShowDebug;
 extern	Boolean						gSongPlayingFlag;
 extern	Boolean						gTorchPlayer;

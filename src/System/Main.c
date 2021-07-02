@@ -64,6 +64,7 @@ u_short		gAreaNum = 0;
 u_short		gLevelTypeMask = 0;
 
 
+Boolean		gShowDebugStats = false;
 Boolean		gShowDebug = false;
 Boolean		gLiquidCheat = false;
 Boolean		gUseCyclorama;
@@ -689,6 +690,9 @@ static void CheckForCheats(void)
 		if (GetNewKeyState_SDL(SDL_SCANCODE_F1))	// win the level!
 			gAreaCompleted = true;
 
+		if (GetNewKeyState_SDL(SDL_SCANCODE_F2))	// get shield
+			gShieldTimer = SHIELD_TIME;
+
 		if (GetKeyState_SDL(SDL_SCANCODE_F3))	// get full health
 			GetHealth(1.0);							
 			
@@ -709,15 +713,15 @@ static void CheckForCheats(void)
 		}
 
 		if (GetNewKeyState_SDL(SDL_SCANCODE_F6))	// see if liquid invincible
-		{
 			gLiquidCheat = !gLiquidCheat;
-//			MoveTo(0, 12);
-//			DrawStringC(gLiquidCheat ? "Liquid cheat ON   " : "Liquid cheat OFF   ");
-		}
 
 		if (GetKeyState_SDL(SDL_SCANCODE_F7))		// hurt player
-		{
 			PlayerGotHurt(NULL, 1/60.0f, 1.0f, false, true, 1/60.0f);
+
+		if (GetNewKeyState_SDL(SDL_SCANCODE_F8))
+		{
+			gShowDebugStats = !gShowDebugStats;
+			QD3D_UpdateDebugTextMesh(NULL);
 		}
 
 		if (GetNewKeyState_SDL(SDL_SCANCODE_F9))
