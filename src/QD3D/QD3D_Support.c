@@ -162,19 +162,7 @@ QD3DSetupOutputType	*outputPtr;
 
 	CreateLights(&setupDefPtr->lights);
 
-	glAlphaFunc(GL_GREATER, 0.4999f);
-
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	// Normalize normal vectors. Required so lighting looks correct on scaled meshes.
-	glEnable(GL_NORMALIZE);
-
-	glCullFace(GL_BACK);
-	glFrontFace(GL_CCW);									// CCW is front face
-
-	glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-
-	Render_InitState();
+	Render_InitState(&setupDefPtr->view.clearColor);
 
 	if (setupDefPtr->lights.useFog)
 	{
@@ -185,11 +173,6 @@ QD3DSetupOutputType	*outputPtr;
 				setupDefPtr->lights.fogEnd,
 				setupDefPtr->lights.useCustomFogColor ? setupDefPtr->lights.fogColor : setupDefPtr->view.clearColor);
 	}
-	else
-		Render_DisableFog();
-
-	glClearColor(setupDefPtr->view.clearColor.r, setupDefPtr->view.clearColor.g, setupDefPtr->view.clearColor.b, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	CHECK_GL_ERROR();
 

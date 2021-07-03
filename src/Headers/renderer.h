@@ -97,7 +97,7 @@ void Render_SetDefaultModifiers(RenderModifiers* dest);
 
 // Sets up the initial renderer state.
 // Call this function after creating the OpenGL context.
-void Render_InitState(void);
+void Render_InitState(const TQ3ColorRGBA* clearColor);
 
 void Render_Shutdown(void);
 

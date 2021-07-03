@@ -29,6 +29,7 @@ typedef struct RendererState
 	bool		hasClientState_GL_VERTEX_ARRAY;
 	bool		hasClientState_GL_COLOR_ARRAY;
 	bool		hasClientState_GL_NORMAL_ARRAY;
+	bool		hasState_GL_NORMALIZE;
 	bool		hasState_GL_CULL_FACE;
 	bool		hasState_GL_ALPHA_TEST;
 	bool		hasState_GL_DEPTH_TEST;
@@ -40,7 +41,7 @@ typedef struct RendererState
 	bool		hasState_GL_FOG;
 	bool		hasFlag_glDepthMask;
 	bool		blendFuncIsAdditive;
-	bool		wantFog;
+	bool		sceneHasFog;
 	GLboolean	wantColorMask;
 	const TQ3Matrix4x4*	currentTransform;
 } RendererState;
@@ -237,15 +238,17 @@ void Render_SetDefaultModifiers(RenderModifiers* dest)
 	memcpy(dest, &kDefaultRenderMods, sizeof(RenderModifiers));
 }
 
-void Render_InitState(void)
+void Render_InitState(const TQ3ColorRGBA* clearColor)
 {
-	// On Windows, proc addresses are only valid for the current context, so we must get fetch everytime we recreate the context.
+	// On Windows, proc addresses are only valid for the current context,
+	// so we must get proc addresses everytime we recreate the context.
 	Render_GetGLProcAddresses();
 
 	SetInitialClientState(GL_VERTEX_ARRAY,				true);
-	SetInitialClientState(GL_NORMAL_ARRAY,				true);
+	SetInitialClientState(GL_NORMAL_ARRAY,				false);
 	SetInitialClientState(GL_COLOR_ARRAY,				false);
-	SetInitialClientState(GL_TEXTURE_COORD_ARRAY,		true);
+	SetInitialClientState(GL_TEXTURE_COORD_ARRAY,		false);
+	SetInitialState(GL_NORMALIZE,		true);		// Normalize normal vectors. Required so lighting looks correct on scaled meshes.
 	SetInitialState(GL_CULL_FACE,		true);
 	SetInitialState(GL_ALPHA_TEST,		true);
 	SetInitialState(GL_DEPTH_TEST,		true);
@@ -257,22 +260,39 @@ void Render_InitState(void)
 	SetInitialState(GL_FOG,				false);
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	gState.blendFuncIsAdditive = false;
-
-	gState.hasFlag_glDepthMask = true;		// initially active on a fresh context
+	gState.blendFuncIsAdditive = false;		// must match glBlendFunc call above!
+	
+	glDepthMask(true);
+	gState.hasFlag_glDepthMask = true;		// must match glDepthMask call above!
 
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-	gState.wantColorMask = true;
+	gState.wantColorMask = true;			// must match glColorMask call above!
 
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+	
 	gState.boundTexture = 0;
-	gState.wantFog = false;
+	gState.sceneHasFog = false;
 	gState.currentTransform = NULL;
 
+	glClearColor(clearColor->r, clearColor->g, clearColor->b, 1.0f);
+	
+	// Set misc GL defaults that apply throughout the entire game
+	glAlphaFunc(GL_GREATER, 0.4999f);
+	glFrontFace(GL_CCW);
+	glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+
+	// Set up mesh queue
 	gMeshQueueSize = 0;
 	memset(gMeshQueuePtrs, 0, sizeof(gMeshQueuePtrs));
 
+	// Set up fullscreen overlay quad
 	if (!gFullscreenQuad)
 		gFullscreenQuad = MakeQuadMesh_UI(0, 0, 640, 480, 0, 0, 1, 1);
+
+	// Clear the buffers
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	CHECK_GL_ERROR();
 }
 
 void Render_Shutdown(void)
@@ -296,12 +316,12 @@ void Render_EnableFog(
 	glFogf(GL_FOG_START,	fogHither * camYon);
 	glFogf(GL_FOG_END,		fogYon * camYon);
 	glFogfv(GL_FOG_COLOR,	(float *)&fogColor);
-	gState.wantFog = true;
+	gState.sceneHasFog = true;
 }
 
 void Render_DisableFog(void)
 {
-	gState.wantFog = false;
+	gState.sceneHasFog = false;
 }
 
 #pragma mark -
@@ -492,7 +512,6 @@ void Render_StartFrame(void)
 
 	// Clear color & depth buffers.
 	SetFlag(glDepthMask, true);	// The depth mask must be re-enabled so we can clear the depth buffer.
-	glDepthMask(true);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	GAME_ASSERT(gState.currentTransform == NULL);
@@ -891,7 +910,7 @@ static void BeginShadingPass(const MeshQueueEntry* entry)
 			!( (statusBits & STATUS_BIT_NULLSHADER) || (mesh->texturingMode & kQ3TexturingModeExt_NullShaderFlag) ));
 
 	// Apply fog or not
-	SetState(GL_FOG, gState.wantFog && !(statusBits & STATUS_BIT_NOFOG));
+	SetState(GL_FOG, gState.sceneHasFog && !(statusBits & STATUS_BIT_NOFOG));
 
 	// Texture mapping
 	if ((mesh->texturingMode & kQ3TexturingModeExt_OpacityModeMask) != kQ3TexturingModeOff)
