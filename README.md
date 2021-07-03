@@ -22,6 +22,7 @@ Get builds for macOS and Windows here: https://github.com/jorio/Bugdom/releases
     [SP](docs/Instructions-ES.pdf)
     [SV](docs/Instructions-SV.pdf)
 - [CHEATS.md](CHEATS.md) — Cheat codes!
+- [COMMANDLINE.md](COMMANDLINE.md) — Advanced command-line switches.
 
 ## License
 

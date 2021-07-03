@@ -14,36 +14,39 @@ static uint32_t			gDebugTextFrameAccumulator = 0;
 static uint32_t			gDebugTextLastUpdatedAt = 0;
 static char				gDebugTextBuffer[1024];
 
-void DoSDLMaintenance()
+static void UpdateDebugStats(void)
+{
+	uint32_t ticksNow = SDL_GetTicks();
+	uint32_t ticksElapsed = ticksNow - gDebugTextLastUpdatedAt;
+	if (ticksElapsed >= kDebugTextUpdateInterval)
+	{
+		float fps = 1000 * gDebugTextFrameAccumulator / (float)ticksElapsed;
+		snprintf(
+				gDebugTextBuffer, sizeof(gDebugTextBuffer),
+				"fps: %d\ntris: %d\nmeshes: %d+%d\n\nx: %d\nz: %d\n\n%s\n\n\n\n\n\n\n\n\n\n\n\n\nBugdom %s\n%s @ %dx%d",
+				(int)roundf(fps),
+				gRenderStats.triangles,
+				gRenderStats.meshesPass1,
+				gRenderStats.meshesPass2,
+				(int)gMyCoord.x,
+				(int)gMyCoord.z,
+				gLiquidCheat? "Liquid cheat ON": "",
+				PROJECT_VERSION,
+				glGetString(GL_RENDERER),
+				gWindowWidth,
+				gWindowHeight
+		);
+		QD3D_UpdateDebugTextMesh(gDebugTextBuffer);
+		gDebugTextFrameAccumulator = 0;
+		gDebugTextLastUpdatedAt = ticksNow;
+	}
+	gDebugTextFrameAccumulator++;
+}
+
+void DoSDLMaintenance(void)
 {
 	if (gShowDebugStats)
-	{
-		uint32_t ticksNow = SDL_GetTicks();
-		uint32_t ticksElapsed = ticksNow - gDebugTextLastUpdatedAt;
-		if (ticksElapsed >= kDebugTextUpdateInterval)
-		{
-			float fps = 1000 * gDebugTextFrameAccumulator / (float)ticksElapsed;
-			snprintf(
-					gDebugTextBuffer, sizeof(gDebugTextBuffer),
-					"fps: %d\ntris: %d\nmeshes: %d+%d\n\nx: %d\nz: %d\n\n%s\n\n\n\n\n\n\n\n\n\n\n\n\nBugdom %s\n%s @ %dx%d",
-					(int)roundf(fps),
-					gRenderStats.triangles,
-					gRenderStats.meshesPass1,
-					gRenderStats.meshesPass2,
-					(int)gMyCoord.x,
-					(int)gMyCoord.z,
-					gLiquidCheat? "Liquid cheat ON": "",
-					PROJECT_VERSION,
-					glGetString(GL_RENDERER),
-					gWindowWidth,
-					gWindowHeight
-			);
-			QD3D_UpdateDebugTextMesh(gDebugTextBuffer);
-			gDebugTextFrameAccumulator = 0;
-			gDebugTextLastUpdatedAt = ticksNow;
-		}
-		gDebugTextFrameAccumulator++;
-	}
+		UpdateDebugStats();
 
 	// Reset these on every new frame
 	gTypedAsciiKey = '\0';
@@ -68,20 +71,18 @@ void DoSDLMaintenance()
 						QD3D_OnWindowResized(event.window.data1, event.window.data2);
 						break;
 
-					case SDL_WINDOWEVENT_FOCUS_LOST:
 #if __APPLE__
+					case SDL_WINDOWEVENT_FOCUS_LOST:
 						// On Mac, always restore system mouse accel if cmd-tabbing away from the game
 						RestoreMacMouseAcceleration();
-#endif
 						break;
 						
 					case SDL_WINDOWEVENT_FOCUS_GAINED:
-#if __APPLE__
 						// On Mac, kill mouse accel when focus is regained only if the game has captured the mouse
 						if (SDL_GetRelativeMouseMode())
 							KillMacMouseAcceleration();
-#endif
 						break;
+#endif
 				}
 				break;
 

@@ -90,6 +90,7 @@ extern	Byte						gMyStartAim;
 extern	Byte						gPlayerMode;
 extern	Byte						gTotalSides;
 extern	CollisionRec				gCollisionList[];
+extern	CommandLineOptions			gCommandLine;
 extern	FSSpec						gDataSpec;
 extern	FenceDefType				*gFenceList;
 extern	NewObjectDefinitionType		gNewObjectDefinition;

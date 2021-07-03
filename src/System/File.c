@@ -498,10 +498,6 @@ PrefsType	prefBuffer;
 
 				/* PREFS ARE OK */
 
-#if _DEBUG
-	prefBlock->fullscreen = false;
-#endif
-
 	*prefBlock = prefBuffer;
 	return noErr;
 

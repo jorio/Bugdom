@@ -158,7 +158,7 @@ QD3DSetupOutputType	*outputPtr;
 
 				/* SET UP OPENGL RENDERER PROPERTIES NOW THAT WE HAVE A CONTEXT */
 
-	SDL_GL_SetSwapInterval(gGamePrefs.vsync ? 1 : 0);
+	SDL_GL_SetSwapInterval(gCommandLine.vsync);
 
 	CreateLights(&setupDefPtr->lights);
 

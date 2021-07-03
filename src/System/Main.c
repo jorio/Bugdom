@@ -234,8 +234,6 @@ void ToolBoxInit(void)
 	gGamePrefs.easyMode				= false;	
 	gGamePrefs.playerRelativeKeys	= false;	
 	gGamePrefs.fullscreen			= true;
-	gGamePrefs.vsync				= true;
-	gGamePrefs.antiAliasing			= false;
 	gGamePrefs.lowDetail			= false;
 	gGamePrefs.mouseSensitivityLevel= DEFAULT_MOUSE_SENSITIVITY_LEVEL;
 	gGamePrefs.showBottomBar		= true;

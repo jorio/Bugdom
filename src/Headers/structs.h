@@ -336,10 +336,16 @@ typedef struct
 	Boolean	easyMode;
 	Boolean	playerRelativeKeys;
 	Boolean fullscreen;
-	Boolean	vsync;
-	Boolean antiAliasing;
 	Boolean lowDetail;
 	Byte	mouseSensitivityLevel;
 	Boolean	showBottomBar;
 }PrefsType;
 
+typedef struct
+{
+	int		fullscreenWidth;
+	int		fullscreenHeight;
+	int		fullscreenRefreshRate;
+	int		msaa;
+	int		vsync;
+} CommandLineOptions;
