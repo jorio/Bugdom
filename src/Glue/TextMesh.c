@@ -267,18 +267,6 @@ ObjNode* TextMesh_Create(const TextMeshDef* def, const char* text)
 	gNewObjectDefinition.scale		= def->scale;
 	ObjNode* textNode = MakeNewObject(&gNewObjectDefinition);
 
-	// Attach shadow mesh first
-	if (def->withShadow)
-	{
-		TextMeshDef shadowDef = *def;
-		shadowDef.meshOrigin.x += shadowDef.shadowOffset.x;
-		shadowDef.meshOrigin.y += shadowDef.shadowOffset.y;
-		shadowDef.meshOrigin.z += -0.1f;
-		TQ3TriMeshData* shadowMesh = TextMesh_CreateMesh(&shadowDef, text);
-		shadowMesh->diffuseColor = def->shadowColor;
-		AttachGeometryToDisplayGroupObject(textNode, 1, &shadowMesh, kAttachGeometry_TransferMeshOwnership);
-	}
-
 	// Attach color mesh
 	AttachGeometryToDisplayGroupObject(textNode, 1, &mesh, kAttachGeometry_TransferMeshOwnership);
 
@@ -286,6 +274,28 @@ ObjNode* TextMesh_Create(const TextMeshDef* def, const char* text)
 	//textNode->BoundingSphere.radius = def->scale * lineWidth / 2.0f;
 
 	UpdateObjectTransforms(textNode);
+
+	// Create shadow node. We could just attach a new mesh to the main node,
+	// but that wouldn't guarantee that the shadow mesh gets sorted before the main mesh.
+	if (def->withShadow)
+	{
+		TextMeshDef shadowDef = *def;
+		shadowDef.meshOrigin.x += shadowDef.shadowOffset.x;
+		shadowDef.meshOrigin.y += shadowDef.shadowOffset.y;
+		gNewObjectDefinition.coord.z += -0.1f;
+		gNewObjectDefinition.slot = 0x7FFF;  // shadow node slot must be AFTER text node slot
+		TQ3TriMeshData* shadowMesh = TextMesh_CreateMesh(&shadowDef, text);
+		shadowMesh->diffuseColor = def->shadowColor;
+
+		ObjNode* shadowNode = MakeNewObject(&gNewObjectDefinition);
+		AttachGeometryToDisplayGroupObject(shadowNode, 1, &shadowMesh, kAttachGeometry_TransferMeshOwnership);
+		UpdateObjectTransforms(shadowNode);
+
+		// Set it as the textNode's shadow. textNode becomes responsible for deleting shadowNode.
+		// The shadow's slot must absolutely follow the text's slot.
+		textNode->ShadowNode = shadowNode;
+		GAME_ASSERT_MESSAGE(textNode->Slot < shadowNode->Slot, "text node slot must precede shadow node slot!");
+	}
 
 	return textNode;
 }

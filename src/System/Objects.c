@@ -219,6 +219,7 @@ void AttachGeometryToDisplayGroupObject(ObjNode* theNode, int numMeshes, TQ3TriM
 
 		theNode->NumMeshes++;
 		GAME_ASSERT(theNode->NumMeshes <= MAX_DECOMPOSED_TRIMESHES);
+		GAME_ASSERT(nodeMeshIndex < MAX_DECOMPOSED_TRIMESHES);
 
 		if (flags & kAttachGeometry_CloneMeshes)
 		{
