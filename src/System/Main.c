@@ -241,9 +241,8 @@ void ToolBoxInit(void)
 	gGamePrefs.showBottomBar		= true;
 				
 	LoadPrefs(&gGamePrefs);							// attempt to read from prefs file		
-	
-	SetFullscreenMode();
 }
+
 #pragma mark -
 
 /******************** PLAY GAME ************************/

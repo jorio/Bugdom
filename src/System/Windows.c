@@ -32,6 +32,21 @@ static void MoveFadeEvent(ObjNode *theNode);
 
 void InitWindowStuff(void)
 {
+		/* SET FULLSCREEN MODE ACCORDING TO PREFS */
+
+	SetFullscreenMode();
+
+		/* SHOW A COUPLE BLACK FRAMES BEFORE WE BEGIN */
+
+	QD3DSetupInputType viewDef;
+	QD3D_NewViewDef(&viewDef);
+	QD3D_SetupWindow(&viewDef, &gGameViewInfoPtr);
+	for (int i = 0; i < 45; i++)
+	{
+		QD3D_DrawScene(gGameViewInfoPtr, nil);
+		DoSDLMaintenance();
+	}
+	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
 }
 
 
@@ -158,9 +173,6 @@ void GameScreenToBlack(void)
 
 void QD3D_OnWindowResized(int windowWidth, int windowHeight)
 {
-	if (!gGameViewInfoPtr)
-		return;
-
 	gWindowWidth = windowWidth;
 	gWindowHeight = windowHeight;
 }
@@ -179,6 +191,9 @@ void SetFullscreenMode(void)
 	SDL_GetWindowSize(gSDLWindow, &width, &height);
 	QD3D_OnWindowResized(width, height);
 
-//	SDL_ShowCursor(gGamePrefs.fullscreen? 0: 1);
+	// Some systems may not display textures properly in the first GL context created by the game
+	// unless we flush SDL events immediately after entering fullscreen mode.
+	SDL_PumpEvents();
+	SDL_FlushEvents(0, 0xFFFFFFFF);
 }
 
