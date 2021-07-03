@@ -10,6 +10,7 @@
 /***************/
 
 #include "game.h"
+#include <stdio.h>
 #include <string.h>
 
 #if __APPLE__

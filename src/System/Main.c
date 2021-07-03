@@ -762,7 +762,6 @@ static void CheckDebugShortcutKeysOnBoot(void)
 	{
 		if (GetKeyState_SDL(levelKeys[i]))
 		{
-			printf("Starting level %i\n", i);
 			InitInventoryForGame();
 			gRealLevel = i;
 			gRestoringSavedGame = true;

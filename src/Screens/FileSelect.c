@@ -17,6 +17,7 @@
 #include "game.h"
 #include <time.h>
 #include <ctype.h>
+#include <stdio.h>
 
 
 /****************************/

@@ -700,10 +700,6 @@ int32_t id;
 
 static void DrawBonusStuff(float duration)
 {
-#if _DEBUG
-	printf("Warning: speeding up bonus screen because this is a debug build\n");
-	duration = 0.05f;
-#endif
 	do
 	{
 		UpdateInput();

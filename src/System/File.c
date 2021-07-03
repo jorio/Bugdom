@@ -11,6 +11,7 @@
 
 #include "game.h"
 #include <time.h>
+#include <stdio.h>
 #include <string.h>
 
 
@@ -1010,7 +1011,9 @@ short					**xlateTableHand,*xlateTbl;
 		// Level 2's spline #16 has 0 points. Skip the byteswapping, but do alloc an empty handle, which the game expects.
 		if ((*gSplineList)[i].numPoints == 0)
 		{
+#if _DEBUG
 			printf("WARNING: Spline #%ld has 0 points\n", i);
+#endif
 			(*gSplineList)[i].pointList = (SplinePointType**) AllocHandle(0);
 			continue;
 		}

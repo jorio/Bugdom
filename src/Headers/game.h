@@ -7,6 +7,8 @@
 
 #if _MSC_VER
 #define _Static_assert static_assert
+#define strncasecmp _strnicmp
+#define strcasecmp _stricmp
 #endif
 
 #ifdef __cplusplus

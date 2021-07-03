@@ -333,9 +333,6 @@ again:
 
 		if (targetObj->CType == INVALID_NODE_FLAG)
 		{
-#if _DEBUG
-			printf("Collided with dead object!\n");
-#endif
 			continue;
 		}
 

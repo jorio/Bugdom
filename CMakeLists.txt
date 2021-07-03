@@ -251,7 +251,12 @@ add_compile_definitions(
 if(WIN32)
 	# On Win32, we need NOGDI and NOUSER to be able to define some Mac functions
 	# whose names are otherwise taken by Windows APIs.
-	target_compile_definitions(${GAME_TARGET} PRIVATE WIN32_LEAN_AND_MEAN NOGDI NOUSER)
+	target_compile_definitions(${GAME_TARGET} PRIVATE
+		WIN32_LEAN_AND_MEAN
+		NOGDI
+		NOUSER
+		_CRT_SECURE_NO_WARNINGS  # quit whining about snprintf_s
+	)
 endif()
 
 #------------------------------------------------------------------------------

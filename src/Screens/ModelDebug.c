@@ -385,7 +385,7 @@ void DoModelDebug(void)
 			char titlebuf[512];
 			if (gDisplaySkeleton)
 			{
-				sprintf(titlebuf, "Skeleton %d/%d [TAB], Anim %d/%d [ENTER]. Press [SPACE] for DGOs.",
+				snprintf(titlebuf, sizeof(titlebuf), "Skeleton %d/%d [TAB], Anim %d/%d [ENTER]. Press [SPACE] for DGOs.",
 						1+gCurrentSkeletonType,
 						MAX_SKELETON_TYPES,
 						1+gModel->Skeleton->AnimNum,
@@ -393,7 +393,7 @@ void DoModelDebug(void)
 			}
 			else
 			{
-				sprintf(titlebuf, "3DMF Group %s (%d/%d) [TAB], DGO %d/%d [ENTER]. Press [SPACE] for skeletons.",
+				snprintf(titlebuf, sizeof(titlebuf), "3DMF Group %s (%d/%d) [TAB], DGO %d/%d [ENTER]. Press [SPACE] for skeletons.",
 						gModelFiles[gCurrentModelFile],
 						1+gCurrentModelFile,
 						gNumModelFiles,
