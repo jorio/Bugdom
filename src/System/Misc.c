@@ -64,6 +64,8 @@ Str255		numStr;
 
 void DoAlert(const char* s)
 {
+	if (gSDLWindow)
+		SDL_SetWindowFullscreen(gSDLWindow, 0);
 	printf("BUGDOM ALERT: %s\n", s);
 	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", s, gSDLWindow);
 }
@@ -73,6 +75,8 @@ void DoAlert(const char* s)
 
 void DoFatalAlert(const char* s)
 {
+	if (gSDLWindow)
+		SDL_SetWindowFullscreen(gSDLWindow, 0);
 	printf("BUGDOM FATAL ALERT: %s\n", s);
 	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", s, gSDLWindow);
 	CleanQuit();
@@ -82,6 +86,8 @@ void DoFatalAlert(const char* s)
 
 void DoFatalAlert2(const char* s1, const char* s2)
 {
+	if (gSDLWindow)
+		SDL_SetWindowFullscreen(gSDLWindow, 0);
 	printf("BUGDOM FATAL ALERT: %s - %s\n", s1, s2);
 	static char alertbuf[1024];
 	snprintf(alertbuf, 1024, "%s\n%s", s1, s2);
@@ -93,6 +99,8 @@ void DoFatalAlert2(const char* s1, const char* s2)
 
 void DoAssert(const char* msg, const char* file, int line)
 {
+	if (gSDLWindow)
+		SDL_SetWindowFullscreen(gSDLWindow, 0);
 	printf("BUGDOM ASSERTION FAILED: %s - %s:%d\n", msg, file, line);
 	static char alertbuf[1024];
 	snprintf(alertbuf, 1024, "%s\n%s:%d", msg, file, line);
