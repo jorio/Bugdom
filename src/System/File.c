@@ -446,7 +446,8 @@ short		refNum;
 FSSpec		file;
 long		count;
 char		header[PREFS_HEADER_LENGTH + 1];
-				
+PrefsType	prefBuffer;
+
 				/*************/
 				/* READ FILE */
 				/*************/
@@ -455,6 +456,14 @@ char		header[PREFS_HEADER_LENGTH + 1];
 	iErr = FSpOpenDF(&file, fsRdPerm, &refNum);	
 	if (iErr)
 		return(iErr);
+
+				/* CHECK FILE LENGTH */
+
+	long eof = 0;
+	GetEOF(refNum, &eof);
+
+	if (eof != sizeof(PrefsType) + PREFS_HEADER_LENGTH)
+		goto fileIsCorrupt;
 
 				/* READ HEADER */
 
@@ -465,21 +474,16 @@ char		header[PREFS_HEADER_LENGTH + 1];
 		count != PREFS_HEADER_LENGTH ||
 		0 != strncmp(header, PREFS_HEADER_STRING, PREFS_HEADER_LENGTH))
 	{
-		FSClose(refNum);
-		return badFileFormat;
+		goto fileIsCorrupt;
 	}
 
 				/* READ PREFS STRUCT */
 
 	count = sizeof(PrefsType);
-	iErr = FSRead(refNum, &count,  (Ptr)prefBlock);		// read data from file
-	if (iErr ||
-		count != sizeof(PrefsType))
-	{
-		FSClose(refNum);			
-		return(badFileFormat);
-	}
-	
+	iErr = FSRead(refNum, &count, (Ptr)&prefBuffer);		// read data from file
+	if (iErr || count != sizeof(PrefsType))
+		goto fileIsCorrupt;
+
 	FSClose(refNum);			
 
 
@@ -491,11 +495,18 @@ char		header[PREFS_HEADER_LENGTH + 1];
 		prefBlock->mouseSensitivityLevel = DEFAULT_MOUSE_SENSITIVITY_LEVEL;
 	}
 
+				/* PREFS ARE OK */
+
 #if _DEBUG
 	prefBlock->fullscreen = false;
 #endif
-	
-	return(noErr);
+
+	*prefBlock = prefBuffer;
+	return noErr;
+
+fileIsCorrupt:
+	FSClose(refNum);
+	return badFileFormat;
 }
 
 
