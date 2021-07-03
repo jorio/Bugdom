@@ -25,7 +25,7 @@ extern "C"
 	SDL_Window* gSDLWindow = nullptr;
 
 	// Tell Windows graphics driver that we prefer running on a dedicated GPU if available
-#if _WIN32
+#if 0 //_WIN32
 	__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 	__declspec(dllexport) unsigned long NvOptimusEnablement = 1;
 #endif
