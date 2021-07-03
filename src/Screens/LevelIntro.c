@@ -1471,9 +1471,7 @@ static Boolean WaitAndDraw(float duration)
 		DoSDLMaintenance();
 		duration -= gFramesPerSecondFrac;
 		
-		if (FlushMouseButtonPress())
-			return(true);
-		if (AreAnyNewKeysPressed())
+		if (GetSkipScreenInput())
 			return(true);		
 		
 	}while(duration > 0.0f);

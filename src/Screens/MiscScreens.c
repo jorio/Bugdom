@@ -257,7 +257,7 @@ Boolean			fo = false;
 		QD3D_CalcFramesPerSecond();					
 	
 		UpdateInput();
-		if (AreAnyNewKeysPressed() || FlushMouseButtonPress())
+		if (GetSkipScreenInput())
 		{
 			if (!fo)
 				GammaFadeOut();

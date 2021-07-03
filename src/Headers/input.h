@@ -65,7 +65,6 @@ Boolean GetKeyState_SDL(unsigned short sdlScanCode);
 Boolean GetKeyState(unsigned short key);
 Boolean GetNewKeyState_SDL(unsigned short sdlScanCode);
 Boolean GetSkipScreenInput(void);
-Boolean AreAnyNewKeysPressed(void);
 void ResetInputState(void);
 void UpdateKeyMap(void);
 

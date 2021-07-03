@@ -109,9 +109,7 @@ TQ3Vector3D	camDelta = {0,0,0};
 		DoSDLMaintenance();
 
 		UpdateInput();
-		if (FlushMouseButtonPress())
-			break;
-		if (AreAnyNewKeysPressed())
+		if (GetSkipScreenInput())
 			break;		
 			
 	}while(gGameViewInfoPtr->currentCameraCoords.y > -500);

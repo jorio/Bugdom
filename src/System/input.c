@@ -333,22 +333,14 @@ Boolean GetNewKeyState_SDL(unsigned short key)
 	return gRawKeyboardState[key] == KEY_DOWN;
 }
 
+/******* DOES USER WANT TO SKIP TO NEXT SCREEN *******/
+
 Boolean GetSkipScreenInput(void)
 {
 	return GetNewKeyState(kKey_UI_Confirm)
 		|| GetNewKeyState(kKey_UI_Cancel)
 		|| GetNewKeyState(kKey_UI_Skip)
 		|| FlushMouseButtonPress();
-}
-
-/***************** ARE ANY NEW KEYS PRESSED ****************/
-
-Boolean AreAnyNewKeysPressed(void)
-{
-	for (int i = 0; i < kKey_MAX; i++)
-		if (gKeyStates[i] == KEY_DOWN)
-			return true;
-	return(false);
 }
 
 
