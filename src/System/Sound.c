@@ -73,8 +73,6 @@ Boolean						gSongPlayingFlag = false;
 Boolean						gResetSong = false;
 Boolean						gLoopSongFlag = true;
 
-long						gOriginalSystemVolume,gCurrentSystemVolume;
-
 static	SndChannelPtr		gMusicChannel=nil;
 static short				gMusicFileRefNum = 0x0ded;
 Boolean						gMuteMusicFlag = false;
@@ -160,13 +158,6 @@ static EffectType	gEffectsTable[] =
 void InitSoundTools(void)
 {
 OSErr		iErr;
-
-			/* SET SYSTEM VOLUME INFO */
-			
-	GetDefaultOutputVolume(&gOriginalSystemVolume);		
-	gOriginalSystemVolume &= 0xffff;	
-	gCurrentSystemVolume = gOriginalSystemVolume;
-
 
 	gMaxChannels = 0;
 
@@ -884,38 +875,6 @@ void DoSoundMaintenance(void)
 
 		if (GetNewKeyState(kKey_ToggleMusic))
 			ToggleMusic();			
-			
-		
-				/* SEE IF CHANGE VOLUME */
-
-		if (GetNewKeyState(kKey_RaiseVolume))
-		{
-			if (gCurrentSystemVolume < 0x100)
-			{
-				if (gCurrentSystemVolume < 10)					// finer control @ low volumes
-					gCurrentSystemVolume += 1;
-				else
-					gCurrentSystemVolume += 15;
-			}
-			if (gCurrentSystemVolume > 0x100)
-				gCurrentSystemVolume = 0x100;
-			SetDefaultOutputVolume((gCurrentSystemVolume<<16)|gCurrentSystemVolume); // set system volume
-		}
-		else
-		if (GetNewKeyState(kKey_LowerVolume))
-		{
-			if (gCurrentSystemVolume > 0x000)
-			{
-				if (gCurrentSystemVolume < 10)					// finer control @ low volumes
-					gCurrentSystemVolume -= 1;
-				else
-					gCurrentSystemVolume -= 15;
-			}
-			if (gCurrentSystemVolume < 0x000)
-				gCurrentSystemVolume = 0;
-			
-			SetDefaultOutputVolume((gCurrentSystemVolume<<16)|gCurrentSystemVolume); // set system volume
-		}
 	}
 				/* SEE IF STREAMED MUSIC STOPPED - SO RESET */
 				

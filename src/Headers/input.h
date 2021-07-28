@@ -27,8 +27,6 @@ enum
 {
 	kKey_Pause,
 	kKey_ToggleMusic,
-	kKey_RaiseVolume,
-	kKey_LowerVolume,
 	kKey_ToggleFullscreen,
 
 	kKey_SwivelCameraLeft,

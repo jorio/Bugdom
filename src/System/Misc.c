@@ -136,7 +136,6 @@ Boolean beenHere = false;
 	UseResFile(gMainAppRezFile);
 
 	InitCursor();
-//	SetDefaultOutputVolume((gOriginalSystemVolume<<16)|gOriginalSystemVolume); // reset system volume
 	ExitToShell();		
 }
 
