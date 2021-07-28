@@ -308,7 +308,7 @@ static void FillProjectionMatrix(TQ3Matrix4x4* m, float fov, float aspect, float
 #undef M
 }
 
-/********************** FILL PROJECTION MATRIX ************************/
+/********************** FILL LOOKAT MATRIX ************************/
 //
 // Equivalent to gluLookAt
 //
@@ -360,7 +360,7 @@ void CalcCameraMatrixInfo(QD3DSetupOutputType *setupInfo)
 			setupInfo->hither,
 			setupInfo->yon);
 
-	glLoadMatrixf((const GLfloat*) gCameraViewToFrustumMatrix.value);
+	glLoadMatrixf((const GLfloat*) &gCameraViewToFrustumMatrix.value[0][0]);
 
 			/* INIT MODELVIEW MATRIX */
 
@@ -372,7 +372,7 @@ void CalcCameraMatrixInfo(QD3DSetupOutputType *setupInfo)
 			&setupInfo->currentCameraLookAt,
 			&setupInfo->currentCameraUpVector);
 
-	glLoadMatrixf((const GLfloat*) gCameraWorldToViewMatrix.value);
+	glLoadMatrixf((const GLfloat*) &gCameraWorldToViewMatrix.value[0][0]);
 
 			/* UPDATE LIGHT POSITIONS */
 

@@ -135,7 +135,7 @@ static TQ3TriMeshData* gFullscreenQuad = nil;
 
 static void Render_GetGLProcAddresses(void)
 {
-	__glDrawRangeElements = (PFNGLDRAWRANGEELEMENTSPROC)SDL_GL_GetProcAddress("glDrawRangeElements");  // missing link with something...?
+	__glDrawRangeElements = (PFNGLDRAWRANGEELEMENTSPROC)SDL_GL_GetProcAddress("glDrawRangeElements");
 	GAME_ASSERT(__glDrawRangeElements);
 }
 
@@ -224,11 +224,7 @@ static inline void SetColorMask(GLboolean enable)
 void DoFatalGLError(GLenum error, const char* file, int line)
 {
 	static char alertbuf[1024];
-	snprintf(alertbuf, sizeof(alertbuf), "OpenGL error 0x%x: %s\nin %s:%d",
-		error,
-		(const char*)gluErrorString(error),
-		file,
-		line);
+	snprintf(alertbuf, sizeof(alertbuf), "OpenGL error 0x%x\nin %s:%d", error, file, line);
 	DoFatalAlert(alertbuf);
 }
 #endif
@@ -600,10 +596,10 @@ void Render_FlushQueue(void)
 
 	if (numDeferredColorMeshes > 0)
 	{
-		glDepthFunc(GL_LEQUAL);
 		EnableState(GL_BLEND);
 		DisableState(GL_ALPHA_TEST);
 		SetFlag(glDepthMask, false);	// don't write to z buffer
+		glDepthFunc(GL_LEQUAL);			// LEQUAL: our meshes' depth info is already in the z buffer (written in pass 1)
 
 		for (int i = 0; i < numDeferredColorMeshes; i++)
 		{

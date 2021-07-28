@@ -1,12 +1,7 @@
 #pragma once
 
 #include <QD3D.h>
-
-#if __APPLE__
-#include <OpenGL/glu.h>		// gluErrorString, gluPerspective, gluLookAt
-#else
-#include <GL/glu.h>			// gluErrorString, gluPerspective, gluLookAt
-#endif
+#include <SDL_opengl.h>
 
 #if !defined(ALLOW_FADE)
 	#if _DEBUG
