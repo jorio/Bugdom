@@ -59,7 +59,6 @@ extern "C"
 #include "tween.h"
 #include "mousesmoothing.h"
 #include "frustumculling.h"
-#include "gamepatches.h"
 #include "structformats.h"
 
 extern	Boolean						gAreaCompleted;

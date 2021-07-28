@@ -84,10 +84,12 @@ set(GAME_SOURCES
 	${GAME_SRCDIR}/QD3D/3DMath.c
 	${GAME_SRCDIR}/QD3D/Camera.c
 	${GAME_SRCDIR}/QD3D/EnvironmentMap.c
+	${GAME_SRCDIR}/QD3D/FrustumCulling.c
 	${GAME_SRCDIR}/QD3D/Pick.c
 	${GAME_SRCDIR}/QD3D/QD3D_Geometry.c
 	${GAME_SRCDIR}/QD3D/QD3D_Support.c
 	${GAME_SRCDIR}/QD3D/Renderer.c
+	${GAME_SRCDIR}/QD3D/TextMesh.c
 	${GAME_SRCDIR}/Ride/DragonFly.c
 	${GAME_SRCDIR}/Ride/WaterBug.c
 	${GAME_SRCDIR}/Screens/AboutScreen.c
@@ -102,6 +104,7 @@ set(GAME_SOURCES
 	${GAME_SRCDIR}/Screens/ModelDebug.c
 	${GAME_SRCDIR}/Screens/SettingsScreen.c
 	${GAME_SRCDIR}/Screens/Title.c
+	${GAME_SRCDIR}/Screens/UIRoutines.c
 	${GAME_SRCDIR}/Screens/WinLose.c
 	${GAME_SRCDIR}/Skeleton/Bones.c
 	${GAME_SRCDIR}/Skeleton/SkeletonAnim.c
@@ -109,17 +112,23 @@ set(GAME_SOURCES
 	${GAME_SRCDIR}/Skeleton/SkeletonObj.c
 	${GAME_SRCDIR}/System/Collision.c
 	${GAME_SRCDIR}/System/File.c
+	${GAME_SRCDIR}/System/KillMacMouseAcceleration.c
 	${GAME_SRCDIR}/System/Main.c
 	${GAME_SRCDIR}/System/Misc.c
+	${GAME_SRCDIR}/System/MouseSmoothing.c
 	${GAME_SRCDIR}/System/Objects.c
 	${GAME_SRCDIR}/System/Objects2.c
+	${GAME_SRCDIR}/System/SDLMaintenance.c
 	${GAME_SRCDIR}/System/Sound.c
+	${GAME_SRCDIR}/System/TGA.c
+	${GAME_SRCDIR}/System/Tween.c
 	${GAME_SRCDIR}/System/Windows.c
 	${GAME_SRCDIR}/System/input.c
 	${GAME_SRCDIR}/Terrain/Fences.c
 	${GAME_SRCDIR}/Terrain/SplineItems.c
 	${GAME_SRCDIR}/Terrain/Terrain.c
 	${GAME_SRCDIR}/Terrain/Terrain2.c
+	${GAME_SRCDIR}/Main.cpp
 )
 
 set(GAME_HEADERS
@@ -165,7 +174,6 @@ set(GAME_HEADERS
 	${GAME_SRCDIR}/Headers/terrain.h
 	${GAME_SRCDIR}/Headers/triggers.h
 	${GAME_SRCDIR}/Headers/window.h
-	${GAME_SRCDIR}/Headers/gamepatches.h
 	${GAME_SRCDIR}/Headers/textmesh.h
 	${GAME_SRCDIR}/Headers/tga.h
 	${GAME_SRCDIR}/Headers/tween.h
@@ -174,20 +182,7 @@ set(GAME_HEADERS
 	${GAME_SRCDIR}/Headers/frustumculling.h
 )
 
-set(GAME_GLUE_SOURCES
-	${GAME_SRCDIR}/Main.cpp
-	${GAME_SRCDIR}/Glue/FrustumCulling.c
-	${GAME_SRCDIR}/Glue/KillMacMouseAcceleration.c
-	${GAME_SRCDIR}/Glue/MouseSmoothing.c
-	${GAME_SRCDIR}/Glue/SDLMaintenance.c
-	${GAME_SRCDIR}/Glue/TextMesh.c
-	${GAME_SRCDIR}/Glue/TGA.c
-	${GAME_SRCDIR}/Glue/Tween.c
-	${GAME_SRCDIR}/Glue/UIRoutines.c
-)
-
 set(GAME_ALL_SOURCES
-	${GAME_GLUE_SOURCES}
 	${GAME_SOURCES}
 	${GAME_HEADERS}
 )
