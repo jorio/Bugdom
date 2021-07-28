@@ -1,7 +1,8 @@
 /****************************/
 /*     SOUND ROUTINES       */
-/* (c)1994-99 Pangea Software  */
 /* By Brian Greenstone      */
+/* (c)1994-99 Pangea Software  */
+/* (c)2021 Iliyas Jorio     */
 /****************************/
 
 
@@ -25,26 +26,44 @@ static void Calc3DEffectVolume(short effectNum, TQ3Point3D *where, float volAdju
 /*    CONSTANTS             */
 /****************************/
 
-#define FloatToFixed16(a)      ((Fixed)((float)(a) * 0x000100L))		// convert float to 16bit fixed pt
-
 #define		MAX_CHANNELS			14
-
-#define		MAX_SOUND_BANKS			5
-#define		MAX_EFFECTS				30
 
 
 typedef struct
 {
-	Byte	bank,sound;
-	long	refDistance;
-	Byte	uniqueness;
-}EffectType;
+	int				bank;
+	const char*		filename;
+	float			refDistance;
+	int				flags;
+} EffectDef;
 
+typedef struct
+{
+	SndListHandle	sndHandle;
+	long			sndOffset;
+	short			lastPlayedOnChannel;
+	u_long			lastLoudness;
+} LoadedEffect;
 
 
 #define	STREAM_BUFFER_SIZE	100000
 
 #define	VOLUME_DISTANCE_FACTOR	.004f		// bigger == sound decays FASTER with dist, smaller = louder far away
+
+
+enum
+{
+	// At most one instance of the effect may be played back at once.
+	// If the effect is started again, the previous instance is stopped.
+	kSoundFlag_Unique = 1 << 0,
+
+	// When combined with kSoundFlag_Unique, any new instances of the effect
+	// will be ignored As long as an instance of the effect is still playing.
+	kSoundFlag_DontInterrupt = 1 << 1,
+
+	// Turn off linear interpolation for this effect.
+	kSoundFlag_NoInterp = 1 << 2,
+};
 
 /**********************/
 /*     VARIABLES      */
@@ -55,19 +74,12 @@ float						gGlobalVolume = .4;
 TQ3Point3D					gEarCoords;				// coord of camera plus a bit to get pt in front of camera
 static	TQ3Vector3D			gEyeVector;
 
-
-static	SndListHandle		gSndHandles[MAX_SOUND_BANKS][MAX_EFFECTS];		// handles to ALL sounds
-static  long				gSndOffsets[MAX_SOUND_BANKS][MAX_EFFECTS];
-static  short				gSndLastChannel[MAX_SOUND_BANKS][MAX_EFFECTS];
+static	LoadedEffect		gLoadedEffects[NUM_EFFECTS];
 
 static	SndChannelPtr		gSndChannel[MAX_CHANNELS];
 static	ChannelInfoType		gChannelInfo[MAX_CHANNELS];
 
 static short				gMaxChannels = 0;
-
-
-static short				gNumSndsInBank[MAX_SOUND_BANKS] = {0,0,0,0,0};
-
 
 Boolean						gSongPlayingFlag = false;
 Boolean						gResetSong = false;
@@ -84,72 +96,63 @@ static short				gCurrentSong = -1;
 		/* EFFECTS TABLE */
 		/*****************/
 
-enum
+static const char* kSoundBankNames[NUM_SOUNDBANKS] =
 {
-	// The effect may be played back unlimited times at once.
-	SOUND_MULTIPLE,
-
-	// At most one instance of the effect may be played back at once.
-	// If the effect is started again, the previous instance is stopped.
-	SOUND_UNIQUE,
-
-	// At most one instance of the effect may be played back at once.
-	// As long as an instance of the effect is still playing, any new instances
-	// of the effect will be ignored.
-	SOUND_UNIQUE_DONTINTERRUPT,
+	[SOUNDBANK_MAIN]	= "main",
+	[SOUNDBANK_LAWN]	= "lawn",
+	[SOUNDBANK_POND]	= "pond",
+	[SOUNDBANK_HIVE]	= "hive",
+	[SOUNDBANK_NIGHT]	= "night",
+	[SOUNDBANK_FOREST]	= "forest",
+	[SOUNDBANK_ANTHILL]	= "anthill",
+	[SOUNDBANK_BONUS]	= "bonus",
 };
 
-static EffectType	gEffectsTable[] =
+static const EffectDef	kEffectsTable[] =
 {
-	{SOUND_BANK_DEFAULT,       SOUND_DEFAULT_SELECT,        800, SOUND_UNIQUE	},  // EFFECT_SELECT
-	{SOUND_BANK_DEFAULT,       SOUND_DEFAULT_JUMP,         1400, SOUND_MULTIPLE	},  // EFFECT_JUMP
-	{SOUND_BANK_DEFAULT,       SOUND_DEFAULT_THROWSPEAR,   1300, SOUND_MULTIPLE	},  // EFFECT_THROWSPEAR
-	{SOUND_BANK_DEFAULT,       SOUND_DEFAULT_HITDIRT,       900, SOUND_MULTIPLE	},  // EFFECT_HITDIRT
-	{SOUND_BANK_DEFAULT,       SOUND_DEFAULT_POP,           800, SOUND_MULTIPLE	},  // EFFECT_POP
-	{SOUND_BANK_DEFAULT,       SOUND_DEFAULT_GETPOW,        500, SOUND_MULTIPLE	},  // EFFECT_GETPOW
-	{SOUND_BANK_DEFAULT,       SOUND_DEFAULT_BUZZ,           50, SOUND_MULTIPLE	},  // EFFECT_BUZZ
-	{SOUND_BANK_DEFAULT,       SOUND_DEFAULT_OUCH,          900, SOUND_MULTIPLE	},  // EFFECT_OUCH
-	{SOUND_BANK_DEFAULT,       SOUND_DEFAULT_KICK,          700, SOUND_MULTIPLE	},  // EFFECT_KICK
-	{SOUND_BANK_DEFAULT,       SOUND_DEFAULT_POUND,         900, SOUND_UNIQUE	},  // EFFECT_POUND
-	{SOUND_BANK_DEFAULT,       SOUND_DEFAULT_SPEEDBOOST,    800, SOUND_UNIQUE	},  // EFFECT_SPEEDBOOST
-	{SOUND_BANK_DEFAULT,       SOUND_DEFAULT_MORPH,         600, SOUND_UNIQUE	},  // EFFECT_MORPH
-	{SOUND_BANK_DEFAULT,       SOUND_DEFAULT_FIRECRACKER,  2500, SOUND_UNIQUE	},  // EFFECT_FIRECRACKER
-	{SOUND_BANK_DEFAULT,       SOUND_DEFAULT_SHIELD,       2000, SOUND_MULTIPLE	},  // EFFECT_SHIELD
-	{SOUND_BANK_DEFAULT,       SOUND_DEFAULT_SPLASH,        900, SOUND_MULTIPLE	},  // EFFECT_SPLASH
-	{SOUND_BANK_DEFAULT,       SOUND_DEFAULT_BUDDYLAUNCH,   300, SOUND_MULTIPLE	},  // EFFECT_BUDDYLAUNCH
-	{SOUND_BANK_DEFAULT,       SOUND_DEFAULT_RESCUE,        500, SOUND_UNIQUE	},  // EFFECT_RESCUE
-	{SOUND_BANK_DEFAULT,       SOUND_DEFAULT_CHECKPOINT,   1000, SOUND_MULTIPLE	},  // EFFECT_CHECKPOINT
-	{SOUND_BANK_DEFAULT,       SOUND_DEFAULT_KABLAM,       2000, SOUND_MULTIPLE	},  // EFFECT_KABLAM
-
-	{SOUND_BANK_LEVELSPECIFIC, SOUND_WATER_BOATENGINE,     2400, SOUND_MULTIPLE	},  // EFFECT_BOATENGINE
-	{SOUND_BANK_LEVELSPECIFIC, SOUND_WATER_WATERBUG,        400, SOUND_MULTIPLE	},  // EFFECT_WATERBUG
-
-	{SOUND_BANK_LEVELSPECIFIC, SOUND_FOREST_FOOTSTEP,      4000, SOUND_MULTIPLE	},  // EFFECT_FOOTSTEP
-	{SOUND_BANK_LEVELSPECIFIC, SOUND_FOREST_HELICOPTER,     800, SOUND_MULTIPLE	},  // EFFECT_HELICOPTER
-	{SOUND_BANK_LEVELSPECIFIC, SOUND_FOREST_PLASMABURST,   3500, SOUND_MULTIPLE	},  // EFFECT_PLASMABURST
-	{SOUND_BANK_LEVELSPECIFIC, SOUND_FOREST_PLASMAEXPLODE, 4500, SOUND_MULTIPLE	},  // EFFECT_PLASMAEXPLODE
-	{SOUND_BANK_LEVELSPECIFIC, SOUND_FOREST_FIRECRACKLE,   8000, SOUND_MULTIPLE	},  // EFFECT_FIRECRACKLE
-
-	{SOUND_BANK_LEVELSPECIFIC, SOUND_WATER_SLURP,           500, SOUND_MULTIPLE	},  // EFFECT_SLURP
-	{SOUND_BANK_LEVELSPECIFIC, SOUND_NIGHT_ROCKSLAM,       1000, SOUND_MULTIPLE	},  // EFFECT_ROCKSLAM
-	{SOUND_BANK_LEVELSPECIFIC, SOUND_ANT_VALVEOPEN,        1000, SOUND_MULTIPLE	},  // EFFECT_VALVEOPEN
-	{SOUND_BANK_LEVELSPECIFIC, SOUND_ANT_WATERLEAK,        1000, SOUND_MULTIPLE	},  // EFFECT_WATERLEAK
-	{SOUND_BANK_LEVELSPECIFIC, SOUND_ANT_SHOOT,            7000, SOUND_MULTIPLE	},  // EFFECT_KINGSHOOT
-	{SOUND_BANK_LEVELSPECIFIC, SOUND_ANT_EXPLODE,          8000, SOUND_MULTIPLE	},  // EFFECT_KINGEXPLODE
-	{SOUND_BANK_LEVELSPECIFIC, SOUND_ANT_KINGCRACKLE,      2000, SOUND_MULTIPLE	},  // EFFECT_KINGCRACKLE
-	{SOUND_BANK_LEVELSPECIFIC, SOUND_ANT_SIZZLE,           2000, SOUND_MULTIPLE	},  // EFFECT_SIZZLE
-	{SOUND_BANK_LEVELSPECIFIC, SOUND_ANT_LAUGH,            2000, SOUND_UNIQUE_DONTINTERRUPT},  // EFFECT_KINGLAUGH
-	{SOUND_BANK_LEVELSPECIFIC, SOUND_ANT_CLANG,            2000, SOUND_UNIQUE_DONTINTERRUPT},  // EFFECT_PIPECLANG
-
-	{SOUND_BANK_LEVELSPECIFIC, SOUND_LAWN_OPENDOOR,        1500, SOUND_MULTIPLE	},  // EFFECT_OPENLAWNDOOR
-	{SOUND_BANK_LEVELSPECIFIC, SOUND_NIGHT_OPENDOOR,       1500, SOUND_MULTIPLE	},  // EFFECT_OPENNIGHTDOOR
-
-	{SOUND_BANK_LEVELSPECIFIC, SOUND_HIVE_STINGERSHOOT,    1300, SOUND_MULTIPLE	},  // EFFECT_STINGERSHOOT
-	{SOUND_BANK_LEVELSPECIFIC, SOUND_HIVE_PUMP,             600, SOUND_MULTIPLE	},  // EFFECT_PUMP
-	{SOUND_BANK_LEVELSPECIFIC, SOUND_HIVE_PLUNGER,          600, SOUND_MULTIPLE	},  // EFFECT_PLUNGER
-
-	{SOUND_BANK_BONUS,         SOUND_BONUS_BELL,           1000, SOUND_MULTIPLE	},  // EFFECT_BONUSBELL
-	{SOUND_BANK_BONUS,         SOUND_BONUS_CLICK,          1000, SOUND_UNIQUE	},  // EFFECT_BONUSCLICK
+	[EFFECT_SELECT]			= {SOUNDBANK_MAIN,		"select",        800, kSoundFlag_Unique },
+	[EFFECT_JUMP]			= {SOUNDBANK_MAIN,		"jump",         1400, 0	},
+	[EFFECT_THROWSPEAR]		= {SOUNDBANK_MAIN,		"throwspear",   1300, 0	},
+	[EFFECT_HITDIRT]		= {SOUNDBANK_MAIN,		"hitdirt",       900, 0	},
+	[EFFECT_POP]			= {SOUNDBANK_MAIN,		"pop",           800, 0	},
+	[EFFECT_GETPOW]			= {SOUNDBANK_MAIN,		"getpow",        500, 0	},
+	[EFFECT_BUZZ]			= {SOUNDBANK_MAIN,		"flybuzz",        50, 0	},
+	[EFFECT_OUCH]			= {SOUNDBANK_MAIN,		"gethit",        900, 0	},
+	[EFFECT_KICK]			= {SOUNDBANK_MAIN,		"kick",          700, 0	},
+	[EFFECT_POUND]			= {SOUNDBANK_MAIN,		"pound",         900, kSoundFlag_Unique },
+	[EFFECT_SPEEDBOOST]		= {SOUNDBANK_MAIN,		"speedboost",    800, kSoundFlag_Unique },
+	[EFFECT_MORPH]			= {SOUNDBANK_MAIN,		"morph",         600, kSoundFlag_Unique },
+	[EFFECT_FIRECRACKER]	= {SOUNDBANK_MAIN,		"firecracker",  2500, kSoundFlag_Unique | kSoundFlag_NoInterp },
+	[EFFECT_SHIELD]			= {SOUNDBANK_MAIN,		"shield",       2000, 0	},
+	[EFFECT_SPLASH]			= {SOUNDBANK_MAIN,		"splash",        900, 0	},
+	[EFFECT_BUDDYLAUNCH]	= {SOUNDBANK_MAIN,		"buddylaunch",   300, kSoundFlag_NoInterp },
+	[EFFECT_RESCUE]			= {SOUNDBANK_MAIN,		"ladybugrescue", 500, kSoundFlag_Unique },
+	[EFFECT_CHECKPOINT]		= {SOUNDBANK_MAIN,		"checkpoint",   1000, 0	},
+	[EFFECT_KABLAM]			= {SOUNDBANK_MAIN,		"kablam",       2000, 0	},
+	[EFFECT_BOATENGINE]		= {SOUNDBANK_POND,		"boatengine",   2400, 0	},
+	[EFFECT_WATERBUG]		= {SOUNDBANK_POND,		"waterbug",      400, 0	},
+	[EFFECT_FOOTSTEP]		= {SOUNDBANK_FOREST,	"footstep",     4000, 0 },
+	[EFFECT_HELICOPTER]		= {SOUNDBANK_FOREST,	"helicopter",    800, 0	},
+	[EFFECT_PLASMABURST]	= {SOUNDBANK_FOREST,	"plasmaburst",  3500, 0	},
+	[EFFECT_PLASMAEXPLODE]	= {SOUNDBANK_FOREST,	"explosion",    4500, 0	},
+	[EFFECT_FIRECRACKLE]	= {SOUNDBANK_FOREST,	"firecrackle",  8000, 0	},
+	[EFFECT_SLURP]			= {SOUNDBANK_POND,		"slurp",         500, 0	},
+	[EFFECT_ROCKSLAM]		= {SOUNDBANK_NIGHT,		"rockslam",     1000, 0	},
+	[EFFECT_VALVEOPEN]		= {SOUNDBANK_ANTHILL,	"valveopen",    1000, 0	},
+	[EFFECT_WATERLEAK]		= {SOUNDBANK_ANTHILL,	"waterleak",    1000, 0	},
+	[EFFECT_KINGSHOOT]		= {SOUNDBANK_ANTHILL,	"shoot",        7000, 0	},
+	[EFFECT_KINGEXPLODE]	= {SOUNDBANK_ANTHILL,	"explosion",    8000, 0	},
+	[EFFECT_KINGCRACKLE]	= {SOUNDBANK_ANTHILL,	"firecrackle",  2000, 0	},
+	[EFFECT_SIZZLE]			= {SOUNDBANK_ANTHILL,	"sizzle",       2000, 0	},
+	[EFFECT_KINGLAUGH]		= {SOUNDBANK_ANTHILL,	"laugh",        2000, kSoundFlag_Unique | kSoundFlag_DontInterrupt },
+	[EFFECT_PIPECLANG]		= {SOUNDBANK_ANTHILL,	"pipeclang",    2000, kSoundFlag_Unique | kSoundFlag_DontInterrupt },
+	[EFFECT_OPENLAWNDOOR]	= {SOUNDBANK_LAWN,		"dooropen",     1500, 0	},
+	[EFFECT_OPENNIGHTDOOR]	= {SOUNDBANK_NIGHT,		"dooropen",     1500, 0	},
+	[EFFECT_STINGERSHOOT]	= {SOUNDBANK_HIVE,		"stingershoot", 1300, kSoundFlag_Unique },
+	[EFFECT_PUMP]			= {SOUNDBANK_HIVE,		"pump",          600, 0	},
+	[EFFECT_PLUNGER]		= {SOUNDBANK_HIVE,		"plunger",       600, 0	},
+	[EFFECT_BONUSBELL]		= {SOUNDBANK_BONUS,		"bell",         1000, 0	},
+	[EFFECT_BONUSCLICK]		= {SOUNDBANK_BONUS,		"click",        1000, kSoundFlag_Unique },
 };
 
 
@@ -163,14 +166,7 @@ OSErr		iErr;
 
 			/* INIT BANK INFO */
 
-	for (int i = 0; i < MAX_SOUND_BANKS; i++)
-	{
-		gNumSndsInBank[i] = 0;
-
-		// Reset channel on which the effects were last played
-		for (int j = 0; j < MAX_EFFECTS; j++)
-			gSndLastChannel[i][j] = -1;
-	}
+	memset(gLoadedEffects, 0, sizeof(gLoadedEffects));
 
 			/******************/
 			/* ALLOC CHANNELS */
@@ -187,7 +183,7 @@ OSErr		iErr;
 	{
 			/* NEW SOUND CHANNEL */
 			
-		iErr = SndNewChannel(&gSndChannel[gMaxChannels],sampledSynth,initMono+initNoInterp,/*NewSndCallBackUPP(CallBackFn)*/nil);
+		iErr = SndNewChannel(&gSndChannel[gMaxChannels],sampledSynth,0,/*NewSndCallBackUPP(CallBackFn)*/nil);
 		if (iErr)												// if err, stop allocating channels
 			break;
 	}
@@ -203,93 +199,95 @@ OSErr		iErr;
 	}
 }
 
+/******************* LOAD A SOUND EFFECT ************************/
+
+void LoadSoundEffect(int effectNum)
+{
+char path[256];
+FSSpec spec;
+short refNum;
+OSErr err;
+
+	LoadedEffect* loadedSound = &gLoadedEffects[effectNum];
+	const EffectDef* effectDef = &kEffectsTable[effectNum];
+
+	if (loadedSound->sndHandle)
+	{
+		// already loaded
+		return;
+	}
+
+	snprintf(path, sizeof(path), ":audio:%s.sounds:%s.aiff", kSoundBankNames[effectDef->bank], effectDef->filename);
+
+	err = FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, path, &spec);
+	if (err != noErr)
+	{
+		DoAlert(path);
+		return;
+	}
+
+	err = FSpOpenDF(&spec, fsRdPerm, &refNum);
+	GAME_ASSERT_MESSAGE(err == noErr, path);
+
+	loadedSound->sndHandle = Pomme_SndLoadFileAsResource(refNum);
+	GAME_ASSERT_MESSAGE(loadedSound->sndHandle, path);
+
+			/* GET OFFSET INTO IT */
+
+	GetSoundHeaderOffset(loadedSound->sndHandle, &loadedSound->sndOffset);
+
+			/* PRE-DECOMPRESS IT */
+
+	Pomme_DecompressSoundResource(&loadedSound->sndHandle, &loadedSound->sndOffset);
+}
+
+/******************* DISPOSE OF A SOUND EFFECT ************************/
+
+void DisposeSoundEffect(int effectNum)
+{
+	LoadedEffect* loadedSound = &gLoadedEffects[effectNum];
+
+	if (loadedSound->sndHandle)
+	{
+		DisposeHandle((Handle) loadedSound->sndHandle);
+		memset(loadedSound, 0, sizeof(LoadedEffect));
+	}
+}
 
 /******************* LOAD SOUND BANK ************************/
 
-void LoadSoundBank(FSSpec *spec, long bankNum)
+void LoadSoundBank(int bankNum)
 {
-short			srcFile1,numSoundsInBank,i;
-OSErr			iErr;
-
 	StopAllEffectChannels();
-
-	if (bankNum >= MAX_SOUND_BANKS)
-		DoFatalAlert("LoadSoundBank: bankNum >= MAX_SOUND_BANKS");
-
-			/* DISPOSE OF EXISTING BANK */
-			
-	DisposeSoundBank(bankNum);
-
-
-			/* OPEN APPROPRIATE REZ FILE */
-			
-	srcFile1 = FSpOpenResFile(spec, fsRdPerm);
-	if (srcFile1 == -1)
-		DoFatalAlert("LoadSoundBank: OpenResFile failed!");
 
 			/****************************/
 			/* LOAD ALL EFFECTS IN BANK */
 			/****************************/
 
-	UseResFile( srcFile1 );												// open sound resource fork
-	numSoundsInBank = Count1Resources('snd ');							// count # snd's in this bank
-	if (numSoundsInBank > MAX_EFFECTS)
-		DoFatalAlert("LoadSoundBank: numSoundsInBank > MAX_EFFECTS");
-
-	for (i=0; i < numSoundsInBank; i++)
+	for (int i = 0; i < NUM_EFFECTS; i++)
 	{
-				/* LOAD SND REZ */
-				
-		gSndHandles[bankNum][i] = (SndListResource **)GetResource('snd ',BASE_EFFECT_RESOURCE+i);
-		if (gSndHandles[bankNum][i] == nil) 
+		if (kEffectsTable[i].bank == bankNum)
 		{
-			iErr = ResError();
-			DoAlert("LoadSoundBank: GetResource failed!");
-			if (iErr == memFullErr)
-				DoFatalAlert("LoadSoundBank: Out of Memory");
-			else
-				ShowSystemErr(iErr);
+			LoadSoundEffect(i);
 		}
-		DetachResource((Handle)gSndHandles[bankNum][i]);				// detach resource from rez file & make a normal Handle
-			
-		HNoPurge((Handle)gSndHandles[bankNum][i]);						// make non-purgeable
-		HLockHi((Handle)gSndHandles[bankNum][i]);
-		
-				/* GET OFFSET INTO IT */
-				
-		GetSoundHeaderOffset(gSndHandles[bankNum][i], &gSndOffsets[bankNum][i]);		
-
-				/* PRE-DECOMPRESS IT (Source port addition) */
-
-		Pomme_DecompressSoundResource(&gSndHandles[bankNum][i], &gSndOffsets[bankNum][i]);
 	}
-
-	UseResFile(gMainAppRezFile );								// go back to normal res file
-	CloseResFile(srcFile1);
-
-	gNumSndsInBank[bankNum] = numSoundsInBank;					// remember how many sounds we've got
 }
-
 
 /******************** DISPOSE SOUND BANK **************************/
 
-void DisposeSoundBank(short bankNum)
+void DisposeSoundBank(int bankNum)
 {
-	if (bankNum > MAX_SOUND_BANKS)
-		return;
-
 	StopAllEffectChannels();									// make sure all sounds are stopped before nuking any banks
 
 			/* FREE ALL SAMPLES */
-			
-	for (int i = 0; i < gNumSndsInBank[bankNum]; i++)
-		DisposeHandle((Handle)gSndHandles[bankNum][i]);
 
-	// Reset channels on which each effect was last played
-	for (int i = 0; i < MAX_EFFECTS; i++)
-		gSndLastChannel[bankNum][i] = -1;
-
-	gNumSndsInBank[bankNum] = 0;
+	for (int i = 0; i < NUM_EFFECTS; i++)
+	{
+		if (kEffectsTable[i].bank == bankNum)
+		{
+			DisposeSoundEffect(i);
+		}
+	}
 }
 
 
@@ -297,9 +295,7 @@ void DisposeSoundBank(short bankNum)
 
 void DisposeAllSoundBanks(void)
 {
-short	i;
-
-	for (i = 0; i < MAX_SOUND_BANKS; i++)
+	for (int i = 0; i < NUM_SOUNDBANKS; i++)
 	{
 		DisposeSoundBank(i);
 	}
@@ -417,7 +413,7 @@ OSErr	iErr;
 		case	SONG_MENU:			path = ":audio:menusong.aiff";		break;
 		case	SONG_GARDEN:		path = ":audio:lawnsong.aiff";		break;
 		case	SONG_GARDEN_OLD:	path = ":audio:lawnsongold.aiff";	break;
-		case	SONG_PANGEA:		path = ":audio:song_pangea";		break;
+		case	SONG_PANGEA:		path = ":audio:song_pangea.aiff";	break;
 		case	SONG_HIGHSCORES:	path = ":audio:highscores.aiff";	break;
 		case	SONG_NIGHT:			path = ":audio:night.aiff";			break;
 		case	SONG_FOREST:		path = ":audio:forest.aiff";		break;
@@ -539,22 +535,10 @@ OSErr	iErr;
 // OUTPUT: channel # used to play sound
 //
 
-short PlayEffect3D(short effectNum, TQ3Point3D *where)
+short PlayEffect3D(int effectNum, TQ3Point3D *where)
 {
 short					theChan;
-Byte					bankNum,soundNum;
 u_long					leftVol, rightVol;
-
-			/* GET BANK & SOUND #'S FROM TABLE */
-			
-	bankNum 	= gEffectsTable[effectNum].bank;
-	soundNum 	= gEffectsTable[effectNum].sound;
-
-	if (soundNum >= gNumSndsInBank[bankNum])					// see if illegal sound #
-	{
-		DoAlert("Illegal sound number!");
-		ShowSystemErr(effectNum);	
-	}
 
 				/* CALC VOLUME */
 
@@ -580,22 +564,10 @@ u_long					leftVol, rightVol;
 // OUTPUT: channel # used to play sound
 //
 
-short PlayEffect_Parms3D(short effectNum, TQ3Point3D *where, u_long rateMultiplier, float volumeAdjust)
+short PlayEffect_Parms3D(int effectNum, TQ3Point3D *where, u_long rateMultiplier, float volumeAdjust)
 {
 short			theChan;
-Byte			bankNum,soundNum;
 u_long			leftVol, rightVol;
-
-			/* GET BANK & SOUND #'S FROM TABLE */
-			
-	bankNum 	= gEffectsTable[effectNum].bank;
-	soundNum 	= gEffectsTable[effectNum].sound;
-
-	if (soundNum >= gNumSndsInBank[bankNum])					// see if illegal sound #
-	{
-		DoAlert("Illegal sound number!");
-		ShowSystemErr(effectNum);	
-	}
 
 				/* CALC VOLUME */
 
@@ -621,7 +593,7 @@ u_long			leftVol, rightVol;
 // Returns TRUE if effectNum was a mismatch or something went wrong
 //
 
-Boolean Update3DSoundChannel(short effectNum, short *channel, TQ3Point3D *where)
+Boolean Update3DSoundChannel(int effectNum, short *channel, TQ3Point3D *where)
 {
 SCStatus		theStatus;
 u_long			leftVol,rightVol;
@@ -700,7 +672,7 @@ TQ3Vector3D	v;
 // OUTPUT: channel # used to play sound
 //
 
-short PlayEffect(short effectNum)
+short PlayEffect(int effectNum)
 {
 	return(PlayEffect_Parms(effectNum,FULL_CHANNEL_VOLUME,FULL_CHANNEL_VOLUME,kMiddleC));
 
@@ -714,52 +686,47 @@ short PlayEffect(short effectNum)
 // OUTPUT: channel # used to play sound
 //
 
-short  PlayEffect_Parms(short effectNum, u_long leftVolume, u_long rightVolume, unsigned long rateMultiplier)
+short  PlayEffect_Parms(int effectNum, u_long leftVolume, u_long rightVolume, unsigned long rateMultiplier)
 {
 SndCommand 		mySndCmd;
 SndChannelPtr	chanPtr;
 short			theChan;
-Byte			bankNum,soundNum;
 OSErr			myErr;
 u_long			lv2,rv2;
 
-	
 			/* GET BANK & SOUND #'S FROM TABLE */
-			
-	bankNum = gEffectsTable[effectNum].bank;
-	soundNum = gEffectsTable[effectNum].sound;
 
-	if (soundNum >= gNumSndsInBank[bankNum])					// see if illegal sound #
-	{
-		DoAlert("Illegal sound number!");
-		ShowSystemErr(effectNum);	
-	}
+	LoadedEffect* sound = &gLoadedEffects[effectNum];
+
+	GAME_ASSERT_MESSAGE(effectNum >= 0 && effectNum < NUM_EFFECTS, "illegal effect number");
+	GAME_ASSERT_MESSAGE(sound->sndHandle, "effect wasn't loaded!");
 
 
 			/* DON'T PLAY EFFECT MULTIPLE TIMES AT ONCE IF EFFECTS TABLE PREVENTS IT */
 			// (Source port addition)
 
-	theChan = gSndLastChannel[bankNum][soundNum];
-	Byte uniqueness = gEffectsTable[effectNum].uniqueness;
+	theChan = sound->lastPlayedOnChannel;
+	Byte flags = kEffectsTable[effectNum].flags;
 
 	if (theChan >= 0
-		&& SOUND_MULTIPLE != uniqueness
+		&& (kSoundFlag_Unique & flags)
 		&& gChannelInfo[theChan].effectNum == effectNum)
 	{
 		SCStatus theStatus;
 		myErr = SndChannelStatus(gSndChannel[theChan], sizeof(SCStatus), &theStatus);
 		if (myErr == noErr && theStatus.scChannelBusy)
 		{
-			if (SOUND_UNIQUE_DONTINTERRUPT == uniqueness)			// don't interrupt currently-playing effect: bail out
+			if (kSoundFlag_DontInterrupt & flags)					// don't interrupt if this flag is set
 				return -1;
+//			else if ((kSoundFlag_DontInterruptLouder & flags) && sound->lastLoudness >= leftVolume + rightVolume)	// don't interrupt louder effect
+//				return -1;
 			else												// otherwise interrupt current effect, force replay
 				StopAChannel(&theChan);
 		}
 	}
 
-
 			/* LOOK FOR FREE CHANNEL */
-			
+
 	theChan = FindSilentChannel();
 	if (theChan == -1)
 	{
@@ -767,7 +734,8 @@ u_long			lv2,rv2;
 	}
 
 	// Remember channel # on which we played this effect
-	gSndLastChannel[bankNum][soundNum] = theChan;
+	sound->lastPlayedOnChannel = theChan;
+	sound->lastLoudness = leftVolume + rightVolume;
 
 	lv2 = (float)leftVolume * gGlobalVolume;							// amplify by global volume
 	rv2 = (float)rightVolume * gGlobalVolume;					
@@ -791,10 +759,15 @@ u_long			lv2,rv2;
 	if (myErr)
 		return(-1);
 
+	mySndCmd.cmd = reInitCmd;
+	mySndCmd.param1 = 0;
+	mySndCmd.param2 = initStereo | ((flags & kSoundFlag_NoInterp) ? initNoInterp : 0);
+	SndDoImmediate(chanPtr, &mySndCmd);
+
 	mySndCmd.cmd = bufferCmd;										// make it play
 	mySndCmd.param1 = 0;
-	mySndCmd.ptr = ((Ptr)*gSndHandles[bankNum][soundNum])+gSndOffsets[bankNum][soundNum];	// pointer to SoundHeader
-	SndDoImmediate(chanPtr, &mySndCmd);
+	mySndCmd.ptr = ((Ptr)*sound->sndHandle) + sound->sndOffset;		// pointer to SoundHeader
+	myErr = SndDoImmediate(chanPtr, &mySndCmd);
 	if (myErr)
 		return(-1);
 	
@@ -947,7 +920,7 @@ u_long	maxLeft,maxRight;
 		
 			/* DO VOLUME CALCS */
 			
-	refDist = gEffectsTable[effectNum].refDistance;			// get ref dist
+	refDist = kEffectsTable[effectNum].refDistance;			// get ref dist
 
 	dist -= refDist;
 	if (dist <= EPS)
@@ -1040,9 +1013,4 @@ u_long	maxLeft,maxRight;
 	*leftVolOut = maxLeft;
 	*rightVolOut = maxRight;		
 }
-
-
-
-
-
 

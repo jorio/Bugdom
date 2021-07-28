@@ -200,7 +200,7 @@ void ShowLevelIntroScreen(void)
 	DeleteAllParticleGroups();
 	FreeAllSkeletonFiles(-1);
 	DeleteAll3DMFGroups();
-	DisposeSoundBank(SOUND_BANK_DEFAULT);
+	DisposeSoundBank(SOUNDBANK_MAIN);
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);		
 }
 
@@ -221,9 +221,8 @@ TQ3Vector3D				fillDirection2 = { -.7, -.2, -.9 };			// fill
 	QD3D_InitParticles();
 
 			/* LOAD SOUNDS */
-			
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:Main.sounds", &spec);
-	LoadSoundBank(&spec, SOUND_BANK_DEFAULT);
+
+	LoadSoundBank(SOUNDBANK_MAIN);
 
 
 			/*************/

@@ -33,15 +33,19 @@ enum
 	SONG_BONUS
 };
 
+
 enum
 {
-	SOUND_BANK_DEFAULT 			= 0,
-	SOUND_BANK_MENU				= 1,
-	SOUND_BANK_LEVELSPECIFIC	= 2,
-	SOUND_BANK_BONUS			= 2
+	SOUNDBANK_MAIN,
+	SOUNDBANK_LAWN,
+	SOUNDBANK_POND,
+	SOUNDBANK_HIVE,
+	SOUNDBANK_NIGHT,
+	SOUNDBANK_FOREST,
+	SOUNDBANK_ANTHILL,
+	SOUNDBANK_BONUS,
+	NUM_SOUNDBANKS
 };
-
-
 
 /***************** EFFECTS *************************/
 // This table must match gEffectsTable
@@ -95,113 +99,11 @@ enum
 	EFFECT_PLUNGER,
 	
 	EFFECT_BONUSBELL,
-	EFFECT_BONUSCLICK
+	EFFECT_BONUSCLICK,
+
+	NUM_EFFECTS
 };
 
-
-
-/**********************/
-/* SOUND BANK TABLES  */
-/**********************/
-//
-// These are simple enums for equating the sound effect #'s in each sound
-// bank's rez file.
-//
-
-/******** SoundBank_Default *********/
-
-enum
-{
-	SOUND_DEFAULT_SELECT,
-	SOUND_DEFAULT_JUMP,
-	SOUND_DEFAULT_THROWSPEAR,
-	SOUND_DEFAULT_HITDIRT,
-	SOUND_DEFAULT_POP,
-	SOUND_DEFAULT_GETPOW,
-	SOUND_DEFAULT_BUZZ,
-	SOUND_DEFAULT_OUCH,
-	SOUND_DEFAULT_KICK,
-	SOUND_DEFAULT_POUND,
-	SOUND_DEFAULT_SPEEDBOOST,
-	SOUND_DEFAULT_MORPH,
-	SOUND_DEFAULT_FIRECRACKER,
-	SOUND_DEFAULT_SHIELD,
-	SOUND_DEFAULT_SPLASH,
-	SOUND_DEFAULT_BUDDYLAUNCH,
-	SOUND_DEFAULT_RESCUE,
-	SOUND_DEFAULT_CHECKPOINT,
-	SOUND_DEFAULT_KABLAM
-};
-
-/******** SoundBank_Lawn *********/
-
-enum
-{
-	SOUND_LAWN_OPENDOOR
-};
-
-/******** SoundBank_Water *********/
-
-enum
-{
-	SOUND_WATER_BOATENGINE,
-	SOUND_WATER_SLURP,
-	SOUND_WATER_WATERBUG
-};
-
-
-/******** SoundBank_Hive *********/
-
-enum
-{
-	SOUND_HIVE_STINGERSHOOT,
-	SOUND_HIVE_PUMP,
-	SOUND_HIVE_PLUNGER
-};
-
-/******** SoundBank_Night *********/
-
-enum
-{
-	SOUND_NIGHT_ROCKSLAM,
-	SOUND_NIGHT_OPENDOOR
-};
-
-
-/******** SoundBank_Forest *********/
-
-enum
-{
-	SOUND_FOREST_FOOTSTEP,
-	SOUND_FOREST_HELICOPTER,
-	SOUND_FOREST_PLASMABURST,
-	SOUND_FOREST_PLASMAEXPLODE,
-	SOUND_FOREST_FIRECRACKLE
-};
-
-
-/******** SoundBank_AntHill *********/
-
-enum
-{
-	SOUND_ANT_VALVEOPEN,
-	SOUND_ANT_WATERLEAK,
-	SOUND_ANT_SHOOT,
-	SOUND_ANT_EXPLODE,
-	SOUND_ANT_KINGCRACKLE,
-	SOUND_ANT_SIZZLE,
-	SOUND_ANT_LAUGH,
-	SOUND_ANT_CLANG
-};
-
-
-/******** SoundBank_Bonus *********/
-
-enum
-{
-	SOUND_BONUS_BELL,
-	SOUND_BONUS_CLICK
-};
 
 //===================== PROTOTYPES ===================================
 
@@ -211,18 +113,20 @@ void StopAChannel(short *channelNum);
 extern	void StopAllEffectChannels(void);
 void PlaySong(short songNum, Boolean loopFlag);
 extern void	KillSong(void);
-extern	short PlayEffect(short effectNum);
-short PlayEffect_Parms3D(short effectNum, TQ3Point3D *where, u_long freq, float volumeAdjust);
+short PlayEffect(int effectNum);
+short PlayEffect_Parms3D(int effectNum, TQ3Point3D *where, u_long freq, float volumeAdjust);
 extern void	ToggleMusic(void);
 extern void	DoSoundMaintenance(void);
-extern	void LoadSoundBank(FSSpec *spec, long bankNum);
+void LoadSoundEffect(int effectNum);
+void DisposeSoundEffect(int effectNum);
+void LoadSoundBank(int bankNum);
+void DisposeSoundBank(int bankNum);
+void DisposeAllSoundBanks(void);
 extern	void WaitEffectsSilent(void);
-extern	void DisposeSoundBank(short bankNum);
-extern	void DisposeAllSoundBanks(void);
-short  PlayEffect_Parms(short effectNum, u_long leftVolume, u_long rightVolume, unsigned long rateMultiplier);
+short PlayEffect_Parms(int effectNum, u_long leftVolume, u_long rightVolume, unsigned long rateMultiplier);
 void ChangeChannelVolume(short channel, float leftVol, float rightVol);
-short PlayEffect3D(short effectNum, TQ3Point3D *where);
-Boolean Update3DSoundChannel(short effectNum, short *channel, TQ3Point3D *where);
+short PlayEffect3D(int effectNum, TQ3Point3D *where);
+Boolean Update3DSoundChannel(int effectNum, short *channel, TQ3Point3D *where);
 Boolean IsEffectChannelPlaying(short chanNum);
 void UpdateListenerLocation(void);
 

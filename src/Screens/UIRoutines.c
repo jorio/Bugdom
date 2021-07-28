@@ -103,11 +103,8 @@ void SetupUIStuff(int backgroundType)
 
 	/* LOAD SOUNDS */
 
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:Main.sounds", &spec);
-	LoadSoundBank(&spec, SOUND_BANK_DEFAULT);
-
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:Bonus.sounds", &spec);
-	LoadSoundBank(&spec, SOUND_BANK_BONUS);
+	LoadSoundBank(SOUNDBANK_MAIN);
+	LoadSoundBank(SOUNDBANK_BONUS);
 
 	/*******************/
 	/* MAKE BACKGROUND */
@@ -134,8 +131,8 @@ void CleanupUIStuff()
 	FreeAllSkeletonFiles(-1);
 	DeleteAll3DMFGroups();
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
-	DisposeSoundBank(SOUND_BANK_BONUS);
-	DisposeSoundBank(SOUND_BANK_DEFAULT);
+	DisposeSoundBank(SOUNDBANK_BONUS);
+	DisposeSoundBank(SOUNDBANK_MAIN);
 	GameScreenToBlack();
 }
 

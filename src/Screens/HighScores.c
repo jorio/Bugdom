@@ -121,7 +121,7 @@ TQ3Vector3D	camDelta = {0,0,0};
 	DeleteAllObjects();
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
 	Free3DMFGroup(MODEL_GROUP_HIGHSCORES);
-	DisposeSoundBank(SOUND_BANK_DEFAULT);
+	DisposeSoundBank(SOUNDBANK_MAIN);
 	GameScreenToBlack();
 }
 
@@ -182,12 +182,11 @@ QD3DSetupInputType		viewDef;
 		/* LOAD CURRENT SCORES */
 
 	LoadHighScores();	
-	
-	
+
+
 		/* LOAD AUDIO */
-		
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:Main.sounds", &file);
-	LoadSoundBank(&file, SOUND_BANK_DEFAULT);
+
+	LoadSoundBank(SOUNDBANK_MAIN);
 }
 
 

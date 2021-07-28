@@ -1113,9 +1113,8 @@ FSSpec	spec;
 	LoadGrouped3DMF(&spec,MODEL_GROUP_GLOBAL1);	
 	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:Global_Models2.3dmf", &spec);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_GLOBAL2);	
-			
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:Main.sounds", &spec);
-	LoadSoundBank(&spec, SOUND_BANK_DEFAULT);
+
+	LoadSoundBank(SOUNDBANK_MAIN);
 
 	LoadASkeleton(SKELETON_TYPE_ME);			
 	LoadASkeleton(SKELETON_TYPE_LADYBUG);			
@@ -1154,9 +1153,8 @@ FSSpec	spec;
 				LoadASkeleton(SKELETON_TYPE_ANT);			
 
 				/* LOAD SOUNDS */
-				
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:Lawn.sounds", &spec);
-				LoadSoundBank(&spec, SOUND_BANK_LEVELSPECIFIC);
+
+				LoadSoundBank(SOUNDBANK_LAWN);
 				break;
 
 
@@ -1184,9 +1182,8 @@ FSSpec	spec;
 
 
 				/* LOAD SOUNDS */
-				
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:Pond.sounds", &spec);
-				LoadSoundBank(&spec, SOUND_BANK_LEVELSPECIFIC);
+
+				LoadSoundBank(SOUNDBANK_POND);
 				break;
 
 
@@ -1218,10 +1215,9 @@ FSSpec	spec;
 				LoadASkeleton(SKELETON_TYPE_ANT);			
 				
 				/* LOAD SOUNDS */
-				
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:Forest.sounds", &spec);
-				LoadSoundBank(&spec, SOUND_BANK_LEVELSPECIFIC);
-						
+
+				LoadSoundBank(SOUNDBANK_FOREST);
+
 				break;
 
 
@@ -1252,10 +1248,9 @@ FSSpec	spec;
 
 				
 				/* LOAD SOUNDS */
-				
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:Hive.sounds", &spec);
-				LoadSoundBank(&spec, SOUND_BANK_LEVELSPECIFIC);
-				
+
+				LoadSoundBank(SOUNDBANK_HIVE);
+
 				break;
 
 
@@ -1284,9 +1279,8 @@ FSSpec	spec;
 
 				
 				/* LOAD SOUNDS */
-				
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:Night.sounds", &spec);
-				LoadSoundBank(&spec, SOUND_BANK_LEVELSPECIFIC);
+
+				LoadSoundBank(SOUNDBANK_NIGHT);
 				break;
 
 	
@@ -1319,9 +1313,8 @@ FSSpec	spec;
 				LoadASkeleton(SKELETON_TYPE_ROACH);	
 
 				/* LOAD SOUNDS */
-				
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:AntHill.sounds", &spec);
-				LoadSoundBank(&spec, SOUND_BANK_LEVELSPECIFIC);
+
+				LoadSoundBank(SOUNDBANK_ANTHILL);
 				break;
 
 		default:
