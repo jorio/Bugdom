@@ -638,7 +638,7 @@ int32_t id;
 	float moveTextUpwardsTween = 0;
 	bool captionsCreatedYet = false;
 
-	InitCursor();
+	SDL_ShowCursor(1);
 	while(true)
 	{
 		moveTextUpwardsTween += gFramesPerSecondFrac;
@@ -688,7 +688,7 @@ int32_t id;
 				break;
 		}
 	}
-	HideCursor();
+	SDL_ShowCursor(0);
 
 		/* SEE IF SAVE GAME */
 

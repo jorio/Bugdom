@@ -135,7 +135,7 @@ Boolean beenHere = false;
 	KillSong();
 	UseResFile(gMainAppRezFile);
 
-	InitCursor();
+	SDL_ShowCursor(1);
 	ExitToShell();		
 }
 

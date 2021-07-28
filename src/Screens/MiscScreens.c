@@ -45,7 +45,7 @@ const float imageAspectRatio = 200.0f/152.0f;
 
 	Pomme_PauseAllChannels(true);
 
-	InitCursor();
+	SDL_ShowCursor(1);
 
 	gGammaFadeFactor = 1.0f;
 

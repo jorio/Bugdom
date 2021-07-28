@@ -87,8 +87,8 @@ start_again:
 	
 	QD3D_CalcFramesPerSecond();
 	QD3D_CalcFramesPerSecond();
-		
-	InitCursor();
+
+	SDL_ShowCursor(1);
 	while(true)	
 	{
 		MoveObjects();
@@ -154,7 +154,7 @@ getout:
 	gCurrentSaveSlot = -1;
 
 	GammaFadeOut();
-	HideCursor();
+	SDL_ShowCursor(0);
 	DeleteAllObjects();
 	FreeAllSkeletonFiles(-1);
 	DeleteAll3DMFGroups();

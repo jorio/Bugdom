@@ -122,7 +122,7 @@ void SetupUIStuff(int backgroundType)
 
 	MakeFadeEvent(true);
 
-	InitCursor();
+	SDL_ShowCursor(1);
 }
 
 void CleanupUIStuff()
