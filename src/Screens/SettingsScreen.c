@@ -32,25 +32,25 @@ enum
 	SLOTID_VALUE_MASK		=	0x2000,
 };
 
+#define MAX_CHOICES 8
+
+_Static_assert(NUM_MOUSE_SENSITIVITY_LEVELS <= MAX_CHOICES, "too many mouse sensitivity levels");
+
 /*********************/
 /*    VARIABLES      */
 /*********************/
-
-
-
 
 typedef struct
 {
 	Byte* ptr;
 	const char* label;
-	Byte subtitleShownForValue;
 	const char* subtitle;
+	Byte subtitleShownForValue;
 	void (*callback)(void);
-	unsigned int nChoices;
 	bool useClovers;
-	const char* choices[8];
+	unsigned int nChoices;
+	const char* choices[MAX_CHOICES];
 	float y;
-
 } SettingEntry;
 
 static unsigned int PositiveModulo(int value, unsigned int m)
@@ -65,15 +65,7 @@ static unsigned int PositiveModulo(int value, unsigned int m)
 
 static void SettingEntry_Cycle(SettingEntry* entry, int delta)
 {
-	if (entry->nChoices == 0 && entry->choices)
-	{
-		// compute nChoices
-		for (entry->nChoices = 0; entry->choices[entry->nChoices]; entry->nChoices++);
-	}
-
-
 	unsigned int value = (unsigned int) *entry->ptr;
-
 
 	value = PositiveModulo(value + delta, entry->nChoices);
 	*entry->ptr = value;
@@ -83,79 +75,64 @@ static void SettingEntry_Cycle(SettingEntry* entry, int delta)
 	}
 }
 
-
-#define CHOICES_NO_YES {"No", "Yes", NULL}
-
 static SettingEntry gSettingEntries[] =
 {
 	{
-		&gGamePrefs.easyMode,
-		"Kiddie mode",
-		1, "Player takes less damage",
-		NULL,
-		0, false, CHOICES_NO_YES,
-		0,
+		.ptr = &gGamePrefs.easyMode,
+		.label = "Kiddie mode",
+		.subtitle = "Player takes less damage",
+		.subtitleShownForValue = 1,
+		.nChoices = 2,
+		.choices = {"No", "Yes"},
 	},
+
 	{
-		&gGamePrefs.mouseSensitivityLevel,
-		"Mouse sensitivity",
-		0, NULL,
-		NULL,
-		NUM_MOUSE_SENSITIVITY_LEVELS, true, { NULL },
-		0,
+		.ptr = &gGamePrefs.mouseSensitivityLevel,
+		.label = "Mouse sensitivity",
+		.useClovers = true,
+		.nChoices = NUM_MOUSE_SENSITIVITY_LEVELS,
+		.choices = {"1","2","3","4","5","6","7","8"},
 	},
+
 	{
-		&gGamePrefs.fullscreen,
-		"Fullscreen",
-		0, NULL,
-		SetFullscreenMode,
-		0, false, CHOICES_NO_YES,
-		0,
+		.ptr = &gGamePrefs.fullscreen,
+		.label = "Fullscreen",
+		.callback = SetFullscreenMode,
+		.nChoices = 2,
+		.choices = {"No", "Yes"},
 	},
+
 	{
-		&gGamePrefs.showBottomBar,
-		"Show bottom bar",
-		0, NULL,
-		NULL,
-		0, false, CHOICES_NO_YES,
-		0,
+		.ptr = &gGamePrefs.showBottomBar,
+		.label = "Show bottom bar",
+		.nChoices = 2,
+		.choices = {"No", "Yes"},
 	},
+
 	{
-		&gGamePrefs.lowDetail,
-		"Level of detail",
-		1, "The \"ATI Rage II\" look",
-		NULL,
-		0, false, {"High", "Low"},
-		0,
+		.ptr = &gGamePrefs.lowDetail,
+		.label = "Level of detail",
+		.subtitle = "The \"ATI Rage II\" look",
+		.subtitleShownForValue = 1,
+		.nChoices = 2,
+		.choices = {"High", "Low"},
 	},
+
 #if _DEBUG
-/*
 	{
-		&gGamePrefs.vsync,
-		"V-Sync",
-		0, NULL,
-		NULL,
-		0, false, CHOICES_NO_YES,
-		0,
+		.ptr = &gGamePrefs.playerRelativeKeys,
+		.label = "Tank controls",
+		.nChoices = 2,
+		.choices = {"No", "Yes"},
 	},
-	{
-		&gGamePrefs.playerRelativeKeys,
-		"PLAYER-RELATIVE KEYS",
-		NULL,
-		NULL,
-		0,
-		CHOICES_NO_YES
-	},
-	 */
 #endif
+
 	// End sentinel
 	{
-		NULL,
-		NULL,
-		0, NULL,
-		NULL,
-		0, false, {NULL},
-		0,
+		.ptr = NULL,
+		.label = NULL,
+		.callback = NULL,
+		.nChoices = 0,
 	}
 };
 
