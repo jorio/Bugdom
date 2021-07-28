@@ -1,7 +1,13 @@
 # Bugdom changelog
 
-- **1.3.1 (WORK IN PROGRESS)**
-    - Full rewrite of the 3D renderer.
+- **1.3.1 (August 2021)**
+    - Full rewrite of the 3D renderer, replacing legacy QuickDraw 3D code. The game should work better on systems that had trouble running the previous version.
+    - Cosmetic touchups on 3DMF model textures. Some textures could use UV clamping, and some had incorrect alpha (spider teeth, etc.).
+    - Native Apple Silicon support in macOS build.
+    - Extra settings: hide/show bottom bar, high/low level of detail.
+    - Command-line options to control MSAA and screen resolution.
+    - Bump SDL to 2.0.16.
+    - Minor gameplay & presentation bugfixes.
 
 - **1.3.0 (December 2020)**
     - Major update so the game works on modern systems.

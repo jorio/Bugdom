@@ -1,10 +1,9 @@
 # Bugdom
 
-# THIS IS THE WORK-IN-PROGRESS BRANCH. The 3D renderer is being rewritten. Use branch 'master' if you just want to play the game.
+This is Pangea Software's **Bugdom** updated to run on modern operating systems.
+This version, at https://github.com/jorio/bugdom, is approved by Pangea Software.
 
-This is *Bugdom* running on modern macOS, Windows and Linux! This version, at https://github.com/jorio/Bugdom, is approved by Pangea Software.
-
-Get builds for macOS and Windows here: https://github.com/jorio/Bugdom/releases
+**Get builds for macOS, Windows and Linux here:** https://github.com/jorio/bugdom/releases
 
 ![Bugdom Screenshot](docs/screenshot.png)
 
@@ -41,5 +40,6 @@ Bugdom® is a registered trademark of Pangea Software, Inc.
 ## Other Pangea game ports
 
 If you like games by Pangea Software, you might also enjoy my ports of
-[Nanosaur](https://github.com/jorio/Nanosaur)
-and [Mighty Mike (aka Power Pete)](https://github.com/jorio/MightyMike).
+[Nanosaur](https://github.com/jorio/nanosaur),
+[Mighty Mike](https://github.com/jorio/mightymike),
+and [Otto Matic](https://github.com/jorio/ottomatic).
