@@ -492,12 +492,18 @@ void DeleteObject(ObjNode	*theNode)
 			// since it's going to be used next pass thru the moveobjects loop.  This
 			// assumes that all chained nodes are later in list.
 			//
-			
+
 	if (theNode->ChainNode)
+	{
 		DeleteObject(theNode->ChainNode);
+		theNode->ChainNode = nil;
+	}
 
 	if (theNode->ShadowNode)
+	{
 		DeleteObject(theNode->ShadowNode);
+		theNode->ShadowNode = nil;
+	}
 
 
 			/* SEE IF NEED TO FREE UP SPECIAL MEMORY */
@@ -512,14 +518,18 @@ void DeleteObject(ObjNode	*theNode)
 	{
 		DisposePtr((Ptr)theNode->CollisionBoxes);
 		theNode->CollisionBoxes = nil;
+		theNode->NumCollisionBoxes = 0;
 	}
 
-//	if (theNode->CollisionTriangles)				// free collision triangle memory
-//		DisposeCollisionTriangleMemory(theNode);
+	if (theNode->OldCollisionBoxes != nil)			// free old collision box memory
+	{
+		DisposePtr((Ptr)theNode->OldCollisionBoxes);
+		theNode->OldCollisionBoxes = nil;
+	}
 
-	
+
 			/* SEE IF STOP SOUND CHANNEL */
-			
+
 	StopObjectStreamEffect(theNode);
 
 

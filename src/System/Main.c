@@ -627,6 +627,7 @@ static void CleanupLevel(void)
 	DeleteAll3DMFGroups();
 	DisposeInfobarTexture();
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
+	DisposeAllSoundBanks();
 }
 
 

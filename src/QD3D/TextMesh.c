@@ -233,12 +233,17 @@ void TextMesh_Init(void)
 	FSClose(refNum);
 
 	ParseSFL(data);
+
+	DisposePtr(data);
 }
 
 void TextMesh_Shutdown(void)
 {
-	DisposePtr((Ptr) gAtlasGlyphs);
-	gAtlasGlyphs = NULL;
+	if (gAtlasGlyphs)
+	{
+		DisposePtr((Ptr) gAtlasGlyphs);
+		gAtlasGlyphs = NULL;
+	}
 
 	if (gFontTexture)
 	{
