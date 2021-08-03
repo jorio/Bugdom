@@ -628,6 +628,7 @@ static void CleanupLevel(void)
 	DisposeInfobarTexture();
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
 	DisposeAllSoundBanks();
+	Pomme_FlushPtrTracking(true);
 }
 
 
@@ -814,6 +815,7 @@ unsigned long	someLong;
 
 			/* DO INTRO */
 
+	Pomme_FlushPtrTracking(false);
 
 	DoPangeaLogo();
 	CheckDebugShortcutKeysOnBoot();

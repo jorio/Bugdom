@@ -88,6 +88,7 @@ void DoWinScreen(void)
 	FreeAllSkeletonFiles(-1);
 	DeleteAll3DMFGroups();
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);		
+	Pomme_FlushPtrTracking(true);
 }
 
 
@@ -311,6 +312,7 @@ void DoLoseScreen(void)
 	FreeAllSkeletonFiles(-1);
 	DeleteAll3DMFGroups();
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);		
+	Pomme_FlushPtrTracking(true);
 }
 
 

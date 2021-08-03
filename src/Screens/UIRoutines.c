@@ -134,6 +134,7 @@ void CleanupUIStuff()
 	DisposeSoundBank(SOUNDBANK_BONUS);
 	DisposeSoundBank(SOUNDBANK_MAIN);
 	GameScreenToBlack();
+	Pomme_FlushPtrTracking(true);
 }
 
 static void MoveSpider(ObjNode* objNode)

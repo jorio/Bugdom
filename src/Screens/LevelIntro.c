@@ -202,6 +202,7 @@ void ShowLevelIntroScreen(void)
 	DeleteAll3DMFGroups();
 	DisposeSoundBank(SOUNDBANK_MAIN);
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);		
+	Pomme_FlushPtrTracking(true);
 }
 
 

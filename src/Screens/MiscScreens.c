@@ -288,6 +288,7 @@ Boolean			fo = false;
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);		
 	KillSong();
 	GameScreenToBlack();
+	Pomme_FlushPtrTracking(true);
 }
 
 

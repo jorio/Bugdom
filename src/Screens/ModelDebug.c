@@ -411,4 +411,5 @@ void DoModelDebug(void)
 	Free3DMFGroup(MODEL_GROUP_LEVELSPECIFIC);
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
 	GameScreenToBlack();
+	Pomme_FlushPtrTracking(true);
 }

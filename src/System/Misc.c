@@ -136,7 +136,8 @@ Boolean beenHere = false;
 	UseResFile(gMainAppRezFile);
 
 	SDL_ShowCursor(1);
-	ExitToShell();		
+	Pomme_FlushPtrTracking(false);
+	ExitToShell();
 }
 
 /********************** WAIT **********************/

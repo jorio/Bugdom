@@ -123,6 +123,7 @@ TQ3Vector3D	camDelta = {0,0,0};
 	Free3DMFGroup(MODEL_GROUP_HIGHSCORES);
 	DisposeSoundBank(SOUNDBANK_MAIN);
 	GameScreenToBlack();
+	Pomme_FlushPtrTracking(true);
 }
 
 

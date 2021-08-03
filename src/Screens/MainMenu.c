@@ -160,6 +160,7 @@ getout:
 	DeleteAll3DMFGroups();
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);		
 	GameScreenToBlack();
+	Pomme_FlushPtrTracking(true);
 	gDisableAnimSounds = false;
 
 			/* SEE WHAT TO DO */

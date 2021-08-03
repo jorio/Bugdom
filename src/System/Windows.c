@@ -47,6 +47,7 @@ void InitWindowStuff(void)
 		DoSDLMaintenance();
 	}
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
+	Pomme_FlushPtrTracking(true);
 }
 
 
