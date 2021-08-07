@@ -1,0 +1,80 @@
+name: Make Release Builds
+
+on: [workflow_dispatch]
+
+jobs:
+  build-linux-appimage:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2  # Checks out repository under $GITHUB_WORKSPACE so the job can access it
+        with:
+          submodules: 'recursive'
+      - name: Get artifact name
+        run: |
+          echo "GAME_ARTIFACT=$(python3 build.py --print-artifact-name)" >> $GITHUB_ENV
+          echo $GAME_ARTIFACT
+      - name: Get build dependencies for SDL from APT  # cf. https://github.com/libsdl-org/SDL/blob/main/docs/README-linux.md
+        run: |
+          sudo apt update
+          sudo apt install libasound2-dev libpulse-dev libaudio-dev libjack-dev libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxinerama-dev libxxf86vm-dev libxss-dev libgl1-mesa-dev libdbus-1-dev libudev-dev libgles2-mesa-dev libegl1-mesa-dev libibus-1.0-dev fcitx-libs-dev libsamplerate0-dev libsndio-dev libwayland-dev libxkbcommon-dev libdrm-dev libgbm-dev
+      - run: python3 build.py --dependencies
+      - run: python3 build.py --configure
+      - run: python3 build.py --build
+      - run: python3 build.py --package
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.GAME_ARTIFACT }}
+          path: dist/${{ env.GAME_ARTIFACT }}
+
+  build-windows:
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+      - name: Get artifact name
+        run: |
+          echo ("GAME_ARTIFACT=" + (python3 build.py --print-artifact-name)) >> $env:GITHUB_ENV
+          echo $env:GAME_ARTIFACT
+      - run: python3 build.py --dependencies
+      - run: python3 build.py --configure
+      - run: python3 build.py --build
+      - run: python3 build.py --package
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.GAME_ARTIFACT }}
+          path: dist/${{ env.GAME_ARTIFACT }}
+
+  build-macos:
+    runs-on: macos-10.15
+    env:
+      CODE_SIGN_IDENTITY: ${{ secrets.APPLE_CODE_SIGN_IDENTITY }}
+    steps:
+      - uses: apple-actions/import-codesign-certs@v1
+        with:
+          p12-file-base64: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_P12_BASE64 }}
+          p12-password: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}
+      - name: Install gon for notarization
+        run: |
+          brew tap mitchellh/gon
+          brew install mitchellh/gon/gon
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+      - name: Get artifact name
+        run: |
+          echo "GAME_ARTIFACT=$(python3 build.py --print-artifact-name)" >> $GITHUB_ENV
+          echo $GAME_ARTIFACT
+      - run: python3 build.py --dependencies
+      - run: python3 build.py --configure
+      - run: python3 build.py --build
+      - run: python3 build.py --package
+      - name: Notarize
+        run: gon packaging/gon-config.json
+        env:
+          AC_USERNAME: ${{ secrets.APPLE_NOTARIZATION_USERNAME }}
+          AC_PASSWORD: ${{ secrets.APPLE_NOTARIZATION_PASSWORD }}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.GAME_ARTIFACT }}
+          path: dist/${{ env.GAME_ARTIFACT }}

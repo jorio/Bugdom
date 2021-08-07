@@ -22,31 +22,66 @@ libs_dir = os.path.abspath("extern")
 cache_dir = os.path.abspath("cache")
 dist_dir = os.path.abspath("dist")
 
-game_name = "Bugdom"  # no spaces
-game_name_human = "Bugdom"  # spaces and other special characters allowed
-game_ver = "1.3.1"
-sdl_ver = "2.0.14"
-appimagetool_ver = "13"
+game_name           = "Bugdom"  # no spaces
+game_name_human     = "Bugdom"  # spaces and other special characters allowed
+game_ver            = "1.3.1"
 
-lib_hashes = {
-    "SDL2-2.0.14.tar.gz":           "d8215b571a581be1332d2106f8036fcb03d12a70bae01e20f424976d275432bc",
-    "SDL2-2.0.14.dmg":              "05ee7538e4617e561333e7a85e5d9ef9813d3e5352e91c10e7f8912f86378793",
-    "SDL2-devel-2.0.14-VC.zip":     "232071cf7d40546cde9daeddd0ec30e8a13254c3431be1f60e1cdab35a968824",
+sdl_ver             = "2.0.16"
+appimagetool_ver    = "13"
+
+lib_hashes = {  # sha-256
+    "SDL2-2.0.16.tar.gz":           "65be9ff6004034b5b2ce9927b5a4db1814930f169c4b2dae0a1e4697075f287b",
+    "SDL2-2.0.16.dmg":              "315a4c6d23800b59051ab25300527d94ae18149b15ad210290cff03d1ac78452",
+    "SDL2-devel-2.0.16-VC.zip":     "f83651227229e059a570aac26be24f5070352c0d23aaf3d2cfbd3eb2c9599334",
     "appimagetool-x86_64.AppImage": "df3baf5ca5facbecfc2f3fa6713c29ab9cefa8fd8c1eac5d283b79cab33e4acb", # appimagetool v13
 }
 
 NPROC = multiprocessing.cpu_count()
 SYSTEM = platform.system()
 
+if SYSTEM == "Windows":
+    os.system("")  # hack to get ANSI color escapes to work
+
 #----------------------------------------------------------------
 
-parser = argparse.ArgumentParser(description=F"Configure, build, and package {game_name}")
+parser = argparse.ArgumentParser(description=F"Configure, build, and package {game_name_human}")
 
-parser.add_argument("--dependencies", default=False, action="store_true")
-parser.add_argument("--configure", default=False, action="store_true")
-parser.add_argument("--build", default=False, action="store_true")
-parser.add_argument("--package", default=False, action="store_true")
-parser.add_argument("--system-sdl", default=False, action="store_true")
+if SYSTEM == "Darwin":
+    default_generator = "Xcode"
+    default_architecture = None
+    help_configure = "generate Xcode project"
+    help_build = "build app from Xcode project"
+    help_package = "package up the game into a DMG"
+elif SYSTEM == "Windows":
+    default_generator = "Visual Studio 16 2019"
+    default_architecture = "x64"
+    help_configure = F"generate {default_generator} solution"
+    help_build = F"build exe from {default_generator} solution"
+    help_package = "package up the game into a ZIP"
+else:
+    default_generator = None
+    default_architecture = None
+    help_configure = "generate project"
+    help_build = "build binary"
+    help_package = "package up the game into an AppImage"
+
+parser.add_argument("--dependencies", default=False, action="store_true", help="fetch and set up dependencies (SDL)")
+parser.add_argument("--configure", default=False, action="store_true", help=help_configure)
+parser.add_argument("--build", default=False, action="store_true", help=help_build)
+parser.add_argument("--package", default=False, action="store_true", help=help_package)
+
+parser.add_argument("-G", metavar="<generator>", default=default_generator,
+        help=F"custom project generator for the CMake configure step (default: {default_generator})")
+
+parser.add_argument("-A", metavar="<arch>", default=default_architecture,
+        help=F"custom platform name for the CMake configure step (default: {default_architecture})")
+
+parser.add_argument("--print-artifact-name", default=False, action="store_true",
+        help="print artifact name and exit")
+
+if SYSTEM == "Linux":
+    parser.add_argument("--system-sdl", default=False, action="store_true",
+        help="use system SDL instead of building SDL from scratch")
 
 args = parser.parse_args()
 
@@ -72,8 +107,15 @@ def chdir(path):
         os.chdir(origin)
 
 def die(message):
-    print(F"\x1b[1;31m{message}\x1b[0m")
+    print(F"\x1b[1;31m{message}\x1b[0m", file=sys.stderr)
     sys.exit(1)
+
+def log(message):
+    print(message, file=sys.stderr)
+
+def fatlog(message):
+    starbar = len(message) * '*'
+    print(F"\n{starbar}\n{message}\n{starbar}", file=sys.stderr)
 
 def hash_file(path):
     hasher = hashlib.sha256()
@@ -95,9 +137,9 @@ def get_package(url):
 
     path = os.path.normpath(F"{cache_dir}/{name}")
     if os.path.exists(path):
-        print("Not redownloading:", path)
+        log(F"Not redownloading: {path}")
     else:
-        print(F"Downloading: {url}")
+        log(F"Downloading: {url}")
         os.makedirs(cache_dir, exist_ok=True)
         urllib.request.urlretrieve(url, path)
 
@@ -108,7 +150,15 @@ def get_package(url):
     return path
 
 def call(cmd, **kwargs):
-    print(">", " ".join(cmd))
+    cmdstr = ""
+    for token in cmd:
+        cmdstr += " "
+        if " " in token:
+            cmdstr += F"\"{token}\""
+        else:
+            cmdstr += token
+
+    log(F">{cmdstr}")
     try:
         return subprocess.run(cmd, check=True, **kwargs)
     except subprocess.CalledProcessError as e:
@@ -116,7 +166,6 @@ def call(cmd, **kwargs):
 
 def rmtree_if_exists(path):
     if os.path.exists(path):
-        print("rmtree:", path)
         shutil.rmtree(path)
 
 def zipdir(zipname, topleveldir, arc_topleveldir):
@@ -125,7 +174,7 @@ def zipdir(zipname, topleveldir, arc_topleveldir):
             for file in files:
                 filepath = os.path.join(root, file)
                 arcpath = os.path.join(arc_topleveldir, filepath[len(topleveldir)+1:])
-                print(filepath, "--zip-->", arcpath)
+                log(F"Zipping: {filepath} --> {arcpath}")
                 zipf.write(filepath, arcpath)
 
 #----------------------------------------------------------------
@@ -142,7 +191,6 @@ def prepare_dependencies_macos():
 
     rmtree_if_exists(sdl2_framework_target_path)
 
-    print("==== Fetching SDL")
     sdl_dmg_path = get_package(F"http://libsdl.org/release/SDL2-{sdl_ver}.dmg")
 
     # Mount the DMG and copy SDL2.framework to extern/
@@ -150,6 +198,12 @@ def prepare_dependencies_macos():
         call(["hdiutil", "attach", sdl_dmg_path, "-mountpoint", mount_point, "-quiet"])
         shutil.copytree(F"{mount_point}/{sdl2_framework}", sdl2_framework_target_path, symlinks=True)
         call(["hdiutil", "detach", mount_point, "-quiet"])
+
+    if "CODE_SIGN_IDENTITY" in os.environ:
+        call(["codesign", "--force", "--timestamp", "--sign", os.environ["CODE_SIGN_IDENTITY"], sdl2_framework_target_path])
+        call(["codesign", "--force", "--timestamp", "--sign", os.environ["CODE_SIGN_IDENTITY"], F"{sdl2_framework_target_path}/Versions/Current/Frameworks/hidapi.framework"])
+    else:
+        print("SDL will not be codesigned. Set the CODE_SIGN_IDENTITY environment variable if you want to sign it.")
 
 def prepare_dependencies_linux():
     if not args.system_sdl:
@@ -167,15 +221,55 @@ def prepare_dependencies_linux():
 
 #----------------------------------------------------------------
 
+def get_artifact_name():
+    if SYSTEM == "Windows":
+        return F"{game_name}-{game_ver}-windows-x64.zip"
+    elif SYSTEM == "Darwin":
+        return F"{game_name}-{game_ver}-mac.dmg"
+    elif SYSTEM == "Linux":
+        return F"{game_name}-{game_ver}-linux-x86_64.AppImage"
+    else:
+        die("Unknown system for print_artifact_name")
+
+def copy_documentation(proj, appdir, full=True):
+    shutil.copy(F"{proj.dir_name}/ReadMe.txt", F"{appdir}")
+    shutil.copy(F"LICENSE.md", F"{appdir}/License.txt")
+
+    if full:
+        shutil.copytree("docs", F"{appdir}/Documentation")
+        os.remove(F"{appdir}/Documentation/screenshot.png")
+        for docfile in ["CHANGELOG.md", "CHEATS.md", "COMMANDLINE.md"]:
+            shutil.copy(docfile, F"{appdir}/Documentation")
+
 def package_windows(proj):
-    zipdir(F"{dist_dir}/{game_name}-{game_ver}-windows-x64.zip", F"{proj.dir_name}/Release", F"{game_name}-{game_ver}")
+    appdir = F"{cache_dir}/{game_name}-{game_ver}"
+    rmtree_if_exists(appdir)
+    os.makedirs(F"{appdir}", exist_ok=True)
+
+    # Copy executable, libs and assets
+    shutil.copy(F"{proj.dir_name}/Release/{game_name}.exe", appdir)
+    shutil.copy(F"extern/SDL2-{sdl_ver}/lib/x64/SDL2.dll", appdir)
+    shutil.copytree("Data", F"{appdir}/Data")
+
+    copy_documentation(proj, appdir)
+
+    zipdir(F"{dist_dir}/{get_artifact_name()}", appdir, F"{game_name}-{game_ver}")
 
 def package_macos(proj):
+    appdir = F"{proj.dir_name}/Release"
+
+    # Human-friendly name for .app
+    os.rename(F"{appdir}/{game_name}.app", F"{appdir}/{game_name_human}.app")
+
+    copy_documentation(proj, appdir)
+
+    #shutil.copy("packaging/dmg_DS_Store", F"{appdir}/.DS_Store")
+
     call(["hdiutil", "create",
         "-fs", "HFS+",
-        "-srcfolder", F"{proj.dir_name}/Release",
+        "-srcfolder", appdir,
         "-volname", F"{game_name_human} {game_ver}",
-        F"{dist_dir}/{game_name}-{game_ver}-mac.dmg"])
+        F"{dist_dir}/{get_artifact_name()}"])
 
 def package_linux(proj):
     appimagetool_path = get_package(F"https://github.com/AppImage/AppImageKit/releases/download/{appimagetool_ver}/appimagetool-x86_64.AppImage")
@@ -191,6 +285,7 @@ def package_linux(proj):
     # Copy executable and assets
     shutil.copy(F"{proj.dir_name}/{game_name}", F"{appdir}/usr/bin")  # executable
     shutil.copytree("Data", F"{appdir}/Data")
+    copy_documentation(proj, appdir, full=False)
 
     # Copy XDG stuff
     shutil.copy(F"packaging/{game_name.lower()}.desktop", appdir)
@@ -206,15 +301,22 @@ def package_linux(proj):
             shutil.copy(file, F"{appdir}/usr/lib", follow_symlinks=False)
 
     # Invoke appimagetool
-    call([appimagetool_path, "--no-appstream", appdir, F"{dist_dir}/{game_name}-{game_ver}-linux-x86_64.AppImage"])
+    call([appimagetool_path, "--no-appstream", appdir, F"{dist_dir}/{get_artifact_name()}"])
 
 #----------------------------------------------------------------
 
-print(F"""
-************************************
-{game_name} {game_ver} build script
-************************************
-""")
+if args.print_artifact_name:
+    print(get_artifact_name())
+    sys.exit(0)
+
+fatlog(F"{game_name} {game_ver} build script")
+
+if not (args.dependencies or args.configure or args.build or args.package):
+    log("No build steps specified, running all of them.")
+    args.dependencies = True
+    args.configure = True
+    args.build = True
+    args.package = True
 
 # Make sure we're running from the correct directory...
 if not os.path.exists("src/Enemies/Enemy_WorkerBee.c"):  # some file that's likely to be from the game's source tree
@@ -225,17 +327,25 @@ if not os.path.exists("src/Enemies/Enemy_WorkerBee.c"):  # some file that's like
 
 projects = []
 
+common_gen_args = []
+if args.G:
+    common_gen_args += ["-G", args.G]
+if args.A:
+    common_gen_args += ["-A", args.A]
+
 if SYSTEM == "Windows":
+
     projects = [Project(
         dir_name="build-msvc",
-        gen_args=["-G", "Visual Studio 16 2019", "-A", "x64"],
+        gen_args=common_gen_args,
         build_configs=["Release", "Debug"],
+        build_args=["-m"]  # multiprocessor compilation
     )]
 
 elif SYSTEM == "Darwin":
     projects = [Project(
         dir_name="build-xcode",
-        gen_args=["-G", "Xcode"],
+        gen_args=common_gen_args,
         build_configs=["Release"],
         build_args=["-j", str(NPROC), "-quiet"]
     )]
@@ -247,14 +357,14 @@ elif SYSTEM == "Linux":
 
     projects.append(Project(
         dir_name="build-release",
-        gen_args=["-DCMAKE_BUILD_TYPE=Release"],
+        gen_args=common_gen_args + ["-DCMAKE_BUILD_TYPE=Release"],
         gen_env=gen_env,
         build_args=["-j", str(NPROC)]
     ))
 
     projects.append(Project(
         dir_name="build-debug",
-        gen_args=["-DCMAKE_BUILD_TYPE=Debug"],
+        gen_args=common_gen_args + ["-DCMAKE_BUILD_TYPE=Debug"],
         gen_env=gen_env,
         build_args=["-j", str(NPROC)]
     ))
@@ -266,6 +376,13 @@ else:
 # Prepare dependencies
 
 if args.dependencies:
+    fatlog("Setting up dependencies")
+
+    # Check that our submodules are here
+    if not os.path.exists("extern/Pomme/CMakeLists.txt"):
+        die("Submodules appear to be missing.\n"
+            + "Did you clone the submodules recursively? Try this:    git submodule update --init --recursive")
+
     if SYSTEM == "Windows":
         prepare_dependencies_windows()
     elif SYSTEM == "Darwin":
@@ -280,7 +397,7 @@ if args.dependencies:
 
 if args.configure:
     for proj in projects:
-        print(F"==== Configuring {proj.dir_name}")
+        fatlog(F"Configuring {proj.dir_name}")
 
         rmtree_if_exists(proj.dir_name)
 
@@ -297,7 +414,7 @@ if args.configure:
 proj = projects[0]
 
 if args.build:
-    print(F"==== Building the game:", proj.dir_name)
+    fatlog(F"Building the game: {proj.dir_name}")
 
     build_command = ["cmake", "--build", proj.dir_name]
 
@@ -313,8 +430,9 @@ if args.build:
 # Package the game
 
 if args.package:
-    print(F"==== Packaging the game")
+    fatlog(F"Packaging the game")
 
+    rmtree_if_exists(dist_dir)
     os.makedirs(dist_dir, exist_ok=True)
 
     if SYSTEM == "Darwin":

@@ -1,0 +1,31 @@
+name: Full Compile Check
+
+on: [workflow_dispatch]
+
+jobs:
+  full-compile-check:
+    name: ${{ matrix.platform.name }}
+    runs-on: ${{ matrix.platform.os }}
+
+    strategy:
+      matrix:
+        platform:
+          - { name: Linux/GCC (ancient), os: ubuntu-18.04, extraflags: "--system-sdl" }
+          - { name: Linux/GCC, os: ubuntu-latest, extraflags: "--system-sdl" }
+          - { name: Linux/Clang, os: ubuntu-latest, extraflags: "--system-sdl" }
+          - { name: Windows/VS2019, os: windows-2019 }
+          - { name: Windows/VS2017, os: windows-2016, extraflags: "-G 'Visual Studio 15 2017'" }
+          - { name: Mac, os: macos-10.15 }
+
+    steps:
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt update
+          sudo apt install libsdl2-dev
+
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+          
+      - run: python3 build.py --dependencies --configure --build ${{ matrix.platform.extraflags }}

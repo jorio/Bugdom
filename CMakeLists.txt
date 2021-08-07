@@ -1,19 +1,22 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+set(GAME_TARGET				"Bugdom")
+set(GAME_VERSION			"1.3.1")
+set(GAME_MAC_ICNS			"packaging/${GAME_TARGET}.icns")
+set(GAME_MAC_COPYRIGHT		"© 1999 Pangea Software, Inc.\n© 2021 Iliyas Jorio.")
+set(GAME_MAC_BUNDLE_ID		"io.jor.bugdom")
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_MODULE_PATH		"${CMAKE_SOURCE_DIR}/cmake")
+set(CMAKE_C_STANDARD		11)
+set(CMAKE_CXX_STANDARD		20)
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.11" CACHE STRING "Minimum OS X deployment version")
 set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Target macOS architectures")
 
-project(Bugdom
-	VERSION 1.3.1
+project(${GAME_TARGET}
+	VERSION ${GAME_VERSION}
 	LANGUAGES C CXX
 )
-
-set(GAME_TARGET ${PROJECT_NAME})
-set(GAME_ICNS packaging/Bugdom.icns)
 
 #------------------------------------------------------------------------------
 # GLOBAL OPTIONS (BEFORE ADDING SUBDIRECTORIES)
@@ -25,7 +28,7 @@ if(MSVC)
 	add_compile_options(/Zc:__cplusplus)
 	add_compile_definitions(UNICODE _UNICODE)
 
-	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Bugdom)
+	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${GAME_TARGET})
 endif()
 
 set(POMME_NO_VIDEO true)
@@ -50,137 +53,9 @@ set(GAME_SRCDIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 # Write header file containing version info
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.h.in ${GAME_SRCDIR}/Headers/version.h)
 
-set(GAME_SOURCES
-	${GAME_SRCDIR}/Enemies/Enemy.c
-	${GAME_SRCDIR}/Enemies/Enemy_Ant.c
-	${GAME_SRCDIR}/Enemies/Enemy_Bee_Flying.c
-	${GAME_SRCDIR}/Enemies/Enemy_BoxerFly.c
-	${GAME_SRCDIR}/Enemies/Enemy_Caterpiller.c
-	${GAME_SRCDIR}/Enemies/Enemy_FireAnt.c
-	${GAME_SRCDIR}/Enemies/Enemy_FireFly.c
-	${GAME_SRCDIR}/Enemies/Enemy_KingAnt.c
-	${GAME_SRCDIR}/Enemies/Enemy_Larva.c
-	${GAME_SRCDIR}/Enemies/Enemy_Mosquito.c
-	${GAME_SRCDIR}/Enemies/Enemy_PondFish.c
-	${GAME_SRCDIR}/Enemies/Enemy_QueenBee.c
-	${GAME_SRCDIR}/Enemies/Enemy_Roach.c
-	${GAME_SRCDIR}/Enemies/Enemy_Skippy.c
-	${GAME_SRCDIR}/Enemies/Enemy_Slug.c
-	${GAME_SRCDIR}/Enemies/Enemy_Spider.c
-	${GAME_SRCDIR}/Enemies/Enemy_Tick.c
-	${GAME_SRCDIR}/Enemies/Enemy_WorkerBee.c
-	${GAME_SRCDIR}/Items/Effects.c
-	${GAME_SRCDIR}/Items/Items.c
-	${GAME_SRCDIR}/Items/Items2.c
-	${GAME_SRCDIR}/Items/Liquids.c
-	${GAME_SRCDIR}/Items/Traps.c
-	${GAME_SRCDIR}/Items/Triggers.c
-	${GAME_SRCDIR}/Items/Triggers2.c
-	${GAME_SRCDIR}/Player/MyGuy.c
-	${GAME_SRCDIR}/Player/Player_Ball.c
-	${GAME_SRCDIR}/Player/Player_Bug.c
-	${GAME_SRCDIR}/Player/Player_Control.c
-	${GAME_SRCDIR}/QD3D/3DMF.c
-	${GAME_SRCDIR}/QD3D/3DMath.c
-	${GAME_SRCDIR}/QD3D/Camera.c
-	${GAME_SRCDIR}/QD3D/EnvironmentMap.c
-	${GAME_SRCDIR}/QD3D/FrustumCulling.c
-	${GAME_SRCDIR}/QD3D/Pick.c
-	${GAME_SRCDIR}/QD3D/QD3D_Geometry.c
-	${GAME_SRCDIR}/QD3D/QD3D_Support.c
-	${GAME_SRCDIR}/QD3D/Renderer.c
-	${GAME_SRCDIR}/QD3D/TextMesh.c
-	${GAME_SRCDIR}/Ride/DragonFly.c
-	${GAME_SRCDIR}/Ride/WaterBug.c
-	${GAME_SRCDIR}/Screens/AboutScreen.c
-	${GAME_SRCDIR}/Screens/BonusScreen.c
-	${GAME_SRCDIR}/Screens/FileSelect.c
-	${GAME_SRCDIR}/Screens/HighScores.c
-	${GAME_SRCDIR}/Screens/Infobar.c
-	${GAME_SRCDIR}/Screens/LevelIntro.c
-	${GAME_SRCDIR}/Screens/LevelSelect.c
-	${GAME_SRCDIR}/Screens/MainMenu.c
-	${GAME_SRCDIR}/Screens/MiscScreens.c
-	${GAME_SRCDIR}/Screens/ModelDebug.c
-	${GAME_SRCDIR}/Screens/SettingsScreen.c
-	${GAME_SRCDIR}/Screens/Title.c
-	${GAME_SRCDIR}/Screens/UIRoutines.c
-	${GAME_SRCDIR}/Screens/WinLose.c
-	${GAME_SRCDIR}/Skeleton/Bones.c
-	${GAME_SRCDIR}/Skeleton/SkeletonAnim.c
-	${GAME_SRCDIR}/Skeleton/SkeletonJoints.c
-	${GAME_SRCDIR}/Skeleton/SkeletonObj.c
-	${GAME_SRCDIR}/System/Collision.c
-	${GAME_SRCDIR}/System/File.c
-	${GAME_SRCDIR}/System/KillMacMouseAcceleration.c
-	${GAME_SRCDIR}/System/Main.c
-	${GAME_SRCDIR}/System/Misc.c
-	${GAME_SRCDIR}/System/MouseSmoothing.c
-	${GAME_SRCDIR}/System/Objects.c
-	${GAME_SRCDIR}/System/Objects2.c
-	${GAME_SRCDIR}/System/SDLMaintenance.c
-	${GAME_SRCDIR}/System/Sound.c
-	${GAME_SRCDIR}/System/TGA.c
-	${GAME_SRCDIR}/System/Tween.c
-	${GAME_SRCDIR}/System/Windows.c
-	${GAME_SRCDIR}/System/input.c
-	${GAME_SRCDIR}/Terrain/Fences.c
-	${GAME_SRCDIR}/Terrain/SplineItems.c
-	${GAME_SRCDIR}/Terrain/Terrain.c
-	${GAME_SRCDIR}/Terrain/Terrain2.c
-	${GAME_SRCDIR}/Main.cpp
-)
+file(GLOB_RECURSE GAME_SOURCES CONFIGURE_DEPENDS ${GAME_SRCDIR}/*.c ${GAME_SRCDIR}/*.cpp)
 
-set(GAME_HEADERS
-	${GAME_SRCDIR}/Headers/game.h
-	${GAME_SRCDIR}/Headers/3dmath.h
-	${GAME_SRCDIR}/Headers/3dmf.h
-	${GAME_SRCDIR}/Headers/bones.h
-	${GAME_SRCDIR}/Headers/bonusscreen.h
-	${GAME_SRCDIR}/Headers/camera.h
-	${GAME_SRCDIR}/Headers/collision.h
-	${GAME_SRCDIR}/Headers/effects.h
-	${GAME_SRCDIR}/Headers/enemy.h
-	${GAME_SRCDIR}/Headers/environmentmap.h
-	${GAME_SRCDIR}/Headers/fences.h
-	${GAME_SRCDIR}/Headers/file.h
-	${GAME_SRCDIR}/Headers/fileselect.h
-	${GAME_SRCDIR}/Headers/globals.h
-	${GAME_SRCDIR}/Headers/highscores.h
-	${GAME_SRCDIR}/Headers/infobar.h
-	${GAME_SRCDIR}/Headers/input.h
-	${GAME_SRCDIR}/Headers/items.h
-	${GAME_SRCDIR}/Headers/liquids.h
-	${GAME_SRCDIR}/Headers/main.h
-	${GAME_SRCDIR}/Headers/mainmenu.h
-	${GAME_SRCDIR}/Headers/misc.h
-	${GAME_SRCDIR}/Headers/miscscreens.h
-	${GAME_SRCDIR}/Headers/mobjtypes.h
-	${GAME_SRCDIR}/Headers/myguy.h
-	${GAME_SRCDIR}/Headers/mytraps.h
-	${GAME_SRCDIR}/Headers/objects.h
-	${GAME_SRCDIR}/Headers/objtypes.h
-	${GAME_SRCDIR}/Headers/pick.h
-	${GAME_SRCDIR}/Headers/player_control.h
-	${GAME_SRCDIR}/Headers/qd3d_geometry.h
-	${GAME_SRCDIR}/Headers/qd3d_support.h
-	${GAME_SRCDIR}/Headers/renderer.h
-	${GAME_SRCDIR}/Headers/skeletonanim.h
-	${GAME_SRCDIR}/Headers/skeletonjoints.h
-	${GAME_SRCDIR}/Headers/skeletonobj.h
-	${GAME_SRCDIR}/Headers/sound2.h
-	${GAME_SRCDIR}/Headers/splineitems.h
-	${GAME_SRCDIR}/Headers/structs.h
-	${GAME_SRCDIR}/Headers/terrain.h
-	${GAME_SRCDIR}/Headers/triggers.h
-	${GAME_SRCDIR}/Headers/window.h
-	${GAME_SRCDIR}/Headers/textmesh.h
-	${GAME_SRCDIR}/Headers/tga.h
-	${GAME_SRCDIR}/Headers/tween.h
-	${GAME_SRCDIR}/Headers/mousesmoothing.h
-	${GAME_SRCDIR}/Headers/killmacmouseacceleration.h
-	${GAME_SRCDIR}/Headers/frustumculling.h
-)
+file(GLOB_RECURSE GAME_HEADERS CONFIGURE_DEPENDS ${GAME_SRCDIR}/*.h)
 
 set(GAME_ALL_SOURCES
 	${GAME_SOURCES}
@@ -206,16 +81,16 @@ set(GAME_LIBRARIES
 if(WIN32)
 	# "WIN32" here is equivalent to /SUBSYSTEM:WINDOWS for MSVC
 	add_executable(${GAME_TARGET} WIN32
-        ${GAME_ALL_SOURCES}
-        "${CMAKE_CURRENT_SOURCE_DIR}/packaging/Bugdom.exe.rc"
-    )
+		${GAME_ALL_SOURCES}
+		"${CMAKE_CURRENT_SOURCE_DIR}/packaging/${GAME_TARGET}.exe.rc"
+	)
 elseif(APPLE)
 	# Add required frameworks for KillMacMouseAcceleration
 	list(APPEND GAME_LIBRARIES "-framework Foundation" "-framework IOKit")
 
 	add_executable(${GAME_TARGET} MACOSX_BUNDLE
 		${GAME_ALL_SOURCES}
-		${GAME_ICNS}
+		${GAME_MAC_ICNS}
 		${SDL2_LIBRARIES}
 	)
 else()
@@ -296,23 +171,62 @@ endif()
 # PLATFORM-SPECIFIC PACKAGING
 #------------------------------------------------------------------------------
 
+set_target_properties(${GAME_TARGET} PROPERTIES
+	#--------------------------------------------------------------------------
+	# MSVC/WIN32
+	#--------------------------------------------------------------------------
+
+	VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+	VS_DPI_AWARE "PerMonitor"
+
+	#--------------------------------------------------------------------------
+	# APPLE
+	#--------------------------------------------------------------------------
+
+	# Set framework search path to (App bundle)/Contents/Frameworks so the game can use its embedded SDL2.framework
+	XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../Frameworks"
+
+	# Explicitly turn off code signing, otherwise downloaded app will be quarantined forever
+	XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ""
+
+	# Set up Info.plist values
+	MACOSX_BUNDLE_ICON_FILE				"${GAME_TARGET}.icns"	# CFBundleIconFile
+	MACOSX_BUNDLE_EXECUTABLE_NAME		${GAME_TARGET}			# CFBundleExecutable - executable name inside the bundle
+	MACOSX_BUNDLE_SHORT_VERSION_STRING	${PROJECT_VERSION}		# CFBundleShortVersionString
+	MACOSX_BUNDLE_COPYRIGHT				${GAME_MAC_COPYRIGHT}	# NSHumanReadableCopyright (supersedes CFBundleGetInfoString (MACOSX_BUNDLE_INFO_STRING))
+	MACOSX_BUNDLE_BUNDLE_NAME			${GAME_TARGET}			# CFBundleName - user-visible (where??) short name for the bundle, up to 15 characters
+	MACOSX_BUNDLE_GUI_IDENTIFIER		${GAME_MAC_BUNDLE_ID}	# CFBundleIdentifier - unique bundle ID in reverse-DNS format
+
+	# Bundle ID required for code signing - must match CFBundleIdentifier otherwise xcode will complain
+	XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER ${GAME_MAC_BUNDLE_ID}
+
+	# Don't bother with universal builds when we're working on the debug version
+	XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH[variant=Debug] "YES"
+
+	XCODE_EMBED_FRAMEWORKS							"${SDL2_LIBRARIES}"
+	XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY		"YES"		# frameworks must be signed by the same developer as the binary
+	XCODE_EMBED_FRAMEWORKS_REMOVE_HEADERS_ON_COPY	"YES"		# not strictly necessary, but that's cleaner
+	XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME			"YES"		# required for notarization to pass
+)
+
 if(APPLE)
-	set_target_properties(${GAME_TARGET} PROPERTIES
-		# Set framework search path to (App bundle)/Contents/Frameworks so the game can use its embedded SDL2.framework
-		XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../Frameworks"
+	# If we have a code signing identity (CODE_SIGN_IDENTITY environment variable),
+	# set up the release build for proper code signing
+	if(NOT "$ENV{CODE_SIGN_IDENTITY}" STREQUAL "")
+		set_target_properties(${GAME_TARGET} PROPERTIES
+			XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY[variant=Release] "$ENV{CODE_SIGN_IDENTITY}"
+			XCODE_ATTRIBUTE_DEVELOPMENT_TEAM[variant=Release] "$ENV{CODE_SIGN_IDENTITY}"
 
-		# Explicitly turn off code signing, otherwise downloaded app will be quarantined forever
-		XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ""
-
-		RESOURCE ${GAME_ICNS}
-		MACOSX_BUNDLE_ICON_FILE Bugdom.icns
-		MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
-		MACOSX_BUNDLE_COPYRIGHT "© 1999 Pangea Software, Inc."
-	)
+			# The following is to pass notarization requirements
+			XCODE_ATTRIBUTE_CODE_SIGN_INJECT_BASE_ENTITLEMENTS[variant=Release] "NO"
+			XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS[variant=Release] "--options=runtime --timestamp"
+		)
+		message("Release build will be code signed!")
+	endif()
 
 	# Copy stuff to app bundle contents
-	set_source_files_properties(${GAME_ICNS} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
-	set_source_files_properties(${SDL2_LIBRARIES} PROPERTIES MACOSX_PACKAGE_LOCATION "Frameworks")
+	set_source_files_properties(${GAME_MAC_ICNS} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+	#set_source_files_properties(${SDL2_LIBRARIES} PROPERTIES MACOSX_PACKAGE_LOCATION "Frameworks")
 
 	set(BUNDLE_CONTENTS_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>/..")
 	set(APP_PARENT_DIR "${BUNDLE_CONTENTS_DIR}/../..")
@@ -320,10 +234,6 @@ if(APPLE)
 	add_custom_command(TARGET ${GAME_TARGET} POST_BUILD
 		# Copy assets to app bundle
 		COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Data ${BUNDLE_CONTENTS_DIR}/Resources
-
-		# Nuke SDL headers in embedded framework
-		COMMAND rm -rf ${BUNDLE_CONTENTS_DIR}/Frameworks/SDL2.framework/Headers
-		COMMAND rm -rf ${BUNDLE_CONTENTS_DIR}/Frameworks/SDL2.framework/Versions/Current/Headers
 
 		# High-DPI support in Info.plist
 #		plutil -replace NSHighResolutionCapable -bool true ${BUNDLE_CONTENTS_DIR}/Info.plist
@@ -342,18 +252,11 @@ if(WIN32)
 		add_custom_command(TARGET ${GAME_TARGET} POST_BUILD
 			COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DLL} ${APP_PARENT_DIR})
 	endforeach()
-
-	set_target_properties(${GAME_TARGET} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 endif()
 
 # Copy documentation to output folder
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/packaging/ReadMe.txt.in ${CMAKE_CURRENT_BINARY_DIR}/ReadMe.txt)
-add_custom_command(TARGET ${GAME_TARGET} POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/ReadMe.txt ${APP_PARENT_DIR}/ReadMe.txt
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.md ${APP_PARENT_DIR}/License.txt
-	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/docs ${APP_PARENT_DIR}/Documentation
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/CHANGELOG.md ${APP_PARENT_DIR}/Documentation/CHANGELOG.md
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/CHEATS.md ${APP_PARENT_DIR}/Documentation/CHEATS.md
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/COMMANDLINE.md ${APP_PARENT_DIR}/Documentation/COMMANDLINE.md
-)
-
+if(WIN32)
+	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/packaging/ReadMe-Win32.txt.in ${CMAKE_CURRENT_BINARY_DIR}/ReadMe.txt)
+else()
+	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/packaging/ReadMe.txt.in ${CMAKE_CURRENT_BINARY_DIR}/ReadMe.txt)
+endif()
