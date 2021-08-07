@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-Clone the repo **recursively**, then you can run `packaging/ship_it.py` to run the build steps described in this document.
+Clone the repo **recursively**, then you can run `./build.py` to run the build steps described in this document and package up the game.
 
 If you want to build the game manually, read on.
 

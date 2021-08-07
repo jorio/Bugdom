@@ -10,6 +10,7 @@ src/Headers/version.h
 # Build directories
 /build*/
 /cmake-build*/
+/dist/
 
 # IDEs
 .vs/
