@@ -288,6 +288,7 @@ else()
 		/wd4201 # nonstandard extension (nameless struct)
 		/wd4244 # conversion from double to float
 		/wd4305 # truncation from double to float
+		/wd5105 # see https://developercommunity.visualstudio.com/t/1249671
 	)
 endif()
 
