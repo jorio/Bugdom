@@ -7,7 +7,7 @@
 // entire system. Restore it when your game is done with the mouse, otherwise
 // linear mouse movement will stick around until a reboot.
 //
-// Tested on macOS 11.1 (20C69).
+// Tested on macOS 11.5.2.
 // Needs CoreFoundation and IOKit.
 //
 // Interesting reading:
@@ -27,7 +27,11 @@
 // - https://forums3.armagetronad.net/viewtopic.php?f=12&t=3364&start=15
 //   The people who found the basis for the current approach.
 
-#if __APPLE__
+#if !(__APPLE__)
+
+typedef char BogusTypedef;  // work around ISO C warning about empty translation unit
+
+#else
 
 #include "killmacmouseacceleration.h"
 
@@ -36,8 +40,8 @@
 #include <IOKit/hidsystem/IOHIDParameter.h>
 #include <IOKit/hidsystem/event_status_driver.h>
 
-static const int32_t	kNoAcceleration			= -0x10000;
-static int32_t			gAccelerationBackup		= 0;
+static const int64_t	kNoAcceleration			= -0x10000;
+static int64_t			gAccelerationBackup		= 0;
 static bool				gAccelerationTainted	= false;
 
 void KillMacMouseAcceleration(void)
@@ -68,19 +72,19 @@ void KillMacMouseAcceleration(void)
 	}
 	else if (actualSize != sizeof(gAccelerationBackup))
 	{
-		printf("%s: IOHIDGetParameter returned unexpected actualSize!\n", __func__);
+		printf("%s: IOHIDGetParameter returned unexpected actualSize! (Got %d)\n", __func__, (int)actualSize);
 	}
 	else if (ret == KERN_SUCCESS)
 	{
 		ret = IOHIDSetParameter(handle, CFSTR(kIOHIDMouseAccelerationType), &kNoAcceleration, sizeof(kNoAcceleration));
 		if (ret != KERN_SUCCESS)
 		{
-			printf("%s: IOHidSetParameter failed! Error %d. (Current accel = %d)\n", __func__, (int)ret, gAccelerationBackup);
+			printf("%s: IOHIDSetParameter failed! Error %d. (Current accel = %lld)\n", __func__, (int)ret, gAccelerationBackup);
 		}
 		else
 		{
 			gAccelerationTainted = true;
-			printf("%s: success. Was %d, now %d.\n", __func__, gAccelerationBackup, kNoAcceleration);
+			printf("%s: success. Was %lld, now %lld.\n", __func__, gAccelerationBackup, kNoAcceleration);
 		}
 	}
 	
@@ -91,7 +95,7 @@ void RestoreMacMouseAcceleration(void)
 {
 	if (!gAccelerationTainted)
 	{
-		printf("%s: Acceleration value not tainted (%d).\n", __func__, gAccelerationBackup);
+		printf("%s: Acceleration value not tainted (%lld).\n", __func__, gAccelerationBackup);
 		return;
 	}
 	
@@ -113,7 +117,7 @@ void RestoreMacMouseAcceleration(void)
 	else
 	{
 		gAccelerationTainted = false;
-		printf("%s: success. Restored %d.\n", __func__, gAccelerationBackup);
+		printf("%s: success. Restored %lld.\n", __func__, gAccelerationBackup);
 	}
 	
 	NXCloseEventStatus(handle);
