@@ -31,13 +31,20 @@ enum
 #define	AUTO_FADE_RANGE			(AUTO_FADE_MAX_DIST - gAutoFadeStartDist)
 
 
+enum
+{
+	kAttachGeometry_TransferMeshOwnership		= (1 << 1),
+	kAttachGeometry_TransferTextureOwnership	= (1 << 2),
+	kAttachGeometry_CloneMeshes					= (1 << 3),
+};
+
+
 //========================================================
 
 extern	void InitObjectManager(void);
 extern	ObjNode	*MakeNewObject(NewObjectDefinitionType *newObjDef);
 extern	void MoveObjects(void);
-ObjNode *MakeNewCustomDrawObject(NewObjectDefinitionType *newObjDef, TQ3BoundingSphere *cullSphere,
-						 void drawFunc(ObjNode *, TQ3ViewObject));
+ObjNode *MakeNewCustomDrawObject(NewObjectDefinitionType *newObjDef, TQ3BoundingSphere *cullSphere, void drawFunc(ObjNode *));
 extern	void DrawObjects(const QD3DSetupOutputType *setupInfo);
 extern	void DeleteAllObjects(void);
 extern	void DeleteObject(ObjNode	*theNode);
@@ -45,13 +52,9 @@ extern	void DetachObject(ObjNode *theNode);
 extern	void GetObjectInfo(ObjNode *theNode);
 extern	void UpdateObject(ObjNode *theNode);
 extern	ObjNode *MakeNewDisplayGroupObject(NewObjectDefinitionType *newObjDef);
-extern	void AttachGeometryToDisplayGroupObject(ObjNode *theNode, TQ3Object geometry);
+void AttachGeometryToDisplayGroupObject(ObjNode* theNode, int numMeshes, TQ3TriMeshData** meshList, int flags);
 extern	void CreateBaseGroup(ObjNode *theNode);
 extern	void UpdateObjectTransforms(ObjNode *theNode);
-extern	void SetObjectTransformMatrix(ObjNode *theNode);
-extern	void MakeObjectKeepBackfaces(ObjNode *theNode);
-extern	void DisposeObjectBaseGroup(ObjNode *theNode);
-extern	void ResetDisplayGroupObject(ObjNode *theNode);
 extern	void MakeObjectTransparent(ObjNode *theNode, float transPercent);
 void AttachObject(ObjNode *theNode);
 
@@ -74,9 +77,4 @@ ObjNode	*AttachGlowShadowToObject(ObjNode *theNode, float scaleX, float scaleZ, 
 extern	void StopObjectStreamEffect(ObjNode *theNode);
 extern	void KeepOldCollisionBoxes(ObjNode *theNode);
 
-
-
-
-
-
-
+void DrawCollisionBoxes(const ObjNode* theNode);

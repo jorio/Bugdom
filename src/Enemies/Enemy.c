@@ -9,18 +9,7 @@
 /*    EXTERNALS             */
 /****************************/
 
-
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	TQ3ViewObject			gGameViewObject;
-extern	ObjNode					*gCurrentNode,*gFirstNodePtr,*gTheQueen,*gAntKingObj;
-extern	float				gFramesPerSecondFrac,gFramesPerSecond;
-extern	TQ3Point3D			gCoord;
-extern	TQ3Vector3D			gDelta;
-extern	short				gNumItems,gNumCollisions;
-extern	CollisionRec		gCollisionList[];
-extern	u_long		gAutoFadeStatusBits;
-extern	short	gCurrentGasParticleGroup;
-extern	u_long	gCurrentGasParticleMagicNum;
+#include "game.h"
 
 
 /****************************/
@@ -40,7 +29,7 @@ static Boolean KillEnemy(ObjNode *theEnemy);
 /*    VARIABLES      */
 /*********************/
 
-signed char	gNumEnemyOfKind[NUM_ENEMY_KINDS];
+int8_t		gNumEnemyOfKind[NUM_ENEMY_KINDS];
 short		gNumEnemies;
 
 
@@ -367,7 +356,7 @@ void MoveEnemy(ObjNode *theNode)
 // OUTPUT: true if was on spline, false if wasnt
 //
 
-Boolean DetachEnemyFromSpline(ObjNode *theNode, void *moveCall)
+Boolean DetachEnemyFromSpline(ObjNode *theNode, void (*moveCall)(ObjNode*))
 {
 		/* MAKE SURE ALL COMPONENTS ARE IN LINKED LIST */
 

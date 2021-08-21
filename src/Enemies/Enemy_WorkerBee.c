@@ -9,18 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	ObjNode					*gPlayerObj;
-extern	SplineDefType			**gSplineList;
-extern	TQ3Point3D				gCoord,gMyCoord;
-extern	short					gNumEnemies;
-extern	float					gFramesPerSecondFrac;
-extern	TQ3Vector3D			gDelta;
-extern	signed char			gNumEnemyOfKind[];
-extern	Byte		gPlayerMode;
-extern	u_short		gRealLevel;
-extern	Boolean 	gDetonatorBlown[];
 
 /****************************/
 /*    PROTOTYPES            */
@@ -703,8 +693,7 @@ TQ3Matrix4x4	m,m2,m3;
 	FindJointFullMatrix(bee, WORKERBEE_JOINT_BUTT, &m2);
 
 	MatrixMultiplyFast(&m, &m2, &stinger->BaseTransformMatrix);
-	SetObjectTransformMatrix(stinger);
-	
+
 			/* CALC COORD OF STINGER */
 			
 	Q3Point3D_Transform(&zero, &stinger->BaseTransformMatrix, &stinger->Coord);

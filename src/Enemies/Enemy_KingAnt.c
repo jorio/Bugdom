@@ -9,19 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	ObjNode					*gPlayerObj;
-extern	SplineDefType			**gSplineList;
-extern	TQ3Point3D				gCoord,gMyCoord;
-extern	short					gNumEnemies,gNumTerrainItems;
-extern	float					gFramesPerSecondFrac;
-extern	TQ3Vector3D				gDelta;
-extern	signed char				gNumEnemyOfKind[];
-extern	Byte					gPlayerMode;
-extern	TerrainItemEntryType 	**gMasterItemList;
-extern 	Boolean					gAreaCompleted;
-extern	u_long		gAutoFadeStatusBits,gInfobarUpdateBits;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -634,8 +623,7 @@ float					s;
 	m.value[3][1] = -40;
 	m.value[3][2] = -130;
 	MatrixMultiplyFast(&m,&m3,&staff->BaseTransformMatrix);			
-	SetObjectTransformMatrix(staff);
-	
+
 			/* CALC STAFF'S COORD */
 			
 	Q3Point3D_Transform(&zero, &staff->BaseTransformMatrix, &staff->Coord);

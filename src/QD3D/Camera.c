@@ -9,21 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
-#include "3dmath.h"
+#include "game.h"
 
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	float					gFramesPerSecond,gFramesPerSecondFrac;
-extern	ObjNode					*gPlayerObj;
-extern	TQ3Point3D				gMyCoord;
-extern	Boolean					gPlayerGotKilledFlag,gDoCeiling;
-extern	TQ3Object				gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
-extern	TQ3Vector3D				gLightDirection1;
-extern	u_short					gLevelType;
-extern	Byte					gPlayerMode;
-extern	CollisionRec			gCollisionList[];
-extern	SDL_Window*				gSDLWindow;
-extern	TQ3Vector2D				gCameraControlDelta;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -53,26 +40,22 @@ static void InitLensFlares(void);
 
 Boolean				gDrawLensFlare;
 
-TQ3Matrix4x4		gCameraWorldToFrustumMatrix,gCameraFrustumToWindowMatrix,
-					gCameraWorldToWindowMatrix,gCameraWindowToWorldMatrix;
-TQ3Matrix4x4		gCameraWorldToViewMatrix, gCameraViewToFrustumMatrix;
+TQ3Matrix4x4		gCameraWorldToFrustumMatrix;
+TQ3Matrix4x4		gCameraWorldToViewMatrix;
+TQ3Matrix4x4		gCameraViewToFrustumMatrix;
+TQ3Matrix4x4		gWindowToFrustum;
+TQ3Matrix4x4		gWindowToFrustumCorrectAspect;
 
 static float		gCameraLookAtAccel,gCameraFromAccelY,gCameraFromAccel;
 static float		gCameraDistFromMe, gCameraHeightFactor,gCameraLookAtYOff;
-
-static	TQ3Vector3D	gOldVector;
 
 float				gPlayerToCameraAngle = 0.0f;
 
 static TQ3Point3D 	gTargetTo,gTargetFrom;
 
-static TQ3Point3D	gSunCoord;
-
-static TQ3SurfaceShaderObject	gLensFlareShader[NUM_FLARE_TYPES] = {nil,nil,nil,nil};
-static TQ3SurfaceShaderObject	gMoonFlareShader = nil;
-
-static TQ3PolygonData		gLensQuad;
-static TQ3Vertex3D			gLensVerts[4] = { {{0,0,0},nil}, {{0,0,0},nil}, {{0,0,0},nil}, {{0,0,0},nil} };
+static bool			gLensFlaresInitialized = false;
+static GLuint		gLensFlareTextureNames[NUM_FLARE_TYPES] = {0,0,0,0};
+static GLuint		gMoonFlareTextureName = 0;
 
 static float	gFlareOffsetTable[]=
 {
@@ -105,62 +88,69 @@ static Byte	gFlareImageTable[]=
 	1
 };
 
+static TQ3TriMeshData* gFlareMeshes[NUM_FLARES] = {nil,nil,nil,nil,nil,nil};
+
+static RenderModifiers gFlareRenderMods;
+
 
 /***************** INIT LENS FLARES *********************/
 
 static void InitLensFlares(void)
 {
-TQ3AttributeSet	attrib;
-long			i;
-static const TQ3Param2D uvs[4] = { {0,1}, {1,1}, {1,0}, {0,0} };
-
 		/******************************/
 		/* CREATE LENS FLARE TEXTURES */
 		/******************************/
 
-	if (gDrawLensFlare)									// only load them for levels that need it
-	{
-			/* SEE IF LOAD SPECIAL MOON FLARE */
-				
-		if (gLevelType == LEVEL_TYPE_NIGHT)
-		{
-			gMoonFlareShader = QD3D_GetTextureMapFromPICTResource(1004, false);
-			GAME_ASSERT(gMoonFlareShader);
-		}
-		else
-		if (gMoonFlareShader)							// nuke any old moon shader
-		{
-			Q3Object_Dispose(gMoonFlareShader);
-			gMoonFlareShader = nil;
-		}
-			
-			
-			/* LOAD ALL DEFAULT FLARES IF NOT ALREADY LOADED */
-				
-		if (gLensFlareShader[0] == nil)
-		{
-			for (i = 0; i < NUM_FLARE_TYPES; i++)
-			{
-				gLensFlareShader[i] = QD3D_GetTextureMapFromPICTResource(1000+i, false);
-				GAME_ASSERT(gLensFlareShader[i]);
-			}
-				
-					/* INIT LENSE FLARE GEOMETRY */
-					
-			gLensQuad.numVertices = 4;
-			gLensQuad.vertices = &gLensVerts[0];
-			gLensQuad.polygonAttributeSet = nil;	
-			
-			for (i = 0; i < 4; i++)
-			{
-				attrib = Q3AttributeSet_New();
-				Q3AttributeSet_Add(attrib, kQ3AttributeTypeSurfaceUV, &uvs[i]);
-				gLensVerts[i].attributeSet = attrib;
-				gLensVerts[i].point.z = -.001;
+	if (!gDrawLensFlare)								// only load them for levels that need it
+		return;
 
-			}
-		}
+	if (gLensFlaresInitialized)
+		return;
+
+			/* SEE IF LOAD SPECIAL MOON FLARE TEXTURE */
+
+	GAME_ASSERT_MESSAGE(!gMoonFlareTextureName, "Moon flare texture already loaded!");
+
+	if (gLevelType == LEVEL_TYPE_NIGHT)
+	{
+		gMoonFlareTextureName = QD3D_LoadTextureFile(1004, kRendererTextureFlags_ClampBoth);
+		GAME_ASSERT(gMoonFlareTextureName);
 	}
+
+			/* LOAD ALL DEFAULT FLARE TEXTURES */
+
+	for (int i = 0; i < NUM_FLARE_TYPES; i++)
+	{
+		GAME_ASSERT_MESSAGE(!gLensFlareTextureNames[i], "Lens flare texture already loaded!");
+
+		gLensFlareTextureNames[i] = QD3D_LoadTextureFile(1000+i, kRendererTextureFlags_ClampBoth);
+		GAME_ASSERT(gLensFlareTextureNames[i]);
+	}
+
+			/* MAKE FLARE MESHES */
+
+	for (int i = 0; i < NUM_FLARES; i++)
+	{
+		GAME_ASSERT_MESSAGE(!gFlareMeshes[i], "Flare mesh already allocated!");
+
+		gFlareMeshes[i] = MakeQuadMesh(1, 1.0f, 1.0f);
+		gFlareMeshes[i]->texturingMode = kQ3TexturingModeAlphaBlend;
+		gFlareMeshes[i]->glTextureName = gLensFlareTextureNames[gFlareImageTable[i]];
+	}
+
+			/* RENDERER BITS */
+
+	Render_SetDefaultModifiers(&gFlareRenderMods);
+	gFlareRenderMods.statusBits
+			|= STATUS_BIT_NOZWRITE
+			| STATUS_BIT_NOFOG
+			| STATUS_BIT_NULLSHADER
+			| STATUS_BIT_GLOW
+			;
+
+			/* WE'RE INITIALIZED */
+
+	gLensFlaresInitialized = true;
 }
 
 
@@ -171,37 +161,42 @@ static const TQ3Param2D uvs[4] = { {0,1}, {1,1}, {1,0}, {0,0} };
 
 void DisposeLensFlares(void)
 {
-int	i;
+	if (!gLensFlaresInitialized)
+		return;
 
-		/* NUKE MOON */
-		
-	if (gMoonFlareShader)							// nuke any old moon shader
+			/* NUKE MOON TEXTURE */
+
+	if (gMoonFlareTextureName)							// nuke any old moon shader
 	{
-		Q3Object_Dispose(gMoonFlareShader);
-		gMoonFlareShader = nil;
+		glDeleteTextures(1, &gMoonFlareTextureName);
+		gMoonFlareTextureName = 0;
 	}
 
-	/* NUKE THE USUAL FLARES */
-		
-	for (i = 0; i < NUM_FLARE_TYPES; i++)
+			/* NUKE THE USUAL FLARE TEXTURES */
+
+	for (int i = 0; i < NUM_FLARE_TYPES; i++)
 	{
-		if (gLensFlareShader[i])
+		if (gLensFlareTextureNames[i])
 		{
-			Q3Object_Dispose(gLensFlareShader[i]);
-			gLensFlareShader[i] = nil;
+			glDeleteTextures(1, &gLensFlareTextureNames[i]);
+			gLensFlareTextureNames[i] = 0;
 		}
 	}
-	
-		/* ALSO DISPOSE OF UV ATTRIBS */
-		
-	for (i = 0; i < 4; i++)
+
+			/* NUKE FLARE MESHES */
+
+	for (int i = 0; i < NUM_FLARES; i++)
 	{
-		if (gLensVerts[i].attributeSet)
+		if (gFlareMeshes[i])
 		{
-			Q3Object_Dispose(gLensVerts[i].attributeSet);
-			gLensVerts[i].attributeSet = nil;
+			Q3TriMeshData_Dispose(gFlareMeshes[i]);
+			gFlareMeshes[i] = nil;
 		}
-	}	
+	}
+
+			/* WE'LL NEED TO REINIT NEXT TIME */
+
+	gLensFlaresInitialized = false;
 }
 
 
@@ -233,11 +228,11 @@ int	i;
 		dx = sin(gPlayerObj->Rot.y) * 10.0f;
 		dz = cos(gPlayerObj->Rot.y) * 10.0f;
 		
-		gGameViewInfoPtr->currentCameraCoords.x = gPlayerObj->Coord.x + dx;
+		gGameViewInfoPtr->currentCameraCoords.x = gPlayerObj->Coord.x + dx;			// camera coords
 		gGameViewInfoPtr->currentCameraCoords.z = gPlayerObj->Coord.z + dz;
 		gGameViewInfoPtr->currentCameraCoords.y = gPlayerObj->Coord.y + 300.0f;
 
-		gGameViewInfoPtr->currentCameraLookAt.x = gPlayerObj->Coord.x;
+		gGameViewInfoPtr->currentCameraLookAt.x = gPlayerObj->Coord.x;				// camera lookAt
 		gGameViewInfoPtr->currentCameraLookAt.y = gPlayerObj->Coord.y + 100.0f;
 		gGameViewInfoPtr->currentCameraLookAt.z = gPlayerObj->Coord.z;
 	}
@@ -263,10 +258,6 @@ void ResetCameraSettings(void)
 	gCameraDistFromMe 	= 500;
 	gCameraHeightFactor = 0.3;
 	gCameraLookAtYOff 	= 95; 
-
-	gOldVector.x = 0;
-	gOldVector.z = -1;
-	gOldVector.y = 0;
 }
 
 /*************** UPDATE CAMERA ***************/
@@ -299,34 +290,135 @@ float	fps = gFramesPerSecondFrac;
 	
 }
 
+
+/********************** FILL PROJECTION MATRIX ************************/
+//
+// Equivalent to gluPerspective
+//
+
+static void FillProjectionMatrix(TQ3Matrix4x4* m, float fov, float aspect, float hither, float yon)
+{
+	float f = 1.0f / tanf(fov/2.0f);
+
+#define M(x,y) m->value[x][y]
+	M(0,0) = f/aspect;		M(1,0) = 0;			M(2,0) = 0;							M(3,0) = 0;
+	M(0,1) = 0;				M(1,1) = f;			M(2,1) = 0;							M(3,1) = 0;
+	M(0,2) = 0;				M(1,2) = 0;			M(2,2) = (yon+hither)/(hither-yon);	M(3,2) = 2*yon*hither/(hither-yon);
+	M(0,3) = 0;				M(1,3) = 0;			M(2,3) = -1;						M(3,3) = 0;
+#undef M
+}
+
+/********************** FILL LOOKAT MATRIX ************************/
+//
+// Equivalent to gluLookAt
+//
+
+static void FillLookAtMatrix(
+		TQ3Matrix4x4* m,
+		const TQ3Point3D* eye,
+		const TQ3Point3D* target,
+		const TQ3Vector3D* upDir)
+{
+	TQ3Vector3D forward;
+	Q3Point3D_Subtract(eye, target, &forward);
+	Q3Vector3D_Normalize(&forward, &forward);
+
+	TQ3Vector3D left;
+	Q3Vector3D_Cross(upDir, &forward, &left);
+	Q3Vector3D_Normalize(&left, &left);
+
+	TQ3Vector3D up;
+	Q3Vector3D_Cross(&forward, &left, &up);
+
+	float tx = Q3Vector3D_Dot((TQ3Vector3D*)eye, &left);
+	float ty = Q3Vector3D_Dot((TQ3Vector3D*)eye, &up);
+	float tz = Q3Vector3D_Dot((TQ3Vector3D*)eye, &forward);
+
+#define M(x,y) m->value[x][y]
+	M(0,0) = left.x;	M(1,0) = left.y;	M(2,0) = left.z;		M(3,0) = -tx;
+	M(0,1) = up.x;		M(1,1) = up.y;		M(2,1) = up.z;			M(3,1) = -ty;
+	M(0,2) = forward.x;	M(1,2) = forward.y;	M(2,2) = forward.z;		M(3,2) = -tz;
+	M(0,3) = 0;			M(1,3) = 0;			M(2,3) = 0;				M(3,3) = 1;
+#undef M
+}
+
 /********************** CALC CAMERA MATRIX INFO ************************/
 //
 // Must be called inside render start/end loop!!!
 //
 
-void CalcCameraMatrixInfo(QD3DSetupOutputType *viewPtr)
+void CalcCameraMatrixInfo(QD3DSetupOutputType *setupInfo)
 {
+			/* INIT PROJECTION MATRIX */
+
+	glMatrixMode(GL_PROJECTION);
+
+	FillProjectionMatrix(
+			&gCameraViewToFrustumMatrix,
+			setupInfo->fov,
+			setupInfo->aspectRatio,
+			setupInfo->hither,
+			setupInfo->yon);
+
+	glLoadMatrixf((const GLfloat*) &gCameraViewToFrustumMatrix.value[0][0]);
+
+			/* INIT MODELVIEW MATRIX */
+
+	glMatrixMode(GL_MODELVIEW);
+
+	FillLookAtMatrix(
+			&gCameraWorldToViewMatrix,
+			&setupInfo->currentCameraCoords,
+			&setupInfo->currentCameraLookAt,
+			&setupInfo->currentCameraUpVector);
+
+	glLoadMatrixf((const GLfloat*) &gCameraWorldToViewMatrix.value[0][0]);
+
+			/* UPDATE LIGHT POSITIONS */
+
+	for (int i = 0; i < setupInfo->lightList.numFillLights; i++)
+	{
+		GLfloat lightVec[4];
+
+		lightVec[0] = -setupInfo->lightList.fillDirection[i].x;			// negate vector because OGL is stupid
+		lightVec[1] = -setupInfo->lightList.fillDirection[i].y;
+		lightVec[2] = -setupInfo->lightList.fillDirection[i].z;
+		lightVec[3] = 0;									// when w==0, this is a directional light, if 1 then point light
+		glLightfv(GL_LIGHT0+i, GL_POSITION, lightVec);
+	}
+
+
 			/* GET CAMERA VIEW MATRIX INFO */
-			
-	Q3View_GetWorldToFrustumMatrixState(viewPtr->viewObject, &gCameraWorldToFrustumMatrix);
-	Q3View_GetFrustumToWindowMatrixState(viewPtr->viewObject, &gCameraFrustumToWindowMatrix);
-	MatrixMultiplyFast(&gCameraWorldToFrustumMatrix, &gCameraFrustumToWindowMatrix, &gCameraWorldToWindowMatrix);
-	
-	Q3Camera_GetWorldToView(viewPtr->cameraObject, &gCameraWorldToViewMatrix);	
-	Q3Camera_GetViewToFrustum(viewPtr->cameraObject, &gCameraViewToFrustumMatrix);	
-	
-			/* CALCULATE THE ADJUSTMENT MATRIX */
-			//
-			// this gets a view->world matrix for putting stuff in the infobar.
-			//
-				
-	Q3Matrix4x4_Invert(&gCameraWorldToWindowMatrix,&gCameraWindowToWorldMatrix);
+
+	Q3Matrix4x4_Multiply(&gCameraWorldToViewMatrix, &gCameraViewToFrustumMatrix, &gCameraWorldToFrustumMatrix);		// calc world to frustum matrix
 
 
 			/* PREPARE FRUSTUM PLANES FOR SPHERE VISIBILITY CHECKS */
-			// (Source port addition)
 
 	UpdateFrustumPlanes(&gCameraWorldToFrustumMatrix);
+
+
+			/* PREPARE WINDOW TO CLIPPED NORMALIZED 2D MATRIX */
+
+	{
+		TQ3Area viewportRect = Render_GetAdjustedViewportRect(setupInfo->paneClip, GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
+
+		float w = viewportRect.max.x - viewportRect.min.x;
+		float h = viewportRect.max.y - viewportRect.min.y;
+		if (w < .001f) w = .001f;						// avoid divide by zero
+		if (h < .001f) h = .001f;
+
+		TQ3Matrix4x4 temp;
+		Q3Matrix4x4_SetScale(&temp, 2.0f / w, -2.0f / h, 0);
+
+		Q3Matrix4x4_SetTranslate(&gWindowToFrustum, -viewportRect.min.x - w * .5f, -viewportRect.min.y - h * .5f, 0);
+		Q3Matrix4x4_Multiply(&gWindowToFrustum, &temp, &gWindowToFrustum);
+
+		Q3Matrix4x4_SetScale(&temp, setupInfo->aspectRatio, 1, 1);
+		Q3Matrix4x4_Multiply(&gWindowToFrustum, &temp, &gWindowToFrustumCorrectAspect);
+	}
+
+	CHECK_GL_ERROR();
 }
 
 /**************** MOVE CAMERA: MANUAL ********************/
@@ -531,14 +623,13 @@ float		fps = gFramesPerSecondFrac;
 
 void DrawLensFlare(const QD3DSetupOutputType *setupInfo)
 {
-TQ3ViewObject	view = setupInfo->viewObject;
-short			i;
-float			x,y,dot;
-TQ3Point3D		sunScreenCoord,from;
-float			cx,cy;
-float			dx,dy,length;
+float			dot;
+TQ3Point3D		sunCoord;
+TQ3Point3D		sunFrustumCoord;
+TQ3Point3D		from;
 TQ3Vector3D		axis,lookAtVector,sunVector;
-TQ3ColorRGB		transColor;
+float			length;
+const bool doMoon = gMoonFlareTextureName != 0;
 
 	if (!gDrawLensFlare)
 		return;
@@ -546,17 +637,16 @@ TQ3ColorRGB		transColor;
 	from = setupInfo->currentCameraCoords;
 
 			/* CALC SUN COORD */
-			
-	gSunCoord.x = from.x - gLightDirection1.x * 3500.0f;
-	gSunCoord.y = from.y - gLightDirection1.y * 3500.0f;
-	gSunCoord.z = from.z - gLightDirection1.z * 3500.0f;
 
+	sunCoord.x = from.x - gLightDirection1.x * 3500.0f;
+	sunCoord.y = from.y - gLightDirection1.y * 3500.0f;
+	sunCoord.z = from.z - gLightDirection1.z * 3500.0f;
 
 	/* CALC DOT PRODUCT BETWEEN VIEW AND LIGHT VECTORS TO SEE IF OUT OF RANGE */
 
-	FastNormalizeVector(from.x - gSunCoord.x,
-						from.y - gSunCoord.y,
-						from.z - gSunCoord.z,
+	FastNormalizeVector(from.x - sunCoord.x,
+						from.y - sunCoord.y,
+						from.z - sunCoord.z,
 						&sunVector);
 
 	FastNormalizeVector(setupInfo->currentCameraLookAt.x - from.x,
@@ -568,127 +658,52 @@ TQ3ColorRGB		transColor;
 	if (dot <= 0.0f)
 		return;
 
-			/* CALC BRIGHTNESS OF FLARE */
-			
-	transColor.r = 
-	transColor.g = 
-	transColor.b = dot;
-
-
-
 			/* CALC SCREEN COORDINATE OF LIGHT */
-			
-	Q3Point3D_Transform(&gSunCoord, &gCameraWorldToWindowMatrix, &sunScreenCoord);
 
-//	if (sunScreenCoord.x < -SUN_RADIUS)					// the sun must be visible for lens flare
-//		return;
-//	if (sunScreenCoord.y < -SUN_RADIUS)
-//		return;		
-//	if (sunScreenCoord.x > (GAME_VIEW_WIDTH + SUN_RADIUS))
-//		return;
-//	if (sunScreenCoord.y > (GAME_VIEW_HEIGHT + SUN_RADIUS))
-//		return;
-		
-			/* CALC CENTER OF SCREEN */
+	Q3Point3D_Transform(&sunCoord, &gCameraWorldToFrustumMatrix, &sunFrustumCoord);
 
-	int windowWidth, windowHeight;
-	SDL_GetWindowSize(gSDLWindow, &windowWidth, &windowHeight);
-			
-	cx = windowWidth/2;
-	cy = windowHeight/2;
-	
+	sunFrustumCoord.x *= setupInfo->aspectRatio;
 
 			/* CALC VECTOR FROM CENTER TO LIGHT */
-			
-	dx = sunScreenCoord.x - cx;
-	dy = sunScreenCoord.y - cy;
-	length = sqrt(dx*dx + dy*dy);	
-	FastNormalizeVector(dx, dy, 0, &axis);
-	
 
-			/************/
-			/* SET TAGS */
-			/************/
-			
-	Q3Push_Submit(view);
-	QD3D_DisableFog(setupInfo);
-	QD3D_SetTriangleCacheMode(false);
-	QD3D_SetAdditiveBlending(true);
-	QD3D_SetZWrite(false);
-	Q3Shader_Submit(setupInfo->nullShaderObject, view);							// use null shader
-	Q3BackfacingStyle_Submit(kQ3BackfacingStyleRemove, view);
-
+	length = sqrtf(sunFrustumCoord.x*sunFrustumCoord.x + sunFrustumCoord.y*sunFrustumCoord.y);
+	FastNormalizeVector(sunFrustumCoord.x, sunFrustumCoord.y, 0, &axis);
 
 			/***************/
 			/* DRAW FLARES */
 			/***************/
-		
-	Q3MatrixTransform_Submit(&gCameraWindowToWorldMatrix, view);
-				
-	for (i = 0; i < NUM_FLARES; i++)
-	{			
-		float	s,o;
-		
-		if (i > 0)									// always draw sun, but fade flares based on dot
-			Q3Attribute_Submit(kQ3AttributeTypeTransparencyColor, &transColor, view);	
 
-	
-		o = gFlareOffsetTable[i];
-		if (gMoonFlareShader && (i == 0))										// see if do moon
-			s = .3;
+	for (int i = 0; i < NUM_FLARES; i++)
+	{
+		TQ3TriMeshData* mesh = gFlareMeshes[i];
+
+		float	s,o;
+
+		if (i > 0)									// always draw sun, but fade flares based on dot
+			mesh->diffuseColor.a = dot;				// flare brightness == dot product
+
+		if (doMoon && (i == 0))						// see if do moon
+			s = .3f;								// special scale for moon
 		else
 			s = gFlareScaleTable[i];
-		
-		// Source port addition: adjust lens flare scale to window dimensions
-		// (Original dimensions are valid for 640x480)
-		s *= windowHeight / 480.0f;
 
-		x = cx + axis.x * length * o;
-		y = cy + axis.y * length * o;
-				
-		gLensVerts[0].point.x = x - (120.0f * s);
-		gLensVerts[0].point.y = y + (120.0f * s);
+		o = 1.33f * gFlareOffsetTable[i] - 0.33f;
+		float x = axis.x * length * o;
+		float y = axis.y * length * o;
 
-		gLensVerts[1].point.x = x + (120.0f * s);
-		gLensVerts[1].point.y = y + (120.0f * s);
+		float extent = s * .67f;
 
-		gLensVerts[2].point.x = x+(120.0f * s);
-		gLensVerts[2].point.y = y-(120.0f * s);
+		mesh->points[0] = (TQ3Point3D) { x - extent, y - extent, 0 };
+		mesh->points[1] = (TQ3Point3D) { x + extent, y - extent, 0 };
+		mesh->points[2] = (TQ3Point3D) { x + extent, y + extent, 0 };
+		mesh->points[3] = (TQ3Point3D) { x - extent, y + extent, 0 };
 
-		gLensVerts[3].point.x = x-(120.0f * s);
-		gLensVerts[3].point.y = y-(120.0f * s);
-	
-		if (gMoonFlareShader && (i == 0))										// see if do moon
-			Q3Object_Submit(gMoonFlareShader, view);							// submit texture
+		if (doMoon && (i == 0))							// see if do moon
+			mesh->glTextureName = gMoonFlareTextureName;
 		else
-			Q3Object_Submit(gLensFlareShader[gFlareImageTable[i]], view);		// submit texture
-		Q3Polygon_Submit(&gLensQuad, view);										// draw it
-				
+			mesh->glTextureName = gLensFlareTextureNames[gFlareImageTable[i]];
 	}
-	Q3ResetTransform_Submit(view);												// reset matrix
 
-
-			/* RESTORE MODES */
-			
-	Q3Shader_Submit(setupInfo->shaderObject, view);								// restore shader
-	QD3D_SetZWrite(true);
-	QD3D_SetTriangleCacheMode(true);
-	QD3D_SetAdditiveBlending(false);
-	QD3D_ReEnableFog(setupInfo);
-	Q3Pop_Submit(view);
+	Render_SubmitMeshList(NUM_FLARES, gFlareMeshes, NULL, &gFlareRenderMods, &kQ3Point3D_Zero);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

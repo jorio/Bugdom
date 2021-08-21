@@ -9,16 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	float			gFramesPerSecond,gFramesPerSecondFrac;
-extern	WindowPtr		gCoverWindow;
-extern	TQ3Object		gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
-extern	short	gPrefsFolderVRefNum;
-extern	long	gPrefsFolderDirID;
-extern	FSSpec	gDataSpec;
-extern	char	gTypedAsciiKey;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -112,14 +104,12 @@ TQ3Vector3D	camDelta = {0,0,0};
 		
 		gScoreCyc->Coord.y -= gFramesPerSecondFrac * 20.0f;
 		UpdateObjectTransforms(gScoreCyc);
-		
+
 		QD3D_DrawScene(gGameViewInfoPtr,DrawObjects);	
 		DoSDLMaintenance();
 
 		UpdateInput();
-		if (FlushMouseButtonPress())
-			break;
-		if (AreAnyNewKeysPressed())
+		if (GetSkipScreenInput())
 			break;		
 			
 	}while(gGameViewInfoPtr->currentCameraCoords.y > -500);
@@ -131,8 +121,9 @@ TQ3Vector3D	camDelta = {0,0,0};
 	DeleteAllObjects();
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
 	Free3DMFGroup(MODEL_GROUP_HIGHSCORES);
-	DisposeSoundBank(SOUND_BANK_DEFAULT);
+	DisposeSoundBank(SOUNDBANK_MAIN);
 	GameScreenToBlack();
+	Pomme_FlushPtrTracking(true);
 }
 
 
@@ -143,7 +134,7 @@ static void SetupHighScoresScreen(void)
 TQ3Point3D			cameraFrom = { 0, 00, 400.0 };
 TQ3Point3D			cameraTo = { 0.0, 0, 0.0 };
 TQ3Vector3D			cameraUp = { 0.0, 1.0, 0.0 };
-TQ3ColorARGB		clearColor = {1,0,0,0};
+TQ3ColorRGBA		clearColor = TQ3ColorRGBA_FromInt(0x295a8cff);
 TQ3ColorRGB			ambientColor = { 1.0, 1.0, 1.0 };
 TQ3Vector3D			fillDirection1 = { .7, -.1, -0.3 };
 TQ3Vector3D			fillDirection2 = { -1, -.3, -.4 };
@@ -156,7 +147,7 @@ QD3DSetupInputType		viewDef;
 			/* SET QD3D PARAMETERS */
 			/***********************/
 			
-	QD3D_NewViewDef(&viewDef, gCoverWindow);			
+	QD3D_NewViewDef(&viewDef);
 	viewDef.view.clearColor 		= clearColor;
 		
 	viewDef.camera.from 			= cameraFrom;
@@ -192,12 +183,11 @@ QD3DSetupInputType		viewDef;
 		/* LOAD CURRENT SCORES */
 
 	LoadHighScores();	
-	
-	
+
+
 		/* LOAD AUDIO */
-		
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:Main.sounds", &file);
-	LoadSoundBank(&file, SOUND_BANK_DEFAULT);
+
+	LoadSoundBank(SOUNDBANK_MAIN);
 }
 
 
@@ -359,7 +349,8 @@ EventRecord	theEvent;
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= 2.5f;		// Source port change from 2.0 (works better in widescreen)
 	gScoreCyc = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-			
+	QD3D_MirrorMeshesZ(gScoreCyc);
+
 			/* MAKE NAME FRAME */
 			
 	gNewObjectDefinition.group = MODEL_GROUP_HIGHSCORES;
@@ -381,10 +372,10 @@ EventRecord	theEvent;
 	gNewObjectDefinition.coord.x = LEFT_EDGE;
 	gNewObjectDefinition.coord.y = 0;
 	gNewObjectDefinition.coord.z = 0;
+	gNewObjectDefinition.flags = STATUS_BIT_KEEPBACKFACES_2PASS | STATUS_BIT_NOZWRITE;
 	gNewObjectDefinition.moveCall = MoveCursor;
 	gCursorObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-	MakeObjectKeepBackfaces(gCursorObj);
-	
+
 	for (i=0; i < MAX_NAME_LENGTH; i++)					// init name to blank
 	{
 		gNewName.name[i] = ' ';
@@ -667,10 +658,6 @@ static const TQ3Point2D xyCoords[NUM_SCORES][2] =
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= 1.0;
 	newObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-	// Source port removal: is there any reason why the game used to keep backfaces on this model?
-	// With Quesa this yields massive z-fighting on the sunflower leaves.
-	// TODO: Check how this model used to look on a real mac.
-	//MakeObjectKeepBackfaces(newObj);
 
 			/*************************/
 			/* CREATE THE BACKGROUND */
@@ -687,7 +674,8 @@ static const TQ3Point2D xyCoords[NUM_SCORES][2] =
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= 6.0;
 	gScoreCyc = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-	
+	QD3D_MirrorMeshesZ(gScoreCyc);
+
 			/**********************/
 			/* CREATE SCORES LIST */
 			/**********************/

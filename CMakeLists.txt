@@ -5,14 +5,15 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_CXX_STANDARD 20)
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.11" CACHE STRING "Minimum OS X deployment version")
+set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Target macOS architectures")
 
 project(Bugdom
-	VERSION 1.3.0
+	VERSION 1.3.1
 	LANGUAGES C CXX
 )
 
 set(GAME_TARGET ${PROJECT_NAME})
-set(GAME_ICNS cmake/Bugdom.icns)
+set(GAME_ICNS packaging/Bugdom.icns)
 
 #------------------------------------------------------------------------------
 # GLOBAL OPTIONS (BEFORE ADDING SUBDIRECTORIES)
@@ -28,13 +29,13 @@ if(MSVC)
 endif()
 
 set(POMME_NO_VIDEO true)
-set(POMME_NO_QD3D true)  # This version of the game uses Quesa rather than Pomme's QD3D/3DMF support
+set(POMME_NO_INPUT true)
+set(POMME_NO_GRAPHICS true)
 
 #------------------------------------------------------------------------------
 # DEPENDENCIES
 #------------------------------------------------------------------------------
 
-add_subdirectory(extern/Quesa)
 add_subdirectory(extern/Pomme)
 
 find_package(SDL2 REQUIRED COMPONENTS main)
@@ -63,7 +64,6 @@ set(GAME_SOURCES
 	${GAME_SRCDIR}/Enemies/Enemy_PondFish.c
 	${GAME_SRCDIR}/Enemies/Enemy_QueenBee.c
 	${GAME_SRCDIR}/Enemies/Enemy_Roach.c
-	${GAME_SRCDIR}/Enemies/Enemy_Skeleton.c
 	${GAME_SRCDIR}/Enemies/Enemy_Skippy.c
 	${GAME_SRCDIR}/Enemies/Enemy_Slug.c
 	${GAME_SRCDIR}/Enemies/Enemy_Spider.c
@@ -84,9 +84,12 @@ set(GAME_SOURCES
 	${GAME_SRCDIR}/QD3D/3DMath.c
 	${GAME_SRCDIR}/QD3D/Camera.c
 	${GAME_SRCDIR}/QD3D/EnvironmentMap.c
+	${GAME_SRCDIR}/QD3D/FrustumCulling.c
 	${GAME_SRCDIR}/QD3D/Pick.c
 	${GAME_SRCDIR}/QD3D/QD3D_Geometry.c
 	${GAME_SRCDIR}/QD3D/QD3D_Support.c
+	${GAME_SRCDIR}/QD3D/Renderer.c
+	${GAME_SRCDIR}/QD3D/TextMesh.c
 	${GAME_SRCDIR}/Ride/DragonFly.c
 	${GAME_SRCDIR}/Ride/WaterBug.c
 	${GAME_SRCDIR}/Screens/AboutScreen.c
@@ -95,11 +98,13 @@ set(GAME_SOURCES
 	${GAME_SRCDIR}/Screens/HighScores.c
 	${GAME_SRCDIR}/Screens/Infobar.c
 	${GAME_SRCDIR}/Screens/LevelIntro.c
+	${GAME_SRCDIR}/Screens/LevelSelect.c
 	${GAME_SRCDIR}/Screens/MainMenu.c
 	${GAME_SRCDIR}/Screens/MiscScreens.c
 	${GAME_SRCDIR}/Screens/ModelDebug.c
 	${GAME_SRCDIR}/Screens/SettingsScreen.c
 	${GAME_SRCDIR}/Screens/Title.c
+	${GAME_SRCDIR}/Screens/UIRoutines.c
 	${GAME_SRCDIR}/Screens/WinLose.c
 	${GAME_SRCDIR}/Skeleton/Bones.c
 	${GAME_SRCDIR}/Skeleton/SkeletonAnim.c
@@ -107,22 +112,27 @@ set(GAME_SOURCES
 	${GAME_SRCDIR}/Skeleton/SkeletonObj.c
 	${GAME_SRCDIR}/System/Collision.c
 	${GAME_SRCDIR}/System/File.c
+	${GAME_SRCDIR}/System/KillMacMouseAcceleration.c
 	${GAME_SRCDIR}/System/Main.c
 	${GAME_SRCDIR}/System/Misc.c
+	${GAME_SRCDIR}/System/MouseSmoothing.c
 	${GAME_SRCDIR}/System/Objects.c
 	${GAME_SRCDIR}/System/Objects2.c
-	${GAME_SRCDIR}/System/SelfRunDemo.c
+	${GAME_SRCDIR}/System/SDLMaintenance.c
 	${GAME_SRCDIR}/System/Sound.c
+	${GAME_SRCDIR}/System/TGA.c
+	${GAME_SRCDIR}/System/Tween.c
 	${GAME_SRCDIR}/System/Windows.c
 	${GAME_SRCDIR}/System/input.c
 	${GAME_SRCDIR}/Terrain/Fences.c
 	${GAME_SRCDIR}/Terrain/SplineItems.c
 	${GAME_SRCDIR}/Terrain/Terrain.c
 	${GAME_SRCDIR}/Terrain/Terrain2.c
+	${GAME_SRCDIR}/Main.cpp
 )
 
 set(GAME_HEADERS
-	${GAME_SRCDIR}/Headers/bugdom.h
+	${GAME_SRCDIR}/Headers/game.h
 	${GAME_SRCDIR}/Headers/3dmath.h
 	${GAME_SRCDIR}/Headers/3dmf.h
 	${GAME_SRCDIR}/Headers/bones.h
@@ -146,7 +156,6 @@ set(GAME_HEADERS
 	${GAME_SRCDIR}/Headers/misc.h
 	${GAME_SRCDIR}/Headers/miscscreens.h
 	${GAME_SRCDIR}/Headers/mobjtypes.h
-	${GAME_SRCDIR}/Headers/morphobj.h
 	${GAME_SRCDIR}/Headers/myguy.h
 	${GAME_SRCDIR}/Headers/mytraps.h
 	${GAME_SRCDIR}/Headers/objects.h
@@ -155,7 +164,7 @@ set(GAME_HEADERS
 	${GAME_SRCDIR}/Headers/player_control.h
 	${GAME_SRCDIR}/Headers/qd3d_geometry.h
 	${GAME_SRCDIR}/Headers/qd3d_support.h
-	${GAME_SRCDIR}/Headers/selfrundemo.h
+	${GAME_SRCDIR}/Headers/renderer.h
 	${GAME_SRCDIR}/Headers/skeletonanim.h
 	${GAME_SRCDIR}/Headers/skeletonjoints.h
 	${GAME_SRCDIR}/Headers/skeletonobj.h
@@ -163,46 +172,17 @@ set(GAME_HEADERS
 	${GAME_SRCDIR}/Headers/splineitems.h
 	${GAME_SRCDIR}/Headers/structs.h
 	${GAME_SRCDIR}/Headers/terrain.h
-	${GAME_SRCDIR}/Headers/title.h
 	${GAME_SRCDIR}/Headers/triggers.h
 	${GAME_SRCDIR}/Headers/window.h
-	${GAME_SRCDIR}/Headers/worldmap.h
-	${GAME_SRCDIR}/Headers/GLFunctions.h
-	${GAME_SRCDIR}/Headers/GLOverlay.h
-	${GAME_SRCDIR}/Headers/GLOverlayFade.h
-	${GAME_SRCDIR}/Headers/gamepatches.h
 	${GAME_SRCDIR}/Headers/textmesh.h
 	${GAME_SRCDIR}/Headers/tga.h
-	${GAME_SRCDIR}/Headers/pickablequads.h
 	${GAME_SRCDIR}/Headers/tween.h
 	${GAME_SRCDIR}/Headers/mousesmoothing.h
 	${GAME_SRCDIR}/Headers/killmacmouseacceleration.h
 	${GAME_SRCDIR}/Headers/frustumculling.h
 )
 
-set(GAME_GLUE_SOURCES
-	${GAME_SRCDIR}/Main.cpp
-	${GAME_SRCDIR}/Glue/DrawPicture.cpp
-	${GAME_SRCDIR}/Glue/EdgePadding.cpp
-	${GAME_SRCDIR}/Glue/FrustumCulling.c
-	${GAME_SRCDIR}/Glue/GLFunctions.cpp
-	${GAME_SRCDIR}/Glue/GLOverlay.cpp
-	${GAME_SRCDIR}/Glue/GLOverlayFade.cpp
-	${GAME_SRCDIR}/Glue/KillMacMouseAcceleration.c
-	${GAME_SRCDIR}/Glue/MouseSmoothing.c
-	${GAME_SRCDIR}/Glue/Overlay.cpp
-	${GAME_SRCDIR}/Glue/Patch3DMFModels.c
-	${GAME_SRCDIR}/Glue/PickableQuads.cpp
-	${GAME_SRCDIR}/Glue/QuesaExtras.c
-	${GAME_SRCDIR}/Glue/SDLMaintenance.c
-	${GAME_SRCDIR}/Glue/TextMesh.c
-	${GAME_SRCDIR}/Glue/TGA.c
-	${GAME_SRCDIR}/Glue/Tween.c
-	${GAME_SRCDIR}/Glue/UIRoutines.c
-)
-
 set(GAME_ALL_SOURCES
-	${GAME_GLUE_SOURCES}
 	${GAME_SOURCES}
 	${GAME_HEADERS}
 )
@@ -214,21 +194,10 @@ set(GAME_ALL_SOURCES
 source_group(TREE ${GAME_SRCDIR} PREFIX "" FILES ${GAME_ALL_SOURCES})
 
 #------------------------------------------------------------------------------
-# SOURCE FILE PROPERTIES
-#------------------------------------------------------------------------------
-
-if(NOT MSVC)
-	set_source_files_properties(${GAME_SOURCES} PROPERTIES COMPILE_FLAGS "-include bugdom.h")
-else()
-	set_source_files_properties(${GAME_SOURCES} PROPERTIES COMPILE_FLAGS /FIbugdom.h)
-endif()
-
-#------------------------------------------------------------------------------
 # EXECUTABLE TARGET
 #------------------------------------------------------------------------------
 
 set(GAME_LIBRARIES
-	Quesa_SDL
 	Pomme
 	${SDL2_LIBRARIES}
 	${OPENGL_LIBRARIES}
@@ -238,7 +207,7 @@ if(WIN32)
 	# "WIN32" here is equivalent to /SUBSYSTEM:WINDOWS for MSVC
 	add_executable(${GAME_TARGET} WIN32
         ${GAME_ALL_SOURCES}
-        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/WindowsResources.rc"
+        "${CMAKE_CURRENT_SOURCE_DIR}/packaging/Bugdom.exe.rc"
     )
 elseif(APPLE)
 	# Add required frameworks for KillMacMouseAcceleration
@@ -260,10 +229,9 @@ target_include_directories(${GAME_TARGET} PRIVATE
 	${SDL2_INCLUDE_DIRS}
 	${OPENGL_INCLUDE_DIR}
 	extern/Pomme/src
+	extern/Pomme/src/QD3D
 	${GAME_SRCDIR}
 	${GAME_SRCDIR}/Headers
-	${GAME_SRCDIR}/Headers/Glue
-	${GAME_SRCDIR}/Headers/QD3DCompat
 )
 
 target_link_libraries(${GAME_TARGET} ${GAME_LIBRARIES})
@@ -276,22 +244,15 @@ add_compile_definitions(
 	"$<$<CONFIG:DEBUG>:_DEBUG>"
 )
 
-target_compile_definitions(Quesa_SDL PUBLIC
-	QUESA_OS_SDL
-	QUESA_APPLY_FOG_COLOR_IN_ALL_PASSES
-	QUESA_NO_TRANSPARENCY_SORT
-	#"$<$<CONFIG:DEBUG>:Q3_DEBUG>"
-	"$<$<CONFIG:DEBUG>:QUESA_DUMP_SHADERS>"
-)
-
-target_compile_definitions(${GAME_TARGET} PRIVATE
-	QUESA_OS_SDL
-)
-
 if(WIN32)
 	# On Win32, we need NOGDI and NOUSER to be able to define some Mac functions
 	# whose names are otherwise taken by Windows APIs.
-	target_compile_definitions(${GAME_TARGET} PRIVATE WIN32_LEAN_AND_MEAN NOGDI NOUSER)
+	target_compile_definitions(${GAME_TARGET} PRIVATE
+		WIN32_LEAN_AND_MEAN
+		NOGDI
+		NOUSER
+		_CRT_SECURE_NO_WARNINGS  # quit whining about snprintf_s
+	)
 endif()
 
 #------------------------------------------------------------------------------
@@ -306,8 +267,9 @@ if(NOT MSVC)
 		-Wshadow
 		-Wno-multichar
 		-Wno-unknown-pragmas
+		$<$<CXX_COMPILER_ID:GNU>:-Wno-unused-but-set-variable>
+		-Werror=return-type
 		-Wno-unused-parameter
-		"$<$<CXX_COMPILER_ID:GNU>:-Wno-unused-but-set-variable>"
 	)
 else()
 	# By default, MSVC may add /EHsc to CMAKE_CXX_FLAGS, which we don't want (we use /EHs below)
@@ -326,6 +288,7 @@ else()
 		/wd4201 # nonstandard extension (nameless struct)
 		/wd4244 # conversion from double to float
 		/wd4305 # truncation from double to float
+		/wd5105 # see https://developercommunity.visualstudio.com/t/1249671
 	)
 endif()
 
@@ -384,10 +347,13 @@ if(WIN32)
 endif()
 
 # Copy documentation to output folder
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ReadMe.txt.in ${CMAKE_CURRENT_BINARY_DIR}/ReadMe.txt)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/packaging/ReadMe.txt.in ${CMAKE_CURRENT_BINARY_DIR}/ReadMe.txt)
 add_custom_command(TARGET ${GAME_TARGET} POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/ReadMe.txt ${APP_PARENT_DIR}/ReadMe.txt
 	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.md ${APP_PARENT_DIR}/License.txt
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/docs ${APP_PARENT_DIR}/Documentation
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/CHANGELOG.md ${APP_PARENT_DIR}/Documentation/CHANGELOG.md
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/CHEATS.md ${APP_PARENT_DIR}/Documentation/CHEATS.md
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/COMMANDLINE.md ${APP_PARENT_DIR}/Documentation/COMMANDLINE.md
 )
 

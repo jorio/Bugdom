@@ -14,19 +14,11 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 #include <time.h>
 #include <ctype.h>
+#include <stdio.h>
 
-extern	float				gFramesPerSecondFrac,gFramesPerSecond;
-extern	WindowPtr			gCoverWindow;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	FSSpec		gDataSpec;
-extern	PrefsType	gGamePrefs;
-extern	u_short		gLevelType,gRealLevel;
-extern 	ObjNode 	*gFirstNodePtr;
-
-extern	TQ3Int32	gHoveredPick;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -40,7 +32,7 @@ static int FileScreenMainLoop(void);
 /*    CONSTANTS             */
 /****************************/
 
-static const char* gLevelNames[NUM_LEVELS] =
+const char* kLevelNames[NUM_LEVELS] =
 {
 	"Training",
 	"Lawn",
@@ -67,10 +59,10 @@ struct
 } fileInfos[NUM_SAVE_FILES];
 
 
-static const TQ3ColorRGB gTextShadowColor	= { 0.0f, 0.0f, 0.3f };
-static const TQ3ColorRGB gTextColor			= { 1.0f, 0.9f, 0.0f };
-static const TQ3ColorRGB gTitleTextColor	= { 1.0f, 0.9f, 0.0f };
-static const TQ3ColorRGB gDeleteColor		= { 0.9f, 0.3f, 0.1f };
+static const TQ3ColorRGBA gTextShadowColor	= {0.0f, 0.0f, 0.3f, 1.0f};
+static const TQ3ColorRGBA gTextColor		= {1.0f, 0.9f, 0.0f, 1.0f};
+static const TQ3ColorRGBA gTitleTextColor	= {1.0f, 0.9f, 0.0f, 1.0f};
+static const TQ3ColorRGBA gDeleteColor		= {0.9f, 0.3f, 0.1f, 1.0f};
 
 
 static char textBuffer[512];
@@ -111,7 +103,7 @@ int DoFileSelectScreen(int type)
 	/* SETUP */
 	/*********/
 
-	SetupUIStuff();
+	SetupUIStuff(kUIBackground_Cyclorama);
 	SetupFileScreen();
 
 	QD3D_CalcFramesPerSecond();
@@ -304,23 +296,16 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 
 	floppies[fileNumber] = newFloppy;
 
-	// Get path to floppy label image
-	snprintf(textBuffer, sizeof(textBuffer), ":Images:Floppy%d.tga", saveDataValid? saveData.realLevel: 0);
-
 	// Set floppy label texture
-	FSSpec floppyLabelPictSpec;
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, textBuffer, &floppyLabelPictSpec);
-	TQ3ShaderObject shaderObject = QD3D_TGAToTexture(&floppyLabelPictSpec);
-	GAME_ASSERT(shaderObject);
-	QD3D_ReplaceGeometryTexture(newFloppy->BaseGroup, shaderObject);
-
-//	gPickables[gNumPickables++] = newFloppy->BaseGroup;
+	GLuint labelTexture = QD3D_LoadTextureFile(3510 + (saveDataValid? saveData.realLevel: 0), 0);
+	newFloppy->MeshList[1]->glTextureName = labelTexture;
 
 	snprintf(textBuffer, sizeof(textBuffer), "File %c", 'A' + fileNumber);
 
 
 	TextMeshDef tmd;
 	TextMesh_FillDef(&tmd);
+	tmd.align			= TEXTMESH_ALIGN_CENTER;
 	tmd.color			= gTextColor;
 	tmd.shadowColor		= gTextShadowColor;
 	tmd.slot			= objNodeSlotID;
@@ -332,7 +317,7 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 
 	if (saveDataValid)
 	{
-		snprintf(textBuffer, sizeof(textBuffer), "Level %d: %s", 1 + saveData.realLevel, gLevelNames[saveData.realLevel]);
+		snprintf(textBuffer, sizeof(textBuffer), "Level %d: %s", 1 + saveData.realLevel, kLevelNames[saveData.realLevel]);
 
 		tmd.coord.y	= y+70*gs;
 		tmd.scale	= .25f * gs;
@@ -358,15 +343,17 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 
 	if (createPickables)
 	{
+		// Floppy
 		{
 			TQ3Point3D quadCenter = {x, y, 0};
-			PickableQuads_NewQuad(quadCenter, 90, 90, kPickBits_Floppy | fileNumber);            // Floppy
+			NewPickableQuad(quadCenter, 90, 90, kPickBits_Floppy | fileNumber);
 		}
 
+		// Delete
 		if (canDelete)
 		{
 			TQ3Point3D quadCenter = { x+30*gs, y-65*gs, 0 };
-			PickableQuads_NewQuad(quadCenter, .3f*100*gs, deleteScale*50*gs, kPickBits_Delete | fileNumber);		// Delete
+			NewPickableQuad(quadCenter, .3f*100*gs, deleteScale*50*gs, kPickBits_Delete | fileNumber);
 		}
 	}
 }
@@ -380,6 +367,7 @@ static void SetupFileScreen(void)
 
 	TextMeshDef tmd;
 	TextMesh_FillDef(&tmd);
+	tmd.align		= TEXTMESH_ALIGN_CENTER;
 	tmd.coord.y		= 110.0f;
 	tmd.color		= gTitleTextColor;
 	tmd.shadowColor	= gTextShadowColor;
@@ -392,7 +380,7 @@ static void SetupFileScreen(void)
 	{
 		//TextMesh_Create(&tmd, "Save where?");
 
-		snprintf(textBuffer, sizeof(textBuffer), "ENTERING LEVEL %d. SAVE WHERE?", gRealLevel+2);
+		snprintf(textBuffer, sizeof(textBuffer), "Entering level %d. Save where?", gRealLevel+2);
 		tmd.scale	= .33f;
 		tmd.color = gTitleTextColor;
 		TextMesh_Create(&tmd, textBuffer);
@@ -402,7 +390,7 @@ static void SetupFileScreen(void)
 		tmd.scale = .33f;
 		tmd.color = gDeleteColor;
 		tmd.align = TEXTMESH_ALIGN_RIGHT;
-		TextMesh_Create(&tmd, "DON'T SAVE");
+		TextMesh_Create(&tmd, "Don't save");
 
 		// Make floppy
 		gNewObjectDefinition.group 		= MODEL_GROUP_BONUS;
@@ -420,7 +408,7 @@ static void SetupFileScreen(void)
 		// Make pickable quad
 		TQ3Point3D dontSaveQuadCenter = tmd.coord;
 		dontSaveQuadCenter.x -= 15;
-		PickableQuads_NewQuad(dontSaveQuadCenter, 100, 25, kPickBits_DontSave);
+		NewPickableQuad(dontSaveQuadCenter, 100, 25, kPickBits_DontSave);
 	}
 
 	for (int i = 0; i < NUM_SAVE_FILES; i++)
@@ -445,7 +433,7 @@ static void PopFloppy(int fileNumber)
 }
 
 
-static void DeleteFile(int fileNumber)
+static void DeleteFileInSlot(int fileNumber)
 {
 	GAME_ASSERT(fileNumber >= 0 && fileNumber < NUM_SAVE_FILES);
 
@@ -468,9 +456,6 @@ static void FileScreenDrawStuff(const QD3DSetupOutputType *setupInfo)
 {
 	DrawObjects(setupInfo);
 	QD3D_DrawParticles(setupInfo);
-#if _DEBUG
-	PickableQuads_Draw(setupInfo->viewObject);
-#endif
 }
 
 static int FileScreenMainLoop()
@@ -512,7 +497,7 @@ static int FileScreenMainLoop()
 						break;
 
 					case kPickBits_Delete:
-						DeleteFile(pickID & kPickBits_FileNumberMask);
+						DeleteFileInSlot(pickID & kPickBits_FileNumberMask);
 						break;
 
 					case kPickBits_DontSave:

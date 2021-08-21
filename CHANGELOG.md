@@ -1,6 +1,14 @@
 # Bugdom changelog
 
-- **1.3.0 (December 2020)** Major update so the game works on modern systems. Support for arbitrary screen resolutions beyond 640x480. Presentation enhancements (built-in save & settings dialogs, widescreen touchups, etc.). Many bugfixes.
+- **1.3.1 (WORK IN PROGRESS)**
+    - Full rewrite of the 3D renderer.
+
+- **1.3.0 (December 2020)**
+    - Major update so the game works on modern systems.
+    - Support for arbitrary screen resolutions beyond 640x480.
+    - Presentation enhancements (built-in save & settings dialogs, widescreen touchups, etc.).
+    - Many bugfixes.
+    - *Note: this is the last version of Bugdom that uses Quesa for rendering, i.e. the last version containing "true" QuickDraw 3D code.*
 
 ---
 

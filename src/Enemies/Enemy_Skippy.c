@@ -9,19 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	ObjNode					*gCurrentNode;
-extern	SplineDefType			**gSplineList;
-extern	TQ3Point3D				gCoord,gMyCoord;
-extern	short					gNumEnemies;
-extern	float					gFramesPerSecondFrac;
-extern	TQ3Vector3D			gDelta;
-extern	signed char			gNumEnemyOfKind[];
-extern	ObjNode				*gPlayerObj;
-extern	Byte				gPlayerMode;
-extern	Boolean				gPlayerGotKilledFlag;
-extern	u_short				gLevelType;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -139,13 +128,22 @@ static void  MoveSkippy_Swimming(ObjNode *theNode)
 float	fps = gFramesPerSecondFrac;
 float	r,s;
 
+			/* CAP SPEED */
+			//
+			// Gravity can pull the skippy to insane speeds if left unchecked
+			//
+
+	if (theNode->Speed > 400)
+		theNode->Speed = 400;
+
 
 			/* MOVE TOWARD PLAYER */
 			
 	TurnObjectTowardTarget(theNode, &gCoord, gMyCoord.x, gMyCoord.z, SKIPPY_TURN_SPEED, false);			
 	r = theNode->Rot.y;
-	
-	
+
+
+
 			/* SEE IF SPEED BOOST */
 			
 	if (theNode->SpeedBoost)
@@ -160,7 +158,7 @@ float	r,s;
 	if (theNode->Speed < 0.0f)
 		theNode->Speed  = 0.0;
 	s = theNode->Speed;
-	
+
 	gDelta.x = -sin(r) * s;
 	gDelta.z = -cos(r) * s;
 	

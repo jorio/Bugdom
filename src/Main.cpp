@@ -6,15 +6,12 @@
 #include "PommeInit.h"
 #include "PommeFiles.h"
 #include "PommeGraphics.h"
-#include "version.h"
-
-#include <Quesa.h>
-#include <SDL.h>
-
-#include "gamepatches.h"
 
 #include <iostream>
 #include <cstring>
+
+#include "game.h"
+#include "version.h"
 
 #if __APPLE__
 #include "killmacmouseacceleration.h"
@@ -24,18 +21,13 @@
 
 extern "C"
 {
-	// bare minimum from Windows.c to satisfy externs in game code
-	WindowPtr gCoverWindow = nullptr;
+	// bare minimum to satisfy externs in game code
 	SDL_Window* gSDLWindow = nullptr;
-	UInt32* gCoverWindowPixPtr = nullptr;
 
-	// Lets the game know where to find its asset files
-	extern FSSpec gDataSpec;
-
-	extern SDL_Window* gSDLWindow;
+	CommandLineOptions gCommandLine;
 
 	// Tell Windows graphics driver that we prefer running on a dedicated GPU if available
-#if _WIN32
+#if 0 //_WIN32
 	__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 	__declspec(dllexport) unsigned long NvOptimusEnablement = 1;
 #endif
@@ -65,12 +57,18 @@ static fs::path FindGameData()
 
 	dataPath = dataPath.lexically_normal();
 
-	// Set data spec
+	// Set data spec -- Lets the game know where to find its asset files
 	gDataSpec = Pomme::Files::HostPathToFSSpec(dataPath / "Skeletons");
 
 	// Use application resource file
 	auto applicationSpec = Pomme::Files::HostPathToFSSpec(dataPath / "System" / "Application");
 	short resFileRefNum = FSpOpenResFile(&applicationSpec, fsRdPerm);
+
+	if (resFileRefNum == -1)
+	{
+		throw std::runtime_error("Couldn't find the Data folder.");
+	}
+
 	UseResFile(resFileRefNum);
 
 	return dataPath;
@@ -83,8 +81,52 @@ static const char* GetWindowTitle()
 	return windowTitle;
 }
 
+void ParseCommandLine(int argc, const char** argv)
+{
+	memset(&gCommandLine, 0, sizeof(gCommandLine));
+	gCommandLine.msaa = 0;
+	gCommandLine.vsync = 1;
+
+	for (int i = 1; i < argc; i++)
+	{
+		std::string argument = argv[i];
+
+		if (argument == "--stats")
+			gShowDebugStats = true;
+		else if (argument == "--no-vsync")
+			gCommandLine.vsync = 0;
+		else if (argument == "--vsync")
+			gCommandLine.vsync = 1;
+		else if (argument == "--adaptive-vsync")
+			gCommandLine.vsync = -1;
+		else if (argument == "--msaa2x")
+			gCommandLine.msaa = 2;
+		else if (argument == "--msaa4x")
+			gCommandLine.msaa = 4;
+		else if (argument == "--msaa8x")
+			gCommandLine.msaa = 8;
+		else if (argument == "--msaa16x")
+			gCommandLine.msaa = 16;
+		else if (argument == "--fullscreen-resolution")
+		{
+			GAME_ASSERT_MESSAGE(i + 2 < argc, "fullscreen width & height unspecified");
+			gCommandLine.fullscreenWidth = atoi(argv[i + 1]);
+			gCommandLine.fullscreenHeight = atoi(argv[i + 2]);
+			i += 2;
+		}
+		else if (argument == "--fullscreen-refresh-rate")
+		{
+			GAME_ASSERT_MESSAGE(i + 1 < argc, "fullscreen refresh rate unspecified");
+			gCommandLine.fullscreenRefreshRate = atoi(argv[i + 1]);
+			i += 1;
+		}
+	}
+}
+
 int CommonMain(int argc, const char** argv)
 {
+	ParseCommandLine(argc, argv);
+
 	// Start our "machine"
 	Pomme::Init();
 
@@ -93,13 +135,15 @@ int CommonMain(int argc, const char** argv)
 		throw std::runtime_error("Couldn't initialize SDL video subsystem.");
 
 	// Create window
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-#if ALLOW_MSAA
-	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
-#endif
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+	if (gCommandLine.msaa != 0)
+	{
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, gCommandLine.msaa);
+	}
+
 	gSDLWindow = SDL_CreateWindow(
 			GetWindowTitle(),
 			SDL_WINDOWPOS_UNDEFINED,
@@ -113,20 +157,8 @@ int CommonMain(int argc, const char** argv)
 	// Uncomment to dump the game's resources to a temporary directory.
 	//Pomme_StartDumpingResources("/tmp/BugdomRezDump");
 
-	// Set up globals that the game expects
-	gCoverWindow = Pomme::Graphics::GetScreenPort();
-	gCoverWindowPixPtr = (UInt32*) GetPixBaseAddr(GetGWorldPixMap(gCoverWindow));
-
-	// Clear window
-	Overlay_BeginExclusive();
-	Overlay_Clear(0xFFA5A5A5);
-	Overlay_Flush();
-	Overlay_EndExclusive();
-
+	// Find path to game data folder
 	fs::path dataPath = FindGameData();
-#if !(__APPLE__)
-	Pomme::Graphics::SetWindowIconFromIcl8Resource(gSDLWindow, 128);
-#endif
 
 	// Init joystick subsystem
 	{
@@ -136,13 +168,6 @@ int CommonMain(int argc, const char** argv)
 		{
 			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING, "Bugdom", "Couldn't load gamecontrollerdb.txt!", gSDLWindow);
 		}
-	}
-
-	// Initialize Quesa
-	auto qd3dStatus = Q3Initialize();
-	if (qd3dStatus != kQ3Success)
-	{
-		throw std::runtime_error("Couldn't initialize Quesa.");
 	}
 
 	// Start the game
@@ -201,7 +226,7 @@ int main(int argc, char** argv)
 	if (showFinalErrorMessage)
 	{
 		std::cerr << "Uncaught exception: " << finalErrorMessage << "\n";
-		SDL_ShowSimpleMessageBox(0, "Uncaught exception", finalErrorMessage.c_str(), nullptr);
+		SDL_ShowSimpleMessageBox(0, "Bugdom", finalErrorMessage.c_str(), nullptr);
 	}
 
 	return returnCode;

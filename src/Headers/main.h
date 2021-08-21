@@ -2,11 +2,8 @@
 // main.h
 //
 
-#ifndef __MAIN
-#define __MAIN
+#pragma once
 
-
-#define NUM_LEVELS	10
 
 enum
 {
@@ -15,7 +12,8 @@ enum
 	LEVEL_TYPE_FOREST,
 	LEVEL_TYPE_HIVE,
 	LEVEL_TYPE_NIGHT,
-	LEVEL_TYPE_ANTHILL
+	LEVEL_TYPE_ANTHILL,
+	NUM_LEVEL_TYPES
 };
 
 enum
@@ -29,7 +27,8 @@ enum
 	LEVEL_NUM_QUEENBEE,
 	LEVEL_NUM_NIGHT,
 	LEVEL_NUM_ANTHILL,
-	LEVEL_NUM_ANTKING
+	LEVEL_NUM_ANTKING,
+	NUM_LEVELS
 };
 
   
@@ -38,7 +37,4 @@ enum
 
 extern	int GameMain(void);
 extern	void ToolBoxInit(void);
-extern	void UpdateGame_Server(void);
 
-
-#endif

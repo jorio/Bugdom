@@ -2,8 +2,7 @@
 // fences.h
 //
 
-#ifndef FENCE_H
-#define FENCE_H
+#pragma once
 
 		// (READ IN FROM FILE -- MUST BE BYTESWAPPED!)
 typedef	struct
@@ -34,8 +33,4 @@ void PrimeFences(void);
 void DoFenceCollision(ObjNode *theNode, float radiusScale);
 void DrawFences(const QD3DSetupOutputType *setupInfo);
 void DisposeFenceShaders(void);
-
-
-#endif
-
 

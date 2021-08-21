@@ -9,9 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
-#include "3dmath.h"
+#include "game.h"
 
-extern	float				gFramesPerSecondFrac,gFramesPerSecond;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -50,8 +49,11 @@ void MatrixMultiplyFast(TQ3Matrix4x4 *a, TQ3Matrix4x4 *b, TQ3Matrix4x4 *result)
 {
 Byte	i,j;
 
+	GAME_ASSERT(a != result);
+	GAME_ASSERT(b != result);
+
 			/* DO IT */
-			
+
 	for (i = 0; i < 4; i++)
 	{
 		for (j = 0; j < 4; j++)
@@ -901,6 +903,10 @@ float					verts2x,verts2y;
 				verts2x = point->x;
 				verts2y = point->y;
 				break;
+
+		default:
+				DoFatalAlert("IsPointInTriangle3D: unknown component");
+				return false;
 	}
 	
 	

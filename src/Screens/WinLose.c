@@ -9,14 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
-extern	float				gFramesPerSecondFrac,gFramesPerSecond;
-extern	TQ3Point3D			gCoord;
-extern	WindowPtr			gCoverWindow;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	Boolean		gSongPlayingFlag,gResetSong,gDisableAnimSounds,gSongPlayingFlag;
-extern	FSSpec		gDataSpec;
-extern	PrefsType	gGamePrefs;
+#include "game.h"
+
 
 /****************************/
 /*    PROTOTYPES            */
@@ -49,6 +43,9 @@ enum
 
 #define	KINGANT_HEAD_LIMB	1
 
+#define LOSE_THRONE_LAVA_SUBMESH 5
+#define WIN_THRONE_WATER_SUBMESH 23
+
 /*********************/
 /*    VARIABLES      */
 /*********************/
@@ -57,7 +54,6 @@ static float gFireTimer = 0;
 static short	gFireGroup1,gFireGroup2;
 
 static ObjNode	*gThrone;
-static float gU = 0, gV = 0;
 
 #define	FireTimer	SpecialF[0]
 
@@ -92,6 +88,7 @@ void DoWinScreen(void)
 	FreeAllSkeletonFiles(-1);
 	DeleteAll3DMFGroups();
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);		
+	Pomme_FlushPtrTracking(true);
 }
 
 
@@ -139,7 +136,7 @@ static const TQ3Point2D po[4] =
 			/* MAKE VIEW */
 			/*************/
 
-	QD3D_NewViewDef(&viewDef, gCoverWindow);
+	QD3D_NewViewDef(&viewDef);
 	
 	viewDef.camera.hither 			= 20;
 	viewDef.camera.yon 				= 3000;		// Source port mod (was 2000) so fog doesn't kick in
@@ -253,11 +250,11 @@ static const TQ3Point2D po[4] =
 	gNewObjectDefinition.coord.x 	= CAGE_X;
 	gNewObjectDefinition.coord.y 	= CAGE_Y;
 	gNewObjectDefinition.coord.z 	= CAGE_Z;
+	gNewObjectDefinition.flags 		= STATUS_BIT_KEEPBACKFACES;
 	gNewObjectDefinition.moveCall 	= nil;
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= scale;
 	newObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-	MakeObjectKeepBackfaces(newObj);
 
 
 			/* 4 POSTS */
@@ -269,6 +266,7 @@ static const TQ3Point2D po[4] =
 		gNewObjectDefinition.coord.x 	= CAGE_X + (po[i].x * scale);
 		gNewObjectDefinition.coord.y 	= CAGE_Y;
 		gNewObjectDefinition.coord.z 	= CAGE_Z + (po[i].y * scale);
+		gNewObjectDefinition.flags 		= 0;
 		gNewObjectDefinition.rot 		= -PI/2 + (PI/2 * i);
 		MakeNewDisplayGroupObject(&gNewObjectDefinition);
 	}
@@ -314,6 +312,7 @@ void DoLoseScreen(void)
 	FreeAllSkeletonFiles(-1);
 	DeleteAll3DMFGroups();
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);		
+	Pomme_FlushPtrTracking(true);
 }
 
 
@@ -363,15 +362,18 @@ static const TQ3Point2D po[4] =
 			/* MAKE VIEW */
 			/*************/
 
-	QD3D_NewViewDef(&viewDef, gCoverWindow);
+	QD3D_NewViewDef(&viewDef);
 	
 	viewDef.camera.hither 			= 20;
-	viewDef.camera.yon 				= 3000;		// Source port mod (was 2000) so fog doesn't kick in
+	viewDef.camera.yon 				= 2000;
 	viewDef.camera.fov 				= 1.1;
 	viewDef.styles.usePhong 		= false;
 	viewDef.camera.from				= cameraFrom;
 	viewDef.camera.to	 			= cameraTo;
-	
+
+	viewDef.lights.fogStart			= .25f;				// source port note: these aren't original values,
+	viewDef.lights.fogEnd			= 1.5f;				// but they mimic the ominous red fog present in the OS9 version
+
 	viewDef.lights.numFillLights 	= 1;
 	viewDef.lights.ambientBrightness = 0.1;
 	viewDef.lights.fillDirection[0] = fillDirection1;
@@ -480,11 +482,11 @@ static const TQ3Point2D po[4] =
 	gNewObjectDefinition.coord.x 	= CAGE_X;
 	gNewObjectDefinition.coord.y 	= CAGE_Y;
 	gNewObjectDefinition.coord.z 	= CAGE_Z;
+	gNewObjectDefinition.flags 		= STATUS_BIT_KEEPBACKFACES;
 	gNewObjectDefinition.moveCall 	= nil;
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= scale;
 	newObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-	MakeObjectKeepBackfaces(newObj);
 
 
 			/* 4 POSTS */
@@ -496,6 +498,7 @@ static const TQ3Point2D po[4] =
 		gNewObjectDefinition.coord.x 	= CAGE_X + (po[i].x * scale);
 		gNewObjectDefinition.coord.y 	= CAGE_Y;
 		gNewObjectDefinition.coord.z 	= CAGE_Z + (po[i].y * scale);
+		gNewObjectDefinition.flags 		= 0;
 		gNewObjectDefinition.rot 		= -PI/2 + (PI/2 * i);
 		MakeNewDisplayGroupObject(&gNewObjectDefinition);
 	}
@@ -535,23 +538,21 @@ float	fps;
 		fps = gFramesPerSecondFrac;			
 		duration -= fps;
 		
-		if (FlushMouseButtonPress())
-			return(true);
-		if (AreAnyNewKeysPressed())
+		if (GetSkipScreenInput())
 			return(true);		
 		
 		if (fire)
 		{
-			UpdateLoseFire();
-			gU += fps * .1f;
-			gV += fps * .05f;
-			QD3D_ScrollUVs(gThrone->BaseGroup, gU, gV, 6);
+ 			UpdateLoseFire();
+
+ 			GAME_ASSERT_MESSAGE(gThrone->NumMeshes > LOSE_THRONE_LAVA_SUBMESH, "lava mesh ID not found in lose throne");
+			QD3D_ScrollUVs(gThrone->MeshList[LOSE_THRONE_LAVA_SUBMESH], fps*.1f, -fps*.05f);
+			gThrone->MeshList[LOSE_THRONE_LAVA_SUBMESH]->hasVertexNormals = false;  // make it pop - don't shade lava
 		}
 		else
 		{
-			gU += fps * .1f;
-			gV += fps * .05f;
-			QD3D_ScrollUVs(gThrone->BaseGroup, gU, gV, 6);
+			GAME_ASSERT_MESSAGE(gThrone->NumMeshes > WIN_THRONE_WATER_SUBMESH, "water mesh ID not found in win throne");
+			QD3D_ScrollUVs(gThrone->MeshList[WIN_THRONE_WATER_SUBMESH], fps*.1f, -fps*.05f);
 		}
 		
 	}while(duration > 0.0f);

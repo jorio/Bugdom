@@ -9,21 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 
-
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	ObjNode					*gPlayerObj,*gMyBuddy;
-extern	TQ3Point3D				gCoord;
-extern	float					gFramesPerSecondFrac,gShieldTimer;
-extern	TQ3Vector3D				gDelta;
-extern	Byte					gPlayerMode;
-extern	unsigned long 			gInfobarUpdateBits;
-extern	TQ3Vector3D			gRecentTerrainNormal[2];
-extern	u_short				gLevelType,gLevelTypeMask;
-extern	u_long				gAutoFadeStatusBits;
-extern	float				gAutoFadeStartDist,gBallTimer;
-extern	short				gNumLives,gMoney;
-extern	u_short				gRealLevel;
 
 /*******************/
 /*   PROTOTYPES    */
@@ -1000,7 +987,7 @@ static void MakePowerup(ObjNode *theNut)
 {
 short				group,type;
 ObjNode				*newObj;
-static const Byte	keyTypes[NUM_LEVELS] =
+static const Byte	keyTypes[NUM_LEVEL_TYPES] =
 {
 	LAWN1_MObjType_Key_Green,	// lawn
 	0, 							// pond

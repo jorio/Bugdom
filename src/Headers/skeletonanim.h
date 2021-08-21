@@ -32,35 +32,14 @@ enum
 	ACCEL_MODE_EASEOUT
 };
 
-		/* SLIDERS */
-		
-typedef struct
-{
-	Rect	bounds;
-	long	type;
-	long	info1;
-	long	info2;
-}SliderBox;
-
-
-enum
-{
-	SLIDER_TYPE_CURRENTTIME,
-	SLIDER_TYPE_KEYFRAME,
-	SLIDER_TYPE_ANIMEVENT
-};
 
 #define	NUM_ACCELERATION_CURVE_NUBS		23						// THESE MUST MATCH BIO-OREO'S NUMBERS!!!
 #define	SPLINE_POINTS_PER_NUB			100
 #define CURVE_SIZE						((NUM_ACCELERATION_CURVE_NUBS-3)*SPLINE_POINTS_PER_NUB)
 
 
-
-
-
 //============================================================
 
-		
 extern	void UpdateSkeletonAnimation(ObjNode *theNode);
 extern	void SetSkeletonAnim(SkeletonObjDataType *skeleton, long animNum);
 extern	void GetModelCurrentPosition(SkeletonObjDataType *skeleton);

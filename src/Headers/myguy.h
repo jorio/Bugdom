@@ -2,16 +2,18 @@
 // myguy.h
 //
 
+#pragma once
+
 #define	PLAYER_RADIUS				60.0f		// both bug & ball share same radius value so that morphing near fences doesnt cause fall-thru
 
 #define BUG_LIMB_NUM_PELVIS			0
 #define BUG_LIMB_NUM_HEAD			7
 
-#define	PLAYER_BUG_FOOTOFFSET		0.0f				// dist to foot from origin
-#define	PLAYER_BUG_HEADOFFSET		180.0f				// dist to head from origin
+#define	PLAYER_BUG_FOOTOFFSET		0			// dist to foot from origin
+#define	PLAYER_BUG_HEADOFFSET		180			// dist to head from origin
 
-#define	PLAYER_BALL_FOOTOFFSET		(50.0f)				// dist to foot from origin
-#define	PLAYER_BALL_HEADOFFSET		(45.0f)				// dist to head from origin
+#define	PLAYER_BALL_FOOTOFFSET		50			// dist to foot from origin
+#define	PLAYER_BALL_HEADOFFSET		45			// dist to head from origin
 
 #define	HurtTimer		SpecialF[0]				// timer for duration of hurting
 #define	InvincibleTimer	SpecialF[4]				// timer for invicibility after being hurt
@@ -71,6 +73,7 @@ void KillPlayer(Boolean changeAnims);
 		/* BALL */
 		
 void InitPlayer_Ball(ObjNode *oldObj, TQ3Point3D *where);
+bool BallHasHeadroomToMorphToBug(void);
 
 		/* BUG */
 		

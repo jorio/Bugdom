@@ -2,8 +2,7 @@
 // structs.h
 //
 
-#ifndef STRUCTS_H
-#define STRUCTS_H
+#pragma once
 
 
 #define	MAX_ANIMS			25
@@ -19,7 +18,7 @@
 #define	MAX_DECOMPOSED_NORMALS	800
 #define	MAX_POINTS_ON_BONE		100		// DONT CHANGE!! MUST MATCH VALUE IN BIO-OREO PRO SINCE IS WIRED INTO ARRAY IN SKELETON FILE!!
 #define	MAX_POINT_REFS			10		// max times a point can be re-used in multiple places
-#define	MAX_DECOMPOSED_TRIMESHES 10
+#define	MAX_DECOMPOSED_TRIMESHES 36		// 10 is enough for most of the game, but the endgame throne room is made of 36 submeshes
 
 
 
@@ -90,11 +89,7 @@ typedef struct
 typedef struct
 {
 	long 				parentBone;			 			// index to previous bone
-	TQ3GroupObject		ignored1;			
-	TQ3Matrix4x4		ignored2;	
-	TQ3TransformObject	ignored3;
-	unsigned char		ignored4[32];		
-	TQ3Point3D			coord;							// absolute coord (not relative to parent!) 
+	TQ3Point3D			coord;							// absolute coord (not relative to parent!)
 	u_short				numPointsAttachedToBone;		// # vertices/points that this bone has
 	u_short				*pointList;						// indecies into gDecomposedPointList
 	u_short				numNormalsAttachedToBone;		// # vertex normals this bone has
@@ -166,7 +161,7 @@ typedef struct
 	BoneDefinitionType	*Bones;							// data which describes bone heirarachy
 	
 	long				numDecomposedTriMeshes;			// # trimeshes in skeleton
-	TQ3TriMeshData		*decomposedTriMeshes;			// array of triMeshData
+	TQ3TriMeshData		**decomposedTriMeshPtrs;		// array of triMeshData
 
 	long				numDecomposedPoints;			// # shared points in skeleton
 	DecomposedPointType	*decomposedPointList;			// array of shared points
@@ -174,7 +169,10 @@ typedef struct
 	short				numDecomposedNormals ;			// # shared normal vectors
 	TQ3Vector3D			*decomposedNormalsList;			// array of shared normals
 
+	TQ3MetaFile			*associated3DMF;				// associated 3DMF file
 
+	long				numTextures;
+	GLuint				*textureNames;
 }SkeletonDefType;
 
 
@@ -208,7 +206,6 @@ typedef struct
 	TQ3Matrix4x4	jointTransformMatrix[MAX_JOINTS];	// holds matrix xform for each joint
 
 	SkeletonDefType	*skeletonDefinition;						// point to skeleton's common/shared data	
-//	TQ3TriMeshData	localTriMeshes[MAX_DECOMPOSED_TRIMESHES];	// the triMeshes to submit for this ObjNode
 }SkeletonObjDataType;
 
 
@@ -245,7 +242,7 @@ struct ObjNode
 	Byte			Group;				// obj group (If Genre=display_group: index into gObjectGroupList.)
 	void			(*MoveCall)(struct ObjNode *);			// pointer to object's move routine
 	void			(*SplineMoveCall)(struct ObjNode *);	// pointer to object's spline move routine
-	void			(*CustomDrawFunction)(struct ObjNode *, TQ3ViewObject view);// pointer to object's custom draw function
+	void			(*CustomDrawFunction)(struct ObjNode *);// pointer to object's custom draw function
 	u_long			StatusBits;			// various status bits
 	
 	TQ3Point3D		Coord;				// coord of object
@@ -270,7 +267,10 @@ struct ObjNode
 		
 	Byte			Kind;				// kind
 	signed char		Mode;				// mode
-	
+
+	bool			IsPickable;
+	int32_t			PickID;
+
 	signed char		Flag[6];
 	long			SpecialL[6];
 	float			SpecialF[6];
@@ -281,10 +281,13 @@ struct ObjNode
 	
 		
 	TQ3Matrix4x4		BaseTransformMatrix;	// matrix which contains all of the transforms for the object as a whole
-	TQ3TransformObject	BaseTransformObject;	// extra LEGAL object ref to BaseTransformMatrix (other legal ref is kept in BaseGroup)
-	TQ3Object			BaseGroup;				// group containing all geometry,etc. for this object (for drawing)
 	TQ3BoundingSphere	BoundingSphere;			// radius use for object culling calculation
 
+	int						NumMeshes;
+	TQ3TriMeshData*			MeshList[MAX_DECOMPOSED_TRIMESHES];
+	bool					OwnsMeshTexture[MAX_DECOMPOSED_TRIMESHES];		// if true, DeleteObject will call glDeleteTextures on the corresponding mesh's texture (if any)
+	bool					OwnsMeshMemory[MAX_DECOMPOSED_TRIMESHES];		// if true, DeleteObject will call Q3TriMeshData_Dispose on the corresponding mesh
+	RenderModifiers			RenderModifiers;
 
 	SkeletonObjDataType	*Skeleton;				// pointer to skeleton record data	
 
@@ -310,6 +313,7 @@ typedef struct
 	short		slot;
 	void		(*moveCall)(ObjNode *);
 	float		rot,scale;
+	int			drawOrder;
 }NewObjectDefinitionType;
 
 
@@ -317,8 +321,13 @@ typedef struct
 
 enum
 {
+	// 3 LODs: 128x128, 64x64, 32x32
 	TERRAIN_TEXTURE_PREF_3_LOD_128 = 0,
+
+	// 1 LOD: 128x128
 	TERRAIN_TEXTURE_PREF_1_LOD_128 = 1,
+
+	// 1 LOD: 160x160
 	TERRAIN_TEXTURE_PREF_1_LOD_160 = 2,
 };
 
@@ -327,18 +336,16 @@ typedef struct
 	Boolean	easyMode;
 	Boolean	playerRelativeKeys;
 	Boolean fullscreen;
-	Boolean	vsync;
-	Boolean antiAliasing;
-	Boolean textureFiltering;
+	Boolean lowDetail;
 	Byte	mouseSensitivityLevel;
-	Byte	terrainTextureDetail;
-	Boolean	hideBottomBarInNonBossLevels;
-	Boolean useCyclorama;
+	Boolean	showBottomBar;
 }PrefsType;
 
-
-#endif
-
-
-
-
+typedef struct
+{
+	int		fullscreenWidth;
+	int		fullscreenHeight;
+	int		fullscreenRefreshRate;
+	int		msaa;
+	int		vsync;
+} CommandLineOptions;

@@ -9,25 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 
-#include "3dmath.h"
-
-extern	float				gFramesPerSecondFrac,gFramesPerSecond;
-extern	TQ3Point3D			gCoord,gMyCoord;
-extern	TQ3Vector3D			gDelta;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	TQ3Object			gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
-extern	TQ3BoundingBox 		gObjectGroupBBoxList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
-extern	QD3DSetupOutputType	*gGameViewInfoPtr;
-extern	u_short				gLevelTypeMask;
-extern	u_short				gLevelType;
-extern	u_long				gAutoFadeStatusBits,gInfobarUpdateBits;
-extern	Boolean				gBatExists,gAreaCompleted;
-extern	ObjNode				*gCurrentCarryingFireFly,*gCurrentChasingFireFly;
-extern	Boolean				gValveIsOpen[];
-extern	ObjNode				*gCurrentDragonFly,*gCurrentWaterBug;
-extern	float gHoneyTubeU,gHoneyTubeV;
-extern	TQ3Vector3D		gRecentTerrainNormal[2];
 
 /****************************/
 /*    PROTOTYPES            */
@@ -41,9 +24,6 @@ static void MoveStump(ObjNode *stump);
 /****************************/
 /*    CONSTANTS             */
 /****************************/
-
-#define	DIST_TO_FRONT	36
-#define	DIST_TO_SIDE	21
 
 #define	TREE_SCALE		20.0f
 
@@ -63,6 +43,7 @@ static void MoveStump(ObjNode *stump);
 /*    VARIABLES      */
 /*********************/
 
+ObjNode	*gCyclorama;
 ObjNode	*gHiveObj;
 
 float	gCycScale;
@@ -90,8 +71,6 @@ void InitItemsManager(void)
 	gCurrentCarryingFireFly = gCurrentChasingFireFly = nil;
 	gCurrentDragonFly = gCurrentWaterBug = nil;
 
-	gHoneyTubeU = gHoneyTubeV = 0;					// for honey tubes
-	
 	gHiveObj = nil;
 }
 
@@ -106,21 +85,45 @@ void InitItemsManager(void)
 
 void CreateCyclorama(void)
 {
-ObjNode *newObj;
-			
-	gNewObjectDefinition.group	= MODEL_GROUP_LEVELSPECIFIC;	
+	GAME_ASSERT_MESSAGE(!gCyclorama, "cyclorama already created");
+
+	gNewObjectDefinition.group	= MODEL_GROUP_LEVELSPECIFIC;
 	gNewObjectDefinition.type 	= 0;						// cyc is always 1st in level-specific list
 	gNewObjectDefinition.coord 	= gMyCoord;
-	gNewObjectDefinition.flags 	= STATUS_BIT_DONTCULL|STATUS_BIT_NULLSHADER|STATUS_BIT_NOFOG|STATUS_BIT_NOZWRITE;
 	gNewObjectDefinition.slot 	= 0;
 	gNewObjectDefinition.moveCall = MoveCyc;
 	gNewObjectDefinition.rot 	= 0;
 	gNewObjectDefinition.scale 	= gCycScale;
-	newObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-	if (newObj == nil)
-		return;
+
+	// Notes on cyclorama status bits:
+	// - HIDDEN because we'll draw it manually in DrawTerrain.
+	// - Don't set NOZWRITE, contrary to the original source code. The cyc does appear to clip
+	// through the terrain and fences on the OS 9 version, effectively reducing draw distance
+	// somewhat. See: faraway fences seen from the starting position in level 4.
+	gNewObjectDefinition.flags 	= STATUS_BIT_DONTCULL | STATUS_BIT_NULLSHADER | STATUS_BIT_NOFOG | STATUS_BIT_HIDDEN;
+
+	gCyclorama = MakeNewDisplayGroupObject(&gNewObjectDefinition);
+	gCyclorama->RenderModifiers.drawOrder = kDrawOrder_Cyclorama;
 }
 
+/************************* DRAW CYCLORAMA *********************************/
+//
+// The cyclorama is drawn manually in DrawTerrain, before the normal object draw loop
+//
+
+void DrawCyclorama(void)
+{
+	if (!gCyclorama)
+		return;
+
+	gCyclorama->RenderModifiers.statusBits = gCyclorama->StatusBits & ~STATUS_BIT_HIDDEN;
+	Render_SubmitMeshList(
+			gCyclorama->NumMeshes,
+			gCyclorama->MeshList,
+			&gCyclorama->BaseTransformMatrix,
+			&gCyclorama->RenderModifiers,
+			&gCyclorama->Coord);
+}
 
 /******************** MOVE CYC ***********************/
 

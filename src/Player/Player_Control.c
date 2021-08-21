@@ -9,22 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
-#include "3dmath.h"
+#include "game.h"
 
-extern	ObjNode			*gPlayerObj;
-extern	float			gFramesPerSecondFrac,gFramesPerSecond,gPlayerToCameraAngle,gBallTimer;
-extern	Byte			gPlayerMode;
-extern	TQ3Point3D		gCoord;
-extern	TQ3Vector3D		gDelta;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	TQ3Vector3D		gRecentTerrainNormal[2];
-extern	float			gPlayerMaxSpeed,gPlayerCurrentWaterY;
-extern	Boolean			gPlayerGotKilledFlag,gPlayerUsingKeyControl,gShowDebug,gDoCeiling;
-extern	u_short			gLevelType;
-extern	TQ3Point3D	gMyCoord;
-extern	Byte		gCurrentLiquidType;
-extern	PrefsType	gGamePrefs;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -41,14 +27,14 @@ extern	PrefsType	gGamePrefs;
 
 #define	KEY_THRUST				3500.0f
 
+static const TQ3Vector2D	gZeroAccel = {0,0};
+
 /*********************/
 /*    VARIABLES      */
 /*********************/
 
-float	gMyMostRecentFloorY,gMyDistToFloor,gMyMostRecentCeilingY,gMyDistToCeiling;
-
+float	gMyDistToFloor;
 Boolean	gPlayerCanMove;
-static const TQ3Vector2D	gZeroAccel = {0,0};
 
 
 /******************* DO PLAYER MOVEMENT AND COLLISION DETECT *********************/
@@ -466,27 +452,18 @@ int	anim;
 			
 	if (gPlayerMode == PLAYER_MODE_BALL)				// see if turn into bug
 	{
-		
 			/* SEE IF HEAD WILL MATERIALIZE IN ROCK */
-		
-		if (gDoCeiling)
-		{
-			float	y1,y2;
-			
-			y1 = GetTerrainHeightAtCoord(gMyCoord.x, gMyCoord.z, CEILING);	
-			y2 = GetTerrainHeightAtCoord(gMyCoord.x, gMyCoord.z, FLOOR);	
-			
-			if ((y1 - y2) <= (PLAYER_BUG_HEADOFFSET+10.0f))						// see if gap is too narrow
-				return;
-		}
-	
+
+		if (!BallHasHeadroomToMorphToBug())
+			return;
+
 		InitPlayer_Bug(gPlayerObj, &gMyCoord, gPlayerObj->Rot.y, PLAYER_ANIM_UNROLL);
 		PlayEffect3D(EFFECT_MORPH, &gMyCoord);
 	}
 	else												// turn into ball
 	{
 			/* CHECK BUG'S MODE AND SEE IF THIS IS ALLOWED */
-			
+
 		anim = gPlayerObj->Skeleton->AnimNum;
 		
 		switch(anim)

@@ -97,7 +97,7 @@ extern	void InitEnemyManager(void);
 extern	ObjNode *FindClosestEnemy(TQ3Point3D *pt, float *dist);
 void EnemyGotBonked(ObjNode *theEnemy);
 void MoveEnemy(ObjNode *theNode);
-Boolean DetachEnemyFromSpline(ObjNode *theNode, void *moveCall);
+Boolean DetachEnemyFromSpline(ObjNode *theNode, void (*moveCall)(ObjNode*));
 
 
 			/* BOXERFLY */

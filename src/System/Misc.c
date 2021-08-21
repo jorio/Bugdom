@@ -9,13 +9,8 @@
 /* EXTERNALS   */
 /***************/
 
-
-extern	unsigned long gOriginalSystemVolume;
-extern	short		gMainAppRezFile;
-extern	Boolean		gGameOverFlag,gAbortedFlag,gQD3DInitialized;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	FSSpec		gDataSpec;
-extern	SDL_Window*	gSDLWindow;
+#include "game.h"
+#include <stdio.h>
 
 
 /****************************/
@@ -69,6 +64,8 @@ Str255		numStr;
 
 void DoAlert(const char* s)
 {
+	if (gSDLWindow)
+		SDL_SetWindowFullscreen(gSDLWindow, 0);
 	printf("BUGDOM ALERT: %s\n", s);
 	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", s, gSDLWindow);
 }
@@ -78,6 +75,8 @@ void DoAlert(const char* s)
 
 void DoFatalAlert(const char* s)
 {
+	if (gSDLWindow)
+		SDL_SetWindowFullscreen(gSDLWindow, 0);
 	printf("BUGDOM FATAL ALERT: %s\n", s);
 	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", s, gSDLWindow);
 	CleanQuit();
@@ -87,6 +86,8 @@ void DoFatalAlert(const char* s)
 
 void DoFatalAlert2(const char* s1, const char* s2)
 {
+	if (gSDLWindow)
+		SDL_SetWindowFullscreen(gSDLWindow, 0);
 	printf("BUGDOM FATAL ALERT: %s - %s\n", s1, s2);
 	static char alertbuf[1024];
 	snprintf(alertbuf, 1024, "%s\n%s", s1, s2);
@@ -98,6 +99,8 @@ void DoFatalAlert2(const char* s1, const char* s2)
 
 void DoAssert(const char* msg, const char* file, int line)
 {
+	if (gSDLWindow)
+		SDL_SetWindowFullscreen(gSDLWindow, 0);
 	printf("BUGDOM ASSERTION FAILED: %s - %s:%d\n", msg, file, line);
 	static char alertbuf[1024];
 	snprintf(alertbuf, 1024, "%s\n%s:%d", msg, file, line);
@@ -113,6 +116,8 @@ Boolean beenHere = false;
 
 	if (!beenHere)
 	{
+		GammaFadeOut();
+
 		beenHere = true;
 
 		DeleteAll3DMFGroups();
@@ -123,9 +128,6 @@ Boolean beenHere = false;
 
 		GameScreenToBlack();
 
-		if (gQD3DInitialized)
-			Q3Exit();
-
 		FreeInfobarArt();
 	}
 
@@ -133,11 +135,9 @@ Boolean beenHere = false;
 	KillSong();
 	UseResFile(gMainAppRezFile);
 
-	CleanupDisplay();								// unloads Draw Sprocket
-	
-	InitCursor();
-//	SetDefaultOutputVolume((gOriginalSystemVolume<<16)|gOriginalSystemVolume); // reset system volume
-	ExitToShell();		
+	SDL_ShowCursor(1);
+	Pomme_FlushPtrTracking(false);
+	ExitToShell();
 }
 
 /********************** WAIT **********************/
@@ -238,15 +238,7 @@ void InitMyRandomSeed(void)
 
 Handle	AllocHandle(long size)
 {
-Handle	hand;
-
-	hand = NewHandle(size);							// alloc in APPL
-	if (hand == nil)
-	{
-		DoAlert("AllocHandle: failed!");
-		return(nil);
-	}
-	return(hand);									
+	return NewHandleClear(size);
 }
 
 
@@ -254,10 +246,7 @@ Handle	hand;
 
 Ptr	AllocPtr(long size)
 {
-Ptr	pr;
-
-	pr = NewPtr(size);						// alloc in Application
-	return(pr);
+	return NewPtrClear(size);
 }
 
 
@@ -267,10 +256,10 @@ void** Alloc2DArray(int sizeofType, int n, int m)
 {
 	GAME_ASSERT_MESSAGE(n > 0, "Alloc2DArray n*m: n cannot be 0");
 
-	char** array = (char**) NewPtr(n * sizeof(Ptr));
+	char** array = (char**) NewPtrClear(n * sizeof(Ptr));
 	GAME_ASSERT(array);
 
-	array[0] = NewPtr(n * m * sizeofType);
+	array[0] = NewPtrClear(n * m * sizeofType);
 	GAME_ASSERT(array[0]);
 
 	for (int i = 1; i < n; i++)

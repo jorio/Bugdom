@@ -9,27 +9,9 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 #include <string.h>
 
-extern	Boolean			gAbortDemoFlag,gGameIsDemoFlag,gSongPlayingFlag,gDisableHiccupTimer;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	float			gFramesPerSecond,gFramesPerSecondFrac,gAutoFadeStartDist;
-extern	Byte		gDemoMode,gPlayerMode;
-extern	WindowPtr	gCoverWindow;
-extern	TQ3Point3D	gCoord;
-extern	long				gMyStartX,gMyStartZ;
-extern	Boolean				gDoCeiling,gDrawLensFlare;
-extern	unsigned long 		gScore;
-extern	ObjNode				*gPlayerObj,*gFirstNodePtr;
-extern	TQ3ShaderObject		gWaterShader;
-extern	short			gNumLives;
-extern	short		gBestCheckPoint,gNumEnemies;
-extern	u_long 		gInfobarUpdateBits;
-extern	float		gCycScale,gBallTimer;
-extern	signed char	gNumEnemyOfKind[];
-extern	TQ3Point3D	gMyCoord;
-extern	int			gMaxItemsAllocatedInAPass;
-extern	GWorldPtr	gInfoBarTop;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -41,7 +23,6 @@ static void PlayArea(void);
 static void DoDeathReset(void);
 static void PlayGame(void);
 static void CheckForCheats(void);
-static void ShowDebug(void);
 
 
 /****************************/
@@ -82,15 +63,15 @@ u_short		gAreaNum = 0;
 u_short		gLevelTypeMask = 0;
 
 
+Boolean		gShowDebugStats = false;
 Boolean		gShowDebug = false;
 Boolean		gLiquidCheat = false;
 Boolean		gUseCyclorama;
-Boolean		gShowBottomBar;
 float		gCurrentYon;
 
 u_long		gAutoFadeStatusBits;
-short		gMainAppRezFile,gTextureRezfile;
-Boolean		gGameOverFlag,gAbortedFlag,gAreaCompleted;
+short		gMainAppRezFile;
+Boolean		gGameOverFlag,gAreaCompleted;
 Boolean		gPlayerGotKilledFlag,gWonGameFlag,gRestoringSavedGame = false;
 
 QD3DSetupOutputType		*gGameViewInfoPtr = nil;
@@ -109,8 +90,8 @@ TQ3ColorRGB		gFillColor2 = { 1.0, 1.0, 1 };
 
 
 		/* LEVEL SETUP PARAMETER TABLES */
-			
-static const Boolean	gLevelHasCyc[NUM_LEVELS] =
+
+static const bool	gLevelHasCyc[NUM_LEVEL_TYPES] =
 {
 	true,						// garden
 	false,						// boat
@@ -120,7 +101,7 @@ static const Boolean	gLevelHasCyc[NUM_LEVELS] =
 	false						// anthill
 };
 
-static const Boolean	gLevelHasCeiling[NUM_LEVELS] =
+static const bool	gLevelHasCeiling[NUM_LEVEL_TYPES] =
 {
 	false,						// garden
 	false,						// boat
@@ -130,7 +111,7 @@ static const Boolean	gLevelHasCeiling[NUM_LEVELS] =
 	true						// anthill
 };
 
-static const Byte	gLevelSuperTileActiveRange[NUM_LEVELS] =
+static const Byte	gLevelSuperTileActiveRange[NUM_LEVEL_TYPES] =
 {
 	5,						// garden
 	4,						// boat
@@ -140,7 +121,7 @@ static const Byte	gLevelSuperTileActiveRange[NUM_LEVELS] =
 	4						// anthill
 };
 
-static const float	gLevelFogStart[NUM_LEVELS] =
+static const float	gLevelFogStart[NUM_LEVEL_TYPES] =
 {
 	.5,						// garden
 	.4,						// boat
@@ -150,7 +131,7 @@ static const float	gLevelFogStart[NUM_LEVELS] =
 	.65,					// anthill
 };
 
-static const float	gLevelFogEnd[NUM_LEVELS] =
+static const float	gLevelFogEnd[NUM_LEVEL_TYPES] =
 {
 	.9,						// garden
 	1,						// boat
@@ -161,7 +142,7 @@ static const float	gLevelFogEnd[NUM_LEVELS] =
 };
 
 
-static const float	gLevelAutoFadeStart[NUM_LEVELS] =
+static const float	gLevelAutoFadeStart[NUM_LEVEL_TYPES] =
 {
 	YON_DISTANCE+400,		// garden
 	0,						// boat
@@ -172,7 +153,7 @@ static const float	gLevelAutoFadeStart[NUM_LEVELS] =
 };
 
 
-static const Boolean	gLevelHasLenseFlare[NUM_LEVELS] =
+static const bool	gLevelHasLensFlare[NUM_LEVEL_TYPES] =
 {
 	true,						// garden
 	true,						// boat
@@ -182,7 +163,7 @@ static const Boolean	gLevelHasLenseFlare[NUM_LEVELS] =
 	false						// anthill
 };
 
-static const TQ3Vector3D	gLensFlareVector[NUM_LEVELS] =
+static const TQ3Vector3D	gLensFlareVector[NUM_LEVEL_TYPES] =
 {
 	{ 0.4f, -0.35f, 1.0f },				// garden
 	{ 0.4f, -0.45f, 1.0f },				// boat
@@ -192,7 +173,7 @@ static const TQ3Vector3D	gLensFlareVector[NUM_LEVELS] =
 	{ 0.4f, -0.35f, 1.0f },				// anthill
 };
 
-static const TQ3ColorRGB	gLevelLightColors[NUM_LEVELS][3] =		// 0 = ambient, 1 = fill0, 2 = fill1
+static const TQ3ColorRGB	gLevelLightColors[NUM_LEVEL_TYPES][3] =		// 0 = ambient, 1 = fill0, 2 = fill1
 {
 	{ {1.0f, 1.0f, 0.9f}, {1.0f, 1.0f, 0.6f}, {1.0f, 1.0f, 1.0f} }, // garden
 	{ {1.0f, 1.0f, 0.9f}, {1.0f, 1.0f, 0.6f}, {1.0f, 1.0f, 1.0f} }, // boat
@@ -202,29 +183,29 @@ static const TQ3ColorRGB	gLevelLightColors[NUM_LEVELS][3] =		// 0 = ambient, 1 =
 	{ {0.5f, 0.5f, 0.6f}, {0.7f, 0.7f, 0.8f}, {1.0f, 1.0f, 1.0f} }, // anthill
 };
 
-static const TQ3ColorARGB	gLevelFogColor[NUM_LEVELS] =
+static const TQ3ColorRGBA	gLevelFogColor[NUM_LEVEL_TYPES] =
 {
-	{ 1.000f, 0.050f, 0.250f, 0.050f },				// garden
-	{ 1.000f, 0.900f, 0.900f, 0.850f },				// boat
-	{ 1.000f, 1.000f, 0.290f, 0.063f },				// dragonfly
-//	{ 1.000f, 0.900f, 0.700f, 0.100f },				// hive
-	{ 1.000f, 0.700f, 0.600f, 0.400f },				// hive
-	{ 1.000f, 0.020f, 0.020f, 0.080f },				// night
-	{ 1.000f, 0.150f, 0.070f, 0.150f },				// anthill
+	{ 0.050f, 0.250f, 0.050f, 1.000f },				// garden
+	{ 0.900f, 0.900f, 0.850f, 1.000f },				// boat
+	{ 1.000f, 0.290f, 0.063f, 1.000f },				// dragonfly
+//	{ 0.900f, 0.700f, 0.100f, 1.000f },				// hive
+	{ 0.700f, 0.600f, 0.400f, 1.000f },				// hive
+	{ 0.020f, 0.020f, 0.080f, 1.000f },				// night
+	{ 0.150f, 0.070f, 0.150f, 1.000f },				// anthill
 };
 
 // Source port addition: on rare occasions you get to see the void "above" the cyclorama.
 // To camouflage this, we make the clear color roughly match the color at the top of the cyc.
 // This is not necessarily the same color as the fog!
 // NOTE: If there's no cyc in a level, this value is ignored and the fog color is used instead.
-static const TQ3ColorARGB	gLevelClearColorWithCyc[NUM_LEVELS] =
+static const TQ3ColorRGBA	gLevelClearColorWithCyc[NUM_LEVEL_TYPES] =
 {
-	{ 1.000f, 0.352f, 0.380f, 1.000f },				// garden		(DIFFERENT FROM FOG)
-	{ 1.000f, 0.900f, 0.900f, 0.850f },				// boat			(same)
-	{ 1.000f, 1.000f, 0.290f, 0.063f },				// dragonfly	(same)
-	{ 1.000f, 0.700f, 0.600f, 0.400f },				// hive			(same)
-	{ 1.000f, 0.020f, 0.020f, 0.080f },				// night		(same)
-	{ 1.000f, 0.150f, 0.070f, 0.150f },				// anthill		(same)
+	{ 0.352f, 0.380f, 1.000f, 1.000f },				// garden		(DIFFERENT FROM FOG)
+	{ 0.900f, 0.900f, 0.850f, 1.000f },				// boat			(same)
+	{ 1.000f, 0.290f, 0.063f, 1.000f },				// dragonfly	(same)
+	{ 0.700f, 0.600f, 0.400f, 1.000f },				// hive			(same)
+	{ 0.020f, 0.020f, 0.080f, 1.000f },				// night		(same)
+	{ 0.150f, 0.070f, 0.150f, 1.000f },				// anthill		(same)
 };
 
 
@@ -240,33 +221,11 @@ static const TQ3ColorARGB	gLevelClearColorWithCyc[NUM_LEVELS] =
 
 void ToolBoxInit(void)
 {
-FSSpec		spec;
-OSErr		err;
-	
 	gMainAppRezFile = CurResFile();
 
 		/* FIRST VERIFY SYSTEM BEFORE GOING TOO FAR */
 				
 	VerifySystem();
-
-
-			/* BOOT QD3D */
-			
-	QD3D_Boot();
-
-
-
-		/* OPEN TEXTURES RESOURCE FILE */
-				
-	err = FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Images:Textures", &spec) != noErr;
-	GAME_ASSERT(err == noErr);
-
-	gTextureRezfile = FSpOpenResFile(&spec, fsRdPerm);
-	GAME_ASSERT(gTextureRezfile != -1);
-
-	UseResFile(gTextureRezfile);
-
-
 
 
 			/* INIT PREFERENCES */
@@ -275,18 +234,13 @@ OSErr		err;
 	gGamePrefs.easyMode				= false;	
 	gGamePrefs.playerRelativeKeys	= false;	
 	gGamePrefs.fullscreen			= true;
-	gGamePrefs.vsync				= true;
-	gGamePrefs.antiAliasing			= true;
-	gGamePrefs.textureFiltering		= true;
+	gGamePrefs.lowDetail			= false;
 	gGamePrefs.mouseSensitivityLevel= DEFAULT_MOUSE_SENSITIVITY_LEVEL;
-	gGamePrefs.hideBottomBarInNonBossLevels = true;
-	gGamePrefs.useCyclorama			= true;
-	gGamePrefs.terrainTextureDetail = TERRAIN_TEXTURE_PREF_1_LOD_160;
+	gGamePrefs.showBottomBar		= true;
 				
 	LoadPrefs(&gGamePrefs);							// attempt to read from prefs file		
-	
-	SetFullscreenMode();
 }
+
 #pragma mark -
 
 /******************** PLAY GAME ************************/
@@ -307,7 +261,10 @@ static void PlayGame(void)
 	UpdateInput();
 	
 	if (GetKeyState_SDL(SDL_SCANCODE_F10))				// see if do level cheat
-		DoLevelCheatDialog();
+	{
+		if (!DoLevelSelect())
+			return;
+	}
 	else
 	if (!gRestoringSavedGame)							// otherwise start @ 0 if not restoring
 		gRealLevel = 0;
@@ -383,7 +340,8 @@ float fps;
 	QD3D_CalcFramesPerSecond();
 
 		/* PRIME 1ST FRAME & MADE FADE EVENT */
-	
+
+	gGammaFadeFactor = 0.0f;
 	QD3D_DrawScene(gGameViewInfoPtr,DrawTerrain);
 	MakeFadeEvent(true);
 
@@ -398,12 +356,6 @@ float fps;
 		fps = gFramesPerSecondFrac;
 		UpdateInput();
 
-				/* SEE IF DEMO ENDED */				
-		
-		if (gAbortDemoFlag)
-			break;
-	
-	
 				/* SPECIFIC MAINTENANCE */
 
 		CheckPlayerMorph();				
@@ -426,31 +378,20 @@ float fps;
 
 		DoMyTerrainUpdate();
 		QD3D_DrawScene(gGameViewInfoPtr,DrawTerrain);
-		SubmitInfobarOverlay();
 
 		QD3D_CalcFramesPerSecond();
 		DoSDLMaintenance();
 		gDisableHiccupTimer = false;
 
-
-		/* SHOW DEBUG */
-		
-		if (gShowDebug)
-			ShowDebug();
-		
-
 			/* SEE IF PAUSE GAME */
-				
-		if (gDemoMode != DEMO_MODE_RECORD)
+
+		if (GetNewKeyState(kKey_Pause))				// see if pause/abort
 		{
-			if (GetNewKeyState(kKey_Pause))				// see if pause/abort
-			{
-				CaptureMouse(false);
-				DoPaused();
-				CaptureMouse(true);
-			}
+			CaptureMouse(false);
+			DoPaused();
+			CaptureMouse(true);
 		}
-		
+
 			/* SEE IF GAME ENDED */				
 		
 		if (gGameOverFlag)
@@ -502,10 +443,11 @@ QD3DSetupInputType	viewDef;
 	gPlayerMode 			= PLAYER_MODE_BUG;						// init this here so infobar looks correct
 	gPlayerObj 				= nil;
 
-	gUseCyclorama			= gGamePrefs.useCyclorama && gLevelHasCyc[gLevelType];
+	gUseCyclorama			= !gGamePrefs.lowDetail && gLevelHasCyc[gLevelType];
 	gAutoFadeStartDist		= gUseCyclorama ? gLevelAutoFadeStart[gLevelType] : 0;
-	gDrawLensFlare			= gLevelHasLenseFlare[gLevelType];
-		
+	gDoAutoFade				= gAutoFadeStartDist > 0.0f;
+	gDrawLensFlare			= !gGamePrefs.lowDetail && gLevelHasLensFlare[gLevelType];
+
 	gDoCeiling				= gLevelHasCeiling[gLevelType];
 	gSuperTileActiveRange	= gLevelSuperTileActiveRange[gLevelType];
 	
@@ -532,15 +474,11 @@ QD3DSetupInputType	viewDef;
 
 
 
-	if (gAutoFadeStartDist != 0.0f)
+	if (gDoAutoFade)
 		gAutoFadeStatusBits = STATUS_BIT_AUTOFADE|STATUS_BIT_NOTRICACHE;
 	else
 		gAutoFadeStatusBits = 0;
 
-
-	// Source port addition: let user hide bottom bar when it's not needed (i.e. outside boss levels)
-	gShowBottomBar = !gGamePrefs.hideBottomBarInNonBossLevels || gLevelTable[gRealLevel].isBossLevel;
-		
 
 			/*************/
 			/* MAKE VIEW */
@@ -551,7 +489,7 @@ QD3DSetupInputType	viewDef;
 
 			/* SETUP VIEW DEF */
 			
-	QD3D_NewViewDef(&viewDef, gCoverWindow);
+	QD3D_NewViewDef(&viewDef);
 	
 	viewDef.camera.hither 			= HITHER_DISTANCE;
 	viewDef.camera.yon 				= gCurrentYon;
@@ -559,13 +497,11 @@ QD3DSetupInputType	viewDef;
 	viewDef.camera.fov 				= 1.1;
 	
 	viewDef.view.paneClip.top		=	62;
-	viewDef.view.paneClip.bottom	=	gShowBottomBar? 60: 0;
+	viewDef.view.paneClip.bottom	=	gGamePrefs.showBottomBar ? 60 : 0;
 	viewDef.view.paneClip.left		=	0;
 	viewDef.view.paneClip.right		=	0;
 
 	viewDef.view.clearColor 	= gLevelFogColor[gLevelType];	// set clear & fog color
-	
-	viewDef.enableMultisamplingByDefault = false;		// we want full control over what objects get MSAA
 
 	
 			/* SET LIGHTS */
@@ -631,10 +567,10 @@ QD3DSetupInputType	viewDef;
 			
 	LoadLevelArt();			
 
-	
+
 				/* INIT FLAGS */
-				
-	gAbortDemoFlag = gGameOverFlag = false;
+
+	gGameOverFlag = false;
 	gPlayerGotKilledFlag = false;
 	gWonGameFlag = false;
 
@@ -678,10 +614,9 @@ QD3DSetupInputType	viewDef;
 static void CleanupLevel(void)
 {
 	StopAllEffectChannels();
-	StopDemo();
-	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
  	EmptySplineObjectList();
 	DeleteAllObjects();
+	gCyclorama = nil;
 	FreeAllSkeletonFiles(-1);
 	DisposeSuperTileMemoryList();
 	DisposeTerrain();
@@ -690,15 +625,10 @@ static void CleanupLevel(void)
 	DisposeLensFlares();
 	DisposeLiquids();
 	DeleteAll3DMFGroups();
-	
-	if (gInfoBarTop)								// dispose of infobar cached image
-	{
-		DisposeGWorld(gInfoBarTop);
-		gInfoBarTop = nil;
-	}
-	
-	// Flush any Quesa errors so we don't prevent loading the next screen (Error -28411 comes up often...TODO?)
-	FlushQuesaErrors();
+	DisposeInfobarTexture();
+	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
+	DisposeAllSoundBanks();
+	Pomme_FlushPtrTracking(true);
 }
 
 
@@ -750,15 +680,10 @@ static void CheckForCheats(void)
 	{
 		if (GetNewKeyState_SDL(SDL_SCANCODE_F1))	// win the level!
 			gAreaCompleted = true;
-			
-		if (GetKeyState_SDL(SDL_SCANCODE_F2))	// Show player position
-		{
-			char msgbuf[128];
-			sprintf(msgbuf, "%.0f   %.0f   %.0f    ", gPlayerObj->Coord.x, gPlayerObj->Coord.y, gPlayerObj->Coord.z);
-			MoveTo(0, 12);
-			DrawStringC(msgbuf);
-		}
-		
+
+		if (GetNewKeyState_SDL(SDL_SCANCODE_F2))	// get shield
+			gShieldTimer = SHIELD_TIME;
+
 		if (GetKeyState_SDL(SDL_SCANCODE_F3))	// get full health
 			GetHealth(1.0);							
 			
@@ -779,27 +704,23 @@ static void CheckForCheats(void)
 		}
 
 		if (GetNewKeyState_SDL(SDL_SCANCODE_F6))	// see if liquid invincible
-		{
 			gLiquidCheat = !gLiquidCheat;
-			MoveTo(0, 12);
-			DrawStringC(gLiquidCheat ? "Liquid cheat ON   " : "Liquid cheat OFF   ");
+
+		if (GetKeyState_SDL(SDL_SCANCODE_F7))		// hurt player
+			PlayerGotHurt(NULL, 1/60.0f, 1.0f, false, true, 1/60.0f);
+
+		if (GetNewKeyState_SDL(SDL_SCANCODE_F8))
+		{
+			gShowDebugStats = !gShowDebugStats;
+			QD3D_UpdateDebugTextMesh(NULL);
 		}
 
 		if (GetNewKeyState_SDL(SDL_SCANCODE_F9))
 			gShowDebug = !gShowDebug;
-
-		if (GetNewKeyState_SDL(SDL_SCANCODE_F10))
-			CaptureMouse(false);
 	}
 }
 
 #pragma mark -
-
-/********************* SHOW DEBUG ***********************/
-
-static void ShowDebug(void)
-{
-}
 
 /********************* DEBUG SHORTCUT KEYS ON BOOT ***********************/
 
@@ -841,7 +762,6 @@ static void CheckDebugShortcutKeysOnBoot(void)
 	{
 		if (GetKeyState_SDL(levelKeys[i]))
 		{
-			printf("Starting level %i\n", i);
 			InitInventoryForGame();
 			gRealLevel = i;
 			gRestoringSavedGame = true;
@@ -882,7 +802,6 @@ unsigned long	someLong;
 	InitSoundTools();
 	Init3DMFManager();	
 	InitFenceManager();
-	InitParticleSystem();
 
 
 			/* INIT MORE MY STUFF */
@@ -896,6 +815,7 @@ unsigned long	someLong;
 
 			/* DO INTRO */
 
+	Pomme_FlushPtrTracking(false);
 
 	DoPangeaLogo();
 	CheckDebugShortcutKeysOnBoot();

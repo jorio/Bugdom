@@ -9,18 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
-#include "3dmath.h"
+#include "game.h"
 
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	SplineDefType			**gSplineList;
-extern	TQ3Point3D				gCoord,gMyCoord;
-extern	short					gNumEnemies;
-extern	float					gFramesPerSecondFrac,gFramesPerSecond;
-extern	TQ3Vector3D				gDelta;
-extern	signed char				gNumEnemyOfKind[];
-extern	ObjNode					*gPlayerObj;
-extern	Byte		gPlayerMode;
-extern	u_short		gLevelType;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -547,7 +537,7 @@ static const Byte type[] =
 
 	gNewObjectDefinition.group 		= MODEL_GROUP_LEVELSPECIFIC;	
 	gNewObjectDefinition.type 		= type[gLevelType];	
-	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER|STATUS_BIT_GLOW|STATUS_BIT_ROTXZY;
+	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER | STATUS_BIT_GLOW | STATUS_BIT_ROTXZY | STATUS_BIT_KEEPBACKFACES;
 	gNewObjectDefinition.slot 		= TRIGGER_SLOT;
 	gNewObjectDefinition.moveCall 	= MoveWebBullet;
 	gNewObjectDefinition.rot 		= theEnemy->Rot.y + PI;
@@ -556,7 +546,6 @@ static const Byte type[] =
 	if (newObj == nil)
 		return;
 
-	MakeObjectKeepBackfaces(newObj);
 	newObj->Health 			= 1.0;							// timer for duration & fading
 	newObj->SpecialF[3]		= gNewObjectDefinition.scale;	// f3 is initial scale
 
@@ -665,15 +654,13 @@ static const Byte type[] =
 	gNewObjectDefinition.coord 		= gPlayerObj->Coord;	
 	gNewObjectDefinition.group 		= MODEL_GROUP_LEVELSPECIFIC;	
 	gNewObjectDefinition.type 		= type[gLevelType];	
-	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER|STATUS_BIT_GLOW;
+	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER | STATUS_BIT_GLOW | STATUS_BIT_KEEPBACKFACES_2PASS;
 	gNewObjectDefinition.slot 		= SLOT_OF_DUMB+20;
 	gNewObjectDefinition.moveCall 	= MoveWebSphere;
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= WEB_SPHERE_SCALE;
 	newObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
 
-	MakeObjectKeepBackfaces(newObj);
-	
 	newObj->Health = SPHERE_DURATION;
 
 	return(false);

@@ -9,34 +9,11 @@
 /* EXTERNALS   */
 /***************/
 
+#include "game.h"
 #include <time.h>
+#include <stdio.h>
 #include <string.h>
 
-
-extern	short			gMainAppRezFile,gTextureRezfile;
-extern  TQ3Object		gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
-extern  short			gNumObjectsInGroupList[MAX_3DMF_GROUPS];
-extern	short			gNumTerrainItems;
-extern	short			gPrefsFolderVRefNum;
-extern	long			gPrefsFolderDirID,gNumTerrainTextureTiles;
-extern	long			gTerrainTileWidth,gTerrainTileDepth,gTerrainUnitWidth,gTerrainUnitDepth;		
-extern	long			gNumSuperTilesDeep,gNumSuperTilesWide;
-extern	u_short			**gFloorMap,**gCeilingMap,**gTileDataHandle;
-extern	long			gCurrentSuperTileRow,gCurrentSuperTileCol;
-extern	long			gMyStartX,gMyStartZ,gNumSplines;
-extern	FSSpec			gDataSpec;
-extern	TerrainInfoMatrixType	**gMapInfoMatrix;
-extern	TerrainYCoordType		**gMapYCoords;
-extern	TerrainItemEntryType 	**gMasterItemList;
-extern	u_short			**gVertexColors[2],gLevelType,gAreaNum,gRealLevel;
-extern	Boolean			gDoCeiling,gRestoringSavedGame,gMuteMusicFlag;
-extern	SplineDefType	**gSplineList;
-extern	FenceDefType	*gFenceList;
-extern	long			gNumFences;
-extern	u_long			gScore;
-extern	float			gMyHealth,gBallTimer;
-extern	short			gNumLives;
-extern	short			gNumGoldClovers;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -60,7 +37,7 @@ static void ReadDataFromPlayfieldFile(FSSpec *specPtr);
 
 #define PREFS_HEADER_LENGTH 16
 #define PREFS_FILE_NAME ":Bugdom:Prefs"
-const char PREFS_HEADER_STRING[PREFS_HEADER_LENGTH+1] = "NewBugdomPrefs02";		// Bump this every time prefs struct changes -- note: this will reset user prefs
+const char PREFS_HEADER_STRING[PREFS_HEADER_LENGTH+1] = "NewBugdomPrefs03";		// Bump this every time prefs struct changes -- note: this will reset user prefs
 
 
 		/* PLAYFIELD HEADER */
@@ -190,9 +167,8 @@ char		pathBuf[128];
 			
 	CloseResFile(fRefNum);
 	UseResFile(gMainAppRezFile);
-	UseResFile(gTextureRezfile);
-		
-		
+
+
 	return(skeleton);
 }
 
@@ -428,29 +404,32 @@ SkeletonFile_AnimHeader_Type	*animHeaderPtr;
 
 /**************** OPEN GAME FILE **********************/
 
-void OpenGameFile(const char* filename, short *fRefNumPtr, const char* errString)
+short OpenGameFile(const char* filename)
 {
 OSErr		iErr;
 FSSpec		spec;
 Str255		s;
+short		refNum;
 
 				/* FIRST SEE IF WE CAN GET IT OFF OF DEFAULT VOLUME */
 
 	iErr = FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, filename, &spec);
 	if (iErr == noErr)
 	{
-		iErr = FSpOpenDF(&spec, fsRdPerm, fRefNumPtr);
+		iErr = FSpOpenDF(&spec, fsRdPerm, &refNum);
 		if (iErr == noErr)
-			return;
+			return refNum;
 	}
 
 	if (iErr == fnfErr)
-		DoFatalAlert2(errString,"FILE NOT FOUND.");
+		DoFatalAlert2("FILE NOT FOUND.", filename);
 	else
 	{
-		NumToStringC(iErr,s);
-		DoFatalAlert2(errString,s);
+		NumToStringC(iErr, s);
+		DoFatalAlert2(filename, s);
 	}
+
+	return -1;
 }
 
 
@@ -468,7 +447,8 @@ short		refNum;
 FSSpec		file;
 long		count;
 char		header[PREFS_HEADER_LENGTH + 1];
-				
+PrefsType	prefBuffer;
+
 				/*************/
 				/* READ FILE */
 				/*************/
@@ -477,6 +457,14 @@ char		header[PREFS_HEADER_LENGTH + 1];
 	iErr = FSpOpenDF(&file, fsRdPerm, &refNum);	
 	if (iErr)
 		return(iErr);
+
+				/* CHECK FILE LENGTH */
+
+	long eof = 0;
+	GetEOF(refNum, &eof);
+
+	if (eof != sizeof(PrefsType) + PREFS_HEADER_LENGTH)
+		goto fileIsCorrupt;
 
 				/* READ HEADER */
 
@@ -487,21 +475,16 @@ char		header[PREFS_HEADER_LENGTH + 1];
 		count != PREFS_HEADER_LENGTH ||
 		0 != strncmp(header, PREFS_HEADER_STRING, PREFS_HEADER_LENGTH))
 	{
-		FSClose(refNum);
-		return badFileFormat;
+		goto fileIsCorrupt;
 	}
 
 				/* READ PREFS STRUCT */
 
 	count = sizeof(PrefsType);
-	iErr = FSRead(refNum, &count,  (Ptr)prefBlock);		// read data from file
-	if (iErr ||
-		count != sizeof(PrefsType))
-	{
-		FSClose(refNum);			
-		return(badFileFormat);
-	}
-	
+	iErr = FSRead(refNum, &count, (Ptr)&prefBuffer);		// read data from file
+	if (iErr || count != sizeof(PrefsType))
+		goto fileIsCorrupt;
+
 	FSClose(refNum);			
 
 
@@ -513,8 +496,14 @@ char		header[PREFS_HEADER_LENGTH + 1];
 		prefBlock->mouseSensitivityLevel = DEFAULT_MOUSE_SENSITIVITY_LEVEL;
 	}
 
-	
-	return(noErr);
+				/* PREFS ARE OK */
+
+	*prefBlock = prefBuffer;
+	return noErr;
+
+fileIsCorrupt:
+	FSClose(refNum);
+	return badFileFormat;
 }
 
 
@@ -745,10 +734,9 @@ short	fRefNum;
 			
 	CloseResFile(fRefNum);
 	UseResFile(gMainAppRezFile);
-	UseResFile(gTextureRezfile);
-	
-		
-	
+
+
+
 				/***********************/
 				/* DO ADDITIONAL SETUP */
 				/***********************/
@@ -1019,7 +1007,9 @@ short					**xlateTableHand,*xlateTbl;
 		// Level 2's spline #16 has 0 points. Skip the byteswapping, but do alloc an empty handle, which the game expects.
 		if ((*gSplineList)[i].numPoints == 0)
 		{
+#if _DEBUG
 			printf("WARNING: Spline #%ld has 0 points\n", i);
+#endif
 			(*gSplineList)[i].pointList = (SplinePointType**) AllocHandle(0);
 			continue;
 		}
@@ -1123,9 +1113,8 @@ FSSpec	spec;
 	LoadGrouped3DMF(&spec,MODEL_GROUP_GLOBAL1);	
 	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:Global_Models2.3dmf", &spec);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_GLOBAL2);	
-			
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:Main.sounds", &spec);
-	LoadSoundBank(&spec, SOUND_BANK_DEFAULT);
+
+	LoadSoundBank(SOUNDBANK_MAIN);
 
 	LoadASkeleton(SKELETON_TYPE_ME);			
 	LoadASkeleton(SKELETON_TYPE_LADYBUG);			
@@ -1164,9 +1153,8 @@ FSSpec	spec;
 				LoadASkeleton(SKELETON_TYPE_ANT);			
 
 				/* LOAD SOUNDS */
-				
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:Lawn.sounds", &spec);
-				LoadSoundBank(&spec, SOUND_BANK_LEVELSPECIFIC);
+
+				LoadSoundBank(SOUNDBANK_LAWN);
 				break;
 
 
@@ -1194,9 +1182,8 @@ FSSpec	spec;
 
 
 				/* LOAD SOUNDS */
-				
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:Pond.sounds", &spec);
-				LoadSoundBank(&spec, SOUND_BANK_LEVELSPECIFIC);
+
+				LoadSoundBank(SOUNDBANK_POND);
 				break;
 
 
@@ -1228,10 +1215,9 @@ FSSpec	spec;
 				LoadASkeleton(SKELETON_TYPE_ANT);			
 				
 				/* LOAD SOUNDS */
-				
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:Forest.sounds", &spec);
-				LoadSoundBank(&spec, SOUND_BANK_LEVELSPECIFIC);
-						
+
+				LoadSoundBank(SOUNDBANK_FOREST);
+
 				break;
 
 
@@ -1262,10 +1248,9 @@ FSSpec	spec;
 
 				
 				/* LOAD SOUNDS */
-				
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:Hive.sounds", &spec);
-				LoadSoundBank(&spec, SOUND_BANK_LEVELSPECIFIC);
-				
+
+				LoadSoundBank(SOUNDBANK_HIVE);
+
 				break;
 
 
@@ -1294,9 +1279,8 @@ FSSpec	spec;
 
 				
 				/* LOAD SOUNDS */
-				
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:Night.sounds", &spec);
-				LoadSoundBank(&spec, SOUND_BANK_LEVELSPECIFIC);
+
+				LoadSoundBank(SOUNDBANK_NIGHT);
 				break;
 
 	
@@ -1329,9 +1313,8 @@ FSSpec	spec;
 				LoadASkeleton(SKELETON_TYPE_ROACH);	
 
 				/* LOAD SOUNDS */
-				
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:AntHill.sounds", &spec);
-				LoadSoundBank(&spec, SOUND_BANK_LEVELSPECIFIC);
+
+				LoadSoundBank(SOUNDBANK_ANTHILL);
 				break;
 
 		default:

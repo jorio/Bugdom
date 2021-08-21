@@ -41,7 +41,6 @@ enum
 //===============================
 
 extern	ObjNode	*MakeNewSkeletonObject(NewObjectDefinitionType *newObjDef);
-extern	void DisposeSkeletonObjectMemory(SkeletonDefType *skeleton);
 extern	void AllocSkeletonDefinitionMemory(SkeletonDefType *skeleton);
 extern	void InitSkeletonManager(void);
 extern	void LoadASkeleton(Byte num);

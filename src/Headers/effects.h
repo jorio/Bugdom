@@ -38,12 +38,11 @@ ObjNode *MakeRipple(float x, float y, float z, float startScale);
 
 void InitParticleSystem(void);
 void DeleteAllParticleGroups(void);
-short NewParticleGroup(u_long magicNum, Byte type, Byte flags, float gravity, float magnetism,
-					 float baseScale, float decayRate, float fadeRate, Byte particleTextureNum);
-Boolean AddParticleToGroup(short groupNum, TQ3Point3D *where, TQ3Vector3D *delta, float scale, float alpha);
+int NewParticleGroup(uint32_t magicNum, Byte type, uint8_t flags, float gravity, float magnetism, float baseScale, float decayRate, float fadeRate, Byte particleTextureNum);
+bool AddParticleToGroup(int groupNum, TQ3Point3D* where, TQ3Vector3D* delta, float scale, float alpha);
 void MoveParticleGroups(void);
 void DrawParticleGroup(const QD3DSetupOutputType *setupInfo);
-Boolean VerifyParticleGroupMagicNum(short group, u_long magicNum);
-Boolean ParticleHitObject(ObjNode *theNode, u_short inFlags);
+bool VerifyParticleGroupMagicNum(int group, uint32_t magicNum);
+bool ParticleHitObject(ObjNode *theNode, uint8_t inFlags);
 
 void MakeSplash(float x, float y, float z, float force, float volume);

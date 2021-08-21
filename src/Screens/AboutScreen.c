@@ -5,18 +5,12 @@
 
 /****************************/
 /*    EXTERNALS             */
-#include <SDL_opengl.h>
-#include <version.h>
-
 /****************************/
 
-extern	float						gFramesPerSecondFrac,gFramesPerSecond;
-extern	WindowPtr					gCoverWindow;
-extern	NewObjectDefinitionType		gNewObjectDefinition;
-extern	QD3DSetupOutputType			*gGameViewInfoPtr;
-extern	FSSpec						gDataSpec;
-extern	PrefsType					gGamePrefs;
-extern 	ObjNode 					*gFirstNodePtr;
+#include "game.h"
+#include "version.h"
+#include <stdio.h>
+
 
 /****************************/
 /*    PROTOTYPES            */
@@ -30,9 +24,9 @@ static void MakeAboutScreenObjects(int slideNumber);
 /*    CONSTANTS             */
 /****************************/
 
-static const TQ3ColorRGB kNameColor			= { 152/255.0f, 1.0f, 205/255.0f };
-static const TQ3ColorRGB kHeadingColor		= { 1,1,1 };
-static const TQ3ColorRGB kDimmedColor		= { .6f,.6f,.6f };
+static const TQ3ColorRGBA kNameColor		= {0.6f, 1.0f, 0.8f, 1.0f};
+static const TQ3ColorRGBA kHeadingColor		= {1.0f, 1.0f, 1.0f, 1.0f};
+static const TQ3ColorRGBA kDimmedColor		= {0.6f, 0.6f, 0.6f, 1.0f};
 
 static const short kAboutScreenObjNodeSlot = 1337;
 
@@ -49,7 +43,7 @@ void DoAboutScreens(void)
 	/* SETUP */
 	/*********/
 
-	SetupUIStuff();
+	SetupUIStuff(kUIBackground_Black);
 	QD3D_CalcFramesPerSecond();
 
 	/**************/
@@ -58,9 +52,8 @@ void DoAboutScreens(void)
 
 	MakeFadeEvent(true);
 
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 4; i++)
 	{
-		NukeObjectsInSlot(999);							// hack to get rid of background
 		NukeObjectsInSlot(kAboutScreenObjNodeSlot);		// nuke text from previous slide
 
 		MakeAboutScreenObjects(i);
@@ -103,8 +96,7 @@ static void MakeCreditPart(
 	tmd.slot = kAboutScreenObjNodeSlot;
 	tmd.scale = .25f;
 	tmd.coord = (TQ3Point3D) {x,y,0};
-	tmd.lowercaseScale = 1;
-	tmd.characterSpacing *= 1.33f;
+	tmd.align = TEXTMESH_ALIGN_CENTER;
 
 	tmd.color = kHeadingColor;
 	TextMesh_Create(&tmd, heading);
@@ -122,13 +114,11 @@ static void MakeAboutScreenObjects(int slideNumber)
 {
 	TextMeshDef tmd;
 	TextMesh_FillDef(&tmd);
+	tmd.align = TEXTMESH_ALIGN_CENTER;
 	tmd.slot = kAboutScreenObjNodeSlot;
 	tmd.coord.y += 110;
 	tmd.withShadow = false;
-	tmd.lowercaseScale = 1;
-	tmd.characterSpacing *= 1.33f;
 	tmd.color = kHeadingColor;
-	tmd.scale = .66f;
 
 	const float LH = 13;
 
@@ -136,9 +126,9 @@ static void MakeAboutScreenObjects(int slideNumber)
 	{
 		case 0:
 		{
-			TextMesh_Create(&tmd, "CREDITS");
+			TextMesh_Create(&tmd, "Credits");
 
-			float XSPREAD = 80;
+			float XSPREAD = 65;
 
 			tmd.scale = 0.25f;
 
@@ -162,78 +152,106 @@ static void MakeAboutScreenObjects(int slideNumber)
 			tmd.color = kDimmedColor;
 			TextMesh_Create(&tmd, "Copyright 1999 Pangea Software, Inc.");
 			tmd.coord.y -= LH * .66f;
-			TextMesh_Create(&tmd, "''Bugdom'' is a registered trademark of Pangea Software, Inc.");
+			TextMesh_Create(&tmd, "\"Bugdom\" is a registered trademark of Pangea Software, Inc.");
 
 			break;
 		}
 
 		case 1:
 		{
-			TextMesh_Create(&tmd, "CONTROLS");
+			TextMesh_Create(&tmd, "Gamepad Controls");
 
-			FSSpec diagramSpec;
-			FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Images:GamepadDiagram.tga", &diagramSpec);
-			TQ3SurfaceShaderObject diagramSurfaceShader = QD3D_TGAToTexture(&diagramSpec);
-			GAME_ASSERT(diagramSurfaceShader);
+			GLuint diagramTexture = QD3D_LoadTextureFile(3500, kRendererTextureFlags_ClampBoth | kRendererTextureFlags_SolidBlackIsAlpha);
 
-			float y = 25;
+			float y = -10;
 
+			gNewObjectDefinition.genre		= DISPLAY_GROUP_GENRE;
+			gNewObjectDefinition.group 		= MODEL_GROUP_ILLEGAL;
 			gNewObjectDefinition.coord.x = 0;
 			gNewObjectDefinition.coord.y = y;
-			gNewObjectDefinition.coord.z = -3;
-			gNewObjectDefinition.flags 	= STATUS_BIT_NOTRICACHE|STATUS_BIT_NULLSHADER|STATUS_BIT_NOZWRITE;
+			gNewObjectDefinition.coord.z = 0;
+			gNewObjectDefinition.flags 	= STATUS_BIT_NULLSHADER|STATUS_BIT_NOZWRITE;
 			gNewObjectDefinition.slot 	= kAboutScreenObjNodeSlot;
 			gNewObjectDefinition.moveCall = nil;
 			gNewObjectDefinition.rot 	= 0;
-			gNewObjectDefinition.scale = 50.0f;
-			MakeNewDisplayGroupObject_TexturedQuad(diagramSurfaceShader, 750.0f/400.0f);
+			gNewObjectDefinition.scale = 2*50.0f;
+			ObjNode* diagramNode = MakeNewObject(&gNewObjectDefinition);
+
+			TQ3TriMeshData* diagramQuad = MakeQuadMesh(1, 754.0f/400.0f, 400.0f/400.0f);
+			diagramQuad->texturingMode = kQ3TexturingModeAlphaTest;
+			diagramQuad->glTextureName = diagramTexture;
+			AttachGeometryToDisplayGroupObject(diagramNode, 1, &diagramQuad,
+					kAttachGeometry_TransferMeshOwnership | kAttachGeometry_TransferTextureOwnership);
+
+			UpdateObjectTransforms(diagramNode);
 
 			tmd.scale = 0.2f;
 			tmd.align = TEXTMESH_ALIGN_LEFT;
 			tmd.coord.x =  95;
-			tmd.coord.y =  34+y; tmd.color = TQ3ColorRGB_FromInt(0x0599f8); TextMesh_Create(&tmd, "KICK");
-			tmd.coord.y =  22+y; tmd.color = TQ3ColorRGB_FromInt(0xfff139); TextMesh_Create(&tmd, "BUDDY");
-			tmd.coord.y =  10+y; tmd.color = TQ3ColorRGB_FromInt(0xdf2020); TextMesh_Create(&tmd, "MORPH");
-			tmd.coord.y =  -2+y; tmd.color = TQ3ColorRGB_FromInt(0x23ab23); TextMesh_Create(&tmd, "JUMP/BOOST");
-			tmd.coord.y = -24+y; tmd.color = TQ3ColorRGB_FromInt(0x7e7e7e); TextMesh_Create(&tmd, "CAMERA");
+			tmd.coord.y =  34+y; tmd.color = TQ3ColorRGBA_FromInt(0x0599f8ff); TextMesh_Create(&tmd, "Kick");
+			tmd.coord.y =  22+y; tmd.color = TQ3ColorRGBA_FromInt(0xfff139ff); TextMesh_Create(&tmd, "Buddy Bug");
+			tmd.coord.y =  10+y; tmd.color = TQ3ColorRGBA_FromInt(0xdf2020ff); TextMesh_Create(&tmd, "Morph");
+			tmd.coord.y =  -2+y; tmd.color = TQ3ColorRGBA_FromInt(0x23ab23ff); TextMesh_Create(&tmd, "Jump/Boost");
+			tmd.coord.y = -24+y; tmd.color = TQ3ColorRGBA_FromInt(0xFFFFFFff); TextMesh_Create(&tmd, "Camera");
 			tmd.align = TEXTMESH_ALIGN_RIGHT;
-			tmd.coord.x = -95; tmd.coord.y = 10+y; TextMesh_Create(&tmd, "WALK/ROLL");
-
-			tmd.scale = 0.2f;
-			tmd.align = TEXTMESH_ALIGN_LEFT;
-			tmd.coord.x = -12-60;
-			tmd.coord.y -= LH*6;
-			TextMesh_Create(&tmd, "MOUSE & KEYBOARD:");
-
-#define MAKE_CONTROL_TEXT(key, caption) \
-			tmd.coord.y -= 11;                   \
-			tmd.coord.x = -12;		tmd.color = kNameColor;		TextMesh_Create(&tmd, key); \
-			tmd.coord.x = -12-60;	tmd.color = kHeadingColor;	TextMesh_Create(&tmd, caption);
-
-			MAKE_CONTROL_TEXT("Mouse / Arrows"			, "WALK/ROLL");
-#if __APPLE__
-			MAKE_CONTROL_TEXT("Left Click / Option"		, "KICK/BOOST");
-			MAKE_CONTROL_TEXT("Right Click / Command"	, "JUMP");
-#else
-			MAKE_CONTROL_TEXT("Left Click / Ctrl"		, "KICK/BOOST");
-			MAKE_CONTROL_TEXT("Right Click / Alt"		, "JUMP");
-#endif
-			MAKE_CONTROL_TEXT("Middle Click / Space"	, "MORPH");
-			MAKE_CONTROL_TEXT("Shift"					, "AUTO-WALK");
-			MAKE_CONTROL_TEXT("Tab"						, "BUDDY");
-			MAKE_CONTROL_TEXT("ESC"						, "PAUSE");
-#undef MAKE_CONTROL_TEXT
+			tmd.coord.x = -95; tmd.coord.y = 10+y; TextMesh_Create(&tmd, "Walk/Roll");
+			tmd.align = TEXTMESH_ALIGN_CENTER;
+			tmd.coord.x = -40; tmd.coord.y = 57+y; tmd.color = TQ3ColorRGBA_FromInt(0x3e4642ff); TextMesh_Create(&tmd, "Zoom in");
+			tmd.coord.x =  40; tmd.coord.y = 57+y; tmd.color = TQ3ColorRGBA_FromInt(0x3e4642ff); TextMesh_Create(&tmd, "Zoom out");
 			break;
 		}
 
 		case 2:
 		{
-			TextMesh_Create(&tmd, "INFO & UPDATES");
+			TextMesh_Create(&tmd, "Mouse & Keyboard Controls");
+
+			tmd.scale = 0.2f;
+			tmd.align = TEXTMESH_ALIGN_LEFT;
+			float x = 0;
+			tmd.coord.x = -20;
+			tmd.coord.y = 75;
+
+#define MAKE_CONTROL_TEXT(key, mouse, caption) \
+			tmd.coord.y -= 14;                   \
+			tmd.coord.x = x-12;		tmd.color = kNameColor;		TextMesh_Create(&tmd, key); \
+			tmd.coord.x = x-12+40;	tmd.color = kNameColor;		TextMesh_Create(&tmd, mouse); \
+			tmd.coord.x = x-12-80;	tmd.color = kHeadingColor;	TextMesh_Create(&tmd, caption);
+
+			MAKE_CONTROL_TEXT("Shift (when using mouse)"		, ""				, "Auto-Walk");
+			MAKE_CONTROL_TEXT("Arrows"		, "or     Mouse"	, "Walk/Roll");
+#if __APPLE__
+			MAKE_CONTROL_TEXT("Option"		, "or     Left click"		, "Kick/Boost");
+			MAKE_CONTROL_TEXT("Command"		, "or     Right click"		, "Jump");
+#else
+			MAKE_CONTROL_TEXT("Ctrl"		, "or     Left click"		, "Kick/Boost");
+			MAKE_CONTROL_TEXT("Alt"			, "or     Right click"		, "Jump");
+#endif
+			MAKE_CONTROL_TEXT("Space"		, "or     Middle click"	, "Morph");
+			MAKE_CONTROL_TEXT("Tab"			, ""				, "Buddy Bug");
+			MAKE_CONTROL_TEXT("< / >"		, ""				, "Turn Camera");
+			MAKE_CONTROL_TEXT("1 / 2"		, ""				, "Zoom in/out");
+			MAKE_CONTROL_TEXT("ESC"			, ""				, "Pause");
+#undef MAKE_CONTROL_TEXT
+
+			tmd.coord.y -= 45;
+
+			tmd.align = TEXTMESH_ALIGN_CENTER;
+			tmd.coord.x = 0;
+			tmd.color = TQ3ColorRGBA_FromInt(0xE0B000FF);
+			TextMesh_Create(&tmd, "We strongly recommend using the mouse and the shift key for motion.");
+			tmd.coord.y -= 14;
+			TextMesh_Create(&tmd, "This combo gives you the most accurate control over the player.");
+			break;
+		}
+
+		case 3:
+		{
+			TextMesh_Create(&tmd, "Info & Updates");
 
 			float y = tmd.coord.y - LH*4;
 
 			MakeCreditPart(0, y-LH*0, "The Makers of Bugdom:", "www.pangeasoft.net", "");
-			MakeCreditPart(0, y-LH*4, "Get Updates at:", "github.com/jorio/bugdom", "");
+			MakeCreditPart(0, y-LH*4, "Get Updates At:", "github.com/jorio/bugdom", "");
 
 			char sdlVersionString[256];
 			SDL_version compiled;
@@ -247,7 +265,7 @@ static void MakeAboutScreenObjects(int slideNumber)
 
 			tmd.scale = 0.2f;
 			tmd.coord.x = -100;
-			tmd.coord.y = -75;
+			tmd.coord.y = -85;
 			tmd.color = kDimmedColor;
 			tmd.align = TEXTMESH_ALIGN_LEFT;
 #define MAKE_TECH_TEXT(key, caption) \
@@ -256,7 +274,6 @@ static void MakeAboutScreenObjects(int slideNumber)
 			MAKE_TECH_TEXT("Game ver:",	PROJECT_VERSION);
 			MAKE_TECH_TEXT("Renderer:",	(const char*)glGetString(GL_RENDERER));
 			MAKE_TECH_TEXT("OpenGL:",	(const char*)glGetString(GL_VERSION));
-			MAKE_TECH_TEXT("GLSL:",		(const char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
 			MAKE_TECH_TEXT("SDL:",		sdlVersionString);
 #undef MAKE_TECH_TEXT
 			break;
@@ -271,8 +288,5 @@ static void AboutScreenDrawStuff(const QD3DSetupOutputType *setupInfo)
 {
 	DrawObjects(setupInfo);
 	QD3D_DrawParticles(setupInfo);
-#if _DEBUG
-	PickableQuads_Draw(setupInfo->viewObject);
-#endif
 }
 

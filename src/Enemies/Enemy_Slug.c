@@ -9,14 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	ObjNode					*gCurrentNode;
-extern	SplineDefType			**gSplineList;
-extern	TQ3Point3D				gCoord,gMyCoord;
-extern	float					gFramesPerSecondFrac;
-extern	TQ3Vector3D			gDelta;
-extern	TQ3Vector3D		gRecentTerrainNormal[];
 
 /****************************/
 /*    PROTOTYPES            */
@@ -74,7 +68,6 @@ float			x,z,placement;
 	DetachObject(newObj);									// detach this object from the linked list
 	
 	Q3Matrix4x4_SetIdentity(&newObj->BaseTransformMatrix);	// we are going to do some manual transforms on the skeleton joints
-	SetObjectTransformMatrix(newObj);
 	newObj->Skeleton->JointsAreGlobal = true;
 		
 	newObj->SplineItemPtr = itemPtr;

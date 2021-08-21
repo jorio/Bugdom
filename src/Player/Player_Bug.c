@@ -9,29 +9,7 @@
 /*    EXTERNALS             */
 /****************************/
 
-extern	Byte					gCurrentLiquidType;
-extern	ObjNode					*gFirstNodePtr,*gCurrentEatingFish,*gPlayerObj, *gCurrentEatingBat;
-extern	float					gFramesPerSecondFrac,gFramesPerSecond,gPlayerMaxSpeed;
-extern	TQ3Point3D				gCoord,gMyCoord;
-extern	TQ3Vector3D				gDelta;
-extern	Byte					gPlayerMode;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	float					gMyDistToFloor,gPlayerCurrentWaterY;
-extern	unsigned long 			gInfobarUpdateBits;
-extern	short					gNumCollisions;
-extern	CollisionRec			gCollisionList[];
-extern	Boolean			gPlayerKnockOnButt,gPlayerGotKilledFlag;
-extern	TQ3Vector3D		gPlayerKnockOnButtDelta;
-extern	ObjNode			*gCurrentWaterBug, *gCurrentDragonFly;
-extern	const TQ3Point3D gPondFishMouthOff,gBatMouthOff;
-extern	u_short			gLevelType,gRealLevel;
-extern	ObjNode			*gCurrentRope,*gPrevRope,*gCurrentCarryingFireFly;
-extern	short			gCurrentRopeJoint;
-extern	u_short			gLevelTypeMask;
-extern	int				gNitroParticleGroup;
-extern	Boolean			gPlayerCanMove,gLiquidCheat,gPlayerUsingKeyControl;
-extern	PrefsType	gGamePrefs;
+#include "game.h"
 
 
 /****************************/
@@ -568,7 +546,7 @@ static void MovePlayerBug_Swim(void)
 	if (gPlayerObj->RippleTimer > .25f)
 	{
 		gPlayerObj->RippleTimer = 0;
-		MakeRipple(gCoord.x, gCoord.y+WATER_COLLISION_TOPOFF, gCoord.z, 3.0);
+		MakeRipple(gCoord.x, gCoord.y+gLiquidCollisionTopOffset[LIQUID_WATER], gCoord.z, 3.0f);
 	}
 
 
@@ -689,8 +667,7 @@ float			s;
 	
 	Q3Matrix4x4_SetTranslate(&m, 0, 30, 40);				// set offset translation matrix for point on waterbug's back
 	MatrixMultiplyFast(&m,&m3,&gPlayerObj->BaseTransformMatrix);			
-	SetObjectTransformMatrix(gPlayerObj);
-	
+
 			/* CALC PLAYER'S COORD */
 			
 	Q3Point3D_Transform(&zero, &gPlayerObj->BaseTransformMatrix, &gMyCoord);
@@ -737,7 +714,6 @@ hop_off:
 	
 	Q3Matrix4x4_SetTranslate(&m, 0, 8, 55);								// set offset translation matrix for point on waterbug's back
 	MatrixMultiplyFast(&m,&m3,&gPlayerObj->BaseTransformMatrix);			
-	SetObjectTransformMatrix(gPlayerObj);
 
 			
 		/* CALC WORLD COORD & DELTA OF BUG */
@@ -824,8 +800,6 @@ int		j;
 	off.z *= enemy->Scale.z;
 	Q3Matrix4x4_SetTranslate(&m, off.x, off.y, off.z);  // get mouth offset	
 	MatrixMultiplyFast(&m,&m3,&gPlayerObj->BaseTransformMatrix);		
-	
-	SetObjectTransformMatrix(gPlayerObj);					// set player's matrix
 
 			/* ON FLIGHT LEVEL, THE CAMERA TRACKS BAT */
 			
@@ -948,8 +922,7 @@ float			dx,dy;
 								 gRopeSwingOffset.y,
 								 gRopeSwingOffset.z);	
 	MatrixMultiplyFast(&m,&m2,&gPlayerObj->BaseTransformMatrix);			
-	SetObjectTransformMatrix(gPlayerObj);
-			
+
 			/* UPDATE IT */
 			
 	FindCoordOnJoint(gCurrentRope, gCurrentRopeJoint, &gRopeSwingOffset, &gMyCoord);	// est. coord of joint	

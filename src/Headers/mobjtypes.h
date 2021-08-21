@@ -2,6 +2,8 @@
 // mobjtypes.h
 //
 
+#pragma once
+
 enum
 {
 	MODEL_GROUP_LEVELSPECIFIC =	0,
@@ -14,7 +16,6 @@ enum
 	MODEL_GROUP_GLOBAL1		=	2,
 	MODEL_GROUP_GLOBAL2		=	3,
 	MODEL_GROUP_LEVELSPECIFIC2 = 4,
-	MODEL_GROUP_TEXTMESH	= 5,
 	MODEL_GROUP_ILLEGAL		= 0xFF,
 };
 
@@ -332,5 +333,3 @@ enum
 	BONUS_MObjType_GoldClover,
 	BONUS_MObjType_BlueClover
 };
-
-

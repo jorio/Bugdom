@@ -9,22 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	ObjNode					*gCurrentNode;
-extern	SplineDefType			**gSplineList;
-extern	TQ3Point3D				gCoord,gMyCoord;
-extern	float					gFramesPerSecondFrac;
-extern	TQ3Vector3D			gDelta;
-extern	ObjNode				*gPlayerObj;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	u_short					gLevelType;
-extern	short	  				gNumTerrainItems;
-extern	u_long					gAutoFadeStatusBits;
-extern	TerrainItemEntryType 	**gMasterItemList;
-extern	Byte					gPlayerMode;
-extern	signed char	gNumEnemyOfKind[];
-extern	CollisionRec	gCollisionList[];
 
 /****************************/
 /*    PROTOTYPES            */
@@ -154,13 +140,11 @@ ObjNode	*newObj,*glow;
 	gNewObjectDefinition.group 		= NIGHT_MGroupNum_FireFlyGlow;	
 	gNewObjectDefinition.type 		= NIGHT_MObjType_FireFlyGlow;
 	gNewObjectDefinition.coord		= newObj->Coord;
-	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER|STATUS_BIT_GLOW|STATUS_BIT_NOZWRITE|STATUS_BIT_NOFOG;
+	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER | STATUS_BIT_GLOW | STATUS_BIT_NOZWRITE | STATUS_BIT_NOFOG | STATUS_BIT_KEEPBACKFACES;
 	gNewObjectDefinition.slot		= SLOT_OF_DUMB+30;
 	gNewObjectDefinition.moveCall 	= nil;
 	gNewObjectDefinition.scale 		= FLARE_SCALE;
 	glow = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-
-	MakeObjectKeepBackfaces(glow);
 
 	newObj->ChainNode = glow;
 	
@@ -535,7 +519,6 @@ ObjNode		*glow;
 		SetLookAtMatrixAndTranslate(&m, &up, &gCoord,  &gGameViewInfoPtr->currentCameraCoords);
 		Q3Matrix4x4_SetScale(&m2, s, s, s);
 		MatrixMultiplyFast(&m2,&m, &glow->BaseTransformMatrix);
-		SetObjectTransformMatrix(glow);
 
 		glow->Coord = theNode->Coord;									// update true coord for culling
 	}				

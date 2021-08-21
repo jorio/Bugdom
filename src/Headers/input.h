@@ -2,9 +2,9 @@
 // input.h
 //
 
-#ifndef __INPUT_H
-#define __INPUT_H
+#pragma once
 
+#include <SDL.h>
 
 #define NUM_MOUSE_SENSITIVITY_LEVELS		5
 #define DEFAULT_MOUSE_SENSITIVITY_LEVEL		(NUM_MOUSE_SENSITIVITY_LEVELS/2)
@@ -27,8 +27,6 @@ enum
 {
 	kKey_Pause,
 	kKey_ToggleMusic,
-	kKey_RaiseVolume,
-	kKey_LowerVolume,
 	kKey_ToggleFullscreen,
 
 	kKey_SwivelCameraLeft,
@@ -65,7 +63,6 @@ Boolean GetKeyState_SDL(unsigned short sdlScanCode);
 Boolean GetKeyState(unsigned short key);
 Boolean GetNewKeyState_SDL(unsigned short sdlScanCode);
 Boolean GetSkipScreenInput(void);
-Boolean AreAnyNewKeysPressed(void);
 void ResetInputState(void);
 void UpdateKeyMap(void);
 
@@ -77,9 +74,4 @@ void CaptureMouse(Boolean doCapture);
 
 SDL_GameController* TryOpenController(bool showMessageOnFailure);
 void OnJoystickRemoved(SDL_JoystickID which);
-
-
-#endif
-
-
 

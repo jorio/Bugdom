@@ -9,19 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 
-extern	float				gFramesPerSecondFrac,gFramesPerSecond;
-extern	TQ3Point3D			gCoord;
-extern	WindowPtr			gCoverWindow;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	Boolean		gSongPlayingFlag,gResetSong,gDisableAnimSounds,gSongPlayingFlag;
-extern	FSSpec		gDataSpec;
-extern	PrefsType	gGamePrefs;
-extern	u_short		gLevelType;
-extern	TQ3Vector3D	gDelta;
-extern	ObjNode		*gPlayerObj;
-extern	Byte		gPlayerMode;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -92,6 +81,7 @@ bail:
 	FreeAllSkeletonFiles(-1);
 	DeleteAll3DMFGroups();
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);		
+	Pomme_FlushPtrTracking(true);
 }
 
 
@@ -113,15 +103,14 @@ Byte					letters[] = {TITLE_MObjType_B, TITLE_MObjType_U,
 
 		/* INIT OTHER SYSTEMS */
 		
-	QD3D_InitParticles();	
-	InitParticleSystem();
+	QD3D_InitParticles();
 
 
 			/*************/
 			/* MAKE VIEW */
 			/*************/
 
-	QD3D_NewViewDef(&viewDef, gCoverWindow);
+	QD3D_NewViewDef(&viewDef);
 	
 	viewDef.camera.hither 			= 50;
 	viewDef.camera.yon 				= 3000;
@@ -138,18 +127,18 @@ Byte					letters[] = {TITLE_MObjType_B, TITLE_MObjType_U,
 	viewDef.lights.fillColor[1] 	= lightColor;
 	viewDef.lights.fillBrightness[0] = 1.1;
 	viewDef.lights.fillBrightness[1] = .2;
-	
-	
-	viewDef.view.clearColor.r = 
-	viewDef.view.clearColor.g = 
-	viewDef.view.clearColor.b = 0;
-		
-		
+
+
+	viewDef.view.clearColor = TQ3ColorRGBA_FromInt(0x295a8cff);
+
+
 	QD3D_SetupWindow(&viewDef, &gGameViewInfoPtr);
 
 			/************/
 			/* LOAD ART */
 			/************/
+
+	InitParticleSystem();		// Must be once we have a valid GL context
 
 	LoadASkeleton(SKELETON_TYPE_ME);
 	LoadASkeleton(SKELETON_TYPE_FIREANT);
@@ -178,22 +167,25 @@ Byte					letters[] = {TITLE_MObjType_B, TITLE_MObjType_U,
 	gNewObjectDefinition.moveCall 	= nil;
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= 1;
+	gNewObjectDefinition.drawOrder	= kDrawOrder_Terrain;
 	MakeNewDisplayGroupObject(&gNewObjectDefinition);
 
 			/* SPHERE */
 				
 	gNewObjectDefinition.group 		= MODEL_GROUP_TITLE;	
 	gNewObjectDefinition.type 		= TITLE_MObjType_Background;	
-	gNewObjectDefinition.coord.x	= 100;		// Source port note:
-	gNewObjectDefinition.coord.y	= 150;		//    X,Y,Z changed from 0,0,-600 to prevent east grass quad
-	gNewObjectDefinition.coord.z	= -650;		//    from clipping into sky sphere in widescreen
+	gNewObjectDefinition.coord.x	= 0;
+	gNewObjectDefinition.coord.y	= 0;
+	gNewObjectDefinition.coord.z	= -600;
 	gNewObjectDefinition.slot 		= 100;
-	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER|STATUS_BIT_NOFOG|STATUS_BIT_DONTCULL;
+	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER | STATUS_BIT_NOFOG | STATUS_BIT_DONTCULL | STATUS_BIT_NOZWRITE;
 	gNewObjectDefinition.moveCall 	= nil;
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= 2.7;
-	MakeNewDisplayGroupObject(&gNewObjectDefinition);
-	
+	gNewObjectDefinition.drawOrder	= kDrawOrder_Terrain-1;
+	ObjNode* cyc = MakeNewDisplayGroupObject(&gNewObjectDefinition);
+	QD3D_MirrorMeshesZ(cyc);
+
 	
 			/* LADYBUG */
 		
@@ -207,6 +199,7 @@ Byte					letters[] = {TITLE_MObjType_B, TITLE_MObjType_U,
 	gNewObjectDefinition.moveCall 	= nil;
 	gNewObjectDefinition.rot 		= 2.9;
 	gNewObjectDefinition.scale 		= .9;
+	gNewObjectDefinition.drawOrder	= kDrawOrder_Default;
 	gLadyBug = MakeNewSkeletonObject(&gNewObjectDefinition);			
 
 	AttachShadowToObject(gLadyBug, 6,6, false);
@@ -229,10 +222,10 @@ Byte					letters[] = {TITLE_MObjType_B, TITLE_MObjType_U,
 	gNewObjectDefinition.scale 		= 1.0;
 	ant1 = MakeNewSkeletonObject(&gNewObjectDefinition);			
 	ant1->Delta.y = -400;
-	
-			/**************/
-			/* BUDOM NAME */
-			/**************/
+
+			/***************/
+			/* BUGDOM NAME */
+			/***************/
 
 	gNewObjectDefinition.coord.x 	= 300;
 	gNewObjectDefinition.coord.y 	= 455;
@@ -495,9 +488,7 @@ static Boolean TitleWaitAndDraw(float duration)
 		DoSDLMaintenance();
 		duration -= gFramesPerSecondFrac;
 		
-		if (FlushMouseButtonPress())
-			return(true);
-		if (AreAnyNewKeysPressed())
+		if (GetSkipScreenInput())
 			return(true);		
 		
 	}while(duration > 0.0f);

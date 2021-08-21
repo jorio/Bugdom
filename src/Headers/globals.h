@@ -4,9 +4,7 @@
 /* By Brian Greenstone      */
 /****************************/
 
-#ifndef MYGLOBALS_H
-#define MYGLOBALS_H
-
+#pragma once
 
 			/* SOME FLOATING POINT HELPERS */
 			
@@ -103,11 +101,11 @@ enum
 
 enum
 {
-	STATUS_BIT_ONGROUND		=	1,			// Player is on anything solid (terrain or objnode)
-	STATUS_BIT_ISCARRYING	=	(1<<1),		// Is Carrying Something
+	STATUS_BIT_ONGROUND		=	(1<<0),		// Player is on anything solid (terrain or objnode)
+	// 1<<1 unused
 	STATUS_BIT_DONTCULL		=	(1<<2),		// set if don't want to perform custom culling on this object
 	STATUS_BIT_NOCOLLISION  = 	(1<<3),		// set if want collision code to skip testing against this object
-	STATUS_BIT_NOMOVE  		= 	(1<<4),		// dont call object's move function
+	// 1<<4 unused
 	STATUS_BIT_ANIM  		= 	(1<<5),		// set if can animate
 	STATUS_BIT_HIDDEN		=	(1<<6),		// dont draw object
 	STATUS_BIT_REFLECTIONMAP = 	(1<<7),		// use reflection mapping
@@ -119,7 +117,7 @@ enum
 	STATUS_BIT_NULLSHADER	 =  (1<<13),	// used when want to render object will NULL shading (no lighting)
 	STATUS_BIT_ALWAYSCULL	 =  (1<<14),	// to force a cull-check
 	STATUS_BIT_NOTRICACHE 	 =  (1<<15), 	// set if want to disable triangle caching when drawing this xparent obj
-	STATUS_BIT_DELETE		=	(1<<16),	// set by a function which cannot actually delete an object but we want to tell system to delete it at its convenience
+	// 1<<16 unused
 	STATUS_BIT_NOZWRITE		=	(1<<17),	// set when want to turn off z buffer writes
 	STATUS_BIT_NOFOG		=	(1<<18),
 	STATUS_BIT_AUTOFADE		=	(1<<19),	// calculate fade xparency value for object when rendering
@@ -127,17 +125,8 @@ enum
 	STATUS_BIT_ONSPLINE		=	(1<<21),	// if objnode is attached to spline
 	STATUS_BIT_REVERSESPLINE =	(1<<22),	// if going reverse direction on spline
 	STATUS_BIT_CLONE		=	(1<<23),	// set so Display Group node creates its own copy of model; then you can modify the model freely
+	STATUS_BIT_KEEPBACKFACES=	(1<<24),
+	STATUS_BIT_KEEPBACKFACES_2PASS = (1<<25),	// draw backfaces and frontfaces separately (useful for transparent objects)
+	STATUS_BIT_DEBUGBREAKPOINT		= (1<<31),
 };
-
-
-#endif
-
-
-
-
-
-
-
-
-
 

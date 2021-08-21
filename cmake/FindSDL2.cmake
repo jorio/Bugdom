@@ -4,7 +4,7 @@
 # Sets variables:
 #     SDL2_INCLUDE_DIRS
 #     SDL2_LIBRARIES
-#     SDL2_DLLS
+#     SDL2_DLLS (Windows only)
 #------------------------------------------------------------------------------
 
 include(FindPackageHandleStandardArgs)
@@ -22,7 +22,10 @@ foreach(_SDL2_component ${SDL2_FIND_COMPONENTS})
 endforeach()
 
 if(WIN32)
-    find_path(SDL2_ROOT "include/SDL.h" PATHS "${CMAKE_SOURCE_DIR}/extern/SDL2-${SDL2_VERSION}" NO_DEFAULT_PATH)
+    find_path(SDL2_ROOT "include/SDL.h"
+        PATHS "${CMAKE_SOURCE_DIR}/extern/SDL2-${SDL2_VERSION}"
+        NO_DEFAULT_PATH
+    )
     
     if(SDL2_ROOT)
         set(SDL2_INCLUDE_DIRS "${SDL2_ROOT}/include")
@@ -36,25 +39,33 @@ if(WIN32)
 
     mark_as_advanced(SDL2_ROOT)
     find_package_handle_standard_args(SDL2 DEFAULT_MSG SDL2_INCLUDE_DIRS SDL2_LIBRARIES SDL2_DLLS)
+
 elseif(APPLE)
-    find_path(SDL2_ROOT "Headers/SDL.h" PATHS "${CMAKE_SOURCE_DIR}/extern/SDL2.framework/Versions/Current" NO_DEFAULT_PATH)
+    find_path(SDL2_INCLUDE_DIRS "SDL.h"
+        PATHS "${CMAKE_SOURCE_DIR}/extern/SDL2.framework/Versions/Current"
+        PATH_SUFFIXES "Headers"
+        REQUIRED
+        NO_DEFAULT_PATH
+    )
 
-    if(SDL2_ROOT)
-        set(SDL2_INCLUDE_DIRS "${SDL2_ROOT}/Headers")
-        set(SDL2_LIBRARIES "${CMAKE_SOURCE_DIR}/extern/SDL2.framework")
-    endif()
+    set(SDL2_LIBRARIES "${CMAKE_SOURCE_DIR}/extern/SDL2.framework")
 
-    mark_as_advanced(SDL2_ROOT)
     find_package_handle_standard_args(SDL2 DEFAULT_MSG SDL2_INCLUDE_DIRS SDL2_LIBRARIES)
+
 else()
-    find_path(SDL2_INCLUDE_DIRS SDL.h PATH_SUFFIXES SDL2)
-    find_library(_SDL2_LIB SDL2)
-    set(SDL2_LIBRARIES ${_SDL2_LIB})
-    if(_SDL2_use_main)
-        find_library(_SDL2main_LIB SDL2)
-        list(APPEND SDL2_LIBRARIES ${_SDL2main_LIB})
-    endif()
+    find_path(SDL2_INCLUDE_DIRS "SDL.h"
+        HINTS $ENV{SDL2DIR}
+        PATH_SUFFIXES "include/SDL2" "include"
+        REQUIRED
+    )
 
-    mark_as_advanced(SDL2_INCLUDE_DIRS _SDL2_LIB _SDL2main_LIB)
+    find_library(SDL2_LIBRARIES
+        NAMES "SDL2"
+        HINTS $ENV{SDL2DIR}
+        PATH_SUFFIXES lib64 lib
+        REQUIRED
+    )
+
     find_package_handle_standard_args(SDL2 DEFAULT_MSG SDL2_INCLUDE_DIRS SDL2_LIBRARIES)
+
 endif()

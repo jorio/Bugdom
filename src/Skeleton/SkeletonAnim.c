@@ -9,12 +9,7 @@
 /*    EXTERNALS             */
 /****************************/
 
-
-#include "3dmath.h"
-
-extern	float				gFramesPerSecondFrac;
-extern	WindowPtr			gNetworkMessageWindow;
-extern	TQ3Point3D			gMyCoord;
+#include "game.h"
 
 
 /****************************/

@@ -9,19 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 
-
-extern	float				gFramesPerSecondFrac;
-extern	TQ3Point3D			gCoord,gMyCoord;
-extern	TQ3Vector3D			gDelta;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	TQ3Vector3D			gRecentTerrainNormal[2];
-extern	SplineDefType		**gSplineList;
-extern	Byte		gPlayerMode;
-extern	ObjNode		*gPlayerObj;
-extern	u_short		gLevelType;
-extern	Boolean		gValveIsOpen[];
-extern	u_long		gAutoFadeStatusBits;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -213,7 +202,7 @@ float		l,r,f,b;
 	m.value[3][1] = theNode->Coord.y;
 	m.value[3][2] = theNode->Coord.z;
 	
-	Q3Point3D_To3DTransformArray(&pts[0], &m, &pts2[0], 12, sizeof(TQ3Point3D), sizeof(TQ3Point3D));
+	Q3Point3D_To3DTransformArray(&pts[0], &m, &pts2[0], 12);//, sizeof(TQ3Point3D), sizeof(TQ3Point3D));
 
 
 		/***************/
@@ -827,8 +816,7 @@ float	d;
 	theNode->PTimer -= gFramesPerSecondFrac;
 	if (theNode->PTimer < 0.0f)								// see if time to spew fire particles
 	{
-		theNode->PTimer = .12f;								// reset timer
-		// Source port mod: was .06f; that was a bit overkill and caused too much overdraw
+		theNode->PTimer = .06f;								// reset timer
 
 				/* SEE IF MAKE NEW GROUP */
 				
@@ -910,7 +898,7 @@ ObjNode	*newObj;
 	gNewObjectDefinition.coord.x 	= coord->x;
 	gNewObjectDefinition.coord.y 	= GetTerrainHeightAtCoord(coord->x,coord->z,FLOOR);
 	gNewObjectDefinition.coord.z 	= coord->z;
-	gNewObjectDefinition.flags 		= 0;
+	gNewObjectDefinition.flags 		= STATUS_BIT_NOZWRITE | STATUS_BIT_KEEPBACKFACES_2PASS;
 	gNewObjectDefinition.slot 		= SLOT_OF_DUMB-1;
 	gNewObjectDefinition.moveCall 	= MoveShockwave;
 	gNewObjectDefinition.rot 		= 0;
@@ -928,7 +916,6 @@ ObjNode	*newObj;
 
 	newObj->Health = .6;
 	MakeObjectTransparent(newObj, newObj->Health);
-	MakeObjectKeepBackfaces(newObj);
 }
 
 

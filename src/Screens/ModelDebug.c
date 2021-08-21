@@ -2,17 +2,8 @@
 // (C) 2020 Iliyas Jorio
 // This file is part of Bugdom. https://github.com/jorio/bugdom
 
-extern	float				gFramesPerSecondFrac,gFramesPerSecond;
-extern	WindowPtr			gCoverWindow;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	FSSpec		gDataSpec;
-extern	PrefsType	gGamePrefs;
-extern	SDL_Window*	gSDLWindow;
-extern	Boolean		gDisableAnimSounds;
-extern float gAutoFadeStartDist;
-extern	short		gNumObjectsInGroupList[MAX_3DMF_GROUPS];
-
+#include "game.h"
+#include <stdio.h>
 
 static TQ3Point3D gModelDebug_modelCoord = { 0, 0, 0 };
 static float gCameraLookAtAccel = 9;
@@ -245,7 +236,7 @@ void DoModelDebug(void)
 
 	/* MAKE VIEW */
 
-	QD3D_NewViewDef(&viewDef, gCoverWindow);
+	QD3D_NewViewDef(&viewDef);
 	viewDef.camera.hither 			= 10;
 	viewDef.camera.yon 				= 2000;
 	viewDef.camera.fov 				= .9;
@@ -310,10 +301,8 @@ void DoModelDebug(void)
 		MoveObjects();
 		MoveCamera_ModelDebug();
 
-		CalcEnvironmentMappingCoords(&gGameViewInfoPtr->currentCameraCoords);
+//		CalcEnvironmentMappingCoords(&gGameViewInfoPtr->currentCameraCoords);
 
-//		Overlay_RenderQuad(OVERLAY_FILL);
-		
 		QD3D_DrawScene(gGameViewInfoPtr,DrawObjects);
 
 		DoSDLMaintenance();
@@ -396,7 +385,7 @@ void DoModelDebug(void)
 			char titlebuf[512];
 			if (gDisplaySkeleton)
 			{
-				sprintf(titlebuf, "Skeleton %d/%d [TAB], Anim %d/%d [ENTER]. Press [SPACE] for DGOs.",
+				snprintf(titlebuf, sizeof(titlebuf), "Skeleton %d/%d [TAB], Anim %d/%d [ENTER]. Press [SPACE] for DGOs.",
 						1+gCurrentSkeletonType,
 						MAX_SKELETON_TYPES,
 						1+gModel->Skeleton->AnimNum,
@@ -404,7 +393,7 @@ void DoModelDebug(void)
 			}
 			else
 			{
-				sprintf(titlebuf, "3DMF Group %s (%d/%d) [TAB], DGO %d/%d [ENTER]. Press [SPACE] for skeletons.",
+				snprintf(titlebuf, sizeof(titlebuf), "3DMF Group %s (%d/%d) [TAB], DGO %d/%d [ENTER]. Press [SPACE] for skeletons.",
 						gModelFiles[gCurrentModelFile],
 						1+gCurrentModelFile,
 						gNumModelFiles,
@@ -422,4 +411,5 @@ void DoModelDebug(void)
 	Free3DMFGroup(MODEL_GROUP_LEVELSPECIFIC);
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
 	GameScreenToBlack();
+	Pomme_FlushPtrTracking(true);
 }

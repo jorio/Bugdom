@@ -9,16 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
-#include "3dmath.h"
+#include "game.h"
 
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	ObjNode					*gCurrentNode;
-extern	SplineDefType			**gSplineList;
-extern	TQ3Point3D				gCoord,gMyCoord;
-extern	short					gNumEnemies;
-extern	float					gFramesPerSecondFrac;
-extern	TQ3Vector3D			gDelta;
-extern	signed char			gNumEnemyOfKind[];
 
 /****************************/
 /*    PROTOTYPES            */
@@ -850,8 +842,8 @@ long		i;
 
 				/* CALC COORD OF MOUTH AND CENTER OF HEAD */
 				
-	FindJointFullMatrix(theNode, FIREANT_HEAD_LIMB, &m);		
-	Q3Point3D_To3DTransformArray(&off[0], &m, &p[0], 2, sizeof(TQ3Point3D), sizeof(TQ3Point3D));	
+	FindJointFullMatrix(theNode, FIREANT_HEAD_LIMB, &m);
+	Q3Point3D_To3DTransformArray(&off[0], &m, &p[0], 2);//, sizeof(TQ3Point3D), sizeof(TQ3Point3D));
 
 
 					/* CALC FIRE VECTOR */

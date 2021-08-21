@@ -3,15 +3,6 @@
 //
 #pragma once
 
-enum
-{
-	SKELETON_LIMBTYPE_PILLOW,
-	SKELETON_LIMBTYPE_LEFTHAND,
-	SKELETON_LIMBTYPE_HEAD
-};
-
-
-
 #define	NO_LIMB_MESH		(-1)			// indicates that this joint's limb mesh does not exist
 #define	NO_PREVIOUS_JOINT	(-1)
 

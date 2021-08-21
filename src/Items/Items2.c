@@ -9,22 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 
-
-extern	float				gFramesPerSecondFrac,gFramesPerSecond;
-extern	TQ3Point3D			gCoord,gMyCoord;
-extern	TQ3Vector3D			gDelta;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	TQ3Object			gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
-extern	TQ3BoundingBox 		gObjectGroupBBoxList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
-extern	QD3DSetupOutputType	*gGameViewInfoPtr;
-extern	u_short				gLevelTypeMask;
-extern	u_short				gLevelType;
-extern	ObjNode				*gPlayerObj;
-extern	Byte				gPlayerMode;
-extern	SplineDefType		**gSplineList;
-extern	Boolean				gDetonatorBlown[];
-extern	u_long				gAutoFadeStatusBits;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -59,8 +45,6 @@ static void MoveHoneyTube(ObjNode *theNode);
 
 ObjNode	*gCurrentRope,*gPrevRope;
 short	gCurrentRopeJoint;
-
-float gHoneyTubeU,gHoneyTubeV;
 
 static float	gRootAnimTimeIndex[MAX_ROOT_SYNCS];
 
@@ -803,7 +787,7 @@ int		n;
 	gNewObjectDefinition.coord.x 	= x;
 	gNewObjectDefinition.coord.y 	= GetTerrainHeightAtCoord(x,z,FLOOR);
 	gNewObjectDefinition.coord.z 	= z;
-	gNewObjectDefinition.flags 		= gAutoFadeStatusBits;
+	gNewObjectDefinition.flags 		= STATUS_BIT_KEEPBACKFACES | gAutoFadeStatusBits;
 	gNewObjectDefinition.slot 		= 550;
 	gNewObjectDefinition.moveCall 	= MoveHoneyTube;
 	gNewObjectDefinition.rot 		= (float)itemPtr->parm[1] * (PI2/4);
@@ -813,8 +797,6 @@ int		n;
 		return(false);
 
 	newObj->TerrainItemPtr = itemPtr;								// keep ptr to item list
-
-	MakeObjectKeepBackfaces(newObj);
 
 	newObj->CType = CTYPE_MISC;
 	newObj->CBits = CBITS_ALLSOLID;
@@ -847,20 +829,26 @@ static void MoveHoneyTube(ObjNode *theNode)
 
 void UpdateHoneyTubeTextureAnimation(void)
 {
-	if (gLevelType == LEVEL_TYPE_HIVE)
+	if (gLevelType != LEVEL_TYPE_HIVE)
+		return;
+
+				/* MOVE UVS */
+
+	float du = 0.0f;
+	float dv = 0.6f * gFramesPerSecondFrac;
+
+
+	for (int type = HIVE_MObjType_BentTube; type <= HIVE_MObjType_TaperTube; type++)
 	{
-					/* MOVE UVS */
-					//
-					// NOTE: since all 4 tube types share the same shader object, we
-					// 		only need to scroll the uv's for one of the objects.
-					//
-					
-		QD3D_ScrollUVs(gObjectGroupList[MODEL_GROUP_LEVELSPECIFIC][HIVE_MObjType_BentTube],
-						gHoneyTubeU,gHoneyTubeV, 2);
-		
-		gHoneyTubeV -= .6f*gFramesPerSecondFrac;
+		GAME_ASSERT_MESSAGE(
+				type == HIVE_MObjType_BentTube || type == HIVE_MObjType_SquiggleTube || type == HIVE_MObjType_StraightTube || type == HIVE_MObjType_TaperTube,
+				"Did Beehive tube object types get shuffled around in the enum?");
+
+		GAME_ASSERT(gObjectGroupList[MODEL_GROUP_LEVELSPECIFIC][type].numMeshes == 2);
+
+		// Mesh #0 is the lattice; Mesh #1 is the inner tube
+		QD3D_ScrollUVs(gObjectGroupList[MODEL_GROUP_LEVELSPECIFIC][type].meshes[1], du, dv);
 	}
-			
 }
 
 #pragma mark -

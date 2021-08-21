@@ -3,26 +3,12 @@
 /****************************/
 
 
-#include "3dmath.h"
-
 /***************/
 /* EXTERNALS   */
 /***************/
 
-extern	long	gTerrainTileWidth,gTerrainTileDepth;
-extern	float	gTerrainItemDeleteWindow_Near,gTerrainItemDeleteWindow_Far,
-				gTerrainItemDeleteWindow_Left,gTerrainItemDeleteWindow_Right;
-extern	long		gMyStartX,gMyStartZ;
-extern	long	gNumTerrainTextureTiles;
-extern	long	gNumSuperTilesDeep,gNumSuperTilesWide;
-extern	long	gTerrainUnitWidth,gTerrainUnitDepth;
-extern	TQ3Point3D	gCoord,gMyCoord;
-extern	const float	gOneOver_TERRAIN_POLYGON_SIZE;
-extern	Byte		gMyStartAim;
-extern	TQ3Vector3D		gRecentTerrainNormal[2];
-extern	u_short	**gVertexColors[2];
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	TQ3Point3D	gMostRecentCheckPointCoord;
+#include "game.h"
+
 
 /****************************/
 /*    PROTOTYPES            */
@@ -417,9 +403,6 @@ TQ3Matrix4x4	*m,m2;
 							 	theNode->Scale.y,			
 							 	theNode->Scale.z);
 	MatrixMultiply(&m2, m, m);
-
-
-	SetObjectTransformMatrix(theNode);							// update the matrix
 }
 
 

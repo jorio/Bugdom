@@ -9,17 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
-extern	float				gFramesPerSecondFrac,gFramesPerSecond;
-extern	TQ3Point3D			gCoord;
-extern	WindowPtr			gCoverWindow;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	Boolean		gSongPlayingFlag,gDisableAnimSounds,gRestoringSavedGame;
-extern	FSSpec		gDataSpec;
-extern	PrefsType	gGamePrefs;
-extern	u_short		gLevelType;
-extern	TQ3Matrix4x4	gCameraWindowToWorldMatrix;
-extern	int			gCurrentSaveSlot;
+#include "game.h"
+
 
 /****************************/
 /*    PROTOTYPES            */
@@ -60,7 +51,7 @@ static double		gCamDX,gCamDY,gCamDZ;
 static TQ3Point3D	gCamCenter = { -10, 10, 250 };		// Source port change from {-40,40,250} (looks better in widescreen)
 ObjNode				*gMenuIcons[NUM_MENU_ICONS];
 static ObjNode		*gSpider;
-static TQ3Int32		gMenuSelection;
+static int32_t		gMenuSelection;
 
 /********************** DO MAIN MENU *************************/
 //
@@ -69,13 +60,13 @@ static TQ3Int32		gMenuSelection;
 
 Boolean DoMainMenu(void)
 {
-Point		mouse,oldMouse;
-float		timer;
-Boolean		loop = false;
+int			mouseX = 0;
+int			mouseY = 0;
+int			oldMouseX = 0;
+int			oldMouseY = 0;
+float		timer = 0;
+bool		loop = false;
 
-	mouse.h = 0;
-	mouse.v = 0;
-	
 start_again:
 
 	timer = 0;
@@ -96,8 +87,8 @@ start_again:
 	
 	QD3D_CalcFramesPerSecond();
 	QD3D_CalcFramesPerSecond();
-		
-	InitCursor();
+
+	SDL_ShowCursor(1);
 	while(true)	
 	{
 		MoveObjects();
@@ -105,22 +96,16 @@ start_again:
 		QD3D_DrawScene(gGameViewInfoPtr,DrawObjects);
 
 			/* UPDATE CURSOR */
-			
-		SetPort(GetWindowPort(gCoverWindow));
-		oldMouse = mouse;
-		GetMouse(&mouse);
 
-		
+		oldMouseX = mouseX;
+		oldMouseY = mouseY;
+		SDL_GetMouseState(&mouseX, &mouseY);
+
 				/* SEE IF USER CLICKED SOMETHING */
-				
+
 		if (FlushMouseButtonPress())
 		{
-			TQ3Point2D	pt;
-			
-			pt.x = mouse.h;
-			pt.y = mouse.v;
-			
-			if (PickMainMenuIcon(pt, &gMenuSelection))
+			if (PickObject(mouseX, mouseY, &gMenuSelection))
 				break;
 		}
 		
@@ -129,8 +114,8 @@ start_again:
 		UpdateInput();									// keys get us out
 		
 				/* UPDATE TIMER */
-				
-		if ((oldMouse.h != mouse.h) || (mouse.v != oldMouse.v))		// reset timer if mouse moved
+
+		if ((oldMouseX != mouseX) || (mouseY != oldMouseY))		// reset timer if mouse moved
 			timer = 0;
 		else
 		{
@@ -154,8 +139,6 @@ start_again:
 		/********************/
 		/* HANDLE SELECTION */
 		/********************/
-	
-	Q3View_Sync(gGameViewInfoPtr->viewObject);					// make sure rendering is done before we do anything
 
 	if (gMenuSelection == 3)	// QUIT
 	{
@@ -171,12 +154,13 @@ getout:
 	gCurrentSaveSlot = -1;
 
 	GammaFadeOut();
-	HideCursor();
+	SDL_ShowCursor(0);
 	DeleteAllObjects();
 	FreeAllSkeletonFiles(-1);
 	DeleteAll3DMFGroups();
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);		
 	GameScreenToBlack();
+	Pomme_FlushPtrTracking(true);
 	gDisableAnimSounds = false;
 
 			/* SEE WHAT TO DO */
@@ -239,7 +223,7 @@ ObjNode					*newObj;
 			/* MAKE VIEW */
 			/*************/
 
-	QD3D_NewViewDef(&viewDef, gCoverWindow);
+	QD3D_NewViewDef(&viewDef);
 	
 	viewDef.camera.hither 			= 20;
 	viewDef.camera.yon 				= 1000;
@@ -258,13 +242,9 @@ ObjNode					*newObj;
 	viewDef.lights.fillColor[1] 	= lightColor;
 	viewDef.lights.fillBrightness[0] = 1.1;
 	viewDef.lights.fillBrightness[1] = .2;
-	
-	
-	viewDef.view.clearColor.r = 
-	viewDef.view.clearColor.g = 
-	viewDef.view.clearColor.b = 1;
-	viewDef.view.dontClear = true;
-				
+
+	viewDef.view.clearColor = TQ3ColorRGBA_FromInt(0x5e63ffff);
+
 	QD3D_SetupWindow(&viewDef, &gGameViewInfoPtr);
 
 			/************/
@@ -304,28 +284,29 @@ ObjNode					*newObj;
 	gNewObjectDefinition.group 		= MODEL_GROUP_MENU;	
 	gNewObjectDefinition.type 		= MENU_MObjType_Background;	
 	gNewObjectDefinition.coord.z 	= 0;
-	gNewObjectDefinition.flags 		= STATUS_BIT_NOTRICACHE; 
+	gNewObjectDefinition.flags 		= STATUS_BIT_NOTRICACHE | STATUS_BIT_NOZWRITE;
 	gNewObjectDefinition.moveCall 	= nil;
 	gNewObjectDefinition.rot 		= 0;
-	gNewObjectDefinition.scale 		= .35f;		// Source port change from .3 (looks better in widescreen)
+	gNewObjectDefinition.scale 		= .3f;
 	gNewObjectDefinition.slot 		= 1000;
 	newObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
 	MakeObjectTransparent(newObj, .4);
 
 			/* CYC */
-			
+
 	gNewObjectDefinition.slot 		= 100;
 	gNewObjectDefinition.coord.x 	= 0;
 	gNewObjectDefinition.coord.y 	= -6;		// Source port change from -40 (looks better in widescreen)
 	gNewObjectDefinition.coord.z 	= 0;
-	gNewObjectDefinition.scale 		= .33f;		// Source port change from .3 (looks better in widescreen)
+	gNewObjectDefinition.scale 		= .3f;
 	gNewObjectDefinition.type 		= MENU_MObjType_Cyc;	
-	gNewObjectDefinition.flags 		= STATUS_BIT_NOFOG|STATUS_BIT_NULLSHADER;
-	MakeNewDisplayGroupObject(&gNewObjectDefinition);
-	
+	gNewObjectDefinition.flags 		= STATUS_BIT_NOFOG | STATUS_BIT_NULLSHADER;
+	ObjNode* cyc = MakeNewDisplayGroupObject(&gNewObjectDefinition);
+	QD3D_MirrorMeshesZ(cyc);
 
-			/* MAIN MENU TEXT */
-			
+		/* MAIN MENU TEXT */
+
+	gNewObjectDefinition.group 		= MODEL_GROUP_MENU;
 	gNewObjectDefinition.coord.x 	= 0;
 	gNewObjectDefinition.coord.y 	= 100;
 	gNewObjectDefinition.coord.z 	= 0;
@@ -334,17 +315,12 @@ ObjNode					*newObj;
 	gNewObjectDefinition.flags 		= 0; 
 	MakeNewDisplayGroupObject(&gNewObjectDefinition);
 
-
-
-
 			/**************/
 			/* MAKE ICONS */
 			/**************/
 			
 	for (i = 0; i < NUM_MENU_ICONS; i++)
 	{
-		TQ3StyleObject	pick;
-		
 		static short iconType[NUM_MENU_ICONS] = {MENU_MObjType_AboutIcon,MENU_MObjType_ScoresIcon,
 									MENU_MObjType_PlayIcon,MENU_MObjType_QuitIcon,
 									MENU_MObjType_RestoreIcon,MENU_MObjType_SettingsIcon};
@@ -361,21 +337,16 @@ ObjNode					*newObj;
 	
 		gNewObjectDefinition.type 		= iconType[i];	
 		gNewObjectDefinition.coord		= iconCoords[i];
-		gNewObjectDefinition.flags 		= 0;
+		gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER;
 		gNewObjectDefinition.moveCall 	= nil;
 		gNewObjectDefinition.rot 		= 0;
 		gNewObjectDefinition.scale 		= .25;
 		gMenuIcons[i] = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-
-					/* ADD PICK ID TO ICON */
-					
-		pick = Q3PickIDStyle_New(i);					
-		AttachGeometryToDisplayGroupObject(gMenuIcons[i], pick);
-		Q3Object_Dispose(pick);
+		gMenuIcons[i]->IsPickable = true;
+		gMenuIcons[i]->PickID = i;
 	}
 	
 	MakeFadeEvent(true);
-	
 }
 
 

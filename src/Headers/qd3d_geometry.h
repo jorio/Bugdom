@@ -24,32 +24,20 @@ typedef struct
 	float					decaySpeed,scale;
 	Byte					mode;
 	TQ3Matrix4x4			matrix;
-	
-	TQ3TriMeshData			triMesh;
-	TQ3Point3D				points[3];
-	TQ3TriMeshTriangleData	triangle;
-	TQ3Param2D				uvs[3];
-	TQ3Vector3D				vertNormals[3],faceNormal;
-	TQ3TriMeshAttributeData	vertAttribs[2];
-
+	TQ3TriMeshData			*mesh;
 }ParticleType;
 
-extern	float QD3D_CalcObjectRadius(TQ3Object theObject);
-extern	void QD3D_CalcObjectBoundingBox(QD3DSetupOutputType *setupInfo, TQ3Object theObject, TQ3BoundingBox	*boundingBox);
-extern	void QD3D_ExplodeGeometry(ObjNode *theNode, float boomForce, Byte particleMode, long particleDensity, float particleDecaySpeed);
-extern	void QD3D_ReplaceGeometryTexture(TQ3Object obj, TQ3SurfaceShaderObject theShader);
-void QD3D_ScrollUVs(TQ3Object theObject, float du, float dv, short whichShader);
-extern	void QD3D_DuplicateTriMeshData(TQ3TriMeshData *inData, TQ3TriMeshData *outData);
-extern	void QD3D_FreeDuplicateTriMeshData(TQ3TriMeshData *inData);
+void QD3D_CalcObjectBoundingBox(int numMeshes, TQ3TriMeshData** meshList, TQ3BoundingBox* boundingBox);
+void QD3D_CalcObjectBoundingSphere(int numMeshes, TQ3TriMeshData** meshList, TQ3BoundingSphere* boundingSphere);
+void QD3D_ExplodeGeometry(ObjNode *theNode, float boomForce, Byte particleMode, int particleDensity, float particleDecaySpeed);
+void QD3D_MirrorMeshesZ(ObjNode *theNode);
+void QD3D_ScrollUVs(TQ3TriMeshData* meshList, float du, float dv);
 extern	void QD3D_InitParticles(void);
 extern	void QD3D_MoveParticles(void);
 void QD3D_DrawParticles(const QD3DSetupOutputType *setupInfo);
-extern	void QD3D_CopyTriMeshData(const TQ3TriMeshData *inData, TQ3TriMeshData *outData);
-extern	void QD3D_FreeCopyTriMeshData(TQ3TriMeshData *data);
-void QD3D_CalcObjectBoundingSphere(QD3DSetupOutputType *setupInfo, TQ3Object theObject, TQ3BoundingSphere *sphere);
 
-void ForEachTriMesh(TQ3Object root, void (*callback)(TQ3TriMeshData triMeshData, void* userData), void* userData, uint64_t triMeshMask);
+TQ3TriMeshData* MakeQuadMesh(int numQuads, float width, float height);
+TQ3TriMeshData* MakeQuadMesh_UI(
+		float xyLeft, float xyTop, float xyRight, float xyBottom,
+		float uvLeft, float uvTop, float uvRight, float uvBottom);
 
-void QD3D_ClearDiffuseColor_TriMesh(TQ3TriMeshData triMeshData, void* userData_unused);
-
-ObjNode* MakeNewDisplayGroupObject_TexturedQuad(TQ3SurfaceShaderObject surfaceShader, float aspectRatio);

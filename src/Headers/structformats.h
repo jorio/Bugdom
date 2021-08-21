@@ -1,5 +1,4 @@
-#ifndef BUGDOM_STRUCTFORMATS_H
-#define BUGDOM_STRUCTFORMATS_H
+#pragma once
 
 // Structure packing formats
 
@@ -36,4 +35,3 @@
 	ByteswapStructs(STRUCTFORMAT_##type, sizeof(type), (n), *(handle));                      \
 }
 
-#endif //BUGDOM_STRUCTFORMATS_H

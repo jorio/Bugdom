@@ -10,74 +10,37 @@
 /****************************/
 
 #include <SDL_opengl.h>
+#include <stdio.h>
+#include "game.h"
 
-#include "3dmath.h"
-
-extern	WindowPtr			gCoverWindow;
-extern	Boolean		gShowDebug;
-extern	Byte		gDemoMode;
-extern	PrefsType	gGamePrefs;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
 
 /****************************/
 /*    PROTOTYPES            */
 /****************************/
 
-static void CreateDrawContext(QD3DViewDefType *viewDefPtr);
-static void SetStyles(QD3DStyleDefType *styleDefPtr);
-static void CreateCamera(QD3DSetupInputType *setupDefPtr);
 static void CreateLights(QD3DLightDefType *lightDefPtr);
-static void CreateView(QD3DSetupInputType *setupDefPtr);
-static void DrawPICTIntoMipmap(PicHandle pict,long width, long height, TQ3Mipmap *mipmap, Boolean blackIsAlpha);
-static void Data16ToMipmap(Ptr data, short width, short height, TQ3Mipmap *mipmap);
-static void DrawNormal(TQ3ViewObject view);
 
 
 /****************************/
 /*    CONSTANTS             */
 /****************************/
 
+static const int kDebugTextMeshQuadCapacity = 1024;
 
 
 /*********************/
 /*    VARIABLES      */
 /*********************/
 
-static TQ3CameraObject			gQD3D_CameraObject;
-TQ3GroupObject					gQD3D_LightGroup;
-static TQ3ViewObject			gQD3D_ViewObject;
-static TQ3DrawContextObject		gQD3D_DrawContext;
-static TQ3RendererObject		gQD3D_RendererObject;
-static TQ3ShaderObject			gQD3D_ShaderObject,gQD3D_NullShaderObject;
-static	TQ3StyleObject			gQD3D_BackfacingStyle;
-static	TQ3StyleObject			gQD3D_FillStyle;
-static	TQ3StyleObject			gQD3D_InterpolationStyle;
+
+SDL_GLContext					gGLContext = NULL;
+RenderStats						gRenderStats;
+
+int								gWindowWidth				= GAME_VIEW_WIDTH;
+int								gWindowHeight				= GAME_VIEW_HEIGHT;
 
 float	gFramesPerSecond = DEFAULT_FPS;				// this is used to maintain a constant timing velocity as frame rates differ
 float	gFramesPerSecondFrac = 1/DEFAULT_FPS;
-
-static TQ3FogMode			gFogMode;
-static float		gFogStart,gFogEnd,gFogDensity;
-static TQ3ColorARGB	gFogColor;
-
-float			gYon;
-
-Boolean		gQD3DInitialized = false;
-
-
-		/* SOURCE PORT EXTRAS */
-
-// Source port addition: this is a Quesa feature, enabled by default,
-// that renders translucent materials more accurately at an angle.
-// However, it looks "off" in the game -- shadow quads, shield spheres,
-// water patches all appear darker than they would on original hardware.
-static const TQ3Boolean gQD3D_AngleAffectsAlpha = kQ3False;
-
-// Source port addition: don't let Quesa swap buffers automatically
-// because we render stuff outside Quesa (such as the HUD).
-static const TQ3Boolean gQD3D_SwapBufferInEndPass = kQ3False;
-
-static Boolean gQD3D_FreshDrawContext = false;
 
 
 
@@ -86,27 +49,7 @@ static Boolean gQD3D_FreshDrawContext = false;
 static TQ3Point3D		gNormalWhere;
 static TQ3Vector3D		gNormal;
 
-
-
-
-/******************** QD3D: BOOT ******************************/
-//
-// NOTE: The QuickDraw3D libraries should be included in the project as a "WEAK LINK" so that I can
-// 		get an error if the library can't load.  Otherwise, the Finder reports a useless error to the user.
-//
-
-void QD3D_Boot(void)
-{
-TQ3Status	status;
-
-
-				/* LET 'ER RIP! */
-				
-	status = Q3Initialize();
-	GAME_ASSERT(status);
-
-	gQD3DInitialized = true;
-}
+static TQ3TriMeshData*	gDebugTextMesh = nil;
 
 
 
@@ -120,9 +63,9 @@ TQ3Status	status;
 // fills a view def structure with default values.
 //
 
-void QD3D_NewViewDef(QD3DSetupInputType *viewDef, WindowPtr theWindow)
+void QD3D_NewViewDef(QD3DSetupInputType *viewDef)
 {
-TQ3ColorARGB		clearColor = {0,0,0,0};
+TQ3ColorRGBA		clearColor = {0,0,0,1};
 TQ3Point3D			cameraFrom = { 0, 40, 200.0 };
 TQ3Point3D			cameraTo = { 0, 0, 0 };
 TQ3Vector3D			cameraUp = { 0.0, 1.0, 0.0 };
@@ -133,12 +76,6 @@ TQ3Vector3D			fillDirection2 = { -.8, .8, -.2 };
 	Q3Vector3D_Normalize(&fillDirection1,&fillDirection1);
 	Q3Vector3D_Normalize(&fillDirection2,&fillDirection2);
 
-	if (theWindow == nil)
-		viewDef->view.useWindow 	=	false;							// assume going to pixmap
-	else
-		viewDef->view.useWindow 	=	true;							// assume going to window
-	viewDef->view.displayWindow 	= theWindow;
-	viewDef->view.rendererType 		= kQ3RendererTypeOpenGL;
 	viewDef->view.clearColor 		= clearColor;
 	viewDef->view.paneClip.left 	= 0;
 	viewDef->view.paneClip.right 	= 0;
@@ -175,8 +112,6 @@ TQ3Vector3D			fillDirection2 = { -.8, .8, -.2 };
 	viewDef->lights.fogMode		= kQ3FogModePlaneBasedLinear;
 	viewDef->lights.useCustomFogColor = false;
 	viewDef->lights.fogColor	= clearColor;
-	
-	viewDef->enableMultisamplingByDefault = true;
 }
 
 /************** SETUP QD3D WINDOW *******************/
@@ -184,7 +119,6 @@ TQ3Vector3D			fillDirection2 = { -.8, .8, -.2 };
 void QD3D_SetupWindow(QD3DSetupInputType *setupDefPtr, QD3DSetupOutputType **outputHandle)
 {
 TQ3Vector3D	v = {0,0,0};
-TQ3Status	status;
 QD3DSetupOutputType	*outputPtr;
 
 			/* ALLOC MEMORY FOR OUTPUT DATA */
@@ -193,54 +127,59 @@ QD3DSetupOutputType	*outputPtr;
 	outputPtr = *outputHandle;
 	GAME_ASSERT(outputPtr);
 
-				/* SETUP */
+				/* CREATE & SET DRAW CONTEXT */
 
-	CreateView(setupDefPtr);
-	
-	CreateCamera(setupDefPtr);										// create new CAMERA object
-	CreateLights(&setupDefPtr->lights);
-	SetStyles(&setupDefPtr->styles);	
+	GAME_ASSERT_MESSAGE(!gGLContext, "stale GL context not destroyed before calling SetupWindow");
 
-				/* DISPOSE OF EXTRA REFERENCES */
-				
-	status = Q3Object_Dispose(gQD3D_RendererObject);				// (is contained w/in gQD3D_ViewObject)
-	GAME_ASSERT(status);
+	gGLContext = SDL_GL_CreateContext(gSDLWindow);									// also makes it current
+	GAME_ASSERT(gGLContext);
 
 				/* PASS BACK INFO */
-				
-	outputPtr->viewObject 			= gQD3D_ViewObject;
-	outputPtr->interpolationStyle 	= gQD3D_InterpolationStyle;
-	outputPtr->fillStyle 			= gQD3D_FillStyle;
-	outputPtr->backfacingStyle 		= gQD3D_BackfacingStyle;
-	outputPtr->shaderObject 		= gQD3D_ShaderObject;
-	outputPtr->nullShaderObject 	= gQD3D_NullShaderObject;
-	outputPtr->cameraObject 		= gQD3D_CameraObject;
-	outputPtr->lightGroup 			= gQD3D_LightGroup;
-	outputPtr->drawContext 			= gQD3D_DrawContext;
-	outputPtr->window 				= setupDefPtr->view.displayWindow;	// remember which window
+
 	outputPtr->paneClip 			= setupDefPtr->view.paneClip;
+	outputPtr->aspectRatio			= 1.0f;								// aspect ratio is set at every frame depending on window size
+	outputPtr->needScissorTest 		= setupDefPtr->view.paneClip.left != 0 || setupDefPtr->view.paneClip.right != 0
+									|| setupDefPtr->view.paneClip.bottom != 0 || setupDefPtr->view.paneClip.top != 0;
 	outputPtr->hither 				= setupDefPtr->camera.hither;		// remember hither/yon
 	outputPtr->yon 					= setupDefPtr->camera.yon;
-	gYon 							= setupDefPtr->camera.yon;			// keep a quick global around for this
-	outputPtr->enableMultisamplingByDefault = setupDefPtr->enableMultisamplingByDefault;
-	
+	outputPtr->fov					= setupDefPtr->camera.fov;
+
+	outputPtr->currentCameraUpVector	= setupDefPtr->camera.up;
+	outputPtr->currentCameraLookAt		= setupDefPtr->camera.to;
+	outputPtr->currentCameraCoords		= setupDefPtr->camera.from;
+
 	outputPtr->isActive = true;								// it's now an active structure
 	
 	outputPtr->lightList = setupDefPtr->lights;				// copy light list
 	
 	QD3D_MoveCameraFromTo(outputPtr,&v,&v);					// call this to set outputPtr->currentCameraCoords & camera matrix
-	
-	
-			/* FOG */
-			
+
+
+
+				/* SET UP OPENGL RENDERER PROPERTIES NOW THAT WE HAVE A CONTEXT */
+
+	SDL_GL_SetSwapInterval(gCommandLine.vsync);
+
+	CreateLights(&setupDefPtr->lights);
+
+	Render_InitState(&setupDefPtr->view.clearColor);
+
 	if (setupDefPtr->lights.useFog)
 	{
-		gFogMode	= setupDefPtr->lights.fogMode;
-		gFogStart 	= setupDefPtr->lights.fogStart;
-		gFogEnd 	= setupDefPtr->lights.fogEnd;
-		gFogDensity = setupDefPtr->lights.fogDensity;
-		gFogColor	= setupDefPtr->lights.useCustomFogColor ? setupDefPtr->lights.fogColor : setupDefPtr->view.clearColor;
+		Render_EnableFog(
+				setupDefPtr->camera.hither,
+				setupDefPtr->camera.yon,
+				setupDefPtr->lights.fogStart,
+				setupDefPtr->lights.fogEnd,
+				setupDefPtr->lights.useCustomFogColor ? setupDefPtr->lights.fogColor : setupDefPtr->view.clearColor);
 	}
+
+	CHECK_GL_ERROR();
+
+
+				/* INIT TEXT SYSTEM SO WE CAN DRAW TEXT ANYWHERE IN THE GAME */
+
+	TextMesh_Init();
 }
 
 
@@ -253,24 +192,18 @@ void QD3D_DisposeWindowSetup(QD3DSetupOutputType **dataHandle)
 {
 QD3DSetupOutputType	*data;
 
-	gQD3D_DrawContext = nil;										// this is no longer valid
-
 	data = *dataHandle;
-	GAME_ASSERT(data);												// see if this setup exists
+	GAME_ASSERT(data);										// see if this setup exists
 
-	Overlay_Dispose();												// source port addition
+	QD3D_UpdateDebugTextMesh(nil);							// dispose debug text mesh
+	TextMesh_Shutdown();
 
-	Q3Object_Dispose(data->viewObject);
-	Q3Object_Dispose(data->interpolationStyle);
-	Q3Object_Dispose(data->backfacingStyle);
-	Q3Object_Dispose(data->fillStyle);
-	Q3Object_Dispose(data->cameraObject);
-	Q3Object_Dispose(data->lightGroup);
-	Q3Object_Dispose(data->drawContext);
-	Q3Object_Dispose(data->shaderObject);
-	Q3Object_Dispose(data->nullShaderObject);
-		
+	SDL_GL_DeleteContext(gGLContext);						// dispose GL context
+	gGLContext = nil;
+
 	data->isActive = false;									// now inactive
+
+	Render_Shutdown();
 	
 		/* FREE MEMORY & NIL POINTER */
 		
@@ -279,334 +212,58 @@ QD3DSetupOutputType	*data;
 }
 
 
-/******************* CREATE GAME VIEW *************************/
-
-static void CreateView(QD3DSetupInputType *setupDefPtr)
-{
-TQ3Status	status;
-
-				/* CREATE NEW VIEW OBJECT */
-				
-	gQD3D_ViewObject = Q3View_New();
-	GAME_ASSERT(gQD3D_ViewObject);
-
-			/* CREATE & SET DRAW CONTEXT */
-	
-	CreateDrawContext(&setupDefPtr->view); 											// init draw context
-	
-	status = Q3View_SetDrawContext(gQD3D_ViewObject, gQD3D_DrawContext);			// assign context to view
-	GAME_ASSERT(status);
-
-			/* CREATE & SET RENDERER */
-
-	gQD3D_RendererObject = Q3Renderer_NewFromType(setupDefPtr->view.rendererType);	// create new RENDERER object
-	GAME_ASSERT(gQD3D_RendererObject);
-
-	status = Q3View_SetRenderer(gQD3D_ViewObject, gQD3D_RendererObject);				// assign renderer to view
-	GAME_ASSERT(status);
-				
-		
-		/* SET RENDERER FEATURES */
-		
-#if 0
-	TQ3Uns32	hints;
-	Q3InteractiveRenderer_GetRAVEContextHints(gQD3D_RendererObject, &hints);
-	hints &= ~kQAContext_NoZBuffer; 				// Z buffer is on 
-	hints &= ~kQAContext_DeepZ; 					// shallow z
-	hints &= ~kQAContext_NoDither; 					// yes-dither
-	Q3InteractiveRenderer_SetRAVEContextHints(gQD3D_RendererObject, hints);	
-#endif
-
-	// Source port addition: set bilinear texturing according to user preference
-	Q3InteractiveRenderer_SetRAVETextureFilter(
-		gQD3D_RendererObject,
-		gGamePrefs.textureFiltering ? kQATextureFilter_Best : kQATextureFilter_Fast);
-
-#if 0
-	Q3InteractiveRenderer_SetDoubleBufferBypass(gQD3D_RendererObject,kQ3True);
-#endif
-
-	// Source port addition: turn off Quesa's angle affect on alpha to preserve the original look of shadows, water, shields etc.
-	Q3Object_SetProperty(gQD3D_RendererObject, kQ3RendererPropertyAngleAffectsAlpha,
-						 sizeof(gQD3D_AngleAffectsAlpha), &gQD3D_AngleAffectsAlpha);
-
-	// Source port addition: we draw overlays in straight OpenGL, so we want control over when the buffers are swapped.
-	Q3Object_SetProperty(gQD3D_DrawContext, kQ3DrawContextPropertySwapBufferInEndPass,
-						sizeof(gQD3D_SwapBufferInEndPass), &gQD3D_SwapBufferInEndPass);
-
-	// Source port addition: Enable writing transparent stuff into the z-buffer.
-	// (This makes auto-fading stuff look better)
-	static const TQ3Float32 depthAlphaThreshold = 0.99f;
-	Q3Object_SetProperty(gQD3D_RendererObject, kQ3RendererPropertyDepthAlphaThreshold,
-					  sizeof(depthAlphaThreshold), &depthAlphaThreshold);
-
-	// Uncomment to apply an alpha threshold to EVERYTHING in the game
-//	static const TQ3Float32 gQD3D_AlphaThreshold = 0.501337;
-//	Q3Object_SetProperty(gQD3D_RendererObject, kQ3RendererPropertyAlphaThreshold, sizeof(gQD3D_AlphaThreshold), &gQD3D_AlphaThreshold);
-}
-
-
-/**************** CREATE DRAW CONTEXT *********************/
-
-static void CreateDrawContext(QD3DViewDefType *viewDefPtr)
-{
-TQ3DrawContextData		drawContexData;
-TQ3SDLDrawContextData	myMacDrawContextData;
-extern SDL_Window*		gSDLWindow;
-
-	int ww, wh;
-	SDL_GL_GetDrawableSize(gSDLWindow, &ww, &wh);
-
-			/* SEE IF DOING PIXMAP CONTEXT */
-			
-	GAME_ASSERT_MESSAGE(viewDefPtr->useWindow, "Pixmap context not supported!");
-
-			/* FILL IN DRAW CONTEXT DATA */
-
-	if (viewDefPtr->dontClear)
-		drawContexData.clearImageMethod = kQ3ClearMethodNone;
-	else
-		drawContexData.clearImageMethod = kQ3ClearMethodWithColor;		
-	
-	drawContexData.clearImageColor = viewDefPtr->clearColor;				// color to clear to
-	drawContexData.pane = GetAdjustedPane(ww, wh, GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT, viewDefPtr->paneClip);
-
-#if DEBUG_WIREFRAME
-	drawContexData.clearImageColor.a = 1.0f;
-	drawContexData.clearImageColor.r = 0.0f;
-	drawContexData.clearImageColor.g = 0.5f;
-	drawContexData.clearImageColor.b = 1.0f;
-#endif
-
-	drawContexData.paneState = kQ3True;										// use bounds?
-	drawContexData.maskState = kQ3False;									// no mask
-	drawContexData.doubleBufferState = kQ3True;								// double buffering
-
-	myMacDrawContextData.drawContextData = drawContexData;					// set MAC specifics
-	myMacDrawContextData.sdlWindow = gSDLWindow;							// assign window to draw to
-
-
-			/* CREATE DRAW CONTEXT */
-
-	gQD3D_DrawContext = Q3SDLDrawContext_New(&myMacDrawContextData);
-	GAME_ASSERT(gQD3D_DrawContext);
-
-
-	gQD3D_FreshDrawContext = true;
-}
-
-
-/**************** SET STYLES ****************/
-//
-// Creates style objects which define how the scene is to be rendered.
-// It also sets the shader object.
-//
-
-static void SetStyles(QD3DStyleDefType *styleDefPtr)
-{
-
-				/* SET INTERPOLATION (FOR SHADING) */
-					
-	gQD3D_InterpolationStyle = Q3InterpolationStyle_New(styleDefPtr->interpolation);
-	GAME_ASSERT(gQD3D_InterpolationStyle);
-
-					/* SET BACKFACING */
-
-	gQD3D_BackfacingStyle = Q3BackfacingStyle_New(styleDefPtr->backfacing);
-	GAME_ASSERT(gQD3D_BackfacingStyle);
-
-				/* SET POLYGON FILL STYLE */
-						
-#if DEBUG_WIREFRAME
-	gQD3D_FillStyle = Q3FillStyle_New(kQ3FillStyleEdges);
-#else
-	gQD3D_FillStyle = Q3FillStyle_New(styleDefPtr->fill);
-#endif
-	GAME_ASSERT(gQD3D_FillStyle);
-
-
-					/* SET THE SHADER TO USE */
-
-	if (styleDefPtr->usePhong)
-	{
-		gQD3D_ShaderObject = Q3PhongIllumination_New();
-		GAME_ASSERT(gQD3D_ShaderObject);
-	}
-	else
-	{
-		gQD3D_ShaderObject = Q3LambertIllumination_New();
-		GAME_ASSERT(gQD3D_ShaderObject);
-	}
-
-
-			/* ALSO MAKE NULL SHADER FOR SPECIAL PURPOSES */
-			
-	gQD3D_NullShaderObject = Q3NULLIllumination_New();
-
-}
-
-
-
-/****************** CREATE CAMERA *********************/
-
-static void CreateCamera(QD3DSetupInputType *setupDefPtr)
-{
-TQ3CameraData					myCameraData;
-TQ3ViewAngleAspectCameraData	myViewAngleCameraData;
-TQ3Area							pane;
-TQ3Status						status;
-QD3DCameraDefType 				*cameraDefPtr;
-
-	cameraDefPtr = &setupDefPtr->camera;
-
-		/* GET PANE */
-		//
-		// Note: Q3DrawContext_GetPane seems to return garbage on pixmaps so, rig it.
-		//
-		
-	if (setupDefPtr->view.useWindow)
-	{
-		status = Q3DrawContext_GetPane(gQD3D_DrawContext,&pane);				// get window pane info
-		GAME_ASSERT(status);
-	}
-	else
-	{
-		Rect	r;
-		
-		GetPortBounds(setupDefPtr->view.gworld, &r);
-		
-		pane.min.x = pane.min.y = 0;
-		pane.max.x = r.right;
-		pane.max.y = r.bottom;
-	}
-
-
-				/* FILL IN CAMERA DATA */
-				
-	myCameraData.placement.cameraLocation = cameraDefPtr->from;			// set camera coords
-	myCameraData.placement.pointOfInterest = cameraDefPtr->to;			// set target coords
-	myCameraData.placement.upVector = cameraDefPtr->up;					// set a vector that's "up"
-	myCameraData.range.hither = cameraDefPtr->hither;					// set frontmost Z dist
-	myCameraData.range.yon = cameraDefPtr->yon;							// set farthest Z dist
-	myCameraData.viewPort.origin.x = -1.0;								// set view origins?
-	myCameraData.viewPort.origin.y = 1.0;
-	myCameraData.viewPort.width = 2.0;
-	myCameraData.viewPort.height = 2.0;
-
-	myViewAngleCameraData.cameraData = myCameraData;
-	myViewAngleCameraData.fov = cameraDefPtr->fov;						// larger = more fisheyed
-	myViewAngleCameraData.aspectRatioXToY =
-				(pane.max.x-pane.min.x)/(pane.max.y-pane.min.y);
-
-	gQD3D_CameraObject = Q3ViewAngleAspectCamera_New(&myViewAngleCameraData);	 // create new camera
-	GAME_ASSERT(gQD3D_CameraObject);
-
-	status = Q3View_SetCamera(gQD3D_ViewObject, gQD3D_CameraObject);		// assign camera to view
-	GAME_ASSERT(status);
-}
-
-
 /********************* CREATE LIGHTS ************************/
 
 static void CreateLights(QD3DLightDefType *lightDefPtr)
 {
-TQ3GroupPosition		myGroupPosition;
-TQ3LightData			myLightData;
-TQ3DirectionalLightData	myDirectionalLightData;
-TQ3LightObject			myLight;
-short					i;
-TQ3Status	myErr;
-
-
-			/* CREATE NEW LIGHT GROUP */
-			
-	gQD3D_LightGroup = (TQ3GroupObject) Q3LightGroup_New();						// make new light group
-	GAME_ASSERT(gQD3D_LightGroup);
-
-
-	myLightData.isOn = kQ3True;									// light is ON
-	
 			/************************/
 			/* CREATE AMBIENT LIGHT */
 			/************************/
 
 	if (lightDefPtr->ambientBrightness != 0)						// see if ambient exists
 	{
-		myLightData.color = lightDefPtr->ambientColor;				// set color of light
-		myLightData.brightness = lightDefPtr->ambientBrightness;	// set brightness value
-		myLight = Q3AmbientLight_New(&myLightData);					// make it
-		GAME_ASSERT(myLight);
-
-		myGroupPosition = (TQ3GroupPosition)Q3Group_AddObject(gQD3D_LightGroup, myLight);	// add to group
-		GAME_ASSERT(myGroupPosition);
-
-		Q3Object_Dispose(myLight);									// dispose of light
-
+		GLfloat ambient[4] =
+		{
+			lightDefPtr->ambientBrightness * lightDefPtr->ambientColor.r,
+			lightDefPtr->ambientBrightness * lightDefPtr->ambientColor.g,
+			lightDefPtr->ambientBrightness * lightDefPtr->ambientColor.b,
+			1
+		};
+		glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambient);
 	}
 
 			/**********************/
 			/* CREATE FILL LIGHTS */
 			/**********************/
-			
-	for (i=0; i < lightDefPtr->numFillLights; i++)
-	{		
+
+	for (int i = 0; i < lightDefPtr->numFillLights; i++)
+	{
+		static GLfloat lightamb[4] = { 0.0, 0.0, 0.0, 1.0 };
+		GLfloat lightVec[4];
+		GLfloat	diffuse[4];
+
+					/* SET FILL DIRECTION */
+
 		Q3Vector3D_Normalize(&lightDefPtr->fillDirection[i], &lightDefPtr->fillDirection[i]);
-		myLightData.color = lightDefPtr->fillColor[i];						// set color of light
-		myLightData.brightness = lightDefPtr->fillBrightness[i];			// set brightness
-		myDirectionalLightData.lightData = myLightData;						// refer to general light info
-		myDirectionalLightData.castsShadows = kQ3True;						// shadows
-		myDirectionalLightData.direction =  lightDefPtr->fillDirection[i];	// set fill vector
-		myLight = Q3DirectionalLight_New(&myDirectionalLightData);			// make it
-		GAME_ASSERT(myLight);
+		lightVec[0] = -lightDefPtr->fillDirection[i].x;		// negate vector because OGL is stupid
+		lightVec[1] = -lightDefPtr->fillDirection[i].y;
+		lightVec[2] = -lightDefPtr->fillDirection[i].z;
+		lightVec[3] = 0;									// when w==0, this is a directional light, if 1 then point light
+		glLightfv(GL_LIGHT0+i, GL_POSITION, lightVec);
 
-		myGroupPosition = (TQ3GroupPosition)Q3Group_AddObject(gQD3D_LightGroup, myLight);		// add to group
-		GAME_ASSERT(myGroupPosition);
+					/* SET COLOR */
 
-		Q3Object_Dispose(myLight);											// dispose of light
+		glLightfv(GL_LIGHT0+i, GL_AMBIENT, lightamb);
+
+		diffuse[0] = lightDefPtr->fillColor[i].r * lightDefPtr->fillBrightness[i];
+		diffuse[1] = lightDefPtr->fillColor[i].g * lightDefPtr->fillBrightness[i];
+		diffuse[2] = lightDefPtr->fillColor[i].b * lightDefPtr->fillBrightness[i];
+		diffuse[3] = 1;
+
+		glLightfv(GL_LIGHT0+i, GL_DIFFUSE, diffuse);
+
+		glEnable(GL_LIGHT0+i);								// enable the light
 	}
-	
-			/* ASSIGN LIGHT GROUP TO VIEW */
-			
-	myErr = Q3View_SetLightGroup(gQD3D_ViewObject, gQD3D_LightGroup);		// assign light group to view
-	GAME_ASSERT(myErr);
-}
-
-
-
-/******************** QD3D CHANGE DRAW SIZE *********************/
-//
-// Changes size of stuff to fit new window size and/or shink factor
-//
-
-void QD3D_ChangeDrawSize(QD3DSetupOutputType *setupInfo)
-{
-Rect			r;
-TQ3Area			pane;
-TQ3ViewAngleAspectCameraData	cameraData;
-TQ3Status		status;
-
-			/* CHANGE DRAW CONTEXT PANE SIZE */
-			
-	if (setupInfo->window == nil)
-		return;
-		
-	GetPortBounds(GetWindowPort(setupInfo->window), &r);										// get size of window
-	pane.min.x = setupInfo->paneClip.left;													// set pane size
-	pane.max.x = r.right-setupInfo->paneClip.right;
-	pane.min.y = setupInfo->paneClip.top;
-	pane.max.y = r.bottom-setupInfo->paneClip.bottom;
-
-	status = Q3DrawContext_SetPane(setupInfo->drawContext,&pane);							// update pane in draw context
-	GAME_ASSERT(status);
-
-				/* CHANGE CAMERA ASPECT RATIO */
-				
-	status = Q3ViewAngleAspectCamera_GetData(setupInfo->cameraObject,&cameraData);			// get camera data
-	GAME_ASSERT(status);
-
-	cameraData.aspectRatioXToY = (pane.max.x-pane.min.x)/(pane.max.y-pane.min.y);			// set new aspect ratio
-	status = Q3ViewAngleAspectCamera_SetData(setupInfo->cameraObject,&cameraData);			// set new camera data
-	GAME_ASSERT(status);
 }
 
 
@@ -614,82 +271,63 @@ TQ3Status		status;
 
 void QD3D_DrawScene(QD3DSetupOutputType *setupInfo, void (*drawRoutine)(const QD3DSetupOutputType *))
 {
-TQ3Status				myStatus;
-TQ3ViewStatus			myViewStatus;
-
 	GAME_ASSERT(setupInfo);
-
 	GAME_ASSERT(setupInfo->isActive);									// make sure it's legit
-
 
 			/* START RENDERING */
 
-			
-	myStatus = Q3View_StartRendering(setupInfo->viewObject);			
-	if ( myStatus == kQ3Failure )
+	int mkc = SDL_GL_MakeCurrent(gSDLWindow, gGLContext);
+	GAME_ASSERT_MESSAGE(mkc == 0, SDL_GetError());
+
+	Render_StartFrame();
+
+			/* SET UP SCISSOR TEST */
+
+	if (setupInfo->needScissorTest)
 	{
-		DoAlert("ERROR: Q3View_StartRendering Failed!");
-		QD3D_ShowRecentError();
+		// Set scissor
+		TQ3Area pane	= Render_GetAdjustedViewportRect(setupInfo->paneClip, GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
+		int paneWidth	= pane.max.x-pane.min.x;
+		int paneHeight	= pane.max.y-pane.min.y;
+		setupInfo->aspectRatio = paneWidth / (paneHeight + .001f);
+		Render_SetViewport(true, pane.min.x, gWindowHeight-pane.max.y, paneWidth, paneHeight);
 	}
+	else
+	{
+		setupInfo->aspectRatio = gWindowWidth / (gWindowHeight + .001f);
+		Render_SetViewport(false, 0, 0, gWindowWidth, gWindowHeight);
+	}
+
+			/* SET UP CAMERA */
 
 	CalcCameraMatrixInfo(setupInfo);						// update camera matrix
-
-
-			/* SOURCE PORT STUFF */
-
-	if (gQD3D_FreshDrawContext)
-	{
-		SDL_GL_SetSwapInterval(gGamePrefs.vsync ? 1 : 0);
-
-		Overlay_Alloc();									// source port addition (must be after StartRendering so we have a valid GL context)
-
-		gQD3D_FreshDrawContext = false;
-	}
-	
-	if (setupInfo->enableMultisamplingByDefault)
-	{
-		QD3D_SetMultisampling(true);
-	}
-
 
 
 			/***************/
 			/* RENDER LOOP */
 			/***************/
-	do
-	{
-				/* DRAW STYLES */
 
-		QD3D_ReEnableFog(setupInfo);
-				
-		myStatus = Q3Style_Submit(setupInfo->interpolationStyle,setupInfo->viewObject);
-		GAME_ASSERT(myStatus);
+	if (drawRoutine)
+		drawRoutine(setupInfo);
 
-		myStatus = Q3Style_Submit(setupInfo->backfacingStyle,setupInfo->viewObject);
-		GAME_ASSERT(myStatus);
-			
-		myStatus = Q3Style_Submit(setupInfo->fillStyle, setupInfo->viewObject);
-		GAME_ASSERT(myStatus);
 
-		myStatus = Q3Shader_Submit(setupInfo->shaderObject, setupInfo->viewObject);
-		GAME_ASSERT(myStatus);
+			/******************/
+			/* DONE RENDERING */
+			/*****************/
 
-			/* DRAW NORMAL */
-			
-		if (gShowDebug)
-			DrawNormal(setupInfo->viewObject);
+	Render_FlushQueue();
 
-			/* CALL INPUT DRAW FUNCTION */
+	Render_Enter2D_Full640x480();
+	SubmitInfobarOverlay();			// draw 2D elements on top
+	if (gGammaFadeFactor < 1.0f)
+		Render_DrawFadeOverlay(gGammaFadeFactor);
+	QD3D_DrawDebugTextMesh();
+	Render_FlushQueue();
+	Render_Exit2D();
 
-		if (drawRoutine != nil)
-			drawRoutine(setupInfo);
+	Render_EndFrame();
 
-		myViewStatus = Q3View_EndRendering(setupInfo->viewObject);
-		GAME_ASSERT(myViewStatus != kQ3ViewStatusError);
-
-	} while ( myViewStatus == kQ3ViewStatusRetraverse );	
-	
-	QD3D_SetMultisampling(false);
+	SDL_GL_SwapWindow(gSDLWindow);
 }
 
 
@@ -703,35 +341,8 @@ TQ3ViewStatus			myViewStatus;
 
 void QD3D_UpdateCameraFromTo(QD3DSetupOutputType *setupInfo, TQ3Point3D *from, TQ3Point3D *to)
 {
-TQ3Status	status;
-TQ3CameraPlacement	placement;
-TQ3CameraObject		camera;
-
-			/* GET CURRENT CAMERA INFO */
-
-	camera = setupInfo->cameraObject;
-			
-	status = Q3Camera_GetPlacement(camera, &placement);
-	GAME_ASSERT(status);
-
-
-			/* SET CAMERA LOOK AT */
-			
-	placement.pointOfInterest = *to;
-	setupInfo->currentCameraLookAt = *to;
-
-
-			/* SET CAMERA COORDS */
-			
-	placement.cameraLocation = *from;
-	setupInfo->currentCameraCoords = *from;				// keep global copy for quick use
-
-
-			/* UPDATE CAMERA INFO */
-			
-	status = Q3Camera_SetPlacement(camera, &placement);
-	GAME_ASSERT(status);
-		
+	setupInfo->currentCameraCoords = *from;					// set camera coords
+	setupInfo->currentCameraLookAt = *to;					// set camera look at
 	UpdateListenerLocation();
 }
 
@@ -740,26 +351,7 @@ TQ3CameraObject		camera;
 
 void QD3D_UpdateCameraFrom(QD3DSetupOutputType *setupInfo, TQ3Point3D *from)
 {
-TQ3Status	status;
-TQ3CameraPlacement	placement;
-
-			/* GET CURRENT CAMERA INFO */
-			
-	status = Q3Camera_GetPlacement(setupInfo->cameraObject, &placement);
-	GAME_ASSERT(status);
-
-
-			/* SET CAMERA COORDS */
-			
-	placement.cameraLocation = *from;
-	setupInfo->currentCameraCoords = *from;				// keep global copy for quick use
-	
-
-			/* UPDATE CAMERA INFO */
-			
-	status = Q3Camera_SetPlacement(setupInfo->cameraObject, &placement);
-	GAME_ASSERT(status);
-
+	setupInfo->currentCameraCoords = *from;					// set camera coords
 	UpdateListenerLocation();
 }
 
@@ -768,199 +360,16 @@ TQ3CameraPlacement	placement;
 
 void QD3D_MoveCameraFromTo(QD3DSetupOutputType *setupInfo, TQ3Vector3D *moveVector, TQ3Vector3D *lookAtVector)
 {
-TQ3Status	status;
-TQ3CameraPlacement	placement;
+	setupInfo->currentCameraCoords.x += moveVector->x;		// set camera coords
+	setupInfo->currentCameraCoords.y += moveVector->y;
+	setupInfo->currentCameraCoords.z += moveVector->z;
 
-			/* GET CURRENT CAMERA INFO */
-			
-	status = Q3Camera_GetPlacement(setupInfo->cameraObject, &placement);
-	GAME_ASSERT(status);
-
-
-			/* SET CAMERA COORDS */
-			
-
-	placement.cameraLocation.x += moveVector->x;
-	placement.cameraLocation.y += moveVector->y;
-	placement.cameraLocation.z += moveVector->z;
-
-	placement.pointOfInterest.x += lookAtVector->x;
-	placement.pointOfInterest.y += lookAtVector->y;
-	placement.pointOfInterest.z += lookAtVector->z;
-	
-	setupInfo->currentCameraCoords = placement.cameraLocation;	// keep global copy for quick use
-	setupInfo->currentCameraLookAt = placement.pointOfInterest;
-
-			/* UPDATE CAMERA INFO */
-			
-	status = Q3Camera_SetPlacement(setupInfo->cameraObject, &placement);
-	GAME_ASSERT(status);
+	setupInfo->currentCameraLookAt.x += lookAtVector->x;	// set camera look at
+	setupInfo->currentCameraLookAt.y += lookAtVector->y;
+	setupInfo->currentCameraLookAt.z += lookAtVector->z;
 
 	UpdateListenerLocation();
 }
-
-
-//=======================================================================================================
-//=============================== LIGHTS STUFF ==========================================================
-//=======================================================================================================
-
-#pragma mark -
-
-
-/********************* QD3D ADD POINT LIGHT ************************/
-
-TQ3GroupPosition QD3D_AddPointLight(QD3DSetupOutputType *setupInfo,TQ3Point3D *point, TQ3ColorRGB *color, float brightness)
-{
-TQ3GroupPosition		myGroupPosition;
-TQ3LightData			myLightData;
-TQ3PointLightData		myPointLightData;
-TQ3LightObject			myLight;
-
-
-	myLightData.isOn = kQ3True;											// light is ON
-	
-	myLightData.color = *color;											// set color of light
-	myLightData.brightness = brightness;								// set brightness
-	myPointLightData.lightData = myLightData;							// refer to general light info
-	myPointLightData.castsShadows = kQ3False;							// no shadows
-	myPointLightData.location = *point;									// set coords
-	
-	myPointLightData.attenuation = kQ3AttenuationTypeNone;				// set attenuation
-	myLight = Q3PointLight_New(&myPointLightData);						// make it
-	GAME_ASSERT(myLight);
-
-	myGroupPosition = (TQ3GroupPosition)Q3Group_AddObject(setupInfo->lightGroup, myLight);// add to light group
-	GAME_ASSERT(myGroupPosition);
-
-	Q3Object_Dispose(myLight);											// dispose of light
-	return(myGroupPosition);
-}
-
-
-/****************** QD3D SET POINT LIGHT COORDS ********************/
-
-void QD3D_SetPointLightCoords(QD3DSetupOutputType *setupInfo, TQ3GroupPosition lightPosition, TQ3Point3D *point)
-{
-TQ3PointLightData	pointLightData;
-TQ3LightObject		light;
-TQ3Status			status;
-
-	status = Q3Group_GetPositionObject(setupInfo->lightGroup, lightPosition, &light);	// get point light object from light group
-	GAME_ASSERT(status);
-
-	status =  Q3PointLight_GetData(light, &pointLightData);				// get light data
-	GAME_ASSERT(status);
-
-	pointLightData.location = *point;									// set coords
-
-	status = Q3PointLight_SetData(light, &pointLightData);				// update light data
-	GAME_ASSERT(status);
-		
-	Q3Object_Dispose(light);
-}
-
-
-/****************** QD3D SET POINT LIGHT BRIGHTNESS ********************/
-
-void QD3D_SetPointLightBrightness(QD3DSetupOutputType *setupInfo, TQ3GroupPosition lightPosition, float bright)
-{
-TQ3LightObject		light;
-TQ3Status			status;
-
-	status = Q3Group_GetPositionObject(setupInfo->lightGroup, lightPosition, &light);	// get point light object from light group
-	GAME_ASSERT(status);
-
-	status = Q3Light_SetBrightness(light, bright);
-	GAME_ASSERT(status);
-
-	Q3Object_Dispose(light);
-}
-
-
-
-/********************* QD3D ADD FILL LIGHT ************************/
-
-TQ3GroupPosition QD3D_AddFillLight(QD3DSetupOutputType *setupInfo,TQ3Vector3D *fillVector, TQ3ColorRGB *color, float brightness)
-{
-TQ3GroupPosition		myGroupPosition;
-TQ3LightData			myLightData;
-TQ3LightObject			myLight;
-TQ3DirectionalLightData	myDirectionalLightData;
-
-
-	myLightData.isOn = kQ3True;									// light is ON
-	
-	myLightData.color = *color;									// set color of light
-	myLightData.brightness = brightness;						// set brightness
-	myDirectionalLightData.lightData = myLightData;				// refer to general light info
-	myDirectionalLightData.castsShadows = kQ3False;				// no shadows
-	myDirectionalLightData.direction = *fillVector;				// set vector
-	
-	myLight = Q3DirectionalLight_New(&myDirectionalLightData);	// make it
-	GAME_ASSERT(myLight);
-
-	myGroupPosition = (TQ3GroupPosition)Q3Group_AddObject(setupInfo->lightGroup, myLight);	// add to light group
-	GAME_ASSERT(myGroupPosition != 0);
-
-	Q3Object_Dispose(myLight);												// dispose of light
-	return(myGroupPosition);
-}
-
-/********************* QD3D ADD AMBIENT LIGHT ************************/
-
-TQ3GroupPosition QD3D_AddAmbientLight(QD3DSetupOutputType *setupInfo, TQ3ColorRGB *color, float brightness)
-{
-TQ3GroupPosition		myGroupPosition;
-TQ3LightData			myLightData;
-TQ3LightObject			myLight;
-
-
-
-	myLightData.isOn = kQ3True;									// light is ON
-	myLightData.color = *color;									// set color of light
-	myLightData.brightness = brightness;						// set brightness
-	
-	myLight = Q3AmbientLight_New(&myLightData);					// make it
-	GAME_ASSERT(myLight);
-
-	myGroupPosition = (TQ3GroupPosition)Q3Group_AddObject(setupInfo->lightGroup, myLight);		// add to light group
-	GAME_ASSERT(myGroupPosition != 0);
-
-	Q3Object_Dispose(myLight);									// dispose of light
-	
-	return(myGroupPosition);
-}
-
-
-
-
-/****************** QD3D DELETE LIGHT ********************/
-
-void QD3D_DeleteLight(QD3DSetupOutputType *setupInfo, TQ3GroupPosition lightPosition)
-{
-TQ3LightObject		light;
-
-	light = (TQ3LightObject)Q3Group_RemovePosition(setupInfo->lightGroup, lightPosition);
-	GAME_ASSERT(light);
-
-	Q3Object_Dispose(light);
-}
-
-
-/****************** QD3D DELETE ALL LIGHTS ********************/
-//
-// Deletes ALL lights from the light group, including the ambient light.
-//
-
-void QD3D_DeleteAllLights(QD3DSetupOutputType *setupInfo)
-{
-TQ3Status				status;
-
-	status = Q3Group_EmptyObjects(setupInfo->lightGroup);
-	GAME_ASSERT(status);
-}
-
-
 
 
 //=======================================================================================================
@@ -971,331 +380,102 @@ TQ3Status				status;
 
 /**************** QD3D GET TEXTURE MAP ***********************/
 //
-// Loads a PICT resource and returns a shader object which is
-// based on the PICT converted to a texture map.
+// Loads a numbered TGA file inside :Data:Images:Textures as an OpenGL texture.
 //
-// INPUT: textureRezID = resource ID of texture PICT to get.
-//			blackIsAlpha = true if want to turn alpha on and to scan image for alpha pixels
+// INPUT: textureRezID = TGA file number to get.
+//			flags = see RendererTextureFlags
 //
-// OUTPUT: TQ3ShaderObject = shader object for texture map.  nil == error.
+// OUTPUT: OpenGL texture name.
 //
 
-TQ3SurfaceShaderObject	QD3D_GetTextureMapFromPICTResource(long	textureRezID, Boolean blackIsAlpha)
+GLuint QD3D_LoadTextureFile(int textureRezID, int flags)
 {
-PicHandle			picture;
-TQ3SurfaceShaderObject		shader;
-
-	picture = GetPicture(textureRezID);
-	GAME_ASSERT(picture);
-
-	shader = QD3D_PICTToTexture(picture, blackIsAlpha);
-
-	ReleaseResource((Handle) picture);
-
-	return shader;
-}
-
-
-/**************** QD3D PICT TO TEXTURE ***********************/
-//
-//
-// INPUT: picture = handle to PICT.
-//
-// OUTPUT: TQ3ShaderObject = shader object for texture map.
-//
-
-TQ3SurfaceShaderObject	QD3D_PICTToTexture(PicHandle picture, Boolean blackIsAlpha)
-{
-TQ3Mipmap 				mipmap;
-TQ3TextureObject		texture;
-TQ3SurfaceShaderObject	shader;
-long					width,height;
-
-
-			/* MAKE INTO STORAGE MIPMAP */
-
-	width = (**picture).picFrame.right  - (**picture).picFrame.left;		// calc dimensions of mipmap
-	height = (**picture).picFrame.bottom - (**picture).picFrame.top;
-		
-	DrawPICTIntoMipmap (picture, width, height, &mipmap, blackIsAlpha);
-		
-
-			/* MAKE NEW PIXMAP TEXTURE */
-			
-	texture = Q3MipmapTexture_New(&mipmap);							// make new mipmap	
-	GAME_ASSERT(texture);
-
-	shader = Q3TextureShader_New (texture);
-	GAME_ASSERT(shader);
-
-	Q3Object_Dispose (texture);
-	Q3Object_Dispose (mipmap.image);			// disposes of extra reference to storage obj
-
-	return(shader);	
-}
-
-
-TQ3SurfaceShaderObject	QD3D_TGAToTexture(FSSpec* spec)
-{
-TQ3Mipmap 				mipmap;
-TQ3TextureObject		texture;
-TQ3SurfaceShaderObject	shader;
-Handle					tgaHandle = nil;
+char					path[128];
+FSSpec					spec;
+uint8_t*				pixelData = nil;
 TGAHeader				header;
 OSErr					err;
 
-	err = ReadTGA(spec, &tgaHandle, &header);
-	if (err != noErr)
+	snprintf(path, sizeof(path), ":Images:Textures:%d.tga", textureRezID);
+
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, path, &spec);
+
+			/* LOAD RAW ARGB DATA FROM TGA FILE */
+
+	err = ReadTGA(&spec, &pixelData, &header, true);
+	GAME_ASSERT(err == noErr);
+
+	GAME_ASSERT(header.bpp == 32);
+	GAME_ASSERT(header.imageType == TGA_IMAGETYPE_CONVERTED_ARGB);
+
+			/* PRE-PROCESS IMAGE */
+
+	int internalFormat = GL_RGB;
+
+	if (flags & kRendererTextureFlags_SolidBlackIsAlpha)
 	{
-		return nil;
-	}
-
-	GAME_ASSERT(header.bpp == 24);
-	GAME_ASSERT(header.imageType == TGA_IMAGETYPE_RAW_RGB);
-
-	int rowBytes = (header.bpp/8) * header.width;
-
-	mipmap.image = Q3MemoryStorage_New((unsigned char*)*tgaHandle, rowBytes * header.height);
-	GAME_ASSERT(mipmap.image);
-
-	mipmap.useMipmapping = kQ3False;							// not actually using mipmaps (just 1 srcmap)
-	mipmap.pixelType = kQ3PixelTypeRGB24;
-
-	mipmap.bitOrder = kQ3EndianBig;
-	mipmap.byteOrder = kQ3EndianLittle;
-	mipmap.reserved = 0;
-	mipmap.mipmaps[0].width = header.width;
-	mipmap.mipmaps[0].height = header.height;
-	mipmap.mipmaps[0].rowBytes = rowBytes;
-	mipmap.mipmaps[0].offset = 0;
-
-	texture = Q3MipmapTexture_New(&mipmap);							// make new mipmap
-	GAME_ASSERT(texture);
-
-	shader = Q3TextureShader_New(texture);
-	GAME_ASSERT(shader);
-
-	Q3Object_Dispose(texture);
-	Q3Object_Dispose(mipmap.image);			// disposes of extra reference to storage obj
-
-	DisposeHandle(tgaHandle);
-
-	return shader;
-}
-
-/******************** DRAW PICT INTO MIPMAP ********************/
-//
-// OUTPUT: mipmap = new mipmap holding texture image
-//
-
-static void DrawPICTIntoMipmap(PicHandle pict,long width, long height, TQ3Mipmap *mipmap, Boolean blackIsAlpha)
-{
-	GAME_ASSERT(width  == (**pict).picFrame.right  - (**pict).picFrame.left);
-	GAME_ASSERT(height == (**pict).picFrame.bottom - (**pict).picFrame.top);
-	
-	Ptr pictMapAddr = (**pict).__pomme_pixelsARGB32;
-	long pictRowBytes = width * (32 / 8);
-
-	if (blackIsAlpha)
-	{
-		const uint32_t alphaMask = 0x000000FF;
-
-		// First clear black areas
-		uint32_t*	rowPtr = (uint32_t *)pictMapAddr;
-
-		for (int y = 0; y < height; y++)
+		for (int p = 0; p < 4 * header.width * header.height; p += 4)
 		{
-			for (int x = 0; x < width; x++)
-			{
-				uint32_t pixel = rowPtr[x];
-				if (!(pixel & ~alphaMask))
-					rowPtr[x] = 0;
-			}
-			rowPtr += pictRowBytes / 4;
+			bool isBlack = !pixelData[p+1] && !pixelData[p+2] && !pixelData[p+3];
+			pixelData[p+0] = isBlack? 0x00: 0xFF;
 		}
+
+		// Apply edge padding to avoid seams
+		TQ3Pixmap pm;
+		pm.image = pixelData;
+		pm.width = header.width;
+		pm.height = header.height;
+		pm.rowBytes = header.width * (header.bpp / 8);
+		pm.pixelSize = 0;
+		pm.pixelType = kQ3PixelTypeARGB32;
+		pm.bitOrder = kQ3EndianBig;
+		pm.byteOrder = kQ3EndianBig;
+		Q3Pixmap_ApplyEdgePadding(&pm);
+
+		internalFormat = GL_RGBA;
 	}
-	
-	mipmap->image = Q3MemoryStorage_New((unsigned char*)pictMapAddr, pictRowBytes * height);
-	GAME_ASSERT(mipmap->image);
-
-	mipmap->useMipmapping = kQ3False;							// not actually using mipmaps (just 1 srcmap)
-	mipmap->pixelType = kQ3PixelTypeARGB32;						// if 32bit, assume alpha
-
-	mipmap->bitOrder = kQ3EndianBig;
-	mipmap->byteOrder = kQ3EndianBig;
-	mipmap->reserved = 0;
-	mipmap->mipmaps[0].width = width;
-	mipmap->mipmaps[0].height = height;
-	mipmap->mipmaps[0].rowBytes = pictRowBytes;
-	mipmap->mipmaps[0].offset = 0;
-
-	if (blackIsAlpha)											// apply edge padding to texture to avoid black seams
-	{															// where texels are being discarded
-		ApplyEdgePadding(mipmap);
-	}
-}
-
-
-/**************** QD3D: DATA16 TO TEXTURE_NOMIP ***********************/
-//
-// Converts input data to non mipmapped texture
-//
-// INPUT: .
-//
-// OUTPUT: TQ3ShaderObject = shader object for texture map.
-//
-
-TQ3SurfaceShaderObject	QD3D_Data16ToTexture_NoMip(Ptr data, short width, short height)
-{
-TQ3Mipmap 					mipmap;
-TQ3TextureObject			texture;
-TQ3SurfaceShaderObject		shader;
-
-			/* CREATE MIPMAP */
-			
-	Data16ToMipmap(data,width,height,&mipmap);
-
-
-			/* MAKE NEW MIPMAP TEXTURE */
-			
-	texture = Q3MipmapTexture_New(&mipmap);							// make new mipmap	
-	GAME_ASSERT(texture);
-			
-	shader = Q3TextureShader_New(texture);
-	GAME_ASSERT(shader);
-
-	Q3Object_Dispose (texture);
-	Q3Object_Dispose (mipmap.image);					// dispose of extra ref to storage object
-
-	return(shader);	
-}
-
-
-/******************** DATA16 TO MIPMAP ********************/
-//
-// Creates a mipmap from an existing 16bit data buffer (note that buffer is not copied!)
-//
-// OUTPUT: mipmap = new mipmap holding texture image
-//
-
-static void Data16ToMipmap(Ptr data, short width, short height, TQ3Mipmap *mipmap)
-{
-long	size = width * height * 2;
-
-			/* MAKE 16bit MIPMAP */
-
-	mipmap->image = (void *)Q3MemoryStorage_NewBuffer ((unsigned char *) data, size,size);
-	if (mipmap->image == nil)
+	else if (flags & kRendererTextureFlags_GrayscaleIsAlpha)
 	{
-		DoAlert("Data16ToMipmap: Q3MemoryStorage_New Failed!");
-		QD3D_ShowRecentError();
+		for (int p = 0; p < 4 * header.width * header.height; p += 4)
+		{
+			// put Blue into Alpha & leave map white
+			pixelData[p+0] = pixelData[p+3];	// put blue into alpha
+			pixelData[p+1] = 255;
+			pixelData[p+2] = 255;
+			pixelData[p+3] = 255;
+		}
+		internalFormat = GL_RGBA;
+	}
+	else if (flags & kRendererTextureFlags_KeepOriginalAlpha)
+	{
+		internalFormat = GL_RGBA;
+	}
+	else
+	{
+		internalFormat = GL_RGB;
 	}
 
-	mipmap->useMipmapping 	= kQ3False;							// not actually using mipmaps (just 1 srcmap)
-	mipmap->pixelType 		= kQ3PixelTypeRGB16;						
-	mipmap->bitOrder 		= kQ3EndianBig;
+			/* LOAD TEXTURE */
 
-	// Source port note: these images come from 'Timg' resources read in File.c.
-	// File.c byteswaps the entire Timg, so they're little-endian now.
-	mipmap->byteOrder 		= kQ3EndianLittle;
+	GLuint glTextureName = Render_LoadTexture(
+			internalFormat,
+			header.width,
+			header.height,
+			GL_BGRA,
+			GL_UNSIGNED_INT_8_8_8_8,
+			pixelData,
+			flags
+			);
 
-	mipmap->reserved 			= 0;
-	mipmap->mipmaps[0].width 	= width;
-	mipmap->mipmaps[0].height 	= height;
-	mipmap->mipmaps[0].rowBytes = width*2;
-	mipmap->mipmaps[0].offset 	= 0;
-}
+			/* CLEAN UP */
 
+	DisposePtr((Ptr) pixelData);
 
-/**************** QD3D: GET MIPMAP STORAGE OBJECT FROM ATTRIB **************************/
-//
-// NOTE: the mipmap.image and surfaceShader are *valid* references which need to be de-referenced later!!!
-//
-// INPUT: attribSet
-//
-// OUTPUT: surfaceShader = shader extracted from attribute set
-//
-
-TQ3StorageObject QD3D_GetMipmapStorageObjectFromAttrib(TQ3AttributeSet attribSet)
-{
-TQ3Status	status;
-
-TQ3TextureObject		texture;
-TQ3Mipmap 				mipmap;
-TQ3StorageObject		storage;
-TQ3SurfaceShaderObject	surfaceShader;
-
-			/* GET SHADER FROM ATTRIB */
-			
-	status = Q3AttributeSet_Get(attribSet, kQ3AttributeTypeSurfaceShader, &surfaceShader);
-	GAME_ASSERT(status);
-
-			/* GET TEXTURE */
-			
-	status = Q3TextureShader_GetTexture(surfaceShader, &texture);
-	GAME_ASSERT(status);
-
-			/* GET MIPMAP */
-			
-	status = Q3MipmapTexture_GetMipmap(texture,&mipmap);
-	GAME_ASSERT(status);
-
-		/* GET A LEGAL REF TO STORAGE OBJ */
-			
-	storage = mipmap.image;
-	
-			/* DISPOSE REFS */
-			
-	Q3Object_Dispose(texture);	
-	Q3Object_Dispose(surfaceShader);
-	return(storage);
+	return glTextureName;
 }
 
 
 #pragma mark -
-
-//=======================================================================================================
-//=============================== STYLE STUFF =====================================================
-//=======================================================================================================
-
-
-/****************** QD3D:  SET BACKFACE STYLE ***********************/
-
-void SetBackFaceStyle(QD3DSetupOutputType *setupInfo, TQ3BackfacingStyle style)
-{
-TQ3Status status;
-TQ3BackfacingStyle	backfacingStyle;
-
-	status = Q3BackfacingStyle_Get(setupInfo->backfacingStyle, &backfacingStyle);
-	GAME_ASSERT(status);
-
-	if (style == backfacingStyle)							// see if already set to that
-		return;
-		
-	status = Q3BackfacingStyle_Set(setupInfo->backfacingStyle, style);
-	GAME_ASSERT(status);
-
-}
-
-
-/****************** QD3D:  SET FILL STYLE ***********************/
-
-void SetFillStyle(QD3DSetupOutputType *setupInfo, TQ3FillStyle style)
-{
-TQ3Status 		status;
-TQ3FillStyle	fillStyle;
-
-	status = Q3FillStyle_Get(setupInfo->fillStyle, &fillStyle);
-	GAME_ASSERT(status);
-
-	if (style == fillStyle)							// see if already set to that
-		return;
-		
-	status = Q3FillStyle_Set(setupInfo->fillStyle, style);
-	GAME_ASSERT(status);
-
-}
-
 
 //=======================================================================================================
 //=============================== MISC ==================================================================
@@ -1309,19 +489,6 @@ UnsignedWide	wide;
 unsigned long	now;
 static	unsigned long then = 0;
 
-			/* HANDLE SPECIAL DEMO MODE STUFF */
-			
-	if (gDemoMode)
-	{
-		gFramesPerSecond = DEMO_FPS;
-		gFramesPerSecondFrac = 1.0f/gFramesPerSecond;
-	
-		do											// speed limiter
-		{	
-			Microseconds(&wide);
-		}while((wide.lo - then) < (1000000.0f / 25.0f));
-	}
-
 
 			/* DO REGULAR CALCULATION */
 			
@@ -1332,26 +499,7 @@ static	unsigned long then = 0;
 		gFramesPerSecond = 1000000.0f/(float)(now-then);
 		if (gFramesPerSecond < DEFAULT_FPS)			// (avoid divide by 0's later)
 			gFramesPerSecond = DEFAULT_FPS;
-	
-#if 0
-		if (GetKeyState(KEY_F8))
-		{
-			RGBColor	color;
-			Str255		s;
-				
-			SetPort(GetWindowPort(gCoverWindow));
-			GetForeColor(&color);
-			FloatToString(gFramesPerSecond,s);		// print # rounded up to nearest integer
-			MoveTo(20,20);
-			ForeColor(greenColor);
-			TextSize(12);
-			TextMode(srcCopy);
-			DrawString(s);
-			DrawChar(' ');
-			RGBForeColor(&color);
-		}
-#endif
-		
+
 		if (gFramesPerSecond < 9.0f)					// this is the minimum we let it go
 			gFramesPerSecond = 9.0f;
 		
@@ -1359,149 +507,11 @@ static	unsigned long then = 0;
 	else
 		gFramesPerSecond = DEFAULT_FPS;
 		
-//	gFramesPerSecondFrac = 1/gFramesPerSecond;		// calc fractional for multiplication
-	gFramesPerSecondFrac = __fres(gFramesPerSecond);	
-	
+	gFramesPerSecondFrac = 1.0f/gFramesPerSecond;	// calc fractional for multiplication
+
 	then = now;										// remember time	
 }
 
-
-#pragma mark -
-
-/************ QD3D: SHOW RECENT ERROR *******************/
-
-void QD3D_ShowRecentError(void)
-{
-TQ3Error	q3Err;
-Str255		s;
-	
-	q3Err = Q3Error_Get(nil);
-	if (q3Err == kQ3ErrorOutOfMemory)
-		DoFatalAlert("QuickDraw 3D has run out of memory!");
-	else
-	if (q3Err == kQ3ErrorMacintoshError)
-		DoFatalAlert("kQ3ErrorMacintoshError");
-	else
-	if (q3Err == kQ3ErrorNotInitialized)
-		DoFatalAlert("kQ3ErrorNotInitialized");
-	else
-	if (q3Err == kQ3ErrorReadLessThanSize)
-		DoFatalAlert("kQ3ErrorReadLessThanSize");
-	else
-	if (q3Err == kQ3ErrorViewNotStarted)
-		DoFatalAlert("kQ3ErrorViewNotStarted");
-	else
-	if (q3Err != 0)
-	{
-		snprintf(s, sizeof(s), "QD3D Error %d\nLook up error code in QuesaErrors.h", q3Err);
-		DoFatalAlert(s);
-	}
-}
-
-
-#pragma mark -
-
-
-
-/******************************* DISABLE FOG *********************************/
-
-void QD3D_DisableFog(const QD3DSetupOutputType *setupInfo)
-{
-
-	TQ3FogStyleData	fogData;
-	
-	fogData.state		= kQ3Off;
-	Q3FogStyle_Submit(&fogData, setupInfo->viewObject);
-}
-
-
-/******************************* REENABLE FOG *********************************/
-
-void QD3D_ReEnableFog(const QD3DSetupOutputType *setupInfo)
-{
-		TQ3FogStyleData	fogData;
-		
-		fogData.state		= kQ3On;
-		fogData.mode		= gFogMode;
-		fogData.fogStart	= setupInfo->yon * gFogStart;
-		fogData.fogEnd		= setupInfo->yon * gFogEnd;
-		fogData.density		= gFogDensity;
-		fogData.color		= gFogColor;
-		
-		Q3FogStyle_Submit(&fogData, setupInfo->viewObject);
-}
-
-
-
-/************************ SET TRIANGLE CACHE MODE *****************************/
-//
-// For ATI driver, sets triangle caching flag for xparent triangles
-//
-
-void QD3D_SetTriangleCacheMode(Boolean isOn)
-{
-#if 0	// Source port removal. We'd need to extend Quesa for this.
-	GAME_ASSERT(gQD3D_DrawContext);
-
-		QASetInt(gQD3D_DrawContext, kQATag_ZSortedHint, isOn);
-#endif
-}	
-				
-/************************ SET Z WRITE *****************************/
-//
-// For ATI driver, turns on/off z-buffer writes
-// QASetInt(gQD3D_DrawContext, kQATag_ZBufferMask, isOn)
-// (Source port note: added Quesa extension for this)
-//
-
-void QD3D_SetZWrite(Boolean isOn)
-{
-	if (!gQD3D_DrawContext)
-		return;
-
-	TQ3Status status = Q3ZWriteTransparencyStyle_Submit(isOn ? kQ3On : kQ3Off, gQD3D_ViewObject);
-	GAME_ASSERT(status);
-}	
-
-
-/************************ SET BLENDING MODE ************************/
-
-void QD3D_SetAdditiveBlending(Boolean enable)
-{
-	static const TQ3BlendingStyleData normalStyle	= { kQ3Off, GL_ONE, GL_ONE_MINUS_SRC_ALPHA };
-	static const TQ3BlendingStyleData additiveStyle	= { kQ3On, GL_ONE, GL_ONE };
-
-	GAME_ASSERT(gQD3D_ViewObject);
-
-	Q3BlendingStyle_Submit(enable ? &additiveStyle : &normalStyle, gQD3D_ViewObject);
-}
-
-/************************ SET MULTISAMPLING ************************/
-
-void QD3D_SetMultisampling(Boolean enable)
-{
-#if ALLOW_MSAA
-	static bool multisamplingEnabled = false;
-	
-	if (multisamplingEnabled == enable)
-	{
-		// no-op
-	}
-	else if (!enable && multisamplingEnabled)			// If we want to disable, always do it if MSAA was currently active
-	{
-		glDisable(GL_MULTISAMPLE);
-		multisamplingEnabled = false;
-	}
-	else if (gGamePrefs.antiAliasing)				// otherwise only honor request if prefs allow MSAA
-	{
-		if (enable)
-			glEnable(GL_MULTISAMPLE);
-		else
-			glDisable(GL_MULTISAMPLE);
-		multisamplingEnabled = enable;
-	}
-#endif
-}
 
 
 #pragma mark -
@@ -1517,20 +527,68 @@ void ShowNormal(TQ3Point3D *where, TQ3Vector3D *normal)
 
 /********************* DRAW NORMAL **************************/
 
-static void DrawNormal(TQ3ViewObject view)
+void DrawNormal(void)
 {
-TQ3LineData	line;
-
-	line.lineAttributeSet = nil;
-
-	line.vertices[0].attributeSet = nil;
-	line.vertices[0].point = gNormalWhere;
-
-	line.vertices[1].attributeSet = nil;
-	line.vertices[1].point.x = gNormalWhere.x + gNormal.x * 400.0f;
-	line.vertices[1].point.y = gNormalWhere.y + gNormal.y * 400.0f;
-	line.vertices[1].point.z = gNormalWhere.z + gNormal.z * 400.0f;
-
-	Q3Line_Submit(&line, view);
+	glBegin(GL_LINES);
+	glVertex3f(gNormalWhere.x, gNormalWhere.y, gNormalWhere.z);
+	glVertex3f(gNormalWhere.x + gNormal.x * 400.0f, gNormalWhere.y + gNormal.y * 400.0f, gNormalWhere.z + gNormal.z * 400.0f);
+	glEnd();
 }
 
+/************ LAY OUT TEXT IN DEBUG TEXT MESH *****************/
+//
+// Pass in NULL or empty string to destroy the mesh.
+//
+
+void QD3D_UpdateDebugTextMesh(const char* text)
+{
+	// If passing in NULL or an empty string, clear the mesh
+	if (!text || !text[0])
+	{
+		if (gDebugTextMesh)
+		{
+			Q3TriMeshData_Dispose(gDebugTextMesh);
+			gDebugTextMesh = nil;
+		}
+		return;
+	}
+
+	int numTriangles	= kDebugTextMeshQuadCapacity * 2;
+	int numPoints		= kDebugTextMeshQuadCapacity * 4;
+
+	// Create the mesh if needed
+	if (!gDebugTextMesh)
+	{
+		gDebugTextMesh = Q3TriMeshData_New(numTriangles, numPoints, kQ3TriMeshDataFeatureVertexUVs);
+	}
+
+	// Reset triangle & point count in mesh so TextMesh_SetMesh knows the mesh's capacity
+	gDebugTextMesh->numTriangles	= numTriangles;
+	gDebugTextMesh->numPoints		= numPoints;
+
+	// Lay out the text
+	TextMesh_SetMesh(nil, text, gDebugTextMesh);
+}
+
+/************ SUBMIT DEBUG TEXT MESH FOR DRAWING *****************/
+//
+// Must be in 640x480 2D mode.
+// Does nothing if there's no text to draw.
+//
+
+void QD3D_DrawDebugTextMesh(void)
+{
+	// Static because matrix must survive beyond this call
+	static TQ3Matrix4x4 m;
+
+	// No text to draw
+	if (!gDebugTextMesh)
+		return;
+
+	float s = .33f;
+	Q3Matrix4x4_SetScale(&m, s * 1.333f * gWindowHeight / gWindowWidth, -s, 1.0f);
+	m.value[3][0] = 2;
+	m.value[3][1] = 72;
+	m.value[3][2] = 0;
+	Render_SubmitMesh(gDebugTextMesh, &m, &kDefaultRenderMods_DebugUI, &kQ3Point3D_Zero);
+}

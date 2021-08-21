@@ -9,20 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
-#include "3dmath.h"
+#include "game.h"
 
-extern	float				gFramesPerSecondFrac,gFramesPerSecond;
-extern	TQ3Point3D			gCoord;
-extern	TQ3Vector3D	gDelta;
-extern	WindowPtr			gCoverWindow;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	Boolean		gSongPlayingFlag,gResetSong,gDisableAnimSounds,gSongPlayingFlag;
-extern	FSSpec		gDataSpec;
-extern	PrefsType	gGamePrefs;
-extern	u_short		gLevelType,gRealLevel;
-extern	short		gNumLadyBugsThisArea;
-extern	u_long			gScore;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -92,6 +80,16 @@ enum
 {
 	INTRO_CAM_MODE_RIGHTDRIFT,
 	INTRO_CAM_MODE_PULLBACK
+};
+
+const TQ3ColorRGBA kIntroClearColors[NUM_LEVEL_TYPES] =
+{
+		[LEVEL_TYPE_LAWN	] = {0.259f, 0.482f, 0.678f, 1.000f},
+		[LEVEL_TYPE_POND	] = {0.259f, 0.482f, 0.678f, 1.000f},
+		[LEVEL_TYPE_FOREST	] = {1.000f, 0.290f, 0.063f, 1.000f},
+		[LEVEL_TYPE_HIVE	] = {0.259f, 0.482f, 0.678f, 1.000f},
+		[LEVEL_TYPE_NIGHT	] = {0.000f, 0.000f, 0.000f, 1.000f},
+		[LEVEL_TYPE_ANTHILL	] = {0.259f, 0.482f, 0.678f, 1.000f},
 };
 
 /*********************/
@@ -202,8 +200,9 @@ void ShowLevelIntroScreen(void)
 	DeleteAllParticleGroups();
 	FreeAllSkeletonFiles(-1);
 	DeleteAll3DMFGroups();
-	DisposeSoundBank(SOUND_BANK_DEFAULT);
+	DisposeSoundBank(SOUNDBANK_MAIN);
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);		
+	Pomme_FlushPtrTracking(true);
 }
 
 
@@ -220,20 +219,18 @@ TQ3Vector3D				fillDirection2 = { -.7, -.2, -.9 };			// fill
 
 		/* INIT OTHER SYSTEMS */
 		
-	QD3D_InitParticles();	
-	InitParticleSystem();
+	QD3D_InitParticles();
 
 			/* LOAD SOUNDS */
-			
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Audio:Main.sounds", &spec);
-	LoadSoundBank(&spec, SOUND_BANK_DEFAULT);
+
+	LoadSoundBank(SOUNDBANK_MAIN);
 
 
 			/*************/
 			/* MAKE VIEW */
 			/*************/
 
-	QD3D_NewViewDef(&viewDef, gCoverWindow);
+	QD3D_NewViewDef(&viewDef);
 	
 	viewDef.camera.hither 			= 70;
 	viewDef.camera.yon 				= 4000;
@@ -252,18 +249,18 @@ TQ3Vector3D				fillDirection2 = { -.7, -.2, -.9 };			// fill
 	viewDef.lights.fillColor[1] 	= lightColor;
 	viewDef.lights.fillBrightness[0] = 1.3;
 	viewDef.lights.fillBrightness[1] = .2;
-	
-	
-	viewDef.view.clearColor.r = 
-	viewDef.view.clearColor.g = 
-	viewDef.view.clearColor.b = 1;
-		
-		
+
+
+	viewDef.view.clearColor = kIntroClearColors[gLevelType];
+
+
 	QD3D_SetupWindow(&viewDef, &gGameViewInfoPtr);
 
 			/************/
 			/* LOAD ART */
 			/************/
+
+	InitParticleSystem();		// Must be once we have a valid GL context
 
 	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:LevelIntro.3dmf", &spec);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_LEVELINTRO);	
@@ -307,7 +304,7 @@ TQ3Vector3D				fillDirection2 = { -.7, -.2, -.9 };			// fill
 	if (gRealLevel != LEVEL_NUM_FLIGHT)
 	{
 				/* LOG */
-					
+
 		gNewObjectDefinition.group 		= MODEL_GROUP_LEVELINTRO;	
 		gNewObjectDefinition.type 		= LINTRO_MObjType_Log;	
 		gNewObjectDefinition.coord.x	= 0;
@@ -318,7 +315,18 @@ TQ3Vector3D				fillDirection2 = { -.7, -.2, -.9 };			// fill
 		gNewObjectDefinition.moveCall 	= nil;
 		gNewObjectDefinition.rot 		= 0;
 		gNewObjectDefinition.scale 		= 1.5;
-		MakeNewDisplayGroupObject(&gNewObjectDefinition);
+		ObjNode* log = MakeNewDisplayGroupObject(&gNewObjectDefinition);
+
+				/* MAKE EXTRA LOGS FOR ULTRA-WIDE DISPLAYS */
+
+		for (int i = 1; i < 4; i++)
+		{
+			gNewObjectDefinition.coord.x	= i*2.0f * gNewObjectDefinition.scale * log->MeshList[0]->bBox.max.x;
+			MakeNewDisplayGroupObject(&gNewObjectDefinition);
+
+			gNewObjectDefinition.coord.x	= -i*2.0f * gNewObjectDefinition.scale * log->MeshList[0]->bBox.max.x;
+			MakeNewDisplayGroupObject(&gNewObjectDefinition);
+		}
 	}
 
 		/* BACKGROUND CYC */
@@ -341,13 +349,14 @@ TQ3Vector3D				fillDirection2 = { -.7, -.2, -.9 };			// fill
 	gNewObjectDefinition.coord.y	= 0;
 	gNewObjectDefinition.coord.z	= 400;
 	gNewObjectDefinition.slot 		= 100;
-	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER|STATUS_BIT_NOFOG;
+	gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER | STATUS_BIT_NOFOG | STATUS_BIT_NOZWRITE;
 	gNewObjectDefinition.moveCall 	= nil;
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= 6.0;
-	MakeNewDisplayGroupObject(&gNewObjectDefinition);
-	
-	
+	ObjNode* cyc = MakeNewDisplayGroupObject(&gNewObjectDefinition);
+	QD3D_MirrorMeshesZ(cyc);
+
+
 		/* FADE EVENT */
 		
 	GameScreenToBlack();
@@ -413,6 +422,7 @@ float	x;
 		
 	if (d1 != 0)
 	{
+		gNewObjectDefinition.group 		= MODEL_GROUP_LEVELINTRO;
 		gNewObjectDefinition.type 		= LINTRO_MObjType_0 + d1;	
 		gNewObjectDefinition.coord.x	= x;
 		obj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
@@ -423,7 +433,8 @@ float	x;
 	}
 	
 		/* 2ND DIGIT */
-		
+
+	gNewObjectDefinition.group 		= MODEL_GROUP_LEVELINTRO;
 	gNewObjectDefinition.type 		= LINTRO_MObjType_0 + d2;	
 	gNewObjectDefinition.coord.x	= x;
 	obj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
@@ -844,7 +855,6 @@ ObjNode	*l;
 
 		Q3Matrix4x4_SetTranslate(&m, 0, 100, 0); 				// get mouth offset	
 		MatrixMultiplyFast(&m,&m3,&l->BaseTransformMatrix);		
-		SetObjectTransformMatrix(l);							// set player's matrix
 	}
 }
 
@@ -1069,18 +1079,17 @@ ObjNode	*letter,*chute;
 
 
 					/* CREATE PARACHUTE */
-		
+
 			gNewObjectDefinition.group 		= MODEL_GROUP_LEVELINTRO;	
 			gNewObjectDefinition.type 		= LINTRO_MObjType_Parachute;	
 			gNewObjectDefinition.coord.y	+= 100;
 			gNewObjectDefinition.slot++;
+			gNewObjectDefinition.flags 		= STATUS_BIT_KEEPBACKFACES;
 			gNewObjectDefinition.moveCall 	= nil;
 			gNewObjectDefinition.rot 		= 0;
 			gNewObjectDefinition.scale 		= .1;
 			chute = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-			
-			MakeObjectKeepBackfaces(chute);
-			
+
 			letter->ChainNode = chute;
 			
 		}
@@ -1399,7 +1408,7 @@ static Byte	letters[] = {LINTRO_MObjType_L, LINTRO_MObjType_E, LINTRO_MObjType_V
 		gNewObjectDefinition.coord.y 	= 75;
 		gNewObjectDefinition.coord.z 	= 0;
 		gNewObjectDefinition.slot 		= 200;
-		gNewObjectDefinition.flags 		= 0;
+		gNewObjectDefinition.flags 		= STATUS_BIT_NOZWRITE | STATUS_BIT_KEEPBACKFACES_2PASS;
 		gNewObjectDefinition.moveCall 	= MoveAntHillLetter;
 		gNewObjectDefinition.rot 		= 0;
 		gNewObjectDefinition.scale 		= 1.2;
@@ -1407,7 +1416,6 @@ static Byte	letters[] = {LINTRO_MObjType_L, LINTRO_MObjType_E, LINTRO_MObjType_V
 
 		gLetterObj[i]->Health = -.5f - RandomFloat()*1.0f;
 		MakeObjectTransparent(gLetterObj[i], 0);
-		MakeObjectKeepBackfaces(gLetterObj[i]);
 
 		if (i == 4)					// spacing before number
 			x += 300;
@@ -1429,8 +1437,14 @@ float fps = gFramesPerSecondFrac;
 	theNode->Health += fps * .5f;
 	
 	if (theNode->Health > 0.0f)
+	{
 		MakeObjectTransparent(theNode, theNode->Health);
 
+		if (theNode->Health >= 1.0f)
+		{
+			theNode->StatusBits &= ~STATUS_BIT_NOZWRITE;
+		}
+	}
 }
 
 
@@ -1457,9 +1471,7 @@ static Boolean WaitAndDraw(float duration)
 		DoSDLMaintenance();
 		duration -= gFramesPerSecondFrac;
 		
-		if (FlushMouseButtonPress())
-			return(true);
-		if (AreAnyNewKeysPressed())
+		if (GetSkipScreenInput())
 			return(true);		
 		
 	}while(duration > 0.0f);

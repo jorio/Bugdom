@@ -3,14 +3,12 @@
 /****************************/
 
 
-#include "3dmath.h"
-
 /***************/
 /* EXTERNALS   */
 /***************/
 
-extern	u_char	gTerrainScrollBuffer[MAX_SUPERTILES_DEEP][MAX_SUPERTILES_WIDE];
-extern	float	gFramesPerSecondFrac;
+#include "game.h"
+
 
 /****************************/
 /*    PROTOTYPES            */

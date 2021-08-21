@@ -9,12 +9,8 @@
 /* EXTERNALS   */
 /***************/
 
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	ObjNode	*gCurrentNode,*gFirstNodePtr;
-extern	float	gFramesPerSecondFrac;
-extern	SDL_Window*				gSDLWindow;
-extern	PrefsType				gGamePrefs;
-extern	QD3DSetupOutputType*	gGameViewInfoPtr;
+#include "game.h"
+
 
 /****************************/
 /*    PROTOTYPES            */
@@ -27,29 +23,31 @@ static void MoveFadeEvent(ObjNode *theNode);
 /*    CONSTANTS             */
 /****************************/
 
-#if _DEBUG
-#define	ALLOW_FADE		0
-#else
-#define	ALLOW_FADE		1
-#endif
-
 
 /**********************/
 /*     VARIABLES      */
 /**********************/
 
-extern WindowPtr		gCoverWindow;
-
-
-float		gGammaFadePercent;
-
 /****************  INIT WINDOW STUFF *******************/
 
 void InitWindowStuff(void)
 {
-	SetPort(GetWindowPort(gCoverWindow));
-	ForeColor(whiteColor);
-	BackColor(blackColor);
+		/* SET FULLSCREEN MODE ACCORDING TO PREFS */
+
+	SetFullscreenMode();
+
+		/* SHOW A COUPLE BLACK FRAMES BEFORE WE BEGIN */
+
+	QD3DSetupInputType viewDef;
+	QD3D_NewViewDef(&viewDef);
+	QD3D_SetupWindow(&viewDef, &gGameViewInfoPtr);
+	for (int i = 0; i < 45; i++)
+	{
+		QD3D_DrawScene(gGameViewInfoPtr, nil);
+		DoSDLMaintenance();
+	}
+	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
+	Pomme_FlushPtrTracking(true);
 }
 
 
@@ -58,8 +56,8 @@ void InitWindowStuff(void)
 void GammaFadeOut(void)
 {
 #if ALLOW_FADE
-	Overlay_FadeOutFrozenFrame(.3f);
-	gGammaFadePercent = 0;
+	gGammaFadeFactor = 0;
+	Render_FreezeFrameFadeOut(.3f);
 #endif
 	FlushMouseButtonPress();
 }
@@ -69,17 +67,9 @@ void GammaFadeOut(void)
 void GammaOn(void)
 {
 	// Note: the game used to fade gamma in smoothly if it wasn't at 100% already. Changed to instant 100%.
-	gGammaFadePercent = 100;
+	gGammaFadeFactor = 1.0f;
 }
 
-
-
-/****************** CLEANUP DISPLAY *************************/
-
-void CleanupDisplay(void)
-{
-	GammaFadeOut();
-}
 
 
 /******************** MAKE FADE EVENT *********************/
@@ -122,6 +112,15 @@ ObjNode		*thisNodePtr;
 		return;
 
 	newObj->Flag[0] = fadeIn;
+
+	if (fadeIn)
+	{
+		gGammaFadeFactor = .01f;
+	}
+	else
+	{
+		gGammaFadeFactor = .99f;
+	}
 }
 
 
@@ -135,27 +134,29 @@ float	fps = gFramesPerSecondFrac;
 			
 	if (theNode->Flag[0])
 	{
-		if (gGammaFadePercent >= 100.0f)										// see if @ 100%
+		if (gGammaFadeFactor >= 1.0f)										// see if @ 100%
 		{
-			gGammaFadePercent = 100;
+			gGammaFadeFactor = 1.0f;
 			DeleteObject(theNode);
+			return;
 		}
-		gGammaFadePercent += 300.0f*fps;
-		if (gGammaFadePercent >= 100.0f)										// see if @ 100%
-			gGammaFadePercent = 100;
+		gGammaFadeFactor += 3.0f * fps;
+		if (gGammaFadeFactor >= 1.0f)										// see if @ 100%
+			gGammaFadeFactor = 1.0f;
 	}
 	
 			/* FADE OUT */
 	else
 	{
-		if (gGammaFadePercent <= 0.0f)													// see if @ 0%
+		if (gGammaFadeFactor <= 0.0f)													// see if @ 0%
 		{
-			gGammaFadePercent = 0;
+			gGammaFadeFactor = 0;
 			DeleteObject(theNode);
+			return;
 		}
-		gGammaFadePercent -= 300.0f*fps;
-		if (gGammaFadePercent <= 0.0f)													// see if @ 0%
-			gGammaFadePercent = 0;
+		gGammaFadeFactor -= 3.0f * fps;
+		if (gGammaFadeFactor <= 0.0f)													// see if @ 0%
+			gGammaFadeFactor = 0;
 	}
 }
 
@@ -164,160 +165,17 @@ float	fps = gFramesPerSecondFrac;
 
 void GameScreenToBlack(void)
 {
-	if (gCoverWindow)
-	{
-		Rect	r;
-		SetPort(GetWindowPort(gCoverWindow));
-		BackColor(blackColor);
-		GetPortBounds(GetWindowPort(gCoverWindow), &r);
-		EraseRect(&r);
-	}
-
 	FlushMouseButtonPress();
 }
 
 #pragma mark -
 
-/*********************** DUMP GWORLD 2 **********************/
-//
-//    copies to a destination RECT
-//
-
-void DumpGWorld2(GWorldPtr thisWorld, WindowPtr thisWindow,Rect *destRect)
-{
-PixMapHandle pm;
-GDHandle		oldGD;
-GWorldPtr		oldGW;
-Rect			r;
-
-	DoLockPixels(thisWorld);
-
-	GetGWorld (&oldGW,&oldGD);
-	pm = GetGWorldPixMap(thisWorld);	
-	if ((pm == nil) | (*pm == nil) )
-		DoAlert("PixMap Handle or Ptr = Null?!");
-
-	SetPort(GetWindowPort(thisWindow));
-
-	ForeColor(blackColor);
-	BackColor(whiteColor);
-
-	GetPortBounds(thisWorld, &r);
-				
-	CopyBits(/*(BitMap *)*/ *pm,
-			GetPortBitMapForCopyBits(GetWindowPort(thisWindow)),
-			&r,
-			destRect,
-			srcCopy,
-			0);
-
-	SetGWorld(oldGW,oldGD);								// restore gworld
-	
-	
-	//QDFlushPortBuffer(GetWindowPort(thisWindow), nil);
-
-}
-
-/*********************** DUMP GWORLD 3 **********************/
-//
-//    copies from src RECT to a destination RECT
-//
-
-void DumpGWorld3(GWorldPtr thisWorld, WindowPtr thisWindow,Rect *srcRect, Rect *destRect)
-{
-PixMapHandle pm;
-GDHandle		oldGD;
-GWorldPtr		oldGW;
-
-	DoLockPixels(thisWorld);
-
-	GetGWorld (&oldGW,&oldGD);
-	pm = GetGWorldPixMap(thisWorld);	
-	if ((pm == nil) | (*pm == nil) )
-		DoAlert("PixMap Handle or Ptr = Null?!");
-
-	SetPort(GetWindowPort(thisWindow));
-
-	ForeColor(blackColor);
-	BackColor(whiteColor);
-				
-	CopyBits(/*(BitMap *)*/ *pm,
-			GetPortBitMapForCopyBits(GetWindowPort(thisWindow)),
-			srcRect,
-			destRect,
-			srcCopy,
-			0);
-
-	SetGWorld(oldGW,oldGD);								// restore gworld
-	
-//	QDFlushPortBuffer(GetWindowPort(thisWindow), nil);
-	
-}
 
 
-/*********************** DUMP GWORLD TRANSPARENT **********************/
-//
-// copies to a destination RECT without copying black
-//
-
-void DumpGWorldTransparent(GWorldPtr thisWorld, WindowPtr thisWindow,Rect *destRect)
-{
-PixMapHandle pm;
-GDHandle		oldGD;
-GWorldPtr		oldGW;
-Rect			r;
-
-	DoLockPixels(thisWorld);
-
-	GetGWorld (&oldGW,&oldGD);
-	pm = GetGWorldPixMap(thisWorld);	
-	if ((pm == nil) | (*pm == nil) )
-		DoAlert("PixMap Handle or Ptr = Null?!");
-
-	SetPort(GetWindowPort(thisWindow));
-
-	ForeColor(whiteColor);
-	BackColor(blackColor);
-
-	GetPortBounds(thisWorld, &r);
-				
-	CopyBits(/*(BitMap *)*/ *pm,
-			GetPortBitMapForCopyBits(GetWindowPort(thisWindow)),
-			&r,
-			destRect,
-			srcCopy|transparent,
-			0);
-
-	SetGWorld(oldGW,oldGD);								// restore gworld
-
-}
-
-
-/******************* DO LOCK PIXELS **************/
-
-void DoLockPixels(GWorldPtr world)
-{
-PixMapHandle pm;
-	
-	pm = GetGWorldPixMap(world);
-	if (LockPixels(pm) == false)
-		DoFatalAlert("PixMap Went Bye,Bye?!");
-}
-
-
-// Called when the game window gets resized.
-// Adjusts the clipping pane and camera aspect ratio.
 void QD3D_OnWindowResized(int windowWidth, int windowHeight)
 {
-	if (!gGameViewInfoPtr)
-		return;
-
-	TQ3Area pane = GetAdjustedPane(windowWidth, windowHeight, GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT, gGameViewInfoPtr->paneClip);
-	Q3DrawContext_SetPane(gGameViewInfoPtr->drawContext, &pane);
-
-	float aspectRatioXToY = (pane.max.x-pane.min.x)/(pane.max.y-pane.min.y);
-
-	Q3ViewAngleAspectCamera_SetAspectRatio(gGameViewInfoPtr->cameraObject, aspectRatioXToY);
+	gWindowWidth = windowWidth;
+	gWindowHeight = windowHeight;
 }
 
 
@@ -325,15 +183,34 @@ void QD3D_OnWindowResized(int windowWidth, int windowHeight)
 
 void SetFullscreenMode(void)
 {
-	SDL_SetWindowFullscreen(
-			gSDLWindow,
-			gGamePrefs.fullscreen? SDL_WINDOW_FULLSCREEN_DESKTOP: 0);
+	if (!gGamePrefs.fullscreen)
+	{
+		SDL_SetWindowFullscreen(gSDLWindow, 0);
+	}
+	else if (gCommandLine.fullscreenWidth > 0 && gCommandLine.fullscreenHeight > 0)
+	{
+		SDL_DisplayMode mode;
+		mode.w = gCommandLine.fullscreenWidth;
+		mode.h = gCommandLine.fullscreenHeight;
+		mode.refresh_rate = gCommandLine.fullscreenRefreshRate;
+		mode.driverdata = nil;
+		mode.format = SDL_PIXELFORMAT_UNKNOWN;
+		SDL_SetWindowDisplayMode(gSDLWindow, &mode);
+		SDL_SetWindowFullscreen(gSDLWindow, SDL_WINDOW_FULLSCREEN);
+	}
+	else
+	{
+		SDL_SetWindowFullscreen(gSDLWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
+	}
 
 	// Ensure the clipping pane gets resized properly after switching in or out of fullscreen mode
 	int width, height;
 	SDL_GetWindowSize(gSDLWindow, &width, &height);
 	QD3D_OnWindowResized(width, height);
 
-//	SDL_ShowCursor(gGamePrefs.fullscreen? 0: 1);
+	// Some systems may not display textures properly in the first GL context created by the game
+	// unless we flush SDL events immediately after entering fullscreen mode.
+	SDL_PumpEvents();
+	SDL_FlushEvents(0, 0xFFFFFFFF);
 }
 

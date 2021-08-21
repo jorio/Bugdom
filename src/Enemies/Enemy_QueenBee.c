@@ -9,19 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	ObjNode					*gPlayerObj;
-extern	SplineDefType			**gSplineList;
-extern	TQ3Point3D				gCoord,gMyCoord;
-extern	short					gNumEnemies,gNumTerrainItems;
-extern	float					gFramesPerSecondFrac;
-extern	TQ3Vector3D				gDelta;
-extern	signed char				gNumEnemyOfKind[];
-extern	Byte					gPlayerMode,gTotalSides;
-extern	TerrainItemEntryType 	**gMasterItemList;
-extern 	Boolean					gAreaCompleted;
-extern	u_long					gInfobarUpdateBits;
 
 /****************************/
 /*    PROTOTYPES            */

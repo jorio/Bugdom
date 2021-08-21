@@ -9,35 +9,19 @@
 /*    EXTERNALS             */
 /****************************/
 
-
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	Byte			gPlayerMode;
-extern	float			gFramesPerSecond,gFramesPerSecondFrac;
-extern	WindowPtr		gCoverWindow;
-extern	Boolean			gGameOverFlag,gAbortedFlag,gRestoringSavedGame;
-extern	ObjNode			*gPlayerObj,*gHiveObj,*gTheQueen,*gAntKingObj;
-extern	u_short			gRealLevel;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	TQ3Matrix4x4		gCameraWorldToFrustumMatrix,gCameraFrustumToWindowMatrix,gCameraWorldToWindowMatrix,gCameraWindowToWorldMatrix;
-extern	TQ3Point3D		gMyCoord;
-extern	long			gNumSuperTilesDeep,gNumSuperTilesWide;	
-extern	FSSpec			gDataSpec;
-extern	short		gMainAppRezFile,gTextureRezfile;
-extern	TerrainItemEntryType 	**gMasterItemList;
-extern	short	  				gNumTerrainItems;
-extern	PrefsType	gGamePrefs;
-extern	Boolean		gShowBottomBar;
+#include "game.h"
+#include <stdio.h>
 
 
 /****************************/
 /*    PROTOTYPES            */
 /****************************/
 
-static short GetSpriteWidth(long spriteNum);
-static void DrawSprite(long spriteNum, long x, long y);
-static void EraseSprite(long spriteNum, long x, long y);
+static int GetSpriteWidth(int spriteNum);
+static void DrawSprite(int spriteNum, int x, int y);
+static void EraseSprite(int spriteNum, int x, int y);
 static void ShowHealth(void);
-static void LoadSpriteResources(FSSpec *spec);
+static void LoadSpriteResources(void);
 static void ShowBallTimerAndInventory(Boolean ballTimerOnly);
 static void ShowLadyBugs(void);
 static void ShowLives(void);
@@ -58,10 +42,6 @@ static void ShowBossHealth(void);
 
 #define	TIMER_X				320
 #define	TIMER_Y				6
-#if 0	// Source port removal: nitro gauge (timer) dimensions now read in from template image
-#define	TIMER_WIDTH			90
-#define	TIMER_HEIGHT		83
-#endif
 
 #define	HEALTH_X			TIMER_X
 #define	HEALTH_Y			50
@@ -84,8 +64,9 @@ static void ShowBossHealth(void);
 #define	BLUE_CLOVER_X		196
 #define	BLUE_CLOVER_Y		0
 
-
-#define	INFOBAR_Z		-15.0f
+#define	INFOBAR_TEXTURE_WIDTH	1024
+#define	INFOBAR_TEXTURE_HEIGHT	128
+#define	BOTTOM_BAR_Y_IN_TEXTURE	64
 
 
 		/* INFOBAR OBJTYPES */
@@ -97,17 +78,13 @@ enum
 
 
 		/* SPRITES */
-				
-#define	MAX_SPRITES		50			// must be at least as big as needed
 
 enum
 {
-		/* MISC */
-		
 	SPRITE_LIFE1,
 	SPRITE_LIFE2,
 	SPRITE_LIFE3,
-	
+
 	SPRITE_GOLDCLOVER1,
 	SPRITE_GOLDCLOVER2,
 	SPRITE_GOLDCLOVER3,
@@ -117,7 +94,7 @@ enum
 	SPRITE_BLUECLOVER2,
 	SPRITE_BLUECLOVER3,
 	SPRITE_BLUECLOVER4,
-	
+
 	SPRITE_LADYBUG,
 	SPRITE_LADYBUG_ALL,
 	SPRITE_LADYBUG_SMALL,
@@ -136,10 +113,13 @@ enum
 	SPRITE_ORANGEKEY_R,
 	SPRITE_PURPLEKEY_L,
 	SPRITE_PURPLEKEY_R,
-	
-	SPRITE_BALL
-	
-			// check MAX_SPRITES above
+
+	SPRITE_BALL,
+
+	SPRITE_INFOBARTOP,
+	SPRITE_INFOBARBOTTOM,
+
+	MAX_SPRITES
 };
 
 
@@ -166,20 +146,29 @@ short			gNumGreenClovers,gNumGoldClovers,gNumBlueClovers;
 
 static Boolean		gInfobarArtLoaded = false;
 
-static long			gNumSprites = 0;
-static GWorldPtr	gSprites[MAX_SPRITES];
+static uint32_t*	gSprites[MAX_SPRITES];
+static uint32_t*	gSpriteMasks[MAX_SPRITES];
+static int			gSpriteWidths[MAX_SPRITES];
+static int			gSpriteHeights[MAX_SPRITES];
 
-GWorldPtr	gInfoBarTop = nil;
+static TQ3TriMeshData*	gInfobarTopMesh = nil;
+static TQ3TriMeshData*	gInfobarBottomMesh = nil;
+
+static uint32_t*	gInfobarTexture = nil;
+static GLuint		gInfobarTextureName = 0;
+static Rect			gInfobarTextureDirtyRect;
+static Boolean		gInfobarTextureIsDirty = true;
 
 static Byte		gLeftArmType, gRightArmType;
 static Byte		gOldLeftArmType, gOldRightArmType;
 
 static Boolean	gBallIconIsDisplayed;
+static Boolean	gBossHealthWasUpdated;
 
-static const int		gNitroGaugeMaxSkipsPerRow = 8;
-static Rect		gNitroGaugeRect;
-static Handle	gNitroGaugeData		= nil;
-static Handle 	gNitroGaugeAlphaSkips	= nil;
+static const int	gNitroGaugeMaxSkipsPerRow = 8;
+static Rect			gNitroGaugeRect;
+static uint8_t*		gNitroGaugeData		= nil;
+static int*			gNitroGaugeAlphaSkips	= nil;
 
 /**************** INIT INVENTORY FOR GAME *********************/
 
@@ -221,9 +210,41 @@ TerrainItemEntryType	*itemPtr;
 		{
 			gNumLadyBugsOnThisLevel++;
 		}
-	
+
+
+	gBossHealthWasUpdated = false;
 }
 
+
+
+void DisposeInfobarTexture(void)
+{
+	if (gInfobarTexture)
+	{
+		DisposePtr((Ptr) gInfobarTexture);
+		gInfobarTexture = nil;
+	}
+
+	if (gInfobarTextureName)
+	{
+		glDeleteTextures(1, &gInfobarTextureName);
+		gInfobarTextureName = 0;
+	}
+
+	if (gInfobarTopMesh)
+	{
+		Q3TriMeshData_Dispose(gInfobarTopMesh);
+		gInfobarTopMesh = nil;
+	}
+
+	if (gInfobarBottomMesh)
+	{
+		Q3TriMeshData_Dispose(gInfobarBottomMesh);
+		gInfobarBottomMesh = nil;
+	}
+
+	gInfobarTextureIsDirty = true;
+}
 
 /*************** INIT INFOBAR **********************/
 //
@@ -232,36 +253,79 @@ TerrainItemEntryType	*itemPtr;
 
 void InitInfobar(void)
 {
-FSSpec		spec;
-Rect		r;
+	GAME_ASSERT(gInfobarArtLoaded);
 
-	SetPort(GetWindowPort(gCoverWindow));
+			/* SEE IF DISPOSE OLD TOP / BOTTOM */
 
-			/* SEE IF DISPOSE OLD TOP */
-			
-	if (gInfoBarTop)
-	{
-		DisposeGWorld(gInfoBarTop);
-		gInfoBarTop = nil;
-	}
+	DisposeInfobarTexture();
 
+			/* CREATE TEXTURE BUFFER */
 
-			/****************/
-			/* DRAW INFOBAR */
-			/****************/
+	gInfobarTexture = (uint32_t*) NewPtrClear(sizeof(uint32_t) * 1024 * 128);
 
 			/* DO TOP */
-			
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Images:InfobarTop.pict", &spec);
-	DrawPictureIntoGWorld(&spec, &gInfoBarTop);
-	SetRect(&r, 0,0, 640,62);
-	DumpGWorld2(gInfoBarTop, gCoverWindow,&r);
-	
-	
+
+	DrawSprite(SPRITE_INFOBARTOP, 0, 0);
+
 			/* DO BOTTOM */
-			
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Images:InfobarBottom.pict", &spec);
-	DrawPictureToScreen(&spec, 0, 480-60);
+
+	DrawSprite(SPRITE_INFOBARBOTTOM, 0, BOTTOM_BAR_Y_IN_TEXTURE);
+
+			/* CREATE TEXTURE */
+
+	gInfobarTextureName = Render_LoadTexture(
+			GL_RGB,
+			1024,
+			128,
+			GL_BGRA,
+			GL_UNSIGNED_INT_8_8_8_8,
+			gInfobarTexture,
+			kRendererTextureFlags_ClampBoth
+	);
+	CHECK_GL_ERROR();
+
+			/* CREATE TOP MESH */
+
+	float uMult = 1.0f / INFOBAR_TEXTURE_WIDTH;
+	float vMult = 1.0f / INFOBAR_TEXTURE_HEIGHT;
+
+	GAME_ASSERT_MESSAGE(!gInfobarTopMesh, "infobar top mesh already created");
+
+	gInfobarTopMesh = MakeQuadMesh_UI(
+			0, 0, 640, 62,
+			0,
+			0,
+			uMult * 640,
+			vMult * 62
+	);
+	gInfobarTopMesh->texturingMode = kQ3TexturingModeOpaque;
+	gInfobarTopMesh->glTextureName = gInfobarTextureName;
+
+			/* CREATE BOTTOM MESH */
+
+	GAME_ASSERT_MESSAGE(!gInfobarBottomMesh, "infobar bottom mesh already created");
+
+	if (!gGamePrefs.showBottomBar)
+	{
+		// Make a mesh that only shows the boss's health
+		gInfobarBottomMesh = MakeQuadMesh_UI(
+				(640-BOSS_WIDTH)/2, 420+20, (640+BOSS_WIDTH)/2, 420+40,
+				uMult * ((640-BOSS_WIDTH)/2 + 0.5f),
+				vMult * (BOTTOM_BAR_Y_IN_TEXTURE + 20 + 0.5f),
+				uMult * ((640+BOSS_WIDTH)/2 - 0.5f),
+				vMult * (BOTTOM_BAR_Y_IN_TEXTURE + 40 - 0.5f));
+	}
+	else
+	{
+		gInfobarBottomMesh = MakeQuadMesh_UI(
+				0, 420, 640, 480,
+				uMult * 0,
+				vMult * BOTTOM_BAR_Y_IN_TEXTURE,
+				uMult * 640,
+				vMult * (BOTTOM_BAR_Y_IN_TEXTURE + 60));
+	}
+	gInfobarBottomMesh->texturingMode = kQ3TexturingModeOpaque;
+	gInfobarBottomMesh->glTextureName = gInfobarTextureName;
 
 
 			/* PRIME SCREEN */
@@ -271,7 +335,7 @@ Rect		r;
 	gBallIconIsDisplayed = false;
 
 	gInfobarUpdateBits = 0xffffffff;
-	UpdateInfobar();	
+	UpdateInfobar();
 }
 
 
@@ -331,6 +395,38 @@ unsigned long	bits;
 
 #pragma mark -
 
+/******************* LOAD SPRITE RESOURCES **********************/
+
+static void LoadSpriteResources(void)
+{
+FSSpec		spec;
+OSErr		err;
+uint32_t*	pixelData;
+TGAHeader	header;
+char		path[256];
+
+			/* READ 'EM IN */
+
+	for (int i = 0; i < MAX_SPRITES; i++)
+	{
+		snprintf(path, sizeof(path), ":Images:Infobar:%d.tga", 128 + i);
+
+		FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, path, &spec);
+		err = ReadTGA(&spec, (uint8_t**) &pixelData, &header, true);
+		GAME_ASSERT(!err);
+
+		gSprites[i] = pixelData;
+		gSpriteWidths[i] = header.width;
+		gSpriteHeights[i] = header.height;
+
+		gSpriteMasks[i] = (uint32_t*) NewPtrClear(4 * header.width * header.height);
+
+		for (int p = 0; p < header.width * header.height; p++)
+		{
+			gSpriteMasks[i][p] = gSprites[i][p]==0x000000FF? 0x00000000: 0xFFFFFFFF;
+		}
+	}
+}
 
 /****************** LOAD INFOBAR ART ********************/
 
@@ -342,8 +438,8 @@ static void LoadNitroGaugeTemplate(void)
 	TGAHeader tga;
 	OSErr err;
 	
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Images:NitroGauge.tga", &spec);
-	err = ReadTGA(&spec, &gNitroGaugeData, &tga);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Images:Infobar:NitroGauge.tga", &spec);
+	err = ReadTGA(&spec, &gNitroGaugeData, &tga, false);
 	GAME_ASSERT(err == noErr);
 	GAME_ASSERT(tga.imageType == TGA_IMAGETYPE_RAW_GRAYSCALE);
 	
@@ -355,9 +451,9 @@ static void LoadNitroGaugeTemplate(void)
 	// Prepare alpha skip table. The nitro gauge is mostly made up of transparent pixels,
 	// so this will speed up rendering a little.
 
-	gNitroGaugeAlphaSkips = NewHandleClear(tga.height * gNitroGaugeMaxSkipsPerRow * sizeof(int));
-	uint8_t*	grayscale	= (uint8_t*) *gNitroGaugeData;
-	int*		skipTable	= (int *) *gNitroGaugeAlphaSkips;
+	gNitroGaugeAlphaSkips	= (int*) NewPtrClear(tga.height * gNitroGaugeMaxSkipsPerRow * sizeof(int));
+	uint8_t*	grayscale	= gNitroGaugeData;
+	int*		skipTable	= gNitroGaugeAlphaSkips;
 	for (int y = 0; y < tga.height; y++)
 	{
 		int skipsThisRow = 0;
@@ -384,35 +480,17 @@ static void LoadNitroGaugeTemplate(void)
 }
 
 void LoadInfobarArt(void)
-{				
-FSSpec	spec;
-
+{
 	if (gInfobarArtLoaded)
 		return;
 
+			/* READ SPRITES */
 
-		/*****************************************************/
-		/* READ THE PICTS FROM REZ FILE & CONVERT TO GWORLDS */
-		/*****************************************************/
+	LoadSpriteResources();
 
-	gNumSprites = 0;
-		
-		
-			/* READ MISC SPRITES */
-						
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Images:Infobar", &spec);
-	LoadSpriteResources(&spec);
-	
-	
-	UseResFile(gMainAppRezFile);
-	UseResFile(gTextureRezfile);
-	
-	
-			/* READ NITRO GAUGE TEMPLATE (SOURCE PORT ADDITION) */
+			/* READ NITRO GAUGE TEMPLATE */
 
 	LoadNitroGaugeTemplate();
-
-
 
 	gInfobarArtLoaded = true;
 }
@@ -422,128 +500,140 @@ void FreeInfobarArt(void)
 {
 	if (gNitroGaugeData != nil)
 	{
-		DisposeHandle(gNitroGaugeData);
+		DisposePtr((Ptr) gNitroGaugeData);
 		gNitroGaugeData = nil;
 	}
 	
 	if (gNitroGaugeAlphaSkips != nil)
 	{
-		DisposeHandle(gNitroGaugeAlphaSkips);
+		DisposePtr((Ptr) gNitroGaugeAlphaSkips);
 		gNitroGaugeAlphaSkips = nil;
 	}
-	
-	for (int i = 0; i < gNumSprites; i++)
+
+	if (gInfobarArtLoaded)
 	{
-		DisposeGWorld(gSprites[i]);
-		gSprites[i] = nil;
+		for (int i = 0; i < MAX_SPRITES; i++)
+		{
+			DisposePtr((Ptr) gSprites[i]);
+			DisposePtr((Ptr) gSpriteMasks[i]);
+			gSprites[i] = nil;
+			gSpriteMasks[i] = nil;
+		}
 	}
-	gNumSprites = 0;
+
+	gInfobarArtLoaded = false;
 }
 
-
-/******************* LOAD SPRITE RESOURCES **********************/
-
-static void LoadSpriteResources(FSSpec *spec)
+static uint32_t* GetInfobarTextureOffset(int x, int y)
 {
-int			i,n;
-int			fRefNum;
-OSErr		iErr;
-GDHandle	oldGD;
-GWorldPtr	oldGW;
+	uint32_t* out = gInfobarTexture + (y * INFOBAR_TEXTURE_WIDTH + x);
+	GAME_ASSERT(out >= gInfobarTexture);
+	GAME_ASSERT(out < gInfobarTexture + 4 * INFOBAR_TEXTURE_WIDTH * INFOBAR_TEXTURE_HEIGHT);
+	return out;
+}
 
-	GetGWorld(&oldGW, &oldGD);										// save current port
+static void DamageInfobarTextureRect(int x, int y, int w, int h)
+{
+	int left	= x;
+	int top		= y;
+	int right	= x + w;
+	int bottom	= y + h;
 
-	fRefNum = FSpOpenResFile(spec,fsRdPerm);
-	GAME_ASSERT(fRefNum != -1);
-	UseResFile(fRefNum);
-			
-			/* READ 'EM IN */
-				
-	n = Count1Resources('PICT');						// get # PICTs in here
-	GAME_ASSERT(gNumSprites+n <= MAX_SPRITES);
-
-	for (i = 0; i < n; i++)
+	if (!gInfobarTextureIsDirty)
 	{
-		PicHandle	pict;
-		Rect		r;
-
-		pict = GetPicture(128+i);										// load pict
-		HLock((Handle)pict);
-		r = (*pict)->picFrame;											// get size of pict
-		
-				/* MAKE GWORLD */
-				
-		iErr = NewGWorld(&gSprites[gNumSprites], 16, &r, nil, nil, 0);	// try app mem
-		GAME_ASSERT(noErr == iErr);
-
-		SetGWorld(gSprites[gNumSprites], nil);
-		DoLockPixels(gSprites[gNumSprites]);
-		DrawPicture(pict, &r);											// draw pict into gworld
-
-		ReleaseResource((Handle)pict);									// nuke pict
-		
-		gNumSprites++;
+		gInfobarTextureDirtyRect.left		= left;
+		gInfobarTextureDirtyRect.top		= top;
+		gInfobarTextureDirtyRect.right		= right;
+		gInfobarTextureDirtyRect.bottom		= bottom;
 	}
-			/* CLOSE REZ FILE */
-			
-	CloseResFile(fRefNum);
+	else
+	{
+#define MIN(a,b) ((a)<(b) ? (a) : (b))
+#define MAX(a,b) ((a)>(b) ? (a) : (b))
+		// Already dirty, expand existing dirty rect
+		gInfobarTextureDirtyRect.top    = MIN(gInfobarTextureDirtyRect.top,    top);
+		gInfobarTextureDirtyRect.left   = MIN(gInfobarTextureDirtyRect.left,   left);
+		gInfobarTextureDirtyRect.bottom = MAX(gInfobarTextureDirtyRect.bottom, bottom);
+		gInfobarTextureDirtyRect.right  = MAX(gInfobarTextureDirtyRect.right,  right);
+#undef MIN
+#undef MAX
+	}
 
-	SetGWorld (oldGW, oldGD);										// restore port
+	gInfobarTextureIsDirty = true;
 }
 
 
 /********************** DRAW SPRITE ****************************/
 
-static void DrawSprite(long spriteNum, long x, long y)
+static void DrawSprite(int spriteNum, int x, int y)
 {
-Rect	r, pr;
+	GAME_ASSERT(gInfobarArtLoaded);
+	GAME_ASSERT_MESSAGE(spriteNum < MAX_SPRITES, "illegal sprite #");
 
-	GAME_ASSERT_MESSAGE(spriteNum < gNumSprites, "illegal sprite #");
+	uint32_t* out = (uint32_t*) GetInfobarTextureOffset(x, y);
+	const uint32_t* in = gSprites[spriteNum];
+	const uint32_t* inMask = gSpriteMasks[spriteNum];
 
-	GetPortBounds(gSprites[spriteNum], &pr);
+	const int spriteWidth = gSpriteWidths[spriteNum];
+	const int spriteHeight = gSpriteHeights[spriteNum];
 
-	r.left 		= x;
-	r.right 	= r.left + (pr.right - pr.left);
-	r.top 		= y;
-	r.bottom 	= r.top + (pr.bottom - pr.top);
+	for (int row = 0; row < spriteHeight; row++)
+	{
+		for (int col = 0; col < spriteWidth; col++)
+		{
+			*out = (*out & ~*inMask) | *in;
+			out++;
+			in++;
+			inMask++;
+		}
 
-	DumpGWorldTransparent(gSprites[spriteNum], gCoverWindow, &r);
+		out += INFOBAR_TEXTURE_WIDTH - spriteWidth;
+	}
+
+	GAME_ASSERT(out <= gInfobarTexture + INFOBAR_TEXTURE_WIDTH * INFOBAR_TEXTURE_HEIGHT);
+
+	DamageInfobarTextureRect(x, y, spriteWidth, spriteHeight);
 }
 
 
 /********************** ERASE SPRITE ****************************/
 
-static void EraseSprite(long spriteNum, long x, long y)
+static void EraseSprite(int spriteNum, int x, int y)
 {
-Rect	r, pr;
+	GAME_ASSERT(gInfobarArtLoaded);
+	GAME_ASSERT_MESSAGE(spriteNum < MAX_SPRITES, "illegal sprite #");
 
-	if (gInfoBarTop == nil)
-		return;
+	const int spriteWidth = gSpriteWidths[spriteNum];
+	const int spriteHeight = gSpriteHeights[spriteNum];
 
-	GAME_ASSERT_MESSAGE(spriteNum < gNumSprites, "illegal sprite #");
+	const int backgroundWidth = gSpriteWidths[SPRITE_INFOBARTOP];
 
-	GetPortBounds(gSprites[spriteNum], &pr);
+	uint32_t* out = (uint32_t*) GetInfobarTextureOffset(x, y);
 
+	const uint32_t* in = gSprites[SPRITE_INFOBARTOP] + x + backgroundWidth * y;
+	//GAME_ASSERT(HandleBoundsCheck(....));
 
-	r.left 		= x;
-	r.right 	= r.left + (pr.right - pr.left);
-	r.top 		= y;
-	r.bottom 	= r.top + (pr.bottom - pr.top);
-	DumpGWorld3(gInfoBarTop, gCoverWindow, &r, &r);
+	for (int row = 0; row < spriteHeight; row++)
+	{
+		memcpy(out, in, 4*spriteWidth);
+		out += INFOBAR_TEXTURE_WIDTH;
+		in += backgroundWidth;
+	}
+
+	GAME_ASSERT(out <= gInfobarTexture + (INFOBAR_TEXTURE_WIDTH * INFOBAR_TEXTURE_HEIGHT * 4));
+
+	DamageInfobarTextureRect(x, y, spriteWidth, spriteHeight);
 }
 
 
 /****************** GET SPRITE WIDTH **********************/
 
-static short GetSpriteWidth(long spriteNum)
+static int GetSpriteWidth(int spriteNum)
 {
-Rect	r;
+	GAME_ASSERT(gInfobarArtLoaded);
+	GAME_ASSERT_MESSAGE(spriteNum < MAX_SPRITES, "illegal sprite #");
 
-	GAME_ASSERT_MESSAGE(spriteNum < gNumSprites, "illegal sprite #");
-
-	GetPortBounds(gSprites[spriteNum], &r);
-
-	return (r.right - r.left);
+	return gSpriteWidths[spriteNum];
 }
 
 
@@ -558,18 +648,13 @@ static void DrawNitroGauge(int arcSpan)
 {
 	Boolean wantMargin = (arcSpan < 178) && (arcSpan > 2);
 
-	uint8_t* templateRow = *((uint8_t**)gNitroGaugeData);
+	uint8_t* templateRow = gNitroGaugeData;
 	int nitroGaugeWidth = gNitroGaugeRect.right - gNitroGaugeRect.left;
 	int nitroGaugeHeight = gNitroGaugeRect.bottom - gNitroGaugeRect.top;
 	
-	PixMapHandle pm = GetGWorldPixMap(gCoverWindow);
-	int pmWidth		= (**pm).bounds.right - (**pm).bounds.left;
+	uint32_t* outRow = GetInfobarTextureOffset(gNitroGaugeRect.left, gNitroGaugeRect.top);
 
-	uint32_t* outRow = (uint32_t*) GetPixBaseAddr(pm);
-	outRow += gNitroGaugeRect.left;
-	outRow += gNitroGaugeRect.top * pmWidth;
-
-	int* skipTable = (int *) *gNitroGaugeAlphaSkips;
+	int* skipTable = gNitroGaugeAlphaSkips;
 
 	for (int y = 0; y < nitroGaugeHeight; y++)
 	{
@@ -603,10 +688,10 @@ static void DrawNitroGauge(int arcSpan)
 		}
 
 		templateRow += nitroGaugeWidth;
-		outRow += pmWidth;
+		outRow += INFOBAR_TEXTURE_WIDTH;
 	}
 
-	DamagePortRegion(&gNitroGaugeRect);
+	DamageInfobarTextureRect(gNitroGaugeRect.left, gNitroGaugeRect.top, nitroGaugeWidth, nitroGaugeHeight);
 }
 
 
@@ -621,9 +706,6 @@ static void ShowBallTimerAndInventory(Boolean ballTimerOnly)
 {
 int		n;
 Boolean	eraseBugStuff;
-
-
-	SetPort(GetWindowPort(gCoverWindow));
 
 
 		/* IF ONLY NEED TO UPDATE TIMER, THEN SEE IF NECESSARY */
@@ -652,11 +734,14 @@ Boolean	eraseBugStuff;
 			/* SEE IF NEED TO ERASE ARMS FIRST */
 			/***********************************/
 
-	if ((gOldLeftArmType != gLeftArmType) || eraseBugStuff)				// erase if changed
-		EraseSprite(gOldLeftArmType, HAND_X - GetSpriteWidth(gOldLeftArmType), HAND_Y);
+	if (!gBallIconIsDisplayed)
+	{
+		if ((gOldLeftArmType != gLeftArmType) || eraseBugStuff)				// erase if changed
+			EraseSprite(gOldLeftArmType, HAND_X - GetSpriteWidth(gOldLeftArmType), HAND_Y);
 
-	if ((gOldRightArmType != gRightArmType) || eraseBugStuff)
-		EraseSprite(gOldRightArmType, HAND_X, HAND_Y);
+		if ((gOldRightArmType != gRightArmType) || eraseBugStuff)
+			EraseSprite(gOldRightArmType, HAND_X, HAND_Y);
+	}
 
 
 			/* SEE IF ERASE BALL */
@@ -694,7 +779,6 @@ Boolean	eraseBugStuff;
 	gOldLeftArmType = gLeftArmType;
 	gOldRightArmType = gRightArmType;
 }
-	
 
 
 /***************** PROCESS BALL TIMER *********************/
@@ -723,9 +807,12 @@ void LoseBallTime(float amount)
 	if (gBallTimer <= 0.0f)
 	{
 		gBallTimer = 0;
-		
-		if (gPlayerMode == PLAYER_MODE_BALL)
+
+		if (gPlayerMode == PLAYER_MODE_BALL &&
+			BallHasHeadroomToMorphToBug())			// extend ball mode as long as bug head would materialize in ceiling
+		{
 			InitPlayer_Bug(gPlayerObj, &gMyCoord, gPlayerObj->Rot.y, PLAYER_ANIM_UNROLL);
+		}
 	}
 	gInfobarUpdateBits |= UPDATE_TIMER;	
 }
@@ -935,51 +1022,60 @@ void LoseHealth(float amount)
 
 /****************** SHOW HEALTH ************************/
 
+static void FillInfobarRect(const Rect r, uint32_t fillColor)
+{
+	uint32_t* dst = GetInfobarTextureOffset(r.left, r.top);
+
+	for (int y = r.top; y < r.bottom; y++)
+	{
+		for (int x = 0; x < r.right - r.left; x++)
+		{
+			dst[x] = fillColor;
+		}
+		dst += INFOBAR_TEXTURE_WIDTH;
+	}
+
+	DamageInfobarTextureRect(r.left, r.top, r.right - r.left, r.bottom - r.top);
+}
+
 static void ShowHealth(void)
 {
 int		n;
 Rect	r;
-RGBColor mc = {63421,0x0000,6342};
-RGBColor ec = {0x0000,0x0000,0x0000};
-RGBColor fc = {0xffff,63421,0x0000};
-	
-	
+
 	n = (float)HEALTH_WIDTH * gMyHealth;
-	
+
 			/* RED FILLER */
 			
 	r.left = HEALTH_X - HEALTH_WIDTH/2;
 	r.right = r.left + n;
 	r.top = HEALTH_Y;
 	r.bottom = r.top + HEALTH_HEIGHT;
+
 	if (r.right > r.left)
 	{
-		RGBForeColor(&mc);
-		PaintRect(&r);
+		FillInfobarRect(r, 0x1800F7FF);		// (BGRA)
 	}
 
 			/* EMPTY FILLER */
-			
+
 	r.left = r.right;
 	r.right = (HEALTH_X - HEALTH_WIDTH/2) + HEALTH_WIDTH;
-	
+
 	if (r.right > r.left)
 	{
-		RGBForeColor(&ec);
-		PaintRect(&r);
+		FillInfobarRect(r, 0x000000FF);		// (BGRA)
 	}
 
 			/* MARGIN LINE */
-	
+
 	n = r.right;		
 	r.right = r.left + 2;
-	
+
 	if (r.right < (n-2))
 	{
-		RGBForeColor(&fc);
-		PaintRect(&r);
+		FillInfobarRect(r, 0x00F7FFFF);		// (BGRA)
 	}
-	
 }
 
 
@@ -1120,31 +1216,14 @@ int		w,x;
 		/* DRAW IT */
 		/***********/
 			
-	r.top = 440;
+	r.top = BOTTOM_BAR_Y_IN_TEXTURE + 20;
 	r.bottom = r.top + 20;
 	r.left = 320-(BOSS_WIDTH/2);
 	x = r.right = r.left + BOSS_WIDTH;
 			
 		/* FRAME */
 
-	SetPort(GetWindowPort(gCoverWindow));
-	ForeColor(blackColor);
-	{
-		const int thickness = 2;
-		Rect frameRect = r;
-		frameRect.left		-= thickness;
-		frameRect.top		-= thickness;
-		frameRect.right		+= thickness;
-		frameRect.bottom	+= thickness;
-		for (int i = 0; i <= thickness; i++)
-		{
-			++frameRect.left;
-			++frameRect.top;
-			--frameRect.right;
-			--frameRect.bottom;
-			FrameRect(&frameRect);
-		}
-	}
+	FillInfobarRect(r, 0x000000FF);			// (BGRA)
 
 		/* METER */
 		
@@ -1155,8 +1234,7 @@ int		w,x;
 	r.right = r.left + w - 4; 	
 	if (w > 0)
 	{
-		ForeColor(redColor);
-		PaintRect(&r);
+		FillInfobarRect(r, 0x0608ddff);		// (BGRA)
 	}
 		
 		/* EMPTY */
@@ -1165,18 +1243,39 @@ int		w,x;
 	{
 		r.left = r.right;
 		r.right = x-2;
-		ForeColor(blackColor);
-		PaintRect(&r);
+		FillInfobarRect(r, 0x000000FF);		// (BGRA)
 	}
-}
 
+
+	gBossHealthWasUpdated = true;
+}
 
 
 void SubmitInfobarOverlay(void)
 {
-	Overlay_SubmitQuad(0,	0,		640,	62,		0,	0,				1.0f,	62.0f/480.0f);
-	if (gShowBottomBar)
+	if (!gInfobarTextureName)
+		return;
+
+	// If the screen port has dirty pixels ("damaged"), update the texture
+	if (gInfobarTextureIsDirty)
 	{
-		Overlay_SubmitQuad(0,	420,	640,	60,		0,	420.0f/480.0f,	1.0f,	60.0f/480.0f);
+		Render_UpdateTexture(
+				gInfobarTextureName,
+				gInfobarTextureDirtyRect.left,
+				gInfobarTextureDirtyRect.top,
+				gInfobarTextureDirtyRect.right - gInfobarTextureDirtyRect.left,
+				gInfobarTextureDirtyRect.bottom - gInfobarTextureDirtyRect.top,
+				GL_BGRA,
+				GL_UNSIGNED_INT_8_8_8_8,
+				GetInfobarTextureOffset(gInfobarTextureDirtyRect.left, gInfobarTextureDirtyRect.top),
+				INFOBAR_TEXTURE_WIDTH);
+
+		// Clear damage
+		gInfobarTextureIsDirty = false;
 	}
+
+	Render_SubmitMesh(gInfobarTopMesh, NULL, &kDefaultRenderMods_UI, &kQ3Point3D_Zero);
+
+	if (gGamePrefs.showBottomBar || gBossHealthWasUpdated)
+		Render_SubmitMesh(gInfobarBottomMesh, NULL, &kDefaultRenderMods_UI, &kQ3Point3D_Zero);
 }

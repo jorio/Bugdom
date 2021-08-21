@@ -9,183 +9,131 @@
 /*    EXTERNALS             */
 /****************************/
 
-#include "3dmath.h"
-
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	ObjNode				*gCurrentNode;
-extern	float				gFramesPerSecondFrac;
-extern	TQ3Point3D			gCoord;
-extern	TQ3Object	gKeepBackfaceStyleObject;
-extern	TQ3TriMeshData	**gLocalTriMeshesOfSkelType;
-extern	u_short			**gFloorMap;
+#include "game.h"
 
 
 /****************************/
 /*    PROTOTYPES            */
 /****************************/
 
-static void CalcRadius_Recurse(TQ3Object obj);
-static void ExplodeTriMesh(TQ3Object theTriMesh, TQ3TriMeshData *inData);
-static void ExplodeGeometry_Recurse(TQ3Object obj);
-static void ScrollUVs_Recurse(TQ3Object obj, short whichShader);
-static void ScrollUVs_TriMesh(TQ3Object theTriMesh, short whichShader);
+static void ExplodeTriMesh(
+		const TQ3TriMeshData* inMesh,
+		const TQ3Matrix4x4* transform,
+		float boomForce,
+		Byte particleMode,
+		int particleDensity,
+		float particleDecaySpeed);
 
 
 /****************************/
 /*    CONSTANTS             */
 /****************************/
 
-const TQ3Float32 gTextureAlphaThreshold = 0.501111f;		// We really want 0.5, but the weird number makes it easier to spot when debugging Quesa.
-
-#define OBJTREE_FRONTIER_STACK_LENGTH 64
-
+static const TQ3Matrix4x4 kIdentity4x4 =
+{{
+	{1, 0, 0, 0},
+	{0, 1, 0, 0},
+	{0, 0, 1, 0},
+	{0, 0, 0, 1},
+}};
 
 /*********************/
 /*    VARIABLES      */
 /*********************/
 
-float				gMaxRadius;
-
-TQ3Object			gModelGroup = nil,gTempGroup;
-TQ3Matrix4x4 		gWorkMatrix;
-
-float		gBoomForce,gParticleDecaySpeed;
-Byte		gParticleMode;
-long		gParticleDensity;
-ObjNode		*gParticleParentObj;
-
-TQ3Matrix3x3		gUVTransformMatrix;
-
 long				gNumParticles = 0;
 ParticleType		gParticles[MAX_PARTICLES2];
 
-static short	gShaderNum;
+static RenderModifiers kParticleRenderingMods;
 
 /*************** QD3D: CALC OBJECT BOUNDING BOX ************************/
 
-void QD3D_CalcObjectBoundingBox(QD3DSetupOutputType *setupInfo, TQ3Object theObject, TQ3BoundingBox	*boundingBox)
+void QD3D_CalcObjectBoundingBox(int numMeshes, TQ3TriMeshData** meshList, TQ3BoundingBox* boundingBox)
 {
-	GAME_ASSERT(setupInfo);
-	GAME_ASSERT(theObject);
+	GAME_ASSERT(numMeshes);
+	GAME_ASSERT(meshList);
 	GAME_ASSERT(boundingBox);
 
-	Q3View_StartBoundingBox(setupInfo->viewObject, kQ3ComputeBoundsExact);
-	do
+	boundingBox->isEmpty = true;
+	boundingBox->min = (TQ3Point3D) { 0, 0, 0 };
+	boundingBox->max = (TQ3Point3D) { 0, 0, 0 };
+
+	for (int i = 0; i < numMeshes; i++)
 	{
-		Q3Object_Submit(theObject,setupInfo->viewObject);
-	}while(Q3View_EndBoundingBox(setupInfo->viewObject, boundingBox) == kQ3ViewStatusRetraverse);
+		TQ3TriMeshData* mesh = meshList[i];
+		for (int v = 0; v < mesh->numPoints; v++)
+		{
+			TQ3Point3D p = mesh->points[v];
+
+			if (boundingBox->isEmpty)
+			{
+				boundingBox->isEmpty = false;
+				boundingBox->min = p;
+				boundingBox->max = p;
+			}
+			else
+			{
+				if (p.x < boundingBox->min.x) boundingBox->min.x = p.x;
+				if (p.y < boundingBox->min.y) boundingBox->min.y = p.y;
+				if (p.z < boundingBox->min.z) boundingBox->min.z = p.z;
+
+				if (p.x > boundingBox->max.x) boundingBox->max.x = p.x;
+				if (p.y > boundingBox->max.y) boundingBox->max.y = p.y;
+				if (p.z > boundingBox->max.z) boundingBox->max.z = p.z;
+			}
+		}
+	}
 }
 
 
 /*************** QD3D: CALC OBJECT BOUNDING SPHERE ************************/
 
-void QD3D_CalcObjectBoundingSphere(QD3DSetupOutputType *setupInfo, TQ3Object theObject, TQ3BoundingSphere *sphere)
+void QD3D_CalcObjectBoundingSphere(int numMeshes, TQ3TriMeshData** meshList, TQ3BoundingSphere* boundingSphere)
 {
-	GAME_ASSERT(setupInfo);
-	GAME_ASSERT(theObject);
-	GAME_ASSERT(sphere);
+	GAME_ASSERT(numMeshes);
+	GAME_ASSERT(meshList);
+	GAME_ASSERT(boundingSphere);
 
-	Q3View_StartBoundingSphere(setupInfo->viewObject, kQ3ComputeBoundsExact);
-	do
+	int totalNumPoints = 0;
+	TQ3Point3D origin = (TQ3Point3D) {0, 0, 0};
+
+	for (int i = 0; i < numMeshes; i++)
 	{
-		Q3Object_Submit(theObject,setupInfo->viewObject);
-	}while(Q3View_EndBoundingSphere(setupInfo->viewObject, sphere) == kQ3ViewStatusRetraverse);
-}
-
-
-
-
-/****************** QD3D: CALC OBJECT RADIUS ***********************/
-//
-// Given any object as input, calculates the radius based on the farthest TriMesh vertex.
-//
-
-float QD3D_CalcObjectRadius(TQ3Object theObject)
-{
-	gMaxRadius = 0;	
-	Q3Matrix4x4_SetIdentity(&gWorkMatrix);					// init to identity matrix
-	CalcRadius_Recurse(theObject);
-	return(gMaxRadius);
-}
-
-
-/****************** CALC RADIUS - RECURSE ***********************/
-
-static void CalcRadius_Recurse(TQ3Object obj)
-{
-TQ3GroupPosition	position;
-TQ3Object   		object,baseGroup;
-TQ3ObjectType		oType;
-TQ3TriMeshData		triMeshData;
-u_long				v;
-//static TQ3Point3D	p000 = {0,0,0};
-TQ3Point3D			tmPoint;
-float				dist;
-TQ3Matrix4x4		transform;
-TQ3Matrix4x4  		stashMatrix;
-
-				/*******************************/
-				/* SEE IF ACCUMULATE TRANSFORM */
-				/*******************************/
-				
-	if (Q3Object_IsType(obj,kQ3ShapeTypeTransform))
-	{
-  		Q3Transform_GetMatrix(obj,&transform);
-  		MatrixMultiply(&transform,&gWorkMatrix,&gWorkMatrix);
- 	}
-	else
-
-				/*************************/
-				/* SEE IF FOUND GEOMETRY */
-				/*************************/
-
-	if (Q3Object_IsType(obj,kQ3ShapeTypeGeometry))
-	{
-		oType = Q3Geometry_GetType(obj);									// get geometry type
-		switch(oType)
+		TQ3TriMeshData* mesh = meshList[i];
+		for (int v = 0; v < mesh->numPoints; v++)
 		{
-					/* MUST BE TRIMESH */
-					
-			case	kQ3GeometryTypeTriMesh:
-					Q3TriMesh_GetData(obj,&triMeshData);							// get trimesh data	
-					for (v = 0; v < triMeshData.numPoints; v++)						// scan thru all verts
-					{
-						tmPoint = triMeshData.points[v];							// get point
-						Q3Point3D_Transform(&tmPoint, &gWorkMatrix, &tmPoint);		// transform it	
-						
-						dist = sqrt((tmPoint.x * tmPoint.x) +
-									(tmPoint.y * tmPoint.y) +
-									(tmPoint.z * tmPoint.z));
-							
-//						dist = Q3Point3D_Distance(&p000, &tmPoint);					// calc dist
-						if (dist > gMaxRadius)
-							gMaxRadius = dist;
-					}
-					Q3TriMesh_EmptyData(&triMeshData);
-					break;
+			TQ3Point3D p = mesh->points[v];
+			origin.x += p.x;
+			origin.y += p.y;
+			origin.z += p.z;
+			totalNumPoints++;
 		}
 	}
-	else
-	
-			/* SEE IF RECURSE SUB-GROUP */
 
-	if (Q3Object_IsType(obj,kQ3ShapeTypeGroup))
- 	{
- 		baseGroup = obj;
-  		stashMatrix = gWorkMatrix;										// push matrix
-  		for (Q3Group_GetFirstPosition(obj, &position); position != nil;
-  			 Q3Group_GetNextPosition(obj, &position))					// scan all objects in group
- 		{
-   			Q3Group_GetPositionObject (obj, position, &object);			// get object from group
-			if (object != NULL)
-   			{
-    			CalcRadius_Recurse(object);								// sub-recurse this object
-    			Q3Object_Dispose(object);								// dispose local ref
-   			}
-  		}
-  		gWorkMatrix = stashMatrix;										// pop matrix  		
+	origin.x /= (float)totalNumPoints;
+	origin.y /= (float)totalNumPoints;
+	origin.z /= (float)totalNumPoints;
+
+	float radiusSquared = 0;
+
+	for (int i = 0; i < numMeshes; i++)
+	{
+		TQ3TriMeshData* mesh = meshList[i];
+		for (int v = 0; v < mesh->numPoints; v++)
+		{
+			float newRadius = Q3Point3D_DistanceSquared(&origin, &mesh->points[v]);
+			if (newRadius > radiusSquared)
+				radiusSquared = newRadius;
+		}
 	}
+
+	boundingSphere->isEmpty = totalNumPoints == 0 ? kQ3True : kQ3False;
+	boundingSphere->origin = origin;
+	boundingSphere->radius = sqrtf(radiusSquared);
 }
+
+
+
 
 //===================================================================================================
 //===================================================================================================
@@ -198,46 +146,19 @@ TQ3Matrix4x4  		stashMatrix;
 
 void QD3D_InitParticles(void)
 {
-long	i;
-
 	gNumParticles = 0;
 
-	for (i = 0; i < MAX_PARTICLES2; i++)
+	for (int i = 0; i < MAX_PARTICLES2; i++)
 	{
-			/* INIT TRIMESH DATA */
-			
-		gParticles[i].isUsed = false;
-		gParticles[i].triMesh.triMeshAttributeSet = nil;
-		gParticles[i].triMesh.numTriangles = 1;
-		gParticles[i].triMesh.triangles = &gParticles[i].triangle;
-		gParticles[i].triMesh.numTriangleAttributeTypes = 0;
-		gParticles[i].triMesh.triangleAttributeTypes = nil;
-		gParticles[i].triMesh.numEdges = 0;
-		gParticles[i].triMesh.edges = nil;
-		gParticles[i].triMesh.numEdgeAttributeTypes = 0;
-		gParticles[i].triMesh.edgeAttributeTypes = nil;
-		gParticles[i].triMesh.numPoints = 3;
-		gParticles[i].triMesh.points = &gParticles[i].points[0];
-		gParticles[i].triMesh.numVertexAttributeTypes = 2;
-		gParticles[i].triMesh.vertexAttributeTypes = &gParticles[i].vertAttribs[0];
-		gParticles[i].triMesh.bBox.isEmpty = kQ3True;
-
-			/* INIT TRIANGLE */
-
-		gParticles[i].triangle.pointIndices[0] = 0;
-		gParticles[i].triangle.pointIndices[1] = 1;
-		gParticles[i].triangle.pointIndices[2] = 2;
-
-			/* INIT VERTEX ATTRIB LIST */
-
-		gParticles[i].vertAttribs[0].attributeType = kQ3AttributeTypeNormal;
-		gParticles[i].vertAttribs[0].data = &gParticles[i].vertNormals[0];
-		gParticles[i].vertAttribs[0].attributeUseArray = nil;
-
-		gParticles[i].vertAttribs[1].attributeType = kQ3AttributeTypeShadingUV;
-		gParticles[i].vertAttribs[1].data = &gParticles[i].uvs[0];
-		gParticles[i].vertAttribs[1].attributeUseArray = nil;
+		ParticleType* particle = &gParticles[i];
+		particle->isUsed = false;
+		particle->mesh = Q3TriMeshData_New(1, 3, kQ3TriMeshDataFeatureVertexUVs | kQ3TriMeshDataFeatureVertexNormals);
+		for (int v = 0; v < 3; v++)
+			particle->mesh->triangles[0].pointIndices[v] = v;
 	}
+
+	Render_SetDefaultModifiers(&kParticleRenderingMods);
+	kParticleRenderingMods.statusBits |= STATUS_BIT_KEEPBACKFACES;			// draw both faces on particles
 }
 
 
@@ -268,99 +189,68 @@ long	i;
 // calculates velocity et.al.
 //
 
-void QD3D_ExplodeGeometry(ObjNode *theNode, float boomForce, Byte particleMode, long particleDensity, float particleDecaySpeed)
+void QD3D_ExplodeGeometry(
+		ObjNode *theNode,
+		float boomForce,
+		Byte particleMode,
+		int particleDensity,
+		float particleDecaySpeed)
 {
-TQ3Object theObject;
-
-	gBoomForce = boomForce;
-	gParticleMode = particleMode;
-	gParticleDensity = particleDensity;
-	gParticleDecaySpeed = particleDecaySpeed;
-	gParticleParentObj = theNode;
-	Q3Matrix4x4_SetIdentity(&gWorkMatrix);				// init to identity matrix
-
-
-
 		/* SEE IF EXPLODING SKELETON OR PLAIN GEOMETRY */
-		
+
+	const TQ3Matrix4x4* transform;
+
 	if (theNode->Genre == SKELETON_GENRE)
 	{
-		DoAlert("Trying to explode skeleton geometry! Maybe that's fine? I dunno!");
-#if 0	
-		short	numTriMeshes,i,skelType;
-		
-		skelType = theNode->Type;
-		numTriMeshes = theNode->Skeleton->skeletonDefinition->numDecomposedTriMeshes;
-		for (i = 0; i < numTriMeshes; i++)
-		{
-			ExplodeTriMesh(nil,&gLocalTriMeshesOfSkelType[skelType][i]);							// explode each trimesh individually
-		}
-#endif		
+		transform = &kIdentity4x4;							// init to identity matrix (skeleton vertices are pre-transformed)
 	}
 	else
 	{
-		theObject = theNode->BaseGroup;						// get TQ3Object from ObjNode
-		ExplodeGeometry_Recurse(theObject);	
+		transform = &theNode->BaseTransformMatrix;			// static object: set pos/rot/scale from its base transform matrix
+	}
+
+
+		/* EXPLODE EACH TRIMESH INDIVIDUALLY */
+
+	for (int i = 0; i < theNode->NumMeshes; i++)
+	{
+		ExplodeTriMesh(theNode->MeshList[i], transform, boomForce, particleMode, particleDensity, particleDecaySpeed);
 	}
 }
 
 
-/****************** EXPLODE GEOMETRY - RECURSE ***********************/
+/************* MIRROR MESHES ON Z AXIS *************/
+//
+// Makes mirrored clones of an object's meshes on the Z axis.
+// This is meant to complete half-sphere or half-cylinder cycloramas
+// which don't cover the entire viewport when using an ultra-wide display.
+//
 
-static void ExplodeGeometry_Recurse(TQ3Object obj)
+void QD3D_MirrorMeshesZ(ObjNode* theNode)
 {
-TQ3GroupPosition	position;
-TQ3Object   		object,baseGroup;
-TQ3ObjectType		oType;
-TQ3Matrix4x4		transform;
-TQ3Matrix4x4  		stashMatrix;
+	int numOriginalMeshes = theNode->NumMeshes;
 
-				/*******************************/
-				/* SEE IF ACCUMULATE TRANSFORM */
-				/*******************************/
-				
-	if (Q3Object_IsType(obj,kQ3ShapeTypeTransform))
+	AttachGeometryToDisplayGroupObject(theNode, numOriginalMeshes, theNode->MeshList, kAttachGeometry_CloneMeshes);
+
+	GAME_ASSERT(theNode->NumMeshes == numOriginalMeshes*2);
+
+	for (int meshID = numOriginalMeshes; meshID < theNode->NumMeshes; meshID++)
 	{
-  		Q3Transform_GetMatrix(obj,&transform);
-  		MatrixMultiply(&transform,&gWorkMatrix,&gWorkMatrix);
- 	}
-	else
+		TQ3TriMeshData* mesh = theNode->MeshList[meshID];
 
-				/*************************/
-				/* SEE IF FOUND GEOMETRY */
-				/*************************/
-
-	if (Q3Object_IsType(obj,kQ3ShapeTypeGeometry))
-	{
-		oType = Q3Geometry_GetType(obj);									// get geometry type
-		switch(oType)
+		for (int p = 0; p < mesh->numPoints; p++)
 		{
-					/* MUST BE TRIMESH */
-					
-			case	kQ3GeometryTypeTriMesh:
-					ExplodeTriMesh(obj,nil);
-					break;
+			mesh->points[p].z = -mesh->points[p].z;
 		}
-	}
-	else
-	
-			/* SEE IF RECURSE SUB-GROUP */
 
-	if (Q3Object_IsType(obj,kQ3ShapeTypeGroup))
- 	{
- 		baseGroup = obj;
-  		stashMatrix = gWorkMatrix;										// push matrix
-  		for (Q3Group_GetFirstPosition(obj, &position); position != nil;
-  			 Q3Group_GetNextPosition(obj, &position))					// scan all objects in group
- 		{
-   			Q3Group_GetPositionObject (obj, position, &object);			// get object from group
-			if (object != NULL)
-   			{
-    			ExplodeGeometry_Recurse(object);						// sub-recurse this object
-    			Q3Object_Dispose(object);								// dispose local ref
-   			}
-  		}
-  		gWorkMatrix = stashMatrix;										// pop matrix  		
+		// Invert triangle winding
+		for (int t = 0; t < mesh->numTriangles; t++)
+		{
+			uint16_t* triPoints = theNode->MeshList[meshID]->triangles[t].pointIndices;
+			uint16_t temp = triPoints[0];
+			triPoints[0] = triPoints[2];
+			triPoints[2] = temp;
+		}
 	}
 }
 
@@ -371,133 +261,122 @@ TQ3Matrix4x4  		stashMatrix;
 //			inData = trimesh data if input is raw data (nil if above)
 //
 
-static void ExplodeTriMesh(TQ3Object theTriMesh, TQ3TriMeshData *inData)
+static void ExplodeTriMesh(
+		const TQ3TriMeshData* inMesh,
+		const TQ3Matrix4x4* transform,
+		float boomForce,
+		Byte particleMode,
+		int particleDensity,
+		float particleDecaySpeed)
 {
-TQ3TriMeshData		triMeshData;
-TQ3Point3D			centerPt = {0,0,0};
-TQ3Vector3D			vertNormals[3],*normalPtr;
-unsigned long		ind[3],t;
-TQ3Param2D			*uvPtr;
-long				i;
-
-	if (inData)
-		triMeshData = *inData;												// use input data
-	else
-		Q3TriMesh_GetData(theTriMesh,&triMeshData);							// get trimesh data	
-
 			/*******************************/
 			/* SCAN THRU ALL TRIMESH FACES */
 			/*******************************/
 					
-	for (t = 0; t < triMeshData.numTriangles; t += gParticleDensity)	// scan thru all faces
+	for (int t = 0; t < inMesh->numTriangles; t += particleDensity)		// scan thru all faces
 	{
 				/* GET FREE PARTICLE INDEX */
-				
-		i = FindFreeParticle();
-		if (i == -1)													// see if all out
+
+		long particleIndex = FindFreeParticle();
+		if (particleIndex == -1)										// see if all out
 			break;
-		
+
+		ParticleType* particle = &gParticles[particleIndex];
+		TQ3TriMeshData* pMesh = particle->mesh;
+
+		const uint16_t* ind = inMesh->triangles[t].pointIndices;		// get indices of 3 points
+
 				/*********************/
 				/* INIT TRIMESH DATA */
 				/*********************/
  
-		gParticles[i].triMesh.triMeshAttributeSet = triMeshData.triMeshAttributeSet;	// set illegal ref to the original attribute set			
-		gParticles[i].triMesh.numVertexAttributeTypes = triMeshData.numVertexAttributeTypes;	// match attribute quantities
-		
-
 				/* DO POINTS */
 
-		ind[0] = triMeshData.triangles[t].pointIndices[0];								// get indecies of 3 points
-		ind[1] = triMeshData.triangles[t].pointIndices[1];			
-		ind[2] = triMeshData.triangles[t].pointIndices[2];
-				
-		gParticles[i].points[0] = triMeshData.points[ind[0]];							// get coords of 3 points
-		gParticles[i].points[1] = triMeshData.points[ind[1]];			
-		gParticles[i].points[2] = triMeshData.points[ind[2]];
-		
-	
-		Q3Point3D_Transform(&gParticles[i].points[0],&gWorkMatrix,&gParticles[i].points[0]);		// transform points
-		Q3Point3D_Transform(&gParticles[i].points[1],&gWorkMatrix,&gParticles[i].points[1]);					
-		Q3Point3D_Transform(&gParticles[i].points[2],&gWorkMatrix,&gParticles[i].points[2]);
-	
-		centerPt.x = (gParticles[i].points[0].x + gParticles[i].points[1].x + gParticles[i].points[2].x) * 0.3333f;		// calc center of polygon
-		centerPt.y = (gParticles[i].points[0].y + gParticles[i].points[1].y + gParticles[i].points[2].y) * 0.3333f;				
-		centerPt.z = (gParticles[i].points[0].z + gParticles[i].points[1].z + gParticles[i].points[2].z) * 0.3333f;				
-		gParticles[i].points[0].x -= centerPt.x;											// offset coords to be around center
-		gParticles[i].points[0].y -= centerPt.y;
-		gParticles[i].points[0].z -= centerPt.z;
-		gParticles[i].points[1].x -= centerPt.x;											// offset coords to be around center
-		gParticles[i].points[1].y -= centerPt.y;
-		gParticles[i].points[1].z -= centerPt.z;
-		gParticles[i].points[2].x -= centerPt.x;											// offset coords to be around center
-		gParticles[i].points[2].y -= centerPt.y;
-		gParticles[i].points[2].z -= centerPt.z;
-
-		// Source port fix: Quesa needs some bounding box for the particle to render.
-		gParticles[i].triMesh.bBox.isEmpty = false;
-		gParticles[i].triMesh.bBox.min = gParticles[i].points[0];
-		gParticles[i].triMesh.bBox.max = centerPt;
-		
-		
-				/* DO VERTEX NORMALS */
-				
-		GAME_ASSERT(triMeshData.vertexAttributeTypes[0].attributeType == kQ3AttributeTypeNormal);
-
-		normalPtr = triMeshData.vertexAttributeTypes[0].data;			// assume vert attrib #0 == vertex normals
-		vertNormals[0] = normalPtr[ind[0]];								// get vertex normals
-		vertNormals[1] = normalPtr[ind[1]];
-		vertNormals[2] = normalPtr[ind[2]];
-		
-		Q3Vector3D_Transform(&vertNormals[0],&gWorkMatrix,&vertNormals[0]);		// transform normals
-		Q3Vector3D_Transform(&vertNormals[1],&gWorkMatrix,&vertNormals[1]);		// transform normals
-		Q3Vector3D_Transform(&vertNormals[2],&gWorkMatrix,&vertNormals[2]);		// transform normals
-		Q3Vector3D_Normalize(&vertNormals[0],&gParticles[i].vertNormals[0]);	// normalize normals & place in structure
-		Q3Vector3D_Normalize(&vertNormals[1],&gParticles[i].vertNormals[1]);
-		Q3Vector3D_Normalize(&vertNormals[2],&gParticles[i].vertNormals[2]);
-
-
-				/* DO VERTEX UV'S */
-					
-		if (triMeshData.numVertexAttributeTypes > 1)					// see if also has UV (assumed to be attrib #1)
+		for (int v = 0; v < 3; v++)
 		{
-			GAME_ASSERT(triMeshData.vertexAttributeTypes[1].attributeType == kQ3AttributeTypeShadingUV);
-
-			uvPtr = triMeshData.vertexAttributeTypes[1].data;	
-			gParticles[i].uvs[0] = uvPtr[ind[0]];									// get vertex u/v's
-			gParticles[i].uvs[1] = uvPtr[ind[1]];								
-			gParticles[i].uvs[2] = uvPtr[ind[2]];								
+			Q3Point3D_Transform(&inMesh->points[ind[v]], transform, &pMesh->points[v]);		// transform points
 		}
 
+		TQ3Point3D centerPt =
+		{
+			(pMesh->points[0].x + pMesh->points[1].x + pMesh->points[2].x) * 0.3333f,		// calc center of polygon
+			(pMesh->points[0].y + pMesh->points[1].y + pMesh->points[2].y) * 0.3333f,
+			(pMesh->points[0].z + pMesh->points[1].z + pMesh->points[2].z) * 0.3333f,
+		};
+
+		for (int v = 0; v < 3; v++)
+		{
+			pMesh->points[v].x -= centerPt.x;											// offset coords to be around center
+			pMesh->points[v].y -= centerPt.y;
+			pMesh->points[v].z -= centerPt.z;
+		}
+
+		pMesh->bBox.min = pMesh->bBox.max = centerPt;
+		pMesh->bBox.isEmpty = kQ3False;
+
+
+				/* DO VERTEX NORMALS */
+
+		GAME_ASSERT(inMesh->hasVertexNormals);
+		for (int v = 0; v < 3; v++)
+		{
+			Q3Vector3D_Transform(&inMesh->vertexNormals[ind[v]], transform, &pMesh->vertexNormals[v]);		// transform normals
+			Q3Vector3D_Normalize(&pMesh->vertexNormals[v], &pMesh->vertexNormals[v]);						// normalize normals
+		}
+
+				/* DO VERTEX UV'S */
+
+		pMesh->texturingMode = inMesh->texturingMode;
+		if (inMesh->texturingMode != kQ3TexturingModeOff)				// see if also has UV
+		{
+			GAME_ASSERT(inMesh->vertexUVs);
+			for (int v = 0; v < 3; v++)									// get vertex u/v's
+			{
+				pMesh->vertexUVs[v] = inMesh->vertexUVs[ind[v]];
+			}
+			pMesh->glTextureName = inMesh->glTextureName;
+			pMesh->internalTextureID = inMesh->internalTextureID;
+		}
+
+				/* DO VERTEX COLORS */
+
+		pMesh->diffuseColor = inMesh->diffuseColor;
+
+		pMesh->hasVertexColors = inMesh->hasVertexColors;				// has per-vertex colors?
+		if (inMesh->hasVertexColors)
+		{
+			for (int v = 0; v < 3; v++)									// get per-vertex colors
+			{
+				pMesh->vertexColors[v] = inMesh->vertexColors[ind[v]];
+			}
+		}
 
 			/*********************/
 			/* SET PHYSICS STUFF */
 			/*********************/
 
-		gParticles[i].coord = centerPt;
-		gParticles[i].rot.x = gParticles[i].rot.y = gParticles[i].rot.z = 0;
-		gParticles[i].scale = 1.0;
-		
-		gParticles[i].coordDelta.x = (RandomFloat() - 0.5f) * gBoomForce;
-		gParticles[i].coordDelta.y = (RandomFloat() - 0.5f) * gBoomForce;
-		gParticles[i].coordDelta.z = (RandomFloat() - 0.5f) * gBoomForce;
-		if (gParticleMode & PARTICLE_MODE_UPTHRUST)
-			gParticles[i].coordDelta.y += 1.5f * gBoomForce;
-		
-		gParticles[i].rotDelta.x = (RandomFloat() - 0.5f) * 4.0f;			// random rotation deltas
-		gParticles[i].rotDelta.y = (RandomFloat() - 0.5f) * 4.0f;
-		gParticles[i].rotDelta.z = (RandomFloat() - 0.5f) * 4.0f;
-		
-		gParticles[i].decaySpeed = gParticleDecaySpeed;
-		gParticles[i].mode = gParticleMode;
+		particle->coord = centerPt;
+		particle->rot = (TQ3Vector3D) {0,0,0};
+		particle->scale = 1.0f;
+
+		particle->coordDelta.x = (RandomFloat() - 0.5f) * boomForce;
+		particle->coordDelta.y = (RandomFloat() - 0.5f) * boomForce;
+		particle->coordDelta.z = (RandomFloat() - 0.5f) * boomForce;
+		if (particleMode & PARTICLE_MODE_UPTHRUST)
+			particle->coordDelta.y += 1.5f * boomForce;
+
+		particle->rotDelta.x = (RandomFloat() - 0.5f) * 4.0f;			// random rotation deltas
+		particle->rotDelta.y = (RandomFloat() - 0.5f) * 4.0f;
+		particle->rotDelta.z = (RandomFloat() - 0.5f) * 4.0f;
+
+		particle->decaySpeed = particleDecaySpeed;
+		particle->mode = particleMode;
 
 				/* SET VALID & INC COUNTER */
-				
-		gParticles[i].isUsed = true;
+
+		particle->isUsed = true;
 		gNumParticles++;
 	}
-
-	if (theTriMesh)
-		Q3TriMesh_EmptyData(&triMeshData);
 }
 
 
@@ -506,7 +385,6 @@ long				i;
 void QD3D_MoveParticles(void)
 {
 float	ty,y,fps,x,z;
-long	i;
 TQ3Matrix4x4	matrix,matrix2;
 
 	if (gNumParticles == 0)												// quick check if any particles at all
@@ -515,29 +393,31 @@ TQ3Matrix4x4	matrix,matrix2;
 	fps = gFramesPerSecondFrac;
 	ty = -100.0f;														// source port add: "floor" point if we have no terrain
 
-	for (i=0; i < MAX_PARTICLES2; i++)
+	for (int i = 0; i < MAX_PARTICLES2; i++)
 	{
 		if (!gParticles[i].isUsed)										// source port fix
 			continue;
 
+		ParticleType* particle = &gParticles[i];
+
 				/* ROTATE IT */
 
-		gParticles[i].rot.x += gParticles[i].rotDelta.x * fps;
-		gParticles[i].rot.y += gParticles[i].rotDelta.y * fps;
-		gParticles[i].rot.z += gParticles[i].rotDelta.z * fps;
-					
+		particle->rot.x += gParticles[i].rotDelta.x * fps;
+		particle->rot.y += gParticles[i].rotDelta.y * fps;
+		particle->rot.z += gParticles[i].rotDelta.z * fps;
+
 					/* MOVE IT */
-					
-		if (gParticles[i].mode & PARTICLE_MODE_HEAVYGRAVITY)
-			gParticles[i].coordDelta.y -= fps * 1700.0f/2;		// gravity
+
+		if (particle->mode & PARTICLE_MODE_HEAVYGRAVITY)
+			particle->coordDelta.y -= fps * 1700.0f/2;		// gravity
 		else
-			gParticles[i].coordDelta.y -= fps * 1700.0f/3;		// gravity
-			
-		x = (gParticles[i].coord.x += gParticles[i].coordDelta.x * fps);	
-		y = (gParticles[i].coord.y += gParticles[i].coordDelta.y * fps);	
-		z = (gParticles[i].coord.z += gParticles[i].coordDelta.z * fps);	
-		
-		
+			particle->coordDelta.y -= fps * 1700.0f/3;		// gravity
+
+		x = (particle->coord.x += particle->coordDelta.x * fps);
+		y = (particle->coord.y += particle->coordDelta.y * fps);
+		z = (particle->coord.z += particle->coordDelta.z * fps);
+
+
 					/* SEE IF BOUNCE */
 
 		if (gFloorMap)
@@ -545,25 +425,25 @@ TQ3Matrix4x4	matrix,matrix2;
 
 		if (y <= ty)
 		{
-			if (gParticles[i].mode & PARTICLE_MODE_BOUNCE)
+			if (particle->mode & PARTICLE_MODE_BOUNCE)
 			{
-				gParticles[i].coord.y  = ty;
-				gParticles[i].coordDelta.y *= -0.5;
-				gParticles[i].coordDelta.x *= 0.9;
-				gParticles[i].coordDelta.z *= 0.9;
+				particle->coord.y  = ty;
+				particle->coordDelta.y *= -0.5f;
+				particle->coordDelta.x *= 0.9f;
+				particle->coordDelta.z *= 0.9f;
 			}
 			else
 				goto del;
 		}
-		
+
 					/* SCALE IT */
-					
-		gParticles[i].scale -= gParticles[i].decaySpeed * fps;
-		if (gParticles[i].scale <= 0.0f)
+
+		particle->scale -= particle->decaySpeed * fps;
+		if (particle->scale <= 0.0f)
 		{
 				/* DEACTIVATE THIS PARTICLE */
 	del:	
-			gParticles[i].isUsed = false;
+			particle->isUsed = false;
 			gNumParticles--;
 			continue;
 		}
@@ -571,21 +451,21 @@ TQ3Matrix4x4	matrix,matrix2;
 			/***************************/
 			/* UPDATE TRANSFORM MATRIX */
 			/***************************/
-			
+
 
 				/* SET SCALE MATRIX */
 
-		Q3Matrix4x4_SetScale(&gParticles[i].matrix, gParticles[i].scale,	gParticles[i].scale, gParticles[i].scale);
-	
+		Q3Matrix4x4_SetScale(&particle->matrix, particle->scale, particle->scale, particle->scale);
+
 					/* NOW ROTATE IT */
 
-		Q3Matrix4x4_SetRotate_XYZ(&matrix, gParticles[i].rot.x, gParticles[i].rot.y, gParticles[i].rot.z);
-		MatrixMultiplyFast(&gParticles[i].matrix,&matrix, &matrix2);
+		Q3Matrix4x4_SetRotate_XYZ(&matrix, particle->rot.x, particle->rot.y, particle->rot.z);
+		MatrixMultiplyFast(&particle->matrix,&matrix, &matrix2);
 	
 					/* NOW TRANSLATE IT */
 
-		Q3Matrix4x4_SetTranslate(&matrix, gParticles[i].coord.x, gParticles[i].coord.y, gParticles[i].coord.z);
-		MatrixMultiplyFast(&matrix2,&matrix, &gParticles[i].matrix);
+		Q3Matrix4x4_SetTranslate(&matrix, particle->coord.x, particle->coord.y, particle->coord.z);
+		MatrixMultiplyFast(&matrix2,&matrix, &particle->matrix);
 	}
 }
 
@@ -594,52 +474,17 @@ TQ3Matrix4x4	matrix,matrix2;
 
 void QD3D_DrawParticles(const QD3DSetupOutputType *setupInfo)
 {
-long	i;
-TQ3ViewObject	view = setupInfo->viewObject;
-Boolean	usingNull = false;
-
 	if (gNumParticles == 0)												// quick check if any particles at all
 		return;
 
-	Q3Push_Submit(view);												// save this state
-
-	QD3D_SetMultisampling(false);
-	
-	Q3Object_Submit(gKeepBackfaceStyleObject,view);						// draw particles both backfaces
-
-	for (i=0; i < MAX_PARTICLES2; i++)
+	for (int i = 0; i < MAX_PARTICLES2; i++)
 	{
-		if (gParticles[i].isUsed)
+		ParticleType* particle = &gParticles[i];
+		if (particle->isUsed)
 		{
-					/* SEE IF NEED NULL SHADER */
-					
-			if (!usingNull)
-			{
-				if (gParticles[i].mode & PARTICLE_MODE_NULLSHADER)
-				{
-					Q3Shader_Submit(setupInfo->nullShaderObject, view);
-					usingNull = true;
-				}
-			}
-			else
-			{
-				if (!(gParticles[i].mode & PARTICLE_MODE_NULLSHADER))
-				{
-					Q3Shader_Submit(setupInfo->shaderObject, view);
-					usingNull = false;
-				}
-			}
-
-			Q3MatrixTransform_Submit(&gParticles[i].matrix, view);		// submit matrix
-			Q3TriMesh_Submit(&gParticles[i].triMesh, view);				// submit geometry
-			Q3ResetTransform_Submit(view);								// reset matrix
+			Render_SubmitMesh(particle->mesh, &particle->matrix, &kParticleRenderingMods, &particle->coord);
 		}
 	}
-	
-	// Source port fix: this used to be Q3Push_Submit, which I think is a mistake, even though it seems to work either way (???)
-	Q3Pop_Submit(view);													// restore state
-	if (usingNull)
-		Q3Shader_Submit(setupInfo->shaderObject, view);
 }
 
 
@@ -658,553 +503,80 @@ Boolean	usingNull = false;
 // Given any object as input this will scroll any u/v coordinates by the given amount
 //
 
-void QD3D_ScrollUVs(TQ3Object theObject, float du, float dv, short whichShader)
+void QD3D_ScrollUVs(TQ3TriMeshData* mesh, float du, float dv)
 {
-	Q3Matrix3x3_SetTranslate(&gUVTransformMatrix, du, dv);		// make the matrix
-
-	gShaderNum = 0;
-	Q3Matrix4x4_SetIdentity(&gWorkMatrix);				// init to identity matrix
-	ScrollUVs_Recurse(theObject, whichShader);	
-}
-
-
-/****************** SCROLL UVs - RECURSE ***********************/
-
-static void ScrollUVs_Recurse(TQ3Object obj, short whichShader)
-{
-TQ3GroupPosition	position;
-TQ3Object   		object,baseGroup;
-TQ3ObjectType		oType;
-TQ3Matrix4x4		transform;
-TQ3Matrix4x4  		stashMatrix;
-
-				/*******************************/
-				/* SEE IF ACCUMULATE TRANSFORM */
-				/*******************************/
-				
-	if (Q3Object_IsType(obj,kQ3ShapeTypeTransform))
+	GAME_ASSERT(mesh->vertexUVs);
+	for (int j = 0; j < mesh->numPoints; j++)
 	{
-  		Q3Transform_GetMatrix(obj,&transform);
-  		MatrixMultiply(&transform,&gWorkMatrix,&gWorkMatrix);
- 	}
-	else
-				/*************************/
-				/* SEE IF FOUND GEOMETRY */
-				/*************************/
-
-	if (Q3Object_IsType(obj,kQ3ShapeTypeGeometry))
-	{
-		oType = Q3Geometry_GetType(obj);									// get geometry type
-		switch(oType)
-		{
-					/* MUST BE TRIMESH */
-					
-			case	kQ3GeometryTypeTriMesh:
-					ScrollUVs_TriMesh(obj, whichShader);
-					break;
-		}
-	}
-	else
-
-				/***********************/
-				/* SEE IF FOUND SHADER */
-				/***********************/
-
-	if (Q3Object_IsType(obj,kQ3ShapeTypeShader))
-	{	
-		if (Q3Shader_GetType(obj) == kQ3ShaderTypeSurface)								// must be texture surface shader
-		{
-			gShaderNum++;
-			if ((whichShader == 0) || (whichShader == gShaderNum))
-				Q3Shader_SetUVTransform(obj, &gUVTransformMatrix);
-		}
-	}
-	else
-	
-			/* SEE IF RECURSE SUB-GROUP */
-
-	if (Q3Object_IsType(obj,kQ3ShapeTypeGroup))
- 	{
- 		baseGroup = obj;
-  		stashMatrix = gWorkMatrix;										// push matrix
-  		for (Q3Group_GetFirstPosition(obj, &position); position != nil;
-  			 Q3Group_GetNextPosition(obj, &position))					// scan all objects in group
- 		{
-   			Q3Group_GetPositionObject (obj, position, &object);			// get object from group
-			if (object != NULL)
-   			{
-    			ScrollUVs_Recurse(object, whichShader);						// sub-recurse this object
-    			Q3Object_Dispose(object);								// dispose local ref
-   			}
-  		}
-  		gWorkMatrix = stashMatrix;										// pop matrix  		
+		mesh->vertexUVs[j].u += du;
+		mesh->vertexUVs[j].v += dv;
 	}
 }
 
 
 
-
-
-/********************** SCROLL UVS: TRIMESH *******************************/
-
-static void ScrollUVs_TriMesh(TQ3Object theTriMesh, short whichShader)
-{
-TQ3TriMeshData		triMeshData;
-TQ3SurfaceShaderObject	shader;
-
-	Q3TriMesh_GetData(theTriMesh,&triMeshData);							// get trimesh data	
-	
-	
-			/* SEE IF HAS A TEXTURE */
-			
-	if (Q3AttributeSet_Contains(triMeshData.triMeshAttributeSet, kQ3AttributeTypeSurfaceShader))
-	{
-		gShaderNum++;
-		if ((whichShader == 0) || (whichShader == gShaderNum))
-		{
-			Q3AttributeSet_Get(triMeshData.triMeshAttributeSet, kQ3AttributeTypeSurfaceShader, &shader);
-			Q3Shader_SetUVTransform(shader, &gUVTransformMatrix);
-			Q3Object_Dispose(shader);
-		}
-	}
-	
-		
-
-	Q3TriMesh_EmptyData(&triMeshData);
-}
-
-
+#pragma mark -
 
 //============================================================================================
 //============================================================================================
 //============================================================================================
 
 
-/****************** QD3D: REPLACE GEOMETRY TEXTURE ***********************/
-//
-// This is a self-recursive routine, so be careful.
-//
-
-void QD3D_ReplaceGeometryTexture(TQ3Object obj, TQ3SurfaceShaderObject theShader)
+TQ3TriMeshData* MakeQuadMesh(int numQuads, float width, float height)
 {
-TQ3GroupPosition	position;
-TQ3Object   		object,baseGroup;
-TQ3ObjectType		oType;
-TQ3TriMeshData		triMeshData;
+	TQ3TriMeshData* mesh = Q3TriMeshData_New(2*numQuads, 4*numQuads, kQ3TriMeshDataFeatureVertexUVs);
+	mesh->texturingMode = kQ3TexturingModeOff;
 
-				/*************************/
-				/* SEE IF FOUND GEOMETRY */
-				/*************************/
-
-	if (Q3Object_IsType(obj,kQ3ShapeTypeGeometry))
+	for (int q = 0; q < numQuads; q++)
 	{
-		oType = Q3Geometry_GetType(obj);									// get geometry type
-		switch(oType)
-		{
-					/* MUST BE TRIMESH */
-					
-			case	kQ3GeometryTypeTriMesh:
-					Q3TriMesh_GetData(obj,&triMeshData);					// get trimesh data	
-					
-					if (triMeshData.triMeshAttributeSet)					// see if has attribs
-					{
-						if (Q3AttributeSet_Contains(triMeshData.triMeshAttributeSet,
-							 kQ3AttributeTypeSurfaceShader))
-						{
-							Q3AttributeSet_Add(triMeshData.triMeshAttributeSet,
-											 kQ3AttributeTypeSurfaceShader, &theShader);					
-							Q3TriMesh_SetData(obj,&triMeshData);
-						}
-					}
-					Q3TriMesh_EmptyData(&triMeshData);
-					break;
-		}
-	}
-	else
-	
-			/* SEE IF RECURSE SUB-GROUP */
+		mesh->triangles[2 * q + 0].pointIndices[0] = 4 * q + 0;
+		mesh->triangles[2 * q + 0].pointIndices[1] = 4 * q + 1;
+		mesh->triangles[2 * q + 0].pointIndices[2] = 4 * q + 2;
 
-	if (Q3Object_IsType(obj,kQ3ShapeTypeGroup))
- 	{
- 		baseGroup = obj;
-  		for (Q3Group_GetFirstPosition(obj, &position); position != nil;
-  			 Q3Group_GetNextPosition(obj, &position))					// scan all objects in group
- 		{
-   			Q3Group_GetPositionObject (obj, position, &object);			// get object from group
-			if (object != NULL)
-   			{
-    			QD3D_ReplaceGeometryTexture(object,theShader);			// sub-recurse this object
-    			Q3Object_Dispose(object);								// dispose local ref
-   			}
-  		}
+		mesh->triangles[2 * q + 1].pointIndices[0] = 4 * q + 0;
+		mesh->triangles[2 * q + 1].pointIndices[1] = 4 * q + 2;
+		mesh->triangles[2 * q + 1].pointIndices[2] = 4 * q + 3;
+
+		float xExtent = width * .5f;
+		float yExtent = height * .5f;
+		mesh->points[4 * q + 0] = (TQ3Point3D) {-xExtent, -yExtent, 0 };
+		mesh->points[4 * q + 1] = (TQ3Point3D) {+xExtent, -yExtent, 0 };
+		mesh->points[4 * q + 2] = (TQ3Point3D) {+xExtent, +yExtent, 0 };
+		mesh->points[4 * q + 3] = (TQ3Point3D) {-xExtent, +yExtent, 0 };
+
+		mesh->vertexUVs[4 * q + 0] = (TQ3Param2D) { 0, 1 };
+		mesh->vertexUVs[4 * q + 1] = (TQ3Param2D) { 1, 1 };
+		mesh->vertexUVs[4 * q + 2] = (TQ3Param2D) { 1, 0 };
+		mesh->vertexUVs[4 * q + 3] = (TQ3Param2D) { 0, 0 };
 	}
+
+	return mesh;
 }
 
-
-/**************************** QD3D: DUPLICATE TRIMESH DATA *******************************/
-//
-// This is a specialized Copy routine only for use with the Skeleton TriMeshes.  Not all
-// data is duplicated and many references are kept the same.  ** dont use for anything else!!
-//
-// ***NOTE:  Since this is not a legitimate TriMesh created via trimesh calls, DO NOT
-//			 use the EmptyData call to free this memory.  Instead, call QD3D_FreeDuplicateTriMeshData!!
-//
-
-void QD3D_DuplicateTriMeshData(TQ3TriMeshData *inData, TQ3TriMeshData *outData)
+TQ3TriMeshData* MakeQuadMesh_UI(
+		float xyLeft, float xyTop, float xyRight, float xyBottom,
+		float uvLeft, float uvTop, float uvRight, float uvBottom)
 {
-TQ3Uns32	numPoints,numVertexAttributeTypes;
-TQ3Uns32 	i;
-
-			/* COPY BASE STUFF */
-			
-	*outData = *inData;							// first do a carbon copy
-	outData->numEdges = 0;						// don't copy edge info
-	outData->edges = nil;
-	outData->numEdgeAttributeTypes = 0;
-	outData->edgeAttributeTypes = nil;
-
-
-			/* GET VARS */
-		
-	numPoints = inData->numPoints;										// get # points
-	numVertexAttributeTypes = inData->numVertexAttributeTypes;			// get # vert attrib types
-
-			/********************/
-			/* ALLOC NEW ARRAYS */
-			/********************/
-						 		
-							/* ALLOC POINT ARRAY */
-								
-	outData->points = (TQ3Point3D *)AllocPtr(sizeof(TQ3Point3D) * numPoints);								// alloc new point array
-	GAME_ASSERT(outData->points);
-
-					
-				/* ALLOC NEW ATTIRBUTE DATA BASE STRUCTURE */
-				
-	outData->vertexAttributeTypes = (TQ3TriMeshAttributeData *)AllocPtr(sizeof(TQ3TriMeshAttributeData) *
-									 numVertexAttributeTypes);												// alloc enough for attrib(s)
-	GAME_ASSERT(outData->vertexAttributeTypes);
-
-	for (i=0; i < numVertexAttributeTypes; i++)
-		outData->vertexAttributeTypes[i] = inData->vertexAttributeTypes[i];									// quick-copy contents	
-	
-	
-				/* DO VERTEX NORMAL ATTRIB ARRAY */
-		
-	outData->vertexAttributeTypes[0].data = (void *)AllocPtr(sizeof(TQ3Vector3D) * numPoints);				// set new data array
-	GAME_ASSERT(outData->vertexAttributeTypes[0].data);
-
-
-	if (numVertexAttributeTypes > 1)
-	{
-					/* DO VERTEX UV ATTRIB ARRAY */
-		
-		outData->vertexAttributeTypes[1].data = (void *)AllocPtr(sizeof(TQ3Param2D) * numPoints);			// set new data array
-		GAME_ASSERT(outData->vertexAttributeTypes[1].data);
-
-		BlockMove(inData->vertexAttributeTypes[1].data, outData->vertexAttributeTypes[1].data,
-				 sizeof(TQ3Param2D) * numPoints);															// copy uv values into new array
-	}
-}
-
-
-
-/********************** QD3D: FREE DUPLICATE TRIMESH DATA *****************************/
-//
-// Called only to free memory allocated by above function.
-//
-
-void QD3D_FreeDuplicateTriMeshData(TQ3TriMeshData *inData)
-{
-	DisposePtr((Ptr)inData->points);
-	inData->points = nil;
-
-	DisposePtr((Ptr)inData->vertexAttributeTypes[0].data);
-	inData->vertexAttributeTypes[0].data = nil;
-
-	if (inData->numVertexAttributeTypes > 1)
-	{
-		DisposePtr((Ptr)inData->vertexAttributeTypes[1].data);
-		inData->vertexAttributeTypes[1].data = nil;	
-	}
-
-	DisposePtr((Ptr)inData->vertexAttributeTypes);
-	inData->vertexAttributeTypes = nil;
-	
-}
-
-        
-/**************************** QD3D: COPY TRIMESH DATA *******************************/
-//
-// Unlike DuplicateTriMeshData above, this function will copy all of the trimesh data arrays
-// EXCEPT FACE ATTRIBUTES into new arrays.  The original data can be nuked with no problem.
-//
-// ***NOTE:  Since this is not a legitimate TriMesh created via trimesh calls, DO NOT
-//			 use the EmptyData call to free this memory.  Instead, call QD3D_FreeCopyTriMeshData!!
-//
-
-void QD3D_CopyTriMeshData(const TQ3TriMeshData *inData, TQ3TriMeshData *outData)
-{
-TQ3Uns32	i, numPoints;
-
-			/* CLEAR UNWANTED FIELDS */
-			
-	outData->numEdges = 0;
-	outData->edges = nil;
-	outData->numEdgeAttributeTypes = 0;
-	outData->edgeAttributeTypes = nil;
-	
-	outData->numTriangleAttributeTypes = 0;
-	outData->triangleAttributeTypes = nil;
-
-			/* COPY TRIMESH ATTRIBUTE SET */
-			
-	if (inData->triMeshAttributeSet)
-		outData->triMeshAttributeSet = Q3Shared_GetReference(inData->triMeshAttributeSet);
-	else
-		outData->triMeshAttributeSet = nil;
-		
-				
-			/* COPY TRIANGLES */
-				
-	outData->numTriangles = inData->numTriangles;
-	outData->triangles = (TQ3TriMeshTriangleData *)AllocPtr(sizeof(TQ3TriMeshTriangleData) *
-						inData->numTriangles);		
-	GAME_ASSERT(outData->triangles);
-
-	for (i=0; i < inData->numTriangles; i++)
-		outData->triangles[i] = inData->triangles[i];
-		
-			
-
-			/* COPY POINTS */
-				
-	numPoints = outData->numPoints = inData->numPoints;
-								
-	outData->points = (TQ3Point3D *)AllocPtr(sizeof(TQ3Point3D) * inData->numPoints);								// alloc new point array
-	GAME_ASSERT(outData->points);
-
-	for (i=0; i < numPoints; i++)
-		outData->points[i] = inData->points[i];
-					
-					
-		/* COPY VERTEX ATTRIBUTES */
-				
-	outData->numVertexAttributeTypes = inData->numVertexAttributeTypes;
-	if (inData->numVertexAttributeTypes)
-	{
-		outData->vertexAttributeTypes = (TQ3TriMeshAttributeData *)AllocPtr(sizeof(TQ3TriMeshAttributeData) *
-										 inData->numVertexAttributeTypes);												// alloc enough for attrib(s)
-		GAME_ASSERT(outData->vertexAttributeTypes);
-
-		for (i=0; i < inData->numVertexAttributeTypes; i++)
-			outData->vertexAttributeTypes[i] = inData->vertexAttributeTypes[i];									// quick-copy contents	
-	}
-	
-		/* DO VERTEX NORMAL ATTRIB ARRAY */
-		
-	outData->vertexAttributeTypes[0].data = (void *)AllocPtr(sizeof(TQ3Vector3D) * numPoints);				// set new data array
-	GAME_ASSERT(outData->vertexAttributeTypes[0].data);
-
-	BlockMove(inData->vertexAttributeTypes[0].data, outData->vertexAttributeTypes[0].data,
-			 sizeof(TQ3Vector3D) * numPoints);															// copy uv values into new array
-
-	if (outData->numVertexAttributeTypes > 1)
-	{
-					/* DO VERTEX UV ATTRIB ARRAY */
-		
-		outData->vertexAttributeTypes[1].data = (void *)AllocPtr(sizeof(TQ3Param2D) * numPoints);			// set new data array
-		GAME_ASSERT(outData->vertexAttributeTypes[1].data);
-
-		BlockMove(inData->vertexAttributeTypes[1].data, outData->vertexAttributeTypes[1].data,
-				 sizeof(TQ3Param2D) * numPoints);															// copy uv values into new array
-	}
-	
-			/* COPY BBOX */
-			
-	outData->bBox = inData->bBox;
-}
-
-
-/********************** QD3D FREE COPY TRIMESH DATA ***********************/
-//
-// Free mem allocated above
-//
-
-void QD3D_FreeCopyTriMeshData(TQ3TriMeshData *data)
-{
-	if (data->triMeshAttributeSet)
-		Q3Object_Dispose(data->triMeshAttributeSet);
-		
-	DisposePtr((Ptr)data->triangles);
-
-	DisposePtr((Ptr)data->points);
-	
-	DisposePtr((Ptr)data->vertexAttributeTypes[0].data);
-	if (data->numVertexAttributeTypes > 1)
-		DisposePtr((Ptr)data->vertexAttributeTypes[1].data);
-
-	DisposePtr((Ptr)data->vertexAttributeTypes);
-	
-
-
-}
-
-
-/********************** RUN CALLBACK FOR EACH TRIMESH ***********************/
-// (Source port addition)
-//
-// Convenience function that traverses the object graph and runs the given callback on all trimeshes.
-//
-
-void ForEachTriMesh(
-		TQ3Object root,
-		void (*callback)(TQ3TriMeshData triMeshData, void* userData),
-		void* userData,
-		uint64_t triMeshMask)
-{
-	TQ3Object	frontier[OBJTREE_FRONTIER_STACK_LENGTH];
-	int			top = 0;
-
-	frontier[top] = root;
-
-	unsigned long nFoundTriMeshes = 0;
-
-	while (top >= 0)
-	{
-		TQ3Object obj = frontier[top];
-		frontier[top] = nil;
-		top--;
-
-		if (Q3Object_IsType(obj,kQ3ShapeTypeGeometry) &&
-			Q3Geometry_GetType(obj) == kQ3GeometryTypeTriMesh)		// must be trimesh
-		{
-			if (triMeshMask & 1)
-			{
-				TQ3TriMeshData		triMeshData;
-				TQ3Status			status;
-
-				status = Q3TriMesh_GetData(obj, &triMeshData);		// get trimesh data
-				GAME_ASSERT(status);
-
-				callback(triMeshData, userData);
-
-				Q3TriMesh_EmptyData(&triMeshData);
-			}
-
-			triMeshMask >>= 1;
-			nFoundTriMeshes++;
-		}
-		else if (Q3Object_IsType(obj, kQ3ShapeTypeShader) &&
-				 Q3Shader_GetType(obj) == kQ3ShaderTypeSurface)		// must be texture surface shader
-		{
-			DoAlert("Implement me?");
-		}
-		else if (Q3Object_IsType(obj, kQ3ShapeTypeGroup))			// SEE IF RECURSE SUB-GROUP
-		{
-			TQ3GroupPosition pos = nil;
-			Q3Group_GetFirstPosition(obj, &pos);
-
-			while (pos)												// scan all objects in group
-			{
-				TQ3Object child;
-				Q3Group_GetPositionObject(obj, pos, &child);		// get object from group
-				if (child)
-				{
-					top++;
-					GAME_ASSERT(top < OBJTREE_FRONTIER_STACK_LENGTH);
-					frontier[top] = child;
-				}
-				Q3Group_GetNextPosition(obj, &pos);
-			}
-		}
-
-		if (obj != root)
-		{
-			Q3Object_Dispose(obj);						// dispose local ref
-		}
-	}
-
-	if (nFoundTriMeshes > 8*sizeof(triMeshMask))
-	{
-		DoAlert("This group contains more trimeshes than can fit in the mask.");
-	}
-}
-
-
-
-
-
-/************** QD3D: NUKE DIFFUSE COLOR ATTRIBUTE FROM TRIMESHES ***********/
-// (SOURCE PORT ADDITION)
-//
-// Remove diffuse color data from meshes so you can render them in
-// a custom color.
-//
-// For example: HighScores.3dmf contains yellow meshes for every letter of
-// the alphabet. Call this function on each letter glyph to make them white.
-// Then you can render letters in any color you like using the attribute
-// kQ3AttributeTypeDiffuseColor.
-
-void QD3D_ClearDiffuseColor_TriMesh(TQ3TriMeshData triMeshData, void* userData)
-{
-	Q3AttributeSet_Clear(triMeshData.triMeshAttributeSet, kQ3AttributeTypeDiffuseColor);
-}
-
-
-
-
-ObjNode* MakeNewDisplayGroupObject_TexturedQuad(TQ3SurfaceShaderObject surfaceShader, float aspectRatio)
-{
-	float x = 0;
-	float y = 0;
-	float halfWidth = aspectRatio;
-	float halfHeight = 1.0f;
-
-	TQ3Vertex3D verts[4] =
-	{
-		{{x-halfWidth, y-halfHeight, 0}, nil},
-		{{x+halfWidth, y-halfHeight, 0}, nil},
-		{{x+halfWidth, y+halfHeight, 0}, nil},
-		{{x-halfWidth, y+halfHeight, 0}, nil},
-	};
-
-
-	static const TQ3Param2D uvs[4] = { {0,0}, {1,0}, {1,1}, {0,1}, };
-
-	for (int i = 0; i < 4; i++)
-	{
-		TQ3AttributeSet attrib = Q3AttributeSet_New();
-		Q3AttributeSet_Add(attrib, kQ3AttributeTypeSurfaceUV, &uvs[i]);
-		verts[i].attributeSet = attrib;
-	}
-
-	TQ3BoundingSphere bSphere =
-	{
-		.origin =  {0, 0, 0},
-		.radius = halfWidth > halfHeight ? halfWidth : halfHeight,
-		.isEmpty = kQ3False,
-	};
-
-	TQ3PolygonData quad =
-	{
-		.numVertices = 4,
-		.vertices = verts,
-		.polygonAttributeSet = nil
-	};
-
-	ObjNode *newObj = MakeNewCustomDrawObject(&gNewObjectDefinition, &bSphere, nil);
-	newObj->Genre = DISPLAY_GROUP_GENRE;		// force rendering loop to submit this node
-	newObj->Group = MODEL_GROUP_ILLEGAL;		// we aren't bound to any model group
-	CreateBaseGroup(newObj);
-
-	TQ3GeometryObject geom = Q3Polygon_New(&quad);
-
-	AttachGeometryToDisplayGroupObject(newObj, surfaceShader);
-	AttachGeometryToDisplayGroupObject(newObj, geom);
-	UpdateObjectTransforms(newObj);
-
-	Q3Object_Dispose(geom);
-
-	return newObj;
+	TQ3TriMeshData* mesh = Q3TriMeshData_New(2, 4, kQ3TriMeshDataFeatureVertexUVs);
+	mesh->texturingMode = kQ3TexturingModeOff;
+
+	mesh->triangles[0].pointIndices[0] = 0;
+	mesh->triangles[0].pointIndices[1] = 1;
+	mesh->triangles[0].pointIndices[2] = 2;
+
+	mesh->triangles[1].pointIndices[0] = 0;
+	mesh->triangles[1].pointIndices[1] = 2;
+	mesh->triangles[1].pointIndices[2] = 3;
+
+	mesh->points[0] = (TQ3Point3D) {xyLeft,		xyBottom,	0};
+	mesh->points[1] = (TQ3Point3D) {xyRight,	xyBottom,	0};
+	mesh->points[2] = (TQ3Point3D) {xyRight,	xyTop,		0};
+	mesh->points[3] = (TQ3Point3D) {xyLeft,		xyTop,		0};
+
+	mesh->vertexUVs[0] = (TQ3Param2D) {uvLeft,	uvBottom};
+	mesh->vertexUVs[1] = (TQ3Param2D) {uvRight,	uvBottom};
+	mesh->vertexUVs[2] = (TQ3Param2D) {uvRight,	uvTop};
+	mesh->vertexUVs[3] = (TQ3Param2D) {uvLeft,	uvTop};
+
+	return mesh;
 }

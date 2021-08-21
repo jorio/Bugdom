@@ -7,12 +7,8 @@
 /*    EXTERNALS             */
 /****************************/
 
-extern	float						gFramesPerSecondFrac,gFramesPerSecond;
-extern	WindowPtr					gCoverWindow;
-extern	NewObjectDefinitionType		gNewObjectDefinition;
-extern	QD3DSetupOutputType			*gGameViewInfoPtr;
-extern	FSSpec						gDataSpec;
-extern	PrefsType					gGamePrefs;
+#include "game.h"
+
 
 /****************************/
 /*    PROTOTYPES            */
@@ -26,7 +22,7 @@ static void SettingsScreenMainLoop(void);
 /*    CONSTANTS             */
 /****************************/
 
-static const TQ3ColorRGB gValueTextColor	= { 190/255.0f,224/255.0f,0 };
+static const TQ3ColorRGBA kValueTextColor = {0.75f, 0.88f, 0.00f, 1.00f};
 
 enum
 {
@@ -36,25 +32,25 @@ enum
 	SLOTID_VALUE_MASK		=	0x2000,
 };
 
+#define MAX_CHOICES 8
+
+_Static_assert(NUM_MOUSE_SENSITIVITY_LEVELS <= MAX_CHOICES, "too many mouse sensitivity levels");
+
 /*********************/
 /*    VARIABLES      */
 /*********************/
-
-
-
 
 typedef struct
 {
 	Byte* ptr;
 	const char* label;
-	Byte subtitleShownForValue;
 	const char* subtitle;
+	Byte subtitleShownForValue;
 	void (*callback)(void);
-	unsigned int nChoices;
 	bool useClovers;
-	const char* choices[8];
+	unsigned int nChoices;
+	const char* choices[MAX_CHOICES];
 	float y;
-
 } SettingEntry;
 
 static unsigned int PositiveModulo(int value, unsigned int m)
@@ -69,15 +65,7 @@ static unsigned int PositiveModulo(int value, unsigned int m)
 
 static void SettingEntry_Cycle(SettingEntry* entry, int delta)
 {
-	if (entry->nChoices == 0 && entry->choices)
-	{
-		// compute nChoices
-		for (entry->nChoices = 0; entry->choices[entry->nChoices]; entry->nChoices++);
-	}
-
-
 	unsigned int value = (unsigned int) *entry->ptr;
-
 
 	value = PositiveModulo(value + delta, entry->nChoices);
 	*entry->ptr = value;
@@ -87,106 +75,64 @@ static void SettingEntry_Cycle(SettingEntry* entry, int delta)
 	}
 }
 
-
-#define CHOICES_NO_YES {"NO","YES",NULL}
-
 static SettingEntry gSettingEntries[] =
 {
 	{
-		&gGamePrefs.easyMode,
-		"KIDDIE MODE",
-		1, "PLAYER TAKES LESS DAMAGE",
-		NULL,
-		0, false, CHOICES_NO_YES,
-		0,
+		.ptr = &gGamePrefs.easyMode,
+		.label = "Kiddie mode",
+		.subtitle = "Player takes less damage",
+		.subtitleShownForValue = 1,
+		.nChoices = 2,
+		.choices = {"No", "Yes"},
 	},
+
 	{
-		&gGamePrefs.mouseSensitivityLevel,
-		"MOUSE SENSITIVITY",
-		0, NULL,
-		NULL,
-		NUM_MOUSE_SENSITIVITY_LEVELS, true, { NULL },
-		0,
+		.ptr = &gGamePrefs.mouseSensitivityLevel,
+		.label = "Mouse sensitivity",
+		.useClovers = true,
+		.nChoices = NUM_MOUSE_SENSITIVITY_LEVELS,
+		.choices = {"1","2","3","4","5","6","7","8"},
 	},
+
 	{
-		&gGamePrefs.fullscreen,
-		"FULLSCREEN",
-		0, NULL,
-		SetFullscreenMode,
-		0, false, CHOICES_NO_YES,
-		0,
+		.ptr = &gGamePrefs.fullscreen,
+		.label = "Fullscreen",
+		.callback = SetFullscreenMode,
+		.nChoices = 2,
+		.choices = {"No", "Yes"},
 	},
-#if ALLOW_MSAA
+
 	{
-		&gGamePrefs.antiAliasing,
-		"ANTI-ALIASING",
-		0, NULL,
-		NULL,
-		0, false, {"NO","YES",NULL},
-		0,
+		.ptr = &gGamePrefs.showBottomBar,
+		.label = "Show bottom bar",
+		.nChoices = 2,
+		.choices = {"No", "Yes"},
 	},
-#endif
+
+	{
+		.ptr = &gGamePrefs.lowDetail,
+		.label = "Level of detail",
+		.subtitle = "The \"ATI Rage II\" look",
+		.subtitleShownForValue = 1,
+		.nChoices = 2,
+		.choices = {"High", "Low"},
+	},
+
 #if _DEBUG
 	{
-		&gGamePrefs.vsync,
-		"V-SYNC",
-		0, NULL,
-		NULL,
-		0, false, CHOICES_NO_YES,
-		0,
+		.ptr = &gGamePrefs.playerRelativeKeys,
+		.label = "Tank controls",
+		.nChoices = 2,
+		.choices = {"No", "Yes"},
 	},
-	{
-		&gGamePrefs.useCyclorama,
-		"CYCLORAMA",
-		0, "THE ''ATI RAGE II'' LOOK",
-		NULL,
-		0, false, CHOICES_NO_YES,
-		0,
-	},
-	/*
-	{
-		&gGamePrefs.textureFiltering,
-		"TEXTURE FILTERING",
-		0, NULL,
-		NULL,
-		0,
-		CHOICES_NO_YES,
-		0,
-	},
-	{
-		&gGamePrefs.terrainTextureDetail,
-		"TERRAIN QUALITY",
-		"3 LODs, 128x128 MAX",
-		NULL,
-		0,
-		{ "LOW (VANILLA)", "MEDIUM", "HIGH" },
-	},
-	{
-		&gGamePrefs.hideBottomBarInNonBossLevels,
-		"BOTTOM BAR",
-		0, NULL,
-		NULL,
-		0, false, {"ALWAYS SHOWN","ONLY WHEN NEEDED",NULL},
-		0,
-	},
-	{
-		&gGamePrefs.playerRelativeKeys,
-		"PLAYER-RELATIVE KEYS",
-		NULL,
-		NULL,
-		0,
-		CHOICES_NO_YES
-	},
-	 */
 #endif
+
 	// End sentinel
 	{
-		NULL,
-		NULL,
-		0, NULL,
-		NULL,
-		0, false, {NULL},
-		0,
+		.ptr = NULL,
+		.label = NULL,
+		.callback = NULL,
+		.nChoices = 0,
 	}
 };
 
@@ -201,7 +147,7 @@ void DoSettingsScreen(void)
 	/* SETUP */
 	/*********/
 
-	SetupUIStuff();
+	SetupUIStuff(kUIBackground_Cyclorama);
 	SetupSettingsScreen();
 
 	QD3D_CalcFramesPerSecond();
@@ -245,13 +191,13 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 
 	tmd.coord = (TQ3Point3D) {x,y,z};
 	tmd.align = TEXTMESH_ALIGN_LEFT;
-	tmd.scale = 0.3f;
+	tmd.scale = 0.25f;
 	tmd.slot = SLOTID_CAPTION_MASK | settingID;
 
 	if (firstTime)
 	{
 		// Create pickable quad
-		PickableQuads_NewQuad(
+		NewPickableQuad(
 				(TQ3Point3D) {x+XSPREAD/2, y, z},
 				XSPREAD*1.0f, LH*0.75f,
 				PICKID_SETTING_MASK | settingID);
@@ -259,7 +205,7 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 		// Create grass blade
 		gNewObjectDefinition.group 		= MODEL_GROUP_LEVELSPECIFIC2;
 		gNewObjectDefinition.type 		= LAWN2_MObjType_Grass2;
-		gNewObjectDefinition.coord		= (TQ3Point3D){x+XSPREAD, y-1, z-1};
+		gNewObjectDefinition.coord		= (TQ3Point3D){x+XSPREAD+5, y-1, z-1};
 		gNewObjectDefinition.slot 		= SLOTID_CAPTION_MASK | settingID;
 		gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER;
 		gNewObjectDefinition.moveCall 	= nil;
@@ -277,7 +223,7 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 	}
 
 	// Create value text
-	tmd.color = gValueTextColor;
+	tmd.color = kValueTextColor;
 	tmd.coord.x = XSPREAD/2.0f;
 	tmd.slot = SLOTID_VALUE_MASK | settingID;
 	if (hasSubtitle)
@@ -323,9 +269,10 @@ static void SetupSettingsScreen(void)
 {
 	TextMeshDef tmd;
 	TextMesh_FillDef(&tmd);
+	tmd.align = TEXTMESH_ALIGN_CENTER;
 	tmd.coord.y += 110;
-	tmd.color = gValueTextColor;
-	TextMesh_Create(&tmd, "Bugdom Settings");
+	tmd.color = kValueTextColor;
+	TextMesh_Create(&tmd, "Settings");
 
 	for (int i = 0; gSettingEntries[i].ptr; i++)
 	{
@@ -342,9 +289,6 @@ static void SettingsScreenDrawStuff(const QD3DSetupOutputType *setupInfo)
 {
 	DrawObjects(setupInfo);
 	QD3D_DrawParticles(setupInfo);
-#if _DEBUG
-	PickableQuads_Draw(setupInfo->viewObject);
-#endif
 }
 
 static void SettingsScreenMainLoop()

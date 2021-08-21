@@ -9,19 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 
-extern	float				gFramesPerSecondFrac,gFramesPerSecond;
-extern	WindowPtr			gCoverWindow;
-extern	FSSpec		gDataSpec;
-extern	u_short		gLevelType,gAreaNum,gRealLevel;
-extern	Boolean		gGameOverFlag,gAbortedFlag;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	ObjNode		*gPlayerObj;
-extern	short		gTextureRezfile;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	Boolean		gSongPlayingFlag,gResetSong,gDisableAnimSounds,gSongPlayingFlag;
-extern	PrefsType	gGamePrefs;
-extern	SDL_Window*	gSDLWindow;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -36,11 +25,14 @@ static void MoveLogoBG(ObjNode *theNode);
 /*    CONSTANTS             */
 /****************************/
 
+#define NUM_PAUSE_TEXTURES 4
 
 
 /*********************/
 /*    VARIABLES      */
 /*********************/
+
+TQ3TriMeshData* gPauseQuad = nil;
 
 
 
@@ -48,71 +40,67 @@ static void MoveLogoBG(ObjNode *theNode);
 
 void DoPaused(void)
 {
-PicHandle	pict;
-Rect		r = { 0, 0, 0, 0 };
-int			windowW = -1;
-int			windowH = -1;
-int			pictW = -1;
-int			pictH = -1;
 float		dummy;
+const float imageAspectRatio = 200.0f/152.0f;
 
 	Pomme_PauseAllChannels(true);
 
-	Q3View_Sync(gGameViewInfoPtr->viewObject);					// make sure rendering is done before we do anything
+	SDL_ShowCursor(1);
 
-	SetPort(GetWindowPort(gCoverWindow));
-	
-	InitCursor();
-	
-	pict = GetPicture(1500);
-	GAME_ASSERT(pict);
-	HLock((Handle)pict);
-	r = (*pict)->picFrame;							// get size of pict
-	pictW = r.right - r.left;
-	pictH = r.bottom - r.top;
-	OffsetRect(&r, (GAME_VIEW_WIDTH - pictW) / 2, (GAME_VIEW_HEIGHT - pictH) / 2);
-	DrawPicture(pict, &r);							// draw pict
+	gGammaFadeFactor = 1.0f;
+
+			/* PRELOAD TEXTURES */
+
+	GLuint textures[NUM_PAUSE_TEXTURES];
+	for (int i = 0; i < NUM_PAUSE_TEXTURES; i++)
+		textures[i] = QD3D_LoadTextureFile(1500+i, kRendererTextureFlags_ClampBoth);
+
+			/* CREATE MESH */
+
+	GAME_ASSERT_MESSAGE(!gPauseQuad, "Pause quad already created!");
+
+	gPauseQuad = MakeQuadMesh(1, 1.0f, 1.0f);
+	gPauseQuad->hasVertexNormals = false;
+	gPauseQuad->texturingMode = kQ3TexturingModeOpaque;
+	gPauseQuad->glTextureName = textures[3];
+
+	float xs = .4f;
+	float ys = xs/imageAspectRatio;
+
+	gPauseQuad->points[0] = (TQ3Point3D) { -xs, -ys, 0 };
+	gPauseQuad->points[1] = (TQ3Point3D) { +xs, -ys, 0 };
+	gPauseQuad->points[2] = (TQ3Point3D) { +xs, +ys, 0 };
+	gPauseQuad->points[3] = (TQ3Point3D) { -xs, +ys, 0 };
 
 			/*******************/
 			/* LET USER SELECT */
 			/*******************/
-			
-	int curState = 0;
-	bool forceDraw = false;
+
+	int curState = 3;
 	while (1)
 	{
-		SDL_GetWindowSize(gSDLWindow, &windowW, &windowH);
+		int rawMouseX, rawMouseY;
+		SDL_GetMouseState(&rawMouseX, &rawMouseY);
 
-		Point	where;
-		GetMouse(&where);
-		
-		int scaledMouseX = GAME_VIEW_WIDTH * where.h / windowW;
-		int scaledMouseY = GAME_VIEW_HEIGHT * where.v / windowH;
+		TQ3Point3D mouse = {rawMouseX, rawMouseY, 0};
+		Q3Point3D_Transform(&mouse, &gWindowToFrustumCorrectAspect, &mouse);
 
-		int newState = -1;
-		if      (scaledMouseX < r.left     ) newState = -1;
-		else if (scaledMouseX > r.right    ) newState = -1;
-		else if (scaledMouseY < r.top +  64) newState = -1;
-		else if (scaledMouseY < r.top +  88) newState = 0;	// Resume
-		else if (scaledMouseY < r.top + 111) newState = 1;	// End Game
-		else if (scaledMouseY < r.top + 135) newState = 2;	// Quit
-		else newState = -1;
+		int newState = 3; // empty
+		if      (mouse.x < -xs) newState = 3;		// empty
+		else if (mouse.x > +xs) newState = 3;		// empty
+		else if (mouse.y > ys*+.15f) newState = 3;	// empty
+		else if (mouse.y > ys*-.17f) newState = 0;	// Resume
+		else if (mouse.y > ys*-.47f) newState = 1;	// End Game
+		else if (mouse.y > ys*-.81f) newState = 2;	// Quit
+		else newState = 3;
 
-		if (newState != -1 && curState != newState)
+		if (curState != newState)
 		{
 			curState = newState;
-			forceDraw = true;
-		}
-
-		if (forceDraw)
-		{
-			pict = GetPicture(1500+curState);				// load this pict
-			GAME_ASSERT(pict);
-			HLock((Handle)pict);
-			DrawPicture(pict, &r);							// draw pict
-			ReleaseResource((Handle)pict);					// nuke pict
-			PlayEffect(EFFECT_SELECT);				
-			forceDraw = false;
+			GAME_ASSERT(curState >= 0 && curState < NUM_PAUSE_TEXTURES);
+			gPauseQuad->glTextureName = textures[newState];
+			if (curState != 3)
+				PlayEffect(EFFECT_SELECT);
 		}
 
 		UpdateInput();
@@ -123,31 +111,28 @@ float		dummy;
 		}
 
 		QD3D_DrawScene(gGameViewInfoPtr, DrawTerrain);
-		SubmitInfobarOverlay();
-		Overlay_SubmitQuad(
-				r.left, r.top, r.right-r.left, r.bottom-r.top,
-				(GAME_VIEW_WIDTH -pictW) / 2.0f / GAME_VIEW_WIDTH,
-				(GAME_VIEW_HEIGHT-pictH) / 2.0f / GAME_VIEW_HEIGHT,
-				pictW/640.0f,
-				pictH/480.0f
-		);
 		DoSDLMaintenance();
 		SDL_Delay(10);
 
-		if (FlushMouseButtonPress() && newState != -1)		// ensure mouse is within frame to proceed
+		if (FlushMouseButtonPress() && newState != 3)		// ensure mouse is within frame to proceed
 		{
 			break;
 		}
 	}
 	while(FlushMouseButtonPress());							// wait for button up
-	
+
+			/* FREE MESH/TEXTURES */
+
+	glDeleteTextures(NUM_PAUSE_TEXTURES, textures);
+	Q3TriMeshData_Dispose(gPauseQuad);
+	gPauseQuad = nil;
 
 			/* HANDLE RESULT */
-			
+
 	switch (curState)
 	{
 		case	1:
-				gGameOverFlag = gAbortedFlag = true;
+				gGameOverFlag = true;
 				break;
 				
 		case	2:
@@ -168,93 +153,6 @@ float		dummy;
 	Pomme_PauseAllChannels(false);
 }
 
-
-
-/********************* DO LEVEL CHEAT DIALOG **********************/
-
-Boolean DoLevelCheatDialog(void)
-{
-	const SDL_MessageBoxButtonData buttons[] =
-	{
-		{ 0, 0, "1" },
-		{ 0, 1, "2" },
-		{ 0, 2, "3" },
-		{ 0, 3, "4" },
-		{ 0, 4, "5" },
-		{ 0, 5, "6" },
-		{ 0, 6, "7" },
-		{ 0, 7, "8" },
-		{ 0, 8, "9" },
-		{ 0, 9, "10" },
-		{ 0, 10, "Quit" },
-	};
-
-	const SDL_MessageBoxData messageboxdata =
-	{
-		SDL_MESSAGEBOX_INFORMATION,		// .flags
-		gSDLWindow,						// .window
-		"LEVEL SELECT",					// .title
-		"PICK A LEVEL",					// .message
-		SDL_arraysize(buttons),			// .numbuttons
-		buttons,						// .buttons
-		NULL							// .colorScheme
-	};
-
-	int buttonid;
-	if (SDL_ShowMessageBox(&messageboxdata, &buttonid) < 0)
-	{
-		DoAlert(SDL_GetError());
-		CleanQuit();
-		return false;
-	}
-
-	switch (buttonid) {
-		case 10: // quit
-			CleanQuit();
-			return false;
-		default: // resume
-			gRealLevel = buttonid;
-			break;
-	}
-
-	return false;
-
-#if 0
-DialogPtr 		myDialog;
-short			itemHit;
-Boolean			dialogDone = false;
-
-	SetPort(GetWindowPort(gCoverWindow));
-	BackColor(blackColor);
-	FlushEvents ( everyEvent, REMOVE_ALL_EVENTS);
-	InitCursor();
-	myDialog = GetNewDialog(132,nil,MOVE_TO_FRONT);
-	if (!myDialog)
-		DoFatalAlert("DoLevelCheatDialog: GetNewDialog failed!");
-	GammaFadeIn();
-	
-				/* DO IT */
-				
-	while(!dialogDone)
-	{
-		ModalDialog(nil, &itemHit);
-		switch (itemHit)
-		{
-			case 	1:									// hit Quit
-					CleanQuit();
-					
-			default:									// selected a level
-					gRealLevel = (itemHit - 2);
-					dialogDone = true;				
-		}
-	}
-	DisposeDialog(myDialog);
-	HideCursor();
-	GammaFadeOut();
-	GameScreenToBlack();
-#endif
-	return(false);
-}
 
 
 #pragma mark -
@@ -279,14 +177,12 @@ Boolean			fo = false;
 
 			/* MAKE VIEW */
 
-	QD3D_NewViewDef(&viewDef, gCoverWindow);
+	QD3D_NewViewDef(&viewDef);
 	viewDef.camera.hither 			= 10;
 	viewDef.camera.yon 				= 2000;
 	viewDef.camera.fov 				= .9;
 	viewDef.camera.from				= cameraFrom;
-	viewDef.view.clearColor.r 		= 0;
-	viewDef.view.clearColor.g 		= 0;
-	viewDef.view.clearColor.b		= 0;
+	viewDef.view.clearColor			= TQ3ColorRGBA_FromInt(0x000000FF);
 	viewDef.styles.usePhong 		= false;
 
 	viewDef.lights.numFillLights 	= 2;
@@ -307,6 +203,7 @@ Boolean			fo = false;
 			/* LOAD ART */
 			
 	err = FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:Pangea.3dmf", &spec);		// load other models
+	GAME_ASSERT(err == noErr);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_TITLE);	
 
 
@@ -360,7 +257,7 @@ Boolean			fo = false;
 		QD3D_CalcFramesPerSecond();					
 	
 		UpdateInput();
-		if (AreAnyNewKeysPressed() || FlushMouseButtonPress())
+		if (GetSkipScreenInput())
 		{
 			if (!fo)
 				GammaFadeOut();
@@ -368,10 +265,9 @@ Boolean			fo = false;
 		}
 
 		MoveObjects();
-		
-		CalcEnvironmentMappingCoords(&gGameViewInfoPtr->currentCameraCoords);
+
 		QD3D_DrawScene(gGameViewInfoPtr,DrawObjects);	
-		
+
 		fotime += gFramesPerSecondFrac;
 		if ((fotime > 7.0f) && (!fo))
 		{
@@ -392,6 +288,7 @@ Boolean			fo = false;
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);		
 	KillSong();
 	GameScreenToBlack();
+	Pomme_FlushPtrTracking(true);
 }
 
 

@@ -9,18 +9,7 @@
 /* EXTERNALS   */
 /***************/
 
-#include "3dmath.h"
-
- 
-extern	TQ3Point3D	gCoord;
-extern	TQ3Vector3D	gDelta;
-extern	TQ3Matrix4x4	gWorkMatrix;
-extern	ObjNode		*gFirstNodePtr,*gPlayerObj;
-extern	long	gTerrainUnitDepth,gTerrainUnitWidth;
-extern	const float	gOneOver_TERRAIN_POLYGON_SIZE;
-extern	float		gFramesPerSecond,gFramesPerSecondFrac;
-extern	TQ3Vector3D		gRecentTerrainNormal[2];
-extern	Boolean		gDoCeiling;
+#include "game.h"
 
 
 /****************************/
@@ -344,9 +333,6 @@ again:
 
 		if (targetObj->CType == INVALID_NODE_FLAG)
 		{
-#if _DEBUG
-			printf("Collided with dead object!\n");
-#endif
 			continue;
 		}
 

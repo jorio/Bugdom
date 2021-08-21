@@ -2,8 +2,7 @@
 // Terrain.h
 //
 
-#ifndef TERRAIN_H
-#define TERRAIN_H
+#pragma once
 
 #include "qd3d_support.h"
 
@@ -64,6 +63,7 @@ enum
 #define	MAX_SUPERTILES_DEEP		(MAX_TERRAIN_DEPTH/SUPERTILE_SIZE)
 
 #define MAX_LODS				3
+#define MAX_LAYERS				2
 
 //=====================================================================
 
@@ -73,11 +73,12 @@ struct SuperTileMemoryType
 	Byte				mode;									// free, used, etc.
 	Byte				hasLOD[MAX_LODS];						// flag set when LOD exists
 	Byte				hiccupTimer;							// timer to delay drawing to avoid hiccup of texture upload
-	float				x,z,y[2];								// world coords (y for floor & ceiling)
+	TQ3Point3D			coord[MAX_LAYERS];						// world coords (y for floor & ceiling)
 	long				left,back;								// integer coords of back/left corner
-	TQ3AttributeSet		texture[MAX_LODS][2];					// attribute set containing texture for floor & ceiling at all LOD's
-	TQ3TriMeshData		triMeshData[2];							// trimesh's data for the supertile (floor & ceiling)
-	float				radius[2];								// radius of this supertile (floor & ceiling)
+	uint32_t			glTextureName[MAX_LAYERS][MAX_LODS];	// OpenGL texture name for floor & ceiling at all LODs
+	uint16_t*			textureData[MAX_LAYERS][MAX_LODS];		// pixel data for floor & ceiling at all LODs
+	TQ3TriMeshData*		triMeshDataPtrs[MAX_LAYERS];			// trimesh's data for the supertile (floor & ceiling)
+	float				radius[MAX_LAYERS];						// radius of this supertile (floor & ceiling)
 };
 typedef struct SuperTileMemoryType SuperTileMemoryType;
 
@@ -152,12 +153,4 @@ void CalcTileNormals(long layer, long row, long col, TQ3Vector3D *n1, TQ3Vector3
 void CalculateSplitModeMatrix(void);
 
 void DoItemShadowCasting(void);
-
-
-#endif
-
-
-
-
-
 

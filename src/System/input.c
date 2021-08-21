@@ -1,7 +1,8 @@
 /****************************/
 /*   	  INPUT.C	   	    */
-/* (c)2006 Pangea Software  */
 /* By Brian Greenstone      */
+/* (c)2006 Pangea Software  */
+/* (c)2021 Iliyas Jorio     */
 /****************************/
 
 
@@ -9,16 +10,14 @@
 /* EXTERNALS   */
 /***************/
 
+#include "game.h"
+#include <stdio.h>
 #include <string.h>
 
 #if __APPLE__
 #include "killmacmouseacceleration.h"
 #endif
 
-extern	float	gFramesPerSecondFrac;
-extern	PrefsType	gGamePrefs;
-extern	SDL_Window* gSDLWindow;
-extern 	SDL_GameController* gSDLController;
 
 /**********************/
 /*     PROTOTYPES     */
@@ -44,8 +43,8 @@ typedef struct KeyBinding
 
 #define NUM_MOUSE_BUTTONS 6
 
-#define JOYSTICK_DEAD_ZONE .1f
-#define JOYSTICK_DEAD_ZONE_SQUARED (JOYSTICK_DEAD_ZONE*JOYSTICK_DEAD_ZONE)
+#define kJoystickDeadZoneFrac .1f
+#define kJoystickDeadZoneFracSquared (kJoystickDeadZoneFrac*kJoystickDeadZoneFrac)
 
 #define MOUSE_DELTA_MAX 250
 #define MOUSE_DELTA_MAX_SQUARED (MOUSE_DELTA_MAX*MOUSE_DELTA_MAX)
@@ -105,8 +104,6 @@ KeyBinding gKeyBindings[kKey_MAX] =
 [kKey_Pause				] = { "Pause",				SDL_SCANCODE_ESCAPE,	0,						0,					SDL_CONTROLLER_BUTTON_START, },
 [kKey_ToggleMusic		] = { "Toggle Music",		SDL_SCANCODE_M,			0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
 [kKey_ToggleFullscreen	] = { "Toggle Fullscreen",	SDL_SCANCODE_F11,		0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
-[kKey_RaiseVolume		] = { "Raise Volume",		SDL_SCANCODE_EQUALS,	0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
-[kKey_LowerVolume		] = { "Lower Volume",		SDL_SCANCODE_MINUS,		0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
 [kKey_SwivelCameraLeft	] = { "Swivel Camera Left",	SDL_SCANCODE_COMMA,		0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
 [kKey_SwivelCameraRight	] = { "Swivel Camera Right",SDL_SCANCODE_PERIOD,	0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
 [kKey_ZoomIn			] = { "Zoom In",			SDL_SCANCODE_2,			0,						0,					SDL_CONTROLLER_BUTTON_LEFTSHOULDER, },
@@ -154,7 +151,6 @@ static inline void UpdateKeyState(Byte* state, bool downNow)
 	}
 }
 
-
 static TQ3Vector2D GetThumbStickVector(bool rightStick)
 {
 	Sint16 dxRaw = SDL_GameControllerGetAxis(gSDLController, rightStick ? SDL_CONTROLLER_AXIS_RIGHTX : SDL_CONTROLLER_AXIS_LEFTX);
@@ -164,10 +160,35 @@ static TQ3Vector2D GetThumbStickVector(bool rightStick)
 	float dy = dyRaw / 32767.0f;
 
 	float magnitudeSquared = dx*dx + dy*dy;
-	if (magnitudeSquared < JOYSTICK_DEAD_ZONE_SQUARED)
+
+	if (magnitudeSquared < kJoystickDeadZoneFracSquared)
+	{
 		return (TQ3Vector2D) { 0, 0 };
+	}
 	else
-		return (TQ3Vector2D) { dx, dy };
+	{
+		float magnitude;
+		
+		if (magnitudeSquared > 1.0f)
+		{
+			// Cap magnitude -- what's returned by the controller actually lies within a square
+			magnitude = 1.0f;
+		}
+		else
+		{
+			magnitude = sqrtf(magnitudeSquared);
+
+			// Avoid magnitude bump when thumbstick is pushed past dead zone:
+			// Bring magnitude from [kJoystickDeadZoneFrac, 1.0] to [0.0, 1.0].
+			magnitude = (magnitude - kJoystickDeadZoneFrac) / (1.0f - kJoystickDeadZoneFrac);
+		}
+
+		float angle = atan2f(dy, dx);
+
+		//angle = SnapAngle(angle, kDefaultSnapAngle);
+
+		return (TQ3Vector2D) { cosf(angle) * magnitude, sinf(angle) * magnitude };
+	}
 }
 
 /********************** UPDATE INPUT ******************************/
@@ -336,22 +357,14 @@ Boolean GetNewKeyState_SDL(unsigned short key)
 	return gRawKeyboardState[key] == KEY_DOWN;
 }
 
+/******* DOES USER WANT TO SKIP TO NEXT SCREEN *******/
+
 Boolean GetSkipScreenInput(void)
 {
 	return GetNewKeyState(kKey_UI_Confirm)
 		|| GetNewKeyState(kKey_UI_Cancel)
 		|| GetNewKeyState(kKey_UI_Skip)
 		|| FlushMouseButtonPress();
-}
-
-/***************** ARE ANY NEW KEYS PRESSED ****************/
-
-Boolean AreAnyNewKeysPressed(void)
-{
-	for (int i = 0; i < kKey_MAX; i++)
-		if (gKeyStates[i] == KEY_DOWN)
-			return true;
-	return(false);
 }
 
 

@@ -9,20 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include "game.h"
 
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	ObjNode					*gFirstNodePtr,*gPlayerObj;
-extern	TQ3Point3D				gCoord;
-extern	float					gFramesPerSecondFrac;
-extern	TQ3Vector3D				gDelta;
-extern	Byte					gPlayerMode;
-extern	unsigned long 			gInfobarUpdateBits;
-extern	TQ3Vector3D		gRecentTerrainNormal[2];
-extern	u_short				gLevelType,gRealLevel;
-extern	short		gBestCheckPoint;
-extern	TQ3Point3D	gMostRecentCheckPointCoord;
-extern	Boolean		gAreaCompleted;
-extern	u_long		gAutoFadeStatusBits;
 
 /*******************/
 /*   PROTOTYPES    */
@@ -44,6 +32,8 @@ static void MoveLadyBug(ObjNode *theNode);
 
 #define	LADYBUG_SCALE		.9f
 #define	LADYBUG_CAGE_SCALE	.30f
+#define LADYBUG_MAX_ALTITUDE_BEFORE_CULLING	3000.0f
+#define LADYBUG_MAX_ALTITUDE_FOR_SHADOW		1250.0f
 
 
 
@@ -115,7 +105,7 @@ int		checkpointNum = itemPtr->parm[0];
 		gNewObjectDefinition.type 		= GLOBAL1_MObjType_Droplet;	
 		gNewObjectDefinition.coord.x 	+= 192.0f * CHECKPOINT_SCALE;
 		gNewObjectDefinition.coord.y 	+= 224.0f * CHECKPOINT_SCALE;
-		gNewObjectDefinition.flags 		= gAutoFadeStatusBits;
+		gNewObjectDefinition.flags 		= gAutoFadeStatusBits | STATUS_BIT_NOZWRITE;
 		gNewObjectDefinition.slot++;
 		gNewObjectDefinition.moveCall 	= nil;
 		droplet = MakeNewDisplayGroupObject(&gNewObjectDefinition);
@@ -651,7 +641,7 @@ float	y;
 		gNewObjectDefinition.group 		= GLOBAL1_MGroupNum_LadyBug;	
 		gNewObjectDefinition.type 		= GLOBAL1_MObjType_LadyBugPost;	
 		gNewObjectDefinition.coord.x 	= x + po[i].x;
-		gNewObjectDefinition.coord.y 	= y - 20.0f;
+		gNewObjectDefinition.coord.y 	= y + 10.0f;
 		gNewObjectDefinition.coord.z 	= z + po[i].y;
 		gNewObjectDefinition.flags 		= gAutoFadeStatusBits;
 		gNewObjectDefinition.slot++;
@@ -677,13 +667,12 @@ float	y;
 	gNewObjectDefinition.type 		= GLOBAL1_MObjType_LadyBugCage;	
 	gNewObjectDefinition.coord.x 	= x;
 	gNewObjectDefinition.coord.z 	= z;
-	gNewObjectDefinition.flags 		= gAutoFadeStatusBits;
+	gNewObjectDefinition.flags 		= STATUS_BIT_KEEPBACKFACES | gAutoFadeStatusBits;
 	gNewObjectDefinition.slot++;
 	gNewObjectDefinition.moveCall 	= nil;
 	gNewObjectDefinition.rot 		= 0;
 	cage = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-	if (cage == nil)
-		return(false);
+	GAME_ASSERT(cage);
 
 	cage->CType 			= CTYPE_MISC|CTYPE_KICKABLE|CTYPE_BLOCKCAMERA|CTYPE_TRIGGER;
 	cage->CBits 			= CBITS_ALLSOLID;
@@ -695,10 +684,8 @@ float	y;
 	post[3]->ChainNode = cage;	
 	cage->ChainHead = post[0];
 
-	MakeObjectKeepBackfaces(cage);
-	
-	
-	
+
+
 			/****************/
 			/* MAKE LADYBUG */
 			/****************/
@@ -713,8 +700,7 @@ float	y;
 	GAME_ASSERT(bug);
 
 	cage->ChainNode = bug;
-	
-	
+
 	return(true);											// item was added
 }
 
@@ -749,6 +735,8 @@ ObjNode	*bug,*p0,*p1,*p2,*p3;
 	{
 		bug->MoveCall = MoveLadyBug;
 		MorphToSkeletonAnim(bug->Skeleton, LADYBUG_ANIM_UNFOLD, 7);
+		bug->StatusBits |= STATUS_BIT_DONTCULL;	// don't cull her as she takes off so the sfx isn't cut off abruptly
+												// -- MoveLadyBug will cull her when she's risen high enough.
 		cage->ChainNode = nil;					// detach bug from chain
 		AttachShadowToObject(bug, 5, 5, false);	// give her a shadow
 	}
@@ -796,6 +784,19 @@ static void MoveLadyBug(ObjNode *theNode)
 		gDelta.y += 100.0 * gFramesPerSecondFrac;
 		gCoord.y += gDelta.y * gFramesPerSecondFrac;	
 		theNode->Rot.y += gFramesPerSecondFrac;
+
+		float altitude = gCoord.y - theNode->InitCoord.y;
+
+		// Fade out shadow based on altitude
+		float shadowTransparency = 1.0f - altitude / LADYBUG_MAX_ALTITUDE_FOR_SHADOW;
+		if (shadowTransparency < 0)
+			shadowTransparency = 0;
+		MakeObjectTransparent(theNode->ShadowNode, shadowTransparency);
+
+		// Culling is disabled on a rescued ladybug until she reaches an altitude threshold
+		// so the sound effect isn't cut off abruptly.
+		if (altitude > LADYBUG_MAX_ALTITUDE_BEFORE_CULLING)			// if risen above altitude threshold, allow culling
+			theNode->StatusBits &= ~STATUS_BIT_DONTCULL;
 	}
 
 	UpdateObject(theNode);

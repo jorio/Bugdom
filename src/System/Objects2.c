@@ -9,18 +9,8 @@
 /* EXTERNALS   */
 /***************/
 
-extern	TQ3Object	gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
-extern	TQ3BoundingSphere		gObjectGroupRadiusList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
-extern	TQ3Matrix4x4	gCameraWorldToViewMatrix,gCameraViewToFrustumMatrix;
-extern	short		gNumObjectsInGroupList[MAX_3DMF_GROUPS];
-extern	float		gFramesPerSecondFrac;
-extern	ObjNode		*gPlayerObj,*gFirstNodePtr;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	TQ3Point3D	gCoord;
-extern	TQ3Object	gKeepBackfaceStyleObject;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	u_long		gAutoFadeStatusBits;
-extern	PrefsType	gGamePrefs;
+#include "game.h"
+
 
 /****************************/
 /*    PROTOTYPES            */
@@ -180,13 +170,15 @@ void SetObjectCollisionBounds(ObjNode *theNode, short top, short bottom, short l
 ObjNode	*AttachShadowToObject(ObjNode *theNode, float scaleX, float scaleZ, Boolean checkBlockers)
 {
 ObjNode	*shadowObj;
-									
+
+	GAME_ASSERT_MESSAGE(!theNode->ShadowNode, "Node already had a shadow");
+
 	gNewObjectDefinition.group 		= GLOBAL1_MGroupNum_Shadow;	
 	gNewObjectDefinition.type 		= GLOBAL1_MObjType_Shadow;	
 	gNewObjectDefinition.coord 		= theNode->Coord;
 	gNewObjectDefinition.coord.y 	+= SHADOW_Y_OFF;
-	gNewObjectDefinition.flags 		= STATUS_BIT_NOZWRITE|STATUS_BIT_NULLSHADER|STATUS_BIT_NOFOG|gAutoFadeStatusBits;
-									
+	gNewObjectDefinition.flags		= STATUS_BIT_NOZWRITE | STATUS_BIT_NULLSHADER | gAutoFadeStatusBits;
+
 	if (theNode->Slot >= SLOT_OF_DUMB+1)					// shadow *must* be after parent!
 		gNewObjectDefinition.slot 	= theNode->Slot+1;
 	else
@@ -199,6 +191,8 @@ ObjNode	*shadowObj;
 		return(nil);
 
 	theNode->ShadowNode = shadowObj;
+
+	shadowObj->RenderModifiers.drawOrder = kDrawOrder_Shadows;	// draw shadow below water (overridden in UpdateShadow)
 
 	shadowObj->SpecialF[0] = scaleX;							// need to remeber scales for update
 	shadowObj->SpecialF[1] = scaleZ;
@@ -234,8 +228,6 @@ ObjNode	*shadowObj;
 	shadowObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
 	if (shadowObj == nil)
 		return(nil);
-
-//	MakeObjectKeepBackfaces(shadowObj);
 
 	theNode->ShadowNode = shadowObj;
 
@@ -277,9 +269,11 @@ float	dist;
 	}
 	else
 		shadowNode->StatusBits &= ~STATUS_BIT_HIDDEN;
-		
-		
-		
+
+
+	shadowNode->RenderModifiers.drawOrder = kDrawOrder_Shadows;			// reset default draw order for shadow
+
+
 	x = theNode->Coord.x;												// get integer copy for collision checks
 	y = theNode->Coord.y + theNode->BottomOff;
 	z = theNode->Coord.z;
@@ -314,28 +308,14 @@ float	dist;
 
 						/* SHADOW IS ON OBJECT  */
 
+					// Use same draw order as object we're standing on top of
+					shadowNode->RenderModifiers.drawOrder = thisNodePtr->RenderModifiers.drawOrder;
+
 					shadowNode->Coord.y = thisNodePtr->CollisionBoxes[0].top + SHADOW_Y_OFF;
 					
 					if (thisNodePtr->CType & CTYPE_LIQUID)						// if liquid, move to top
 					{
-						switch(thisNodePtr->Kind)
-						{
-							case	LIQUID_WATER:
-									shadowNode->Coord.y += WATER_COLLISION_TOPOFF;
-									break;
-									
-							case	LIQUID_SLIME:
-									shadowNode->Coord.y += SLIME_COLLISION_TOPOFF;
-									break;
-
-							case	LIQUID_HONEY:
-									shadowNode->Coord.y += HONEY_COLLISION_TOPOFF;
-									break;
-
-							case	LIQUID_LAVA:
-									shadowNode->Coord.y += LAVA_COLLISION_TOPOFF;
-									break;						
-						}
+						shadowNode->Coord.y += gLiquidCollisionTopOffset[thisNodePtr->Kind];
 					}
 					
 					shadowNode->Scale.x = shadowNode->SpecialF[0];				// use preset scale
@@ -370,8 +350,6 @@ float	dist;
 	
 	shadowNode->Scale.x = dist * shadowNode->SpecialF[0];				// this scale wont get updated until next frame (RotateOnTerrain).
 	shadowNode->Scale.z = dist * shadowNode->SpecialF[1];
-	
-	SetObjectTransformMatrix(shadowNode);								// update transforms
 }
 
 
@@ -406,10 +384,9 @@ ObjNode				*theNode;
 			
 		if (theNode->StatusBits & STATUS_BIT_HIDDEN)			// if hidden then treat as OFF
 			goto draw_off;
-		
-		if (theNode->BaseGroup == nil)							// quick check if any geometry at all
-			if (theNode->Genre != SKELETON_GENRE)
-				goto next;
+
+		if (0 == theNode->NumMeshes)							// quick check if any geometry at all
+			goto next;
 
 		if (theNode->StatusBits & STATUS_BIT_DONTCULL)			// see if dont want to use our culling
 			goto draw_on;

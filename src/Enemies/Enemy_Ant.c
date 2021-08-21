@@ -9,18 +9,8 @@
 /*    EXTERNALS             */
 /****************************/
 
-#include "3dmath.h"
+#include "game.h"
 
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	ObjNode					*gCurrentNode;
-extern	SplineDefType			**gSplineList;
-extern	TQ3Point3D				gCoord,gMyCoord;
-extern	short					gNumEnemies;
-extern	float					gFramesPerSecondFrac;
-extern	TQ3Vector3D			gDelta;
-extern	signed char			gNumEnemyOfKind[];
-extern	u_short					gLevelType;
-extern	u_long				gAutoFadeStatusBits;
 
 /****************************/
 /*    PROTOTYPES            */
@@ -990,9 +980,8 @@ static const TQ3Point3D	zero = {0,0,0};
 	Q3Matrix4x4_SetTranslate(&m3, 21, -80, -33);
 	FindJointFullMatrix(theEnemy, ANT_HOLDING_LIMB, &m);
 	MatrixMultiplyFast(&m3, &m, &spearObj->BaseTransformMatrix);
-	SetObjectTransformMatrix(spearObj);
-	
-	
+
+
 			/* SET REAL POINT FOR CULLING */
 			
 	Q3Point3D_Transform(&zero, &spearObj->BaseTransformMatrix, &spearObj->Coord);
@@ -1288,9 +1277,8 @@ static const TQ3Point3D	zero = {0,0,0};
 	Q3Matrix4x4_SetTranslate(&m3, 30, 0, -50);
 	FindJointFullMatrix(theEnemy, ANT_HOLDING_LIMB, &m);
 	MatrixMultiplyFast(&m3, &m, &rock->BaseTransformMatrix);
-	SetObjectTransformMatrix(rock);
-	
-	
+
+
 			/* SET REAL POINT FOR CULLING */
 			
 	Q3Point3D_Transform(&zero, &rock->BaseTransformMatrix, &rock->Coord);

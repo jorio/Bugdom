@@ -2,7 +2,9 @@
 // pick.h
 //
 
-TQ3PickObject CreateDefaultPickObject(TQ3Point2D *point);
-Boolean	PickMainMenuIcon(TQ3Point2D point, TQ3Int32 *pickID);
-Boolean	PickSaveGameIcon(TQ3Point2D point, TQ3Int32 *pickID);
+ObjNode* NewPickableQuad(TQ3Point3D	coord, float width, float height, int32_t pickID);
+
+void DisposePickableObjects(void);
+
+bool PickObject(int mouseX, int mouseY, int32_t *pickID);
 

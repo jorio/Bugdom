@@ -7,25 +7,8 @@
 /* EXTERNALS   */
 /***************/
 
+#include "game.h"
 
-
-extern	ObjNode		*gFirstNodePtr;
-extern	TerrainItemEntryType	**gTerrainItemLookupTableX;
-extern	TQ3Matrix4x4		gCameraWorldToViewMatrix, gCameraViewToFrustumMatrix;
-extern	NewObjectDefinitionType	gNewObjectDefinition;
-extern	TQ3Point3D		gMyCoord;
-extern	TerrainYCoordType		**gMapYCoords;
-extern	TerrainInfoMatrixType	**gMapInfoMatrix;
-extern	TerrainItemEntryType 	**gMasterItemList;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	float					gYon;
-extern	long					gNumSplines;
-extern	SplineDefType			**gSplineList;
-extern	FenceDefType	*gFenceList;
-extern	long			gNumFences;
-extern	long		gMyStartX,gMyStartZ;
-extern	TQ3Point3D	gMostRecentCheckPointCoord;
-extern	PrefsType	gGamePrefs;
 
 /****************************/
 /*  PROTOTYPES             */
@@ -43,6 +26,7 @@ static Boolean IsSuperTileVisible(short superTileNum, Byte layer);
 static void DrawTileIntoMipmap(uint16_t tile, int row, int col, uint16_t* buffer);
 static void	ShrinkSuperTileTextureMap(const u_short *srcPtr,u_short *destPtr);
 //static void	ShrinkSuperTileTextureMapTo64(u_short *srcPtr,u_short *destPtr);
+static void ShrinkHalf(const uint16_t* input, uint16_t* output, int outputSize);
 static inline void ReleaseAllSuperTiles(void);
 static void BuildSuperTileLOD(SuperTileMemoryType *superTilePtr, short lod);
 
@@ -54,12 +38,16 @@ static void BuildSuperTileLOD(SuperTileMemoryType *superTilePtr, short lod);
 #define	ITEM_WINDOW		1			// # supertiles for item add window (must be integer)
 #define	OUTER_SIZE		0.6f		// size of border out of add window for delete window (can be float)
 
+#define TILE_TEXTURE_INTERNAL_FORMAT	GL_RGB
+#define TILE_TEXTURE_FORMAT				GL_BGRA_EXT
+#define TILE_TEXTURE_TYPE				GL_UNSIGNED_SHORT_1_5_5_5_REV
+
 
 /**********************/
 /*     VARIABLES      */
 /**********************/
 
-
+int				gTerrainTextureDetail = TERRAIN_TEXTURE_PREF_1_LOD_160;
 int				gSuperTileActiveRange;
 
 Boolean			gDoCeiling;
@@ -73,7 +61,7 @@ u_short	**gTileDataHandle;
 
 u_short	**gFloorMap = nil;								// 2 dimensional array of u_shorts (allocated below)
 u_short	**gCeilingMap = nil;
-u_short	**gVertexColors[2];
+u_short	**gVertexColors[MAX_LAYERS];
 
 long	gTerrainTileWidth,gTerrainTileDepth;			// width & depth of terrain in tiles
 long	gTerrainUnitWidth,gTerrainUnitDepth;			// width & depth of terrain in world units (see TERRAIN_POLYGON_SIZE)
@@ -83,7 +71,7 @@ long	gNumTerrainTextureTiles = 0;
 long	gNumSuperTilesDeep,gNumSuperTilesWide;	  		// dimensions of terrain in terms of supertiles
 long	gCurrentSuperTileRow,gCurrentSuperTileCol;
 
-u_char	gTerrainScrollBuffer[MAX_SUPERTILES_DEEP][MAX_SUPERTILES_WIDE];		// 2D array which has index to supertiles for each possible supertile
+uint8_t	gTerrainScrollBuffer[MAX_SUPERTILES_DEEP][MAX_SUPERTILES_WIDE];		// 2D array which has index to supertiles for each possible supertile
 
 short	gNumFreeSupertiles;
 static	SuperTileMemoryType		gSuperTileMemoryList[MAX_SUPERTILES];
@@ -94,11 +82,9 @@ float	gTerrainItemDeleteWindow_Near,gTerrainItemDeleteWindow_Far,
 
 float		gSuperTileRadius;			// normal x/z radius
 
-float		gUnitToPixel = 1.0f/(TERRAIN_POLYGON_SIZE/TERRAIN_HMTILE_SIZE);
+static int		gTextureSizePerLOD[MAX_LODS] = { 0, 0, 0 };
 
-const float gOneOver_TERRAIN_POLYGON_SIZE = (1.0f / TERRAIN_POLYGON_SIZE);
-
-static Handle	gTerrainTextureBuffers[MAX_SUPERTILES][2][MAX_LODS];
+static RenderModifiers gTerrainRenderMods;
 
 			/* TILE SPLITTING TABLES */
 			
@@ -148,8 +134,9 @@ static const	Byte			gTileTriangleWinding[2][3] =
 };
 
 
+
 TQ3Point3D		gWorkGrid[SUPERTILE_SIZE+1][SUPERTILE_SIZE+1];
-u_short			*gTempTextureBuffer = nil;
+uint16_t		*gTempTextureBuffer = nil;
 
 TQ3Vector3D		gRecentTerrainNormal[2];							// from _Planar
 
@@ -177,6 +164,13 @@ void InitTerrainManager(void)
 		gTempTextureBuffer = (u_short *)AllocPtr(TEMP_TEXTURE_BUFF_SIZE * TEMP_TEXTURE_BUFF_SIZE * sizeof(u_short));
 		GAME_ASSERT(gTempTextureBuffer);
 	}
+
+
+			/* INIT RENDER MODIFIERS */
+
+	Render_SetDefaultModifiers(&gTerrainRenderMods);
+	gTerrainRenderMods.statusBits |= STATUS_BIT_NULLSHADER;
+	gTerrainRenderMods.drawOrder = kDrawOrder_Terrain;
 }
 
 
@@ -310,17 +304,10 @@ int	i;
 
 void CreateSuperTileMemoryList(void)
 {
-long							u,v,i,j,maxSuperTilesNeeded,numLayers;
-TQ3Status						status;
-TQ3TriMeshData					triMeshData;
-static 	TQ3Point3D				p[NUM_VERTICES_IN_SUPERTILE];
+long							u,v,i,maxSuperTilesNeeded,numLayers;
 static 	TQ3TriMeshTriangleData	newTriangle[NUM_TRIS_IN_SUPERTILE];
-static	TQ3TriMeshAttributeData	triangleAttribs,vertAttribs[2];
-static	TQ3Vector3D				faceNormals[NUM_TRIS_IN_SUPERTILE];
 static  TQ3ColorRGB				vertexColors[NUM_VERTICES_IN_SUPERTILE];
 static	TQ3Param2D				uvs[NUM_VERTICES_IN_SUPERTILE];
-TQ3Object						tempTriMesh;
-int								textureSize[MAX_LODS] = { 0, 0, 0 };
 
 
 
@@ -334,32 +321,34 @@ int								textureSize[MAX_LODS] = { 0, 0, 0 };
 			/* PREPARE TEXTURE DETAIL CONSTANTS ACCORDING TO USER PREFS */
 
 	// Fill out gNumLODs and textureSize[] according to user pref for texture detail (source port addition)
+	gTerrainTextureDetail = gGamePrefs.lowDetail? TERRAIN_TEXTURE_PREF_3_LOD_128: TERRAIN_TEXTURE_PREF_1_LOD_160;
+
 retryParseLODPref:
-	switch (gGamePrefs.terrainTextureDetail)
+	switch (gTerrainTextureDetail)
 	{
 	case TERRAIN_TEXTURE_PREF_3_LOD_128:
 		gNumLODs = 3;
-		textureSize[0] = SUPERTILE_TEXMAP_SIZE;
-		textureSize[1] = SUPERTILE_TEXMAP_SIZE / 2;
-		textureSize[2] = SUPERTILE_TEXMAP_SIZE / 4;
+		gTextureSizePerLOD[0] = SUPERTILE_TEXMAP_SIZE;
+		gTextureSizePerLOD[1] = SUPERTILE_TEXMAP_SIZE / 2;
+		gTextureSizePerLOD[2] = SUPERTILE_TEXMAP_SIZE / 4;
 		break;
 
 	case TERRAIN_TEXTURE_PREF_1_LOD_128:
 		gNumLODs = 1;
-		textureSize[0] = SUPERTILE_TEXMAP_SIZE;
+		gTextureSizePerLOD[0] = SUPERTILE_TEXMAP_SIZE;
 		break;
 
 	case TERRAIN_TEXTURE_PREF_1_LOD_160:
 		gNumLODs = 1;
-		textureSize[0] = TEMP_TEXTURE_BUFF_SIZE;
+		gTextureSizePerLOD[0] = TEMP_TEXTURE_BUFF_SIZE;
 		break;
 		
 	default:
 		DoAlert("Unknown terrain texture detail pref!");
-		ShowSystemErr_NonFatal(gGamePrefs.terrainTextureDetail);
+		ShowSystemErr_NonFatal(gTerrainTextureDetail);
 
 		// Set a sane fallback value and try again
-		gGamePrefs.terrainTextureDetail = TERRAIN_TEXTURE_PREF_3_LOD_128;
+		gTerrainTextureDetail = TERRAIN_TEXTURE_PREF_3_LOD_128;
 		goto retryParseLODPref;
 	}
 
@@ -373,7 +362,7 @@ retryParseLODPref:
 		for (u = 0; u <= SUPERTILE_SIZE; u++)
 		{
 			uvs[i].u = (float)u / (float)SUPERTILE_SIZE;
-			uvs[i].v = 1.0f - ((float)v / (float)SUPERTILE_SIZE);	
+			uvs[i].v = (float)v / (float)SUPERTILE_SIZE;
 			i++;
 		}	
 	}
@@ -392,57 +381,25 @@ retryParseLODPref:
 			i++;
 		}	
 	}
-					
-				/* SET DATA */
-
-	triangleAttribs.attributeType 		= kQ3AttributeTypeNormal;			// set attribute Type
-	triangleAttribs.data 				= &faceNormals[0];					// point to attribute data
-	triangleAttribs.attributeUseArray 	= nil;								// (not used)
-
-	vertAttribs[0].attributeUseArray 	= nil;								// (not used)
-	vertAttribs[1].attributeUseArray 	= nil;										
-
-	vertAttribs[0].attributeType 		= kQ3AttributeTypeShadingUV;		// set attrib type == shading UV
-	vertAttribs[0].data 				= &uvs[0];							// point to vertex UV's
-	
-					/* SET 2ND ATTRIBUTE TO DIFFUSE COLOR */
-					//
-					// NOTE: Depending on whether the terrain is pre-lit or not will
-					//		make attrib #1 either a diffuse color or a vertex normal.
-					//		Since TQ3ColorRGB and TQ3Vector3D are both 3-floats in
-					//		size, they can share the same data array.  All that 
-					//		needs to be done later is to change the attributeType
-					//		field to normal or diffuse depending on the need.
-					//
-					
-					
-	vertAttribs[1].attributeType 		= kQ3AttributeTypeDiffuseColor;		// set attrib type == diffuse color
-	vertAttribs[1].data 				= &vertexColors[0];					// point to vertex colors
-
-
 
 			/********************************************/
 			/* FOR EACH POSSIBLE SUPERTILE ALLOC MEMORY */
 			/********************************************/
 
 	gNumFreeSupertiles = maxSuperTilesNeeded;
-				
+
 	for (i = 0; i < maxSuperTilesNeeded; i++)
 	{
-		gSuperTileMemoryList[i].mode = SUPERTILE_MODE_FREE;					// it's free for use
+		SuperTileMemoryType* superTile = &gSuperTileMemoryList[i];
 
-				/**************************************/
-				/* CREATE TEXTURE FOR FLOOR & CEILING */
-				/**************************************/
-				
-		for (j = 0; j < numLayers; j++)
+		superTile->mode = SUPERTILE_MODE_FREE;									// it's free for use
+
+				/************************************************/
+				/* CREATE TEXTURE & TRIMESH FOR FLOOR & CEILING */
+				/************************************************/
+
+		for (int layer = 0; layer < numLayers; layer++)							// do it for floor & ceiling trimeshes
 		{
-			int						size;				
-			Handle					blankTexHand;
-			TQ3SurfaceShaderObject	blankTexObject;
-			TQ3AttributeSet			geometryAttribSet;
-			
-			
 				/*****************************/
 				/* DO OUR OWN FAUX-LOD THING */
 				/*****************************/
@@ -450,90 +407,55 @@ retryParseLODPref:
 				// Normally there are 3 LOD's, but if we are low on memory, then we'll skip LOD #0 which
 				// is the big one, and only do the other 2 smaller ones.
 				//
-			
+
 			for (int lod = 0; lod < gNumLODs; lod++)
 			{
-				size = textureSize[lod];										// get size of texture @ this lod
-				
+				int size = gTextureSizePerLOD[lod];								// get size of texture @ this lod
+				GAME_ASSERT_MESSAGE(size >= 0, "gTextureSizePerLOD not initialized!");
+
 						/* MAKE BLANK TEXTURE */
-	
-				blankTexHand = AllocHandle(size * size * sizeof(short));	// alloc memory for texture
-				GAME_ASSERT(blankTexHand);
-				HLockHi(blankTexHand);
-		
-				blankTexObject = QD3D_Data16ToTexture_NoMip(*blankTexHand, size, size);	// create texture from buffer
-				GAME_ASSERT(blankTexObject);
-				
-				gTerrainTextureBuffers[i][j][lod] = blankTexHand;				// keep this pointer since we need to manually dispose of this later
-				
-						/* CLAMP TEXTURE FOR NICER SEAMS (SOURCE PORT FIX) */
 
-				Q3Shader_SetUBoundary(blankTexObject, kQ3ShaderUVBoundaryClamp);
-				Q3Shader_SetVBoundary(blankTexObject, kQ3ShaderUVBoundaryClamp);
-		
-						/* ADD TO ATTRIBUTE SET */
-							
-				geometryAttribSet = Q3AttributeSet_New();						// make attrib set
-				GAME_ASSERT(geometryAttribSet);
+				superTile->textureData[layer][lod] = (uint16_t*) NewPtrClear(size * size * sizeof(uint16_t));	// alloc memory for texture
+				GAME_ASSERT(superTile->textureData[layer][lod]);
 
-				status = Q3AttributeSet_Add(geometryAttribSet, kQ3AttributeTypeSurfaceShader, &blankTexObject);	
-				GAME_ASSERT(status);
-				Q3Object_Dispose(blankTexObject);								// free extra ref to shader
-	
-				gSuperTileMemoryList[i].texture[lod][j] = geometryAttribSet;	// save this reference to the attrib set
-				
+				superTile->glTextureName[layer][lod] = Render_LoadTexture(		// create texture from buffer
+						TILE_TEXTURE_INTERNAL_FORMAT,
+						size,
+						size,
+						TILE_TEXTURE_FORMAT,
+						TILE_TEXTURE_TYPE,
+						superTile->textureData[layer][lod],
+						kRendererTextureFlags_ClampBoth
+				);
+				CHECK_GL_ERROR();
+				GAME_ASSERT(superTile->glTextureName[layer][lod]);
 			}
-		}	
 
-				/*************************************/
 				/* CREATE AN EMPTY TRIMESH STRUCTURE */
-				/*************************************/
-				 			
-		triMeshData.triMeshAttributeSet			= nil;
-		triMeshData.numTriangles 				= NUM_TRIS_IN_SUPERTILE;	// n triangles in each trimesh
-		triMeshData.triangles 					= &newTriangle[0];			// point to triangle list
-		triMeshData.numTriangleAttributeTypes 	= 1;						// all triangles share the same attribs
-		triMeshData.triangleAttributeTypes 		= &triangleAttribs;
-		triMeshData.numEdges 					= 0;						// our trimesh doesnt have any edge info
-		triMeshData.edges 						= nil;
-		triMeshData.numEdgeAttributeTypes 		= 0;						
-		triMeshData.edgeAttributeTypes 			= nil;
-		triMeshData.numPoints 					= NUM_VERTICES_IN_SUPERTILE;// set n # vertices		
-		triMeshData.points 						= &p[0];					// point to bogus temp point list
-		triMeshData.numVertexAttributeTypes 	= 2;						// 2 attrib types: uv's, normals or colors
-		triMeshData.vertexAttributeTypes 		= &vertAttribs[0];
-		triMeshData.bBox.isEmpty 				= kQ3False;					// calc bounding box			
-		triMeshData.bBox.min.x = triMeshData.bBox.min.y = triMeshData.bBox.min.z = 0;
-		triMeshData.bBox.max.x = triMeshData.bBox.max.y = triMeshData.bBox.max.z = TERRAIN_SUPERTILE_UNIT_SIZE;
-		
 
-				/***************************/
-				/* CREATE THE TRIMESH DATA */
-				/***************************/
-				//
-				// I'm doing a little trick here.  I create a temporary Trimesh
-				// object from our local data and then do a GetData on the new
-				// Trimesh.  This will effectively give me a new copy of
-				// all of the TriMesh data so that I don't have to 
-				// allocate the memory myself.
-				//
-				// Once I'm done, I can throw the TriMesh object out since I dont
-				// need it anymore. I simply need to remember to do a ClearData when I want
-				// to dispose of this data.
-				//
-					
-		for (j = 0; j < numLayers; j++)											// do it for floor & ceiling trimeshes
-		{
-			tempTriMesh = Q3TriMesh_New(&triMeshData);					// make the temp trimesh
-			GAME_ASSERT(tempTriMesh);
+			TQ3TriMeshData* tmd = Q3TriMeshData_New(
+					NUM_TRIS_IN_SUPERTILE,
+					NUM_VERTICES_IN_SUPERTILE,
+					kQ3TriMeshDataFeatureVertexUVs | kQ3TriMeshDataFeatureVertexNormals | kQ3TriMeshDataFeatureVertexColors
+			);
+			GAME_ASSERT(tmd);
 
-			status = Q3TriMesh_GetData(tempTriMesh, &gSuperTileMemoryList[i].triMeshData[j]);	// get the data
-			GAME_ASSERT(status);
+			_Static_assert(sizeof(uvs) == sizeof(tmd->vertexUVs[0]) * NUM_VERTICES_IN_SUPERTILE, "supertile UV array size mismatch");
 
-			Q3Object_Dispose(tempTriMesh);								// dispose of the temp trimesh object
+			memcpy(tmd->triangles,		newTriangle,	sizeof(tmd->triangles[0]) * NUM_TRIS_IN_SUPERTILE);
+			memcpy(tmd->vertexUVs,		uvs,			sizeof(tmd->vertexUVs[0]) * NUM_VERTICES_IN_SUPERTILE);
+
+			tmd->bBox.isEmpty = kQ3False;										// calc bounding box
+			tmd->bBox.min.x = tmd->bBox.min.y = tmd->bBox.min.z = 0;
+			tmd->bBox.max.x = tmd->bBox.max.y = tmd->bBox.max.z = TERRAIN_SUPERTILE_UNIT_SIZE;
+
+			tmd->glTextureName = gSuperTileMemoryList[i].glTextureName[layer][0];	// set LOD 0 texture by default
+			tmd->texturingMode = kQ3TexturingModeOpaque;
+
+			gSuperTileMemoryList[i].triMeshDataPtrs[layer] = tmd;
 		}
-	}	// i
-	
+	}
+
 	gSuperTileMemoryListExists = true;
 }
 
@@ -542,7 +464,7 @@ retryParseLODPref:
 
 void DisposeSuperTileMemoryList(void)
 {
-int		numSuperTiles,i,j,lod,numLayers;
+int		numSuperTiles,numLayers;
 
 	if (gSuperTileMemoryListExists == false)
 		return;
@@ -559,35 +481,31 @@ int		numSuperTiles,i,j,lod,numLayers;
 	
 	numSuperTiles = gSuperTileActiveRange*gSuperTileActiveRange*4;
 				
-	for (i = 0; i < numSuperTiles; i++)
+	for (int i = 0; i < numSuperTiles; i++)
 	{
+		SuperTileMemoryType* superTile = &gSuperTileMemoryList[i];
 
-				
-		for (j = 0; j < numLayers; j++)
+		for (int layer = 0; layer < numLayers; layer++)
 		{
 				/* NUKE TEXTURES */
-				
-			for (lod = 0; lod < gNumLODs; lod++)
+
+			for (int lod = 0; lod < gNumLODs; lod++)
 			{
-				Q3Object_Dispose(gSuperTileMemoryList[i].texture[lod][j]);
-				DisposeHandle(gTerrainTextureBuffers[i][j][lod]);
+				DisposePtr((Ptr) superTile->textureData[layer][lod]);
+				superTile->textureData[layer][lod] = nil;
+				superTile->hasLOD[lod] = false;
 
-				gSuperTileMemoryList[i].hasLOD[lod] = false;
-				gSuperTileMemoryList[i].texture[lod][j] = nil;
-				gTerrainTextureBuffers[i][j][lod] = nil;
+				if (superTile->glTextureName[layer][lod])
+				{
+					glDeleteTextures(1, &superTile->glTextureName[layer][lod]);
+					superTile->glTextureName[layer][lod] = 0;
+				}
 			}
-										
-						
-						
-				/* NUKE TRIMESH DATA */
-				//
-				// Remember to set triMesh attribute set to nil since it was nil when we created the triMesh earlier.
-				//
-					
-			gSuperTileMemoryList[i].triMeshData[j].triMeshAttributeSet = nil;
-			
-			Q3TriMesh_EmptyData(&gSuperTileMemoryList[i].triMeshData[j]);
 
+				/* NUKE TRIMESH DATA */
+
+			Q3TriMeshData_Dispose(gSuperTileMemoryList[i].triMeshDataPtrs[layer]);
+			gSuperTileMemoryList[i].triMeshDataPtrs[layer] = nil;
 		}
 	}
 	
@@ -638,29 +556,24 @@ short	i;
 
 static short	BuildTerrainSuperTile(long	startCol, long startRow)
 {
-TQ3Status			status;
-long	 			row,col,row2,col2,i;
-Byte				j;
+long	 			row,col,row2,col2;
 short				superTileNum;
 float				height,miny,maxy;
 TQ3TriMeshData		*triMeshData;
-TQ3Vector3D			*faceNormal,*vertexNormalList;
+TQ3Vector3D			*vertexNormalList;
 u_short				tile;
 TQ3Point3D			*pointList;
 TQ3TriMeshTriangleData	*triangleList;
-TQ3StorageObject	mipmapStorage;
-unsigned char		*buffer;
-TQ3Uns32			validSize,bufferSize;
 SuperTileMemoryType	*superTilePtr;
-TQ3ColorRGB			*vertexColorList;
+TQ3ColorRGBA		*vertexColorList;
 float				brightness;
 float				ambientR,ambientG,ambientB;
 float				fillR0,fillG0,fillB0;
 float				fillR1,fillG1,fillB1;
 TQ3Vector3D			*fillDir0,*fillDir1;
 Byte				numFillLights, numLayers;
-static  TQ3Vector3D	tempVertexNormalList[NUM_VERTICES_IN_SUPERTILE];
 
+static TQ3Vector3D	faceNormal[NUM_TRIS_IN_SUPERTILE];
 
 	if (gDoCeiling)
 		numLayers = 2;
@@ -675,17 +588,24 @@ static  TQ3Vector3D	tempVertexNormalList[NUM_VERTICES_IN_SUPERTILE];
 		superTilePtr->hiccupTimer = 0;
 	else
 		superTilePtr->hiccupTimer = (gHiccupEliminator++ & 0x3) + 1;	// set hiccup timer to aleiviate hiccup caused by massive texture uploading
-	
-	for (j=0; j < MAX_LODS; j++)
-		superTilePtr->hasLOD[j] = false;						// LOD isnt built yet
 
-	superTilePtr->x = (startCol * TERRAIN_POLYGON_SIZE) + (TERRAIN_SUPERTILE_UNIT_SIZE/2);		// also remember world coords
-	superTilePtr->z = (startRow * TERRAIN_POLYGON_SIZE) + (TERRAIN_SUPERTILE_UNIT_SIZE/2);
+	for (int lod = 0; lod < MAX_LODS; lod++)
+		superTilePtr->hasLOD[lod] = false;						// LOD isnt built yet
+
+	for (int layer = 0; layer < MAX_LAYERS; layer++)
+	{
+		superTilePtr->coord[layer] = (TQ3Point3D)				// also remember world coords
+		{
+			startCol*TERRAIN_POLYGON_SIZE + TERRAIN_SUPERTILE_UNIT_SIZE/2,
+			0,																		// y is set later
+			startRow*TERRAIN_POLYGON_SIZE + TERRAIN_SUPERTILE_UNIT_SIZE/2,
+		};
+	}
 
 	superTilePtr->left = (startCol * TERRAIN_POLYGON_SIZE);		// also save left/back coord
 	superTilePtr->back = (startRow * TERRAIN_POLYGON_SIZE);
 
-			
+
 		/* GET LIGHT DATA */
 
 	brightness = gGameViewInfoPtr->lightList.ambientBrightness;				// get ambient brightness
@@ -719,25 +639,19 @@ static  TQ3Vector3D	tempVertexNormalList[NUM_VERTICES_IN_SUPERTILE];
 		/***********************************************************/
 		/*                DO FLOOR & CEILING LAYERS                */
 		/***********************************************************/
-					
-	for (j = 0; j < numLayers; j++)													// do floor & ceiling
+
+	for (int layer = 0; layer < numLayers; layer++)							// do floor & ceiling
 	{
 					/*******************/
 					/* GET THE TRIMESH */
 					/*******************/
 					
-		triMeshData = &gSuperTileMemoryList[superTileNum].triMeshData[j];	// get ptr to triMesh data
+		triMeshData = gSuperTileMemoryList[superTileNum].triMeshDataPtrs[layer];	// get ptr to triMesh data
 		pointList = triMeshData->points;									// get ptr to point/vertex list
 		triangleList = triMeshData->triangles;								// get ptr to triangle index list
-		faceNormal = triMeshData->triangleAttributeTypes->data;				// get ptr to face normals		
-					
-				/* DETERMING IF VERTEX ATTRIBS HAVE NORMALS OR COLOR */
-					
-		vertexColorList = triMeshData->vertexAttributeTypes[1].data;	// get ptr to vertex color
-		triMeshData->vertexAttributeTypes[1].attributeType = kQ3AttributeTypeDiffuseColor;
-		
-		vertexNormalList = &tempVertexNormalList[0];					// need scratch area for temp normals
-	
+		vertexColorList = triMeshData->vertexColors;						// get ptr to vertex color
+		vertexNormalList = triMeshData->vertexNormals;						// get ptr to vertex normals
+
 		miny = 1000000;														// init bbox counters
 		maxy = -miny;
 				
@@ -757,7 +671,7 @@ static  TQ3Vector3D	tempVertexNormalList[NUM_VERTICES_IN_SUPERTILE];
 				if ((row >= gTerrainTileDepth) || (col >= gTerrainTileWidth)) // check for edge vertices (off map array)
 					height = 0;
 				else
-					height = gMapYCoords[row][col].layerY[j]; 				// get pixel height here
+					height = gMapYCoords[row][col].layerY[layer];			// get pixel height here
 	
 				gWorkGrid[row2][col2].x = (col*TERRAIN_POLYGON_SIZE);
 				gWorkGrid[row2][col2].z = (row*TERRAIN_POLYGON_SIZE);
@@ -774,9 +688,10 @@ static  TQ3Vector3D	tempVertexNormalList[NUM_VERTICES_IN_SUPERTILE];
 				/*********************************/
 				/* CREATE TERRAIN MESH POLYGONS  */
 				/*********************************/
-	
+
+		int i;
 						/* SET VERTEX COORDS */
-		
+
 		i = 0;			
 		for (row = 0; row < (SUPERTILE_SIZE+1); row++)
 		{
@@ -798,7 +713,7 @@ static  TQ3Vector3D	tempVertexNormalList[NUM_VERTICES_IN_SUPERTILE];
 	
 						/* ADD TILE TO PIXMAP */
 						
-				if (j == 0)
+				if (layer == 0)
 					tile = gFloorMap[row][col];				// get tile from floor map...
 				else
 					tile = gCeilingMap[row][col];				// ...or get tile from ceiling map
@@ -811,7 +726,7 @@ static  TQ3Vector3D	tempVertexNormalList[NUM_VERTICES_IN_SUPERTILE];
 				const Byte* tri1;
 				const Byte* tri2;
 
-				if (gMapInfoMatrix[row][col].splitMode[j] == SPLIT_BACKWARD)	// set coords & uv's based on splitting
+				if (gMapInfoMatrix[row][col].splitMode[layer] == SPLIT_BACKWARD)	// set coords & uv's based on splitting
 				{
 						/* \ */
 					tri1 = gTileTriangles1_B[row2][col2];
@@ -824,15 +739,16 @@ static  TQ3Vector3D	tempVertexNormalList[NUM_VERTICES_IN_SUPERTILE];
 					tri2 = gTileTriangles2_A[row2][col2];
 				}
 
-				triangleList[i].pointIndices[0] 	= tri1[gTileTriangleWinding[j][0]];
-				triangleList[i].pointIndices[1] 	= tri1[gTileTriangleWinding[j][1]];
-				triangleList[i++].pointIndices[2] 	= tri1[gTileTriangleWinding[j][2]];
-				triangleList[i].pointIndices[0] 	= tri2[gTileTriangleWinding[j][0]];
-				triangleList[i].pointIndices[1] 	= tri2[gTileTriangleWinding[j][1]];
-				triangleList[i++].pointIndices[2] 	= tri2[gTileTriangleWinding[j][2]];
+				triangleList[i].pointIndices[0] 	= tri1[gTileTriangleWinding[layer][0]];
+				triangleList[i].pointIndices[1] 	= tri1[gTileTriangleWinding[layer][1]];
+				triangleList[i++].pointIndices[2] 	= tri1[gTileTriangleWinding[layer][2]];
+				triangleList[i].pointIndices[0] 	= tri2[gTileTriangleWinding[layer][0]];
+				triangleList[i].pointIndices[1] 	= tri2[gTileTriangleWinding[layer][1]];
+				triangleList[i++].pointIndices[2] 	= tri2[gTileTriangleWinding[layer][2]];
 			}
 		}
-		
+
+
 							/* CALC FACE NORMALS */
 						
 		for (i = 0; i < NUM_TRIS_IN_SUPERTILE; i++)
@@ -841,8 +757,8 @@ static  TQ3Vector3D	tempVertexNormalList[NUM_VERTICES_IN_SUPERTILE];
 							&pointList[triangleList[i].pointIndices[1]],
 							&pointList[triangleList[i].pointIndices[2]],
 							&faceNormal[i]);
-		}			
-				
+		}
+
 				/******************************/
 				/* CALCULATE VERTEX NORMALS   */
 				/******************************/
@@ -883,7 +799,7 @@ static  TQ3Vector3D	tempVertexNormalList[NUM_VERTICES_IN_SUPERTILE];
 						}
 						else																// tile is out of supertile, so calc face normal & average
 						{
-							CalcTileNormals(j, rr+startRow, (cc>>1)+startCol, &nA,&nB);		// calculate the 2 face normals for this tile
+							CalcTileNormals(layer, rr+startRow, (cc>>1)+startCol, &nA,&nB);	// calculate the 2 face normals for this tile
 							avX += nA.x + nB.x;												// average with current average
 							avY += nA.y + nB.y;
 							avZ += nA.z + nB.z;
@@ -905,7 +821,7 @@ static  TQ3Vector3D	tempVertexNormalList[NUM_VERTICES_IN_SUPERTILE];
 			{
 				for (col = 0; col <= SUPERTILE_SIZE; col++)
 				{
-					u_short	color = gVertexColors[j][row+startRow][col+startCol];
+					u_short	color = gVertexColors[layer][row+startRow][col+startCol];
 					float	r,g,b,dot;
 					float	lr,lg,lb;
 					
@@ -969,47 +885,49 @@ static  TQ3Vector3D	tempVertexNormalList[NUM_VERTICES_IN_SUPERTILE];
 			}
 		}
 				
-				/******************/
-				/* UPDATE TEXTURE */
-				/******************/
+				/************************/
+				/* UPDATE TEXTURE LOD 0 */
+				/************************/
 				//
 				// If we are in low-memory mode, then we shrink the texture to LOD #1 instead of LOD #0 and we shrink it to 64x64
 				//
+
 		{
-			mipmapStorage = QD3D_GetMipmapStorageObjectFromAttrib(gSuperTileMemoryList[superTileNum].texture[0][j]);// get storage object of LOD #0
-			GAME_ASSERT(mipmapStorage);
-
-			status = Q3MemoryStorage_GetBuffer(mipmapStorage, &buffer, &validSize, &bufferSize);			// get ptr to the buffer
-			GAME_ASSERT(status);
-
-			if (gGamePrefs.terrainTextureDetail == TERRAIN_TEXTURE_PREF_1_LOD_160)
+			if (gTerrainTextureDetail == TERRAIN_TEXTURE_PREF_1_LOD_160)
 			{
-				BlockMove(gTempTextureBuffer, buffer, bufferSize);
+				memcpy(superTilePtr->textureData[layer][0], gTempTextureBuffer, sizeof(gTempTextureBuffer[0]) * gTextureSizePerLOD[0] * gTextureSizePerLOD[0]);
 			}
 			else
 			{
-				ShrinkSuperTileTextureMap(gTempTextureBuffer,(u_short *)buffer);							// shrink to 128x128
+				ShrinkSuperTileTextureMap(gTempTextureBuffer, superTilePtr->textureData[layer][0]);				// shrink to 128x128
 			}
 
 			superTilePtr->hasLOD[0] = true;
+
+			Render_UpdateTexture(
+					superTilePtr->glTextureName[layer][0],
+					0,
+					0,
+					gTextureSizePerLOD[0],
+					gTextureSizePerLOD[0],
+					TILE_TEXTURE_FORMAT,
+					TILE_TEXTURE_TYPE,
+					superTilePtr->textureData[layer][0],
+					0);
 		}
-			
-		status = Q3MemoryStorage_SetBuffer(mipmapStorage, buffer, validSize, bufferSize);
-		GAME_ASSERT(status);
-		Q3Object_Dispose(mipmapStorage);												// nuke the mipmap storage object
 
 				/***********************/
 				/* CALC COORD & RADIUS */
 				/***********************/
-	
-		superTilePtr->y[j] = (miny+maxy)*.5f;	// This y coord is not used to translate since the terrain has no translation matrix
+
+		superTilePtr->coord[layer].y = (miny+maxy)*.5f;	// This y coord is not used to translate since the terrain has no translation matrix
 												// Instead, this is used by the cone-of-vision routine for culling tests
-				
+
 		height = (maxy-miny) * .5f;
 		if (height > gSuperTileRadius)
-			superTilePtr->radius[j] = height;
+			superTilePtr->radius[layer] = height;
 		else						
-			superTilePtr->radius[j] = gSuperTileRadius;
+			superTilePtr->radius[layer] = gSuperTileRadius;
 	
 	
 				/**********************/
@@ -1032,6 +950,7 @@ static  TQ3Vector3D	tempVertexNormalList[NUM_VERTICES_IN_SUPERTILE];
 }
 
 
+
 /********************** BUILD SUPERTILE LEVEL OF DETAIL ********************/
 //
 // Called from DrawTerrain to generate the LOD's from the source LOD=0 geometry
@@ -1039,166 +958,45 @@ static  TQ3Vector3D	tempVertexNormalList[NUM_VERTICES_IN_SUPERTILE];
 
 static void BuildSuperTileLOD(SuperTileMemoryType *superTilePtr, short lod)
 {
-short				j,x,y;
-TQ3AttributeSet		baseData,newData;
-u_short				*baseBuffer, *newBuffer, *nextLine, *newBufferPtr;
-TQ3Uns32			validSize,bufferSize;
-TQ3StorageObject 	baseTexture,newTexture;
-int					size,numLayers;
-
-
 	if (superTilePtr->hasLOD[lod])									// see if already has LOD
 		return;
-		
+
+	GAME_ASSERT_MESSAGE(lod != 0, "Cannot use BuildSuperTileLOD for LOD 0!");
+
 	if (lod >= gNumLODs)
 		DoFatalAlert("BuildSuperTileLOD: lod overflow");
-		
+
 	superTilePtr->hasLOD[lod] = true;								// has LOD now
 
-	if (gDoCeiling)
-		numLayers = 2;
-	else
-		numLayers = 1;
+	int numLayers = gDoCeiling ? 2 : 1;
 
-	for (j = 0; j < numLayers; j++)
+	for (int j = 0; j < numLayers; j++)
 	{
 			/*************************/
 			/* SHRINK & COPY TEXTURE */
 			/*************************/
-			
-		switch(lod)
-		{
-							/***********/
-							/* 1ST LOD */
-							/***********/
-							
-			case	1:
-						
-						/* GET POINTERS TO TEXTURE BUFFERS */
-							
-					baseData = superTilePtr->texture[0][j];					// get level 0 attrib set
-					newData = superTilePtr->texture[1][j];					// get level 1 attrib set
-					
-					baseTexture = QD3D_GetMipmapStorageObjectFromAttrib(baseData);
-					Q3MemoryStorage_GetBuffer(baseTexture, (u_char **)&baseBuffer,&validSize, &bufferSize);
-					Q3Object_Dispose(baseTexture);
-					
-					newTexture = QD3D_GetMipmapStorageObjectFromAttrib(newData);
-					Q3MemoryStorage_GetBuffer(newTexture, (u_char **)&newBufferPtr,&validSize, &bufferSize);
-							
-					newBuffer = newBufferPtr;
-					nextLine = baseBuffer + SUPERTILE_TEXMAP_SIZE;
-					
-					size = SUPERTILE_TEXMAP_SIZE/2;
-					
-					for (y = 0; y < size; y++)
-					{
-						for (x = 0; x < size; x++)
-						{
-							u_short	r,g,b;
-							u_short	pixel;
-							
-							pixel = *baseBuffer++;							// get a pixel
-							r = (pixel >> 10) & 0x1f;	
-							g = (pixel >> 5) & 0x1f;	
-							b = pixel & 0x1f;	
-							
-							pixel = *baseBuffer++;							// get next pixel
-							r += (pixel >> 10) & 0x1f;	
-							g += (pixel >> 5) & 0x1f;	
-							b += pixel & 0x1f;	
-			
-			
-							pixel = *nextLine++;							// get a pixel from next line
-							r += (pixel >> 10) & 0x1f;	
-							g += (pixel >> 5) & 0x1f;	
-							b += pixel & 0x1f;	
-							
-							pixel = *nextLine++;							// get next pixel from next line
-							r += (pixel >> 10) & 0x1f;	
-							g += (pixel >> 5) & 0x1f;	
-							b += pixel & 0x1f;	
-							
-							r >>= 2;										// calc average
-							g >>= 2;
-							b >>= 2;
-							
-							*newBuffer++ = (r<<10) | (g<<5) | b;			// save new pixel
-						}
-						baseBuffer += SUPERTILE_TEXMAP_SIZE;				// skip a line
-						nextLine += SUPERTILE_TEXMAP_SIZE;				
-					}	
-					break;
-					
-							/***********/
-							/* 2nd LOD */
-							/***********/
-							//
-							// LOD #2 is built from LOD #1
-							//
-					
-			case	2:
-						/* GET POINTERS TO TEXTURE BUFFERS */
-							
-					baseData = superTilePtr->texture[1][j];					// get level 1 attrib set
-					newData = superTilePtr->texture[2][j];					// get level 2 attrib set
-					baseTexture = QD3D_GetMipmapStorageObjectFromAttrib(baseData);
-					Q3MemoryStorage_GetBuffer(baseTexture, (u_char **)&baseBuffer,
-											&validSize, &bufferSize);
-					Q3Object_Dispose(baseTexture);
-					newTexture = QD3D_GetMipmapStorageObjectFromAttrib(newData);
-					Q3MemoryStorage_GetBuffer(newTexture, (u_char **)&newBufferPtr,
-											&validSize, &bufferSize);
-							
-					newBuffer = newBufferPtr;
-					nextLine = baseBuffer + SUPERTILE_TEXMAP_SIZE/2;
-					
-					size = SUPERTILE_TEXMAP_SIZE/4;
-					
-					for (y = 0; y < size; y++)
-					{
-						for (x = 0; x < size; x++)
-						{
-							u_short	r,g,b;
-							u_short	pixel;
-							
-							pixel = *baseBuffer++;							// get a pixel
-							r = (pixel >> 10) & 0x1f;	
-							g = (pixel >> 5) & 0x1f;	
-							b = pixel & 0x1f;	
-							
-							pixel = *baseBuffer++;							// get next pixel
-							r += (pixel >> 10) & 0x1f;	
-							g += (pixel >> 5) & 0x1f;	
-							b += pixel & 0x1f;	
-			
-			
-							pixel = *nextLine++;							// get a pixel from next line
-							r += (pixel >> 10) & 0x1f;	
-							g += (pixel >> 5) & 0x1f;	
-							b += pixel & 0x1f;	
-							
-							pixel = *nextLine++;							// get next pixel from next line
-							r += (pixel >> 10) & 0x1f;	
-							g += (pixel >> 5) & 0x1f;	
-							b += pixel & 0x1f;	
-							
-							r >>= 2;										// calc average
-							g >>= 2;
-							b >>= 2;
-							
-							*newBuffer++ = (r<<10) | (g<<5) | b;			// save new pixel
-						}
-						baseBuffer += SUPERTILE_TEXMAP_SIZE/2;				// skip a line
-						nextLine += SUPERTILE_TEXMAP_SIZE/2;				
-					}	
-					break;
-		}
-		
-				/* UPDATE THE BUFFER */
 
-		Q3MemoryStorage_SetBuffer(newTexture, (u_char *)newBufferPtr, validSize, bufferSize);
-		Q3Object_Dispose(newTexture);			
+			/* GET POINTERS TO TEXTURE BUFFERS */
+
+		uint16_t*	baseBuffer	= superTilePtr->textureData[j][lod-1];	// build new LOD from inferior LOD
+		uint16_t*	newBuffer	= superTilePtr->textureData[j][lod];
+
+			/* SHRINK IMAGE */
+
+		ShrinkHalf(baseBuffer, newBuffer, gTextureSizePerLOD[lod]);
+
+			/* UPDATE THE TEXTURE */
+
+		Render_UpdateTexture(
+				superTilePtr->glTextureName[j][lod],
+				0,
+				0,
+				gTextureSizePerLOD[lod],
+				gTextureSizePerLOD[lod],
+				TILE_TEXTURE_FORMAT,
+				TILE_TEXTURE_TYPE,
+				newBuffer,
+				0);
 	}
 }
 
@@ -1382,9 +1180,8 @@ uint16_t*		ptr16;
 
 static void	ShrinkSuperTileTextureMap(const u_short *srcPtr, u_short *dstPtr)
 {
-#if (SUPERTILE_TEXMAP_SIZE != 128) || ((SUPERTILE_SIZE * OREOMAP_TILE_SIZE) != 160)
-#error ReWrite this!
-#endif
+	_Static_assert(SUPERTILE_TEXMAP_SIZE == 128, "rewrite this for new supertile texmap size!");
+	_Static_assert(SUPERTILE_SIZE * OREOMAP_TILE_SIZE == 160, "rewrite this for new oreomap tile size!");
 
 	for (int y = 0; y < 128; y++)
 	{
@@ -1421,9 +1218,7 @@ static void	ShrinkSuperTileTextureMap(const u_short *srcPtr, u_short *dstPtr)
 
 static void	ShrinkSuperTileTextureMapTo64(u_short *srcPtr, u_short *dstPtr)
 {
-#if ((SUPERTILE_SIZE * OREOMAP_TILE_SIZE) != 160)
-#error ReWrite this!
-#endif
+	_Static_assert(SUPERTILE_SIZE * OREOMAP_TILE_SIZE == 160, "rewrite this for new oreomap tile size!");
 
 	for (int y = 0; y < 64; y++)
 	{
@@ -1442,6 +1237,54 @@ static void	ShrinkSuperTileTextureMapTo64(u_short *srcPtr, u_short *dstPtr)
 	}
 }
 #endif
+
+
+/************ SHRINK SQUARE TEXTURE TO HALF SIZE ******************/
+
+static void ShrinkHalf(const uint16_t* input, uint16_t* output, int outputSize)
+{
+	int inputWidth = outputSize * 2;
+	const uint16_t* nextLine = input + inputWidth;
+
+	for (int y = 0; y < outputSize; y++)
+	{
+		for (int x = 0; x < outputSize; x++)
+		{
+			uint16_t	r,g,b;
+			uint16_t	pixel;
+
+			pixel = *input++;							// get a pixel
+			r = (pixel >> 10) & 0x1f;
+			g = (pixel >> 5) & 0x1f;
+			b = pixel & 0x1f;
+
+			pixel = *input++;							// get next pixel
+			r += (pixel >> 10) & 0x1f;
+			g += (pixel >> 5) & 0x1f;
+			b += pixel & 0x1f;
+
+
+			pixel = *nextLine++;						// get a pixel from next line
+			r += (pixel >> 10) & 0x1f;
+			g += (pixel >> 5) & 0x1f;
+			b += pixel & 0x1f;
+
+			pixel = *nextLine++;						// get next pixel from next line
+			r += (pixel >> 10) & 0x1f;
+			g += (pixel >> 5) & 0x1f;
+			b += pixel & 0x1f;
+
+			r >>= 2;									// calc average
+			g >>= 2;
+			b >>= 2;
+
+			*output++ = (r<<10) | (g<<5) | b;			// save new pixel
+		}
+		input += inputWidth;							// skip a line
+		nextLine += inputWidth;
+	}
+}
+
 
 
 /******************* RELEASE SUPERTILE OBJECT *******************/
@@ -1476,32 +1319,16 @@ long	i;
 
 void DrawTerrain(const QD3DSetupOutputType *setupInfo)
 {
-short	i, numLayers;
-Byte	j;
-TQ3Status	myStatus;
-float	dist;
-TQ3Point3D		cameraCoord, tileCoord;
-TQ3ViewObject	view = setupInfo->viewObject;
-			
-	if (gDoCeiling)
-		numLayers = 2;
-	else
-		numLayers = 1;
-			
+	int numLayers = gDoCeiling? 2: 1;
+
 		/* GET CURRENT CAMERA COORD */
 		
-	cameraCoord = setupInfo->currentCameraCoords;
+	TQ3Point3D cameraCoord = setupInfo->currentCameraCoords;
 	
-			
+
 				/* DRAW STUFF */
 
-	//QD3D_SetTextureWrapMode(kQAGL_Clamp);								// clamp textures for nicer seams -- Source port removal: now set on the supertiles' TQ3SurfaceShaderObject
-	QD3D_SetTriangleCacheMode(false);
-	Q3Shader_Submit(setupInfo->nullShaderObject, view);					// use NULL shader to draw terrain
-	QD3D_SetMultisampling(true);										// set MSAA (only honored if prefs allow it)
-	
-	
-	for (i = 0; i < MAX_SUPERTILES; i++)
+	for (int i = 0; i < MAX_SUPERTILES; i++)
 	{
 		if (gSuperTileMemoryList[i].mode != SUPERTILE_MODE_USED)		// if supertile is being used, then draw it
 			continue;
@@ -1517,82 +1344,86 @@ TQ3ViewObject	view = setupInfo->viewObject;
 			}
 		}
 
-		tileCoord.x = gSuperTileMemoryList[i].x;						// get x & z coords of tile
-		tileCoord.z = gSuperTileMemoryList[i].z;
-		
-		for (j = 0; j < numLayers; j++)									// DRAW FLOOR & CEILING
+		for (int j = 0; j < numLayers; j++)								// DRAW FLOOR & CEILING
 		{
 			if (!IsSuperTileVisible(i,j))								// make sure it's visible
 				continue;
+
 
 				/**************************************/
 				/* DRAW THE TRIMESH IN THIS SUPERTILE */
 				/**************************************/
 
-			if (gGamePrefs.terrainTextureDetail != TERRAIN_TEXTURE_PREF_3_LOD_128)
-			{
-				goto use_0;
-			}
-				
-					/* SEE WHICH LOD TO USE */
+			int lod = 0;
 
-			dist = CalcQuickDistance(cameraCoord.x, cameraCoord.z, tileCoord.x, tileCoord.z);
-			
-			
-						/* USE LOD 0 */
-						
-			if (dist < 1300.0f)
+			if (gTerrainTextureDetail == TERRAIN_TEXTURE_PREF_3_LOD_128)
 			{
-use_0:
-				gSuperTileMemoryList[i].triMeshData[j].triMeshAttributeSet = gSuperTileMemoryList[i].texture[0][j];
-			}
-				
-						/* USE LOD 1 */
-			else
-			if (dist < 1700.0f)
-			{
-use_1:			
-				if (!gSuperTileMemoryList[i].hasLOD[1])					 // see if 2nd LOD has been built yet
-					BuildSuperTileLOD(&gSuperTileMemoryList[i], 1);				
+						/* SEE WHICH LOD TO USE */
 
-				gSuperTileMemoryList[i].triMeshData[j].triMeshAttributeSet = gSuperTileMemoryList[i].texture[1][j];
-			}
-			
-						/* USE LOD 2 */
-			else
-			{
-				if (!gSuperTileMemoryList[i].hasLOD[2])						// see if 3rd LOD has been built yet
+				TQ3Point3D tileCoord = gSuperTileMemoryList[i].coord[j];	// get x & z coords of tile
+				float dist = CalcQuickDistance(cameraCoord.x, cameraCoord.z, tileCoord.x, tileCoord.z);
+
+				if (dist < 1300.0f)
+					lod = 0;
+				else if (dist < 1700.0f)
+					lod = 1;
+				else
+					lod = 2;
+
+						/* MAKE SURE THE LOD IS BUILT */
+
+				if (!gSuperTileMemoryList[i].hasLOD[lod])
 				{
-					if (gSuperTileMemoryList[i].hasLOD[1])					// in order to build 3rd, we need 2nd
-						BuildSuperTileLOD(&gSuperTileMemoryList[i], 2);
-					else
-						goto use_1;
-				}
-				gSuperTileMemoryList[i].triMeshData[j].triMeshAttributeSet = gSuperTileMemoryList[i].texture[2][j];
-			}
-			
-			myStatus = Q3TriMesh_Submit(&gSuperTileMemoryList[i].triMeshData[j],view);				
-			if ( myStatus == kQ3Failure )
-			{
-				DoAlert("DrawTerrain: Q3TriMesh_Submit failed!");
-				QD3D_ShowRecentError();	
-			}
-		}		
-	}
-	//QD3D_SetTextureWrapMode(kQAGL_Repeat);							// let textures wrap/repeat -- Source port removal: now set on the supertiles' TQ3SurfaceShaderObject
-	Q3Shader_Submit(setupInfo->shaderObject, view);						// set the normal shader
-	QD3D_SetTriangleCacheMode(true);
+					GAME_ASSERT(lod != 0);	// can't build LOD 0 like that
 
+					for (int lodToBuild = 0; lodToBuild <= lod; lodToBuild++)	// any LOD requires all of the inferior LODs to be built
+					{
+						if (!gSuperTileMemoryList[i].hasLOD[lodToBuild])
+							BuildSuperTileLOD(&gSuperTileMemoryList[i], lodToBuild);
+					}
+				}
+			}
+
+						/* USE LOD TEXTURE */
+
+			gSuperTileMemoryList[i].triMeshDataPtrs[j]->glTextureName = gSuperTileMemoryList[i].glTextureName[j][lod];
+
+						/* SUBMIT FOR DRAWING */
+
+			Render_SubmitMesh(gSuperTileMemoryList[i].triMeshDataPtrs[j], nil, &gTerrainRenderMods, &gSuperTileMemoryList[i].coord[j]);
+		}
+	}
 
 		/* DRAW OBJECTS */
-		
-		
-	QD3D_SetMultisampling(false);										// disable MSAA for fences -- they use alpha testing so it wouldn't do much
+
+	DrawCyclorama();
 	DrawFences(setupInfo);												// draw these first
+
+	if (gDoAutoFade)													// avoid clover-shaped holes in fences
+		Render_FlushQueue();
+
 	DrawObjects(setupInfo);												// draw objNodes
-	QD3D_DrawParticles(setupInfo);
-	DrawParticleGroup(setupInfo);
-	DrawLensFlare(setupInfo);										
+	QD3D_DrawParticles(setupInfo);										// draw "shard" particles
+	DrawParticleGroup(setupInfo);										// draw alpha-blended particle groups
+
+	Render_FlushQueue();												// flush before drawing 2D stuff
+
+	if (gShowDebug)
+	{
+		Render_ResetColor();
+		for (ObjNode* node = gFirstNodePtr; node; node = node->NextNode)
+			DrawCollisionBoxes(node);
+		DrawNormal();
+	}
+
+		/* DRAW IN-GAME 2D ELEMENTS */
+
+	Render_Enter2D_NormalizedCoordinates(setupInfo->aspectRatio);
+	DrawLensFlare(setupInfo);
+	if (gPauseQuad)
+		Render_SubmitMesh(gPauseQuad, NULL, &kDefaultRenderMods_UI, &kQ3Point3D_Zero);
+	Render_FlushQueue();
+	Render_Exit2D();
 }
 
 
@@ -2258,13 +2089,7 @@ static Boolean IsSuperTileVisible(short superTileNum, Byte layer)
 {
 	const SuperTileMemoryType* superTile = &gSuperTileMemoryList[superTileNum];
 	float radius = superTile->radius[layer];
-	TQ3Point3D center =
-	{
-		superTile->x,
-		superTile->y[layer],
-		superTile->z
-	};
-	return IsSphereInFrustum_XZ(&center, radius);
+	return IsSphereInFrustum_XZ(&superTile->coord[layer], radius);
 }
 
 
@@ -2318,14 +2143,4 @@ float	y0,y1,y2,y3;
 
 
 }
-
-
-
-
-
-
-
-
-
-
 

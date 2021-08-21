@@ -9,25 +9,14 @@
 /* EXTERNALS   */
 /***************/
 
-#include "3dmath.h"
+#include "game.h"
 
-extern	TQ3Object	gObjectGroupList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
-extern	TQ3BoundingSphere		gObjectGroupRadiusList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
-extern	TQ3Matrix4x4	gCameraWorldToViewMatrix,gCameraViewToFrustumMatrix;
-extern	short		gNumObjectsInGroupList[MAX_3DMF_GROUPS];
-extern	float		gFramesPerSecondFrac;
-extern	ObjNode		*gPlayerObj;
-extern	QD3DSetupOutputType		*gGameViewInfoPtr;
-extern	TQ3TriMeshData	**gLocalTriMeshesOfSkelType;
-extern	Boolean		gShowDebug;
 
 /****************************/
 /*    PROTOTYPES            */
 /****************************/
 
 static void FlushObjectDeleteQueue(void);
-static void DrawCollisionBoxes(ObjNode *theNode, TQ3ViewObject view);
-static void DrawBoundingSphere(ObjNode *theNode, TQ3ViewObject view);
 
 
 /****************************/
@@ -52,11 +41,10 @@ NewObjectDefinitionType	gNewObjectDefinition;
 TQ3Point3D	gCoord;
 TQ3Vector3D	gDelta;
 
-TQ3Object	gKeepBackfaceStyleObject = nil;
-
 long		gNumObjsInDeleteQueue = 0;
 ObjNode		*gObjectDeleteQueue[OBJ_DEL_Q_SIZE];
 
+Boolean		gDoAutoFade;
 float		gAutoFadeStartDist;
 
 
@@ -79,13 +67,6 @@ void InitObjectManager(void)
 					/* CLEAR ENTIRE OBJECT LIST */
 		
 	gFirstNodePtr = nil;									// no node yet
-
-			/* MAKE BACKFACE STYLE OBJECT */
-
-	GAME_ASSERT(gKeepBackfaceStyleObject == nil);
-
-	gKeepBackfaceStyleObject = Q3BackfacingStyle_New(kQ3BackfacingStyleBoth);
-	GAME_ASSERT(gKeepBackfaceStyleObject);
 }
 
 
@@ -137,6 +118,10 @@ ObjNode	*newNodePtr;
 	newNodePtr->ParticleGroup = -1;						// no particle group
 	newNodePtr->SplineObjectIndex = -1;					// no index yet
 
+	Render_SetDefaultModifiers(&newNodePtr->RenderModifiers);
+	newNodePtr->RenderModifiers.statusBits = 0;
+	newNodePtr->RenderModifiers.diffuseColor = (TQ3ColorRGBA) { 1,1,1,1 };	// default diffuse color is opaque white
+
 	if (newObjDef->flags & STATUS_BIT_ONSPLINE)
 		newNodePtr->SplineMoveCall = newObjDef->moveCall;	// save spline move routine
 	else
@@ -164,7 +149,6 @@ ObjNode *MakeNewDisplayGroupObject(NewObjectDefinitionType *newObjDef)
 ObjNode	*newObj;
 Byte	group,type;
 
-
 	newObjDef->genre = DISPLAY_GROUP_GENRE;
 	
 	newObj = MakeNewObject(newObjDef);		
@@ -179,30 +163,28 @@ Byte	group,type;
 	
 	GAME_ASSERT(type < gNumObjectsInGroupList[group]);					// see if illegal
 
-	if (newObjDef->flags & STATUS_BIT_CLONE)
-	{
-		AttachGeometryToDisplayGroupObject(newObj, Q3Object_Duplicate(gObjectGroupList[group][type]));
-	}
-	else
-	{
-		AttachGeometryToDisplayGroupObject(newObj, gObjectGroupList[group][type]);
-	}
+	TQ3TriMeshFlatGroup* meshList = &gObjectGroupList[group][type];
+	AttachGeometryToDisplayGroupObject(
+			newObj, meshList->numMeshes, meshList->meshes,
+			(newObjDef->flags & STATUS_BIT_CLONE) ? kAttachGeometry_CloneMeshes : 0);
+
+	newObj->RenderModifiers.drawOrder = newObjDef->drawOrder;
+
 
 			/* CALC RADIUS */
 			
 	newObj->BoundingSphere.origin.x = gObjectGroupRadiusList[group][type].origin.x * newObj->Scale.x;	
 	newObj->BoundingSphere.origin.y = gObjectGroupRadiusList[group][type].origin.y * newObj->Scale.y;	
 	newObj->BoundingSphere.origin.z = gObjectGroupRadiusList[group][type].origin.z * newObj->Scale.z;	
-	newObj->BoundingSphere.radius = gObjectGroupRadiusList[group][type].radius * newObj->Scale.x;	
-	
+	newObj->BoundingSphere.radius = gObjectGroupRadiusList[group][type].radius * newObj->Scale.x;
+
 	return(newObj);
 }
 
 
 /************* MAKE NEW CUSTOM DRAW OBJECT *************/
 
-ObjNode *MakeNewCustomDrawObject(NewObjectDefinitionType *newObjDef, TQ3BoundingSphere *cullSphere,
-						 void drawFunc(ObjNode *, TQ3ViewObject))
+ObjNode *MakeNewCustomDrawObject(NewObjectDefinitionType *newObjDef, TQ3BoundingSphere *cullSphere, void drawFunc(ObjNode *))
 {
 ObjNode	*newObj;
 
@@ -219,23 +201,6 @@ ObjNode	*newObj;
 }
 
 
-/******************* RESET DISPLAY GROUP OBJECT *********************/
-//
-// If the ObjNode's "Type" field has changed, call this to dispose of
-// the old BaseGroup and create a new one with the correct model attached.
-//
-
-void ResetDisplayGroupObject(ObjNode *theNode)
-{
-	DisposeObjectBaseGroup(theNode);									// dispose of old group
-	CreateBaseGroup(theNode);											// create new group object
-
-	GAME_ASSERT(theNode->Type < gNumObjectsInGroupList[theNode->Group]);	// see if illegal
-
-	AttachGeometryToDisplayGroupObject(theNode,gObjectGroupList[theNode->Group][theNode->Type]);	// attach geometry to group
-}
-
-
 
 /************************* ADD GEOMETRY TO DISPLAY GROUP OBJECT ***********************/
 //
@@ -243,12 +208,31 @@ void ResetDisplayGroupObject(ObjNode *theNode)
 // called which made the group & transforms.
 //
 
-void AttachGeometryToDisplayGroupObject(ObjNode *theNode, TQ3Object geometry)
+void AttachGeometryToDisplayGroupObject(ObjNode* theNode, int numMeshes, TQ3TriMeshData** meshList, int flags)
 {
-TQ3GroupPosition	groupPosition;
+	bool ownMeshes = flags & (kAttachGeometry_TransferMeshOwnership | kAttachGeometry_CloneMeshes);
+	bool ownTextures = flags & kAttachGeometry_TransferTextureOwnership;
 
-	groupPosition = (TQ3GroupPosition)Q3Group_AddObject(theNode->BaseGroup,geometry);
-	GAME_ASSERT(groupPosition);
+	for (int i = 0; i < numMeshes; i++)
+	{
+		int nodeMeshIndex = theNode->NumMeshes;
+
+		theNode->NumMeshes++;
+		GAME_ASSERT(theNode->NumMeshes <= MAX_DECOMPOSED_TRIMESHES);
+		GAME_ASSERT(nodeMeshIndex < MAX_DECOMPOSED_TRIMESHES);
+
+		if (flags & kAttachGeometry_CloneMeshes)
+		{
+			theNode->MeshList[nodeMeshIndex] = Q3TriMeshData_Duplicate(meshList[i]);
+		}
+		else
+		{
+			theNode->MeshList[nodeMeshIndex] = meshList[i];
+		}
+
+		theNode->OwnsMeshMemory[nodeMeshIndex] = ownMeshes;
+		theNode->OwnsMeshTexture[nodeMeshIndex] = ownTextures;
+	}
 }
 
 
@@ -263,14 +247,11 @@ TQ3GroupPosition	groupPosition;
 
 void CreateBaseGroup(ObjNode *theNode)
 {
-TQ3GroupPosition		myGroupPosition;
 TQ3Matrix4x4			transMatrix,scaleMatrix,rotMatrix;
-TQ3TransformObject		transObject;
 
 				/* CREATE THE GROUP OBJECT */
-				
-	theNode->BaseGroup = (TQ3Object)Q3OrderedDisplayGroup_New();
-	GAME_ASSERT(theNode->BaseGroup);
+
+	theNode->NumMeshes = 0;
 
 					/* SETUP BASE MATRIX */
 			
@@ -294,17 +275,6 @@ TQ3TransformObject		transObject;
 	MatrixMultiply(&theNode->BaseTransformMatrix,							// mult by trans matrix
 						 &transMatrix,
 						 &theNode->BaseTransformMatrix);
-
-
-					/* CREATE A MATRIX XFORM */
-
-	transObject = (TQ3TransformObject)Q3MatrixTransform_New(&theNode->BaseTransformMatrix);			// make matrix xform object
-	GAME_ASSERT(transObject);
-
-	myGroupPosition = (TQ3GroupPosition)Q3Group_AddObject(theNode->BaseGroup, transObject);		// add to base group
-	GAME_ASSERT(myGroupPosition);
-
-	theNode->BaseTransformObject = transObject;									// keep extra LEGAL ref (remember to dispose later)
 }
 
 
@@ -343,8 +313,8 @@ ObjNode		*thisNodePtr;
 
 
 					/* NEXT TRY TO MOVE IT */
-					
-		if ((!(thisNodePtr->StatusBits & STATUS_BIT_NOMOVE)) &&	(thisNodePtr->MoveCall != nil))
+
+		if (thisNodePtr->MoveCall != nil)
 		{
 			thisNodePtr->MoveCall(thisNodePtr);				// call object's move routine
 		}
@@ -371,19 +341,8 @@ ObjNode		*thisNodePtr;
 void DrawObjects(const QD3DSetupOutputType *setupInfo)
 {
 ObjNode		*theNode;
-TQ3Status	myStatus;
-short		i,numTriMeshes;
 unsigned long	statusBits;
-TQ3ViewObject	view = setupInfo->viewObject;
-Boolean			autoFade = false;
-Boolean			noCache = false;
-Boolean			useNullShader = false;
-Boolean			noZWrites = false;
-Boolean			noFog = false;
-Boolean			glow = false;
 float			cameraX, cameraZ;
-static const TQ3ColorRGB	white = {1,1,1};	
-short			skelType;		
 
 	if (gFirstNodePtr == nil)									// see if there are any objects
 		return;
@@ -400,8 +359,6 @@ short			skelType;
 	cameraX = setupInfo->currentCameraCoords.x;
 	cameraZ = setupInfo->currentCameraCoords.z;
 	
-	QD3D_SetMultisampling(true);
-	
 			/***********************/
 			/* MAIN NODE TASK LOOP */
 			/***********************/			
@@ -409,191 +366,69 @@ short			skelType;
 	{
 		statusBits = theNode->StatusBits;						// get obj's status bits
 
-		if (statusBits & STATUS_BIT_ISCULLED)					// see if is culled
-			goto next;		
-		
-		if (statusBits & STATUS_BIT_HIDDEN)						// see if is hidden
-			goto next;		
+		theNode->RenderModifiers.statusBits = statusBits;		// copy status bits to render mods
 
 		if (theNode->CType == INVALID_NODE_FLAG)				// see if already deleted
-			goto next;		
-
-		if (statusBits & STATUS_BIT_REFLECTIONMAP)				// dont draw here if this is reflection mapped
 			goto next;
 
-			
-				/**************************/
-				/* CHECK TRIANGLE CACHING */
-				/**************************/
-				
-		if (statusBits & STATUS_BIT_NOTRICACHE)					// see if disable caching
-		{
-			if (!noCache)										// only disable if currently on
-			{
-				QD3D_SetTriangleCacheMode(false);
-				noCache = true;
-			}
-		}
-		else
-		if (noCache)											// if caching disabled, reenable it
-		{
-			QD3D_SetTriangleCacheMode(true);
-			noCache = false;
-		}
+		if (statusBits & (STATUS_BIT_ISCULLED | STATUS_BIT_HIDDEN))
+			goto next;
 
-		
+
 			/******************/
 			/* CHECK AUTOFADE */
 			/******************/
-			
-		if (gAutoFadeStartDist != 0.0f)							// see if this level has autofade
+
+		if (gDoAutoFade && (statusBits & STATUS_BIT_AUTOFADE))		// see if this level has autofade
 		{
-			if (statusBits & STATUS_BIT_AUTOFADE)
+			float dist = CalcQuickDistance(cameraX, cameraZ, theNode->Coord.x, theNode->Coord.z);	// see if in fade zone
+			if (dist >= gAutoFadeStartDist)
 			{
-				TQ3ColorRGB	xcolor;			
-				float		dist;
-				
-				dist = CalcQuickDistance(cameraX, cameraZ, theNode->Coord.x, theNode->Coord.z);			// see if in fade zone
-				if (dist < gAutoFadeStartDist)
-					goto no_auto_fade;
-				
-				dist -= gAutoFadeStartDist;							// calc xparency %
-				dist = 1.0f - (dist * (1.0f/AUTO_FADE_RANGE));				
-				if (dist < 0.0f)
+				float factor = 1.0f - (dist - gAutoFadeStartDist) / AUTO_FADE_RANGE;	// calc xparency %
+				if (factor <= 0.0f)		// too far; fully faded
 					goto next;
-					
-				xcolor.r = xcolor.g = xcolor.b = dist;
-				
-				Q3Attribute_Submit(kQ3AttributeTypeTransparencyColor, &xcolor, view);
-				autoFade = true;
+
+				theNode->RenderModifiers.autoFadeFactor = factor;
 			}
 			else
 			{
-	no_auto_fade:			
-				if (autoFade)
-				{
-					Q3Attribute_Submit(kQ3AttributeTypeTransparencyColor, &white, view);			
-					autoFade = false;
-				}
-			}		
-		}
-					
-		
-			/*********************/
-			/* CHECK NULL SHADER */
-			/*********************/
-			
-		if (statusBits & STATUS_BIT_NULLSHADER)
-		{
-			if (!useNullShader)
-			{
-				Q3Shader_Submit(setupInfo->nullShaderObject, view);
-				useNullShader = true;
+				theNode->RenderModifiers.autoFadeFactor = 1.0f;
 			}
 		}
 		else
-		if (useNullShader)
 		{
-			useNullShader = false;
-			Q3Shader_Submit(setupInfo->shaderObject, view);
-		}
-		
-			/*********************/
-			/* CHECK NO Z-WRITES */
-			/*********************/
-			
-		if (statusBits & STATUS_BIT_NOZWRITE)
-		{
-			if (!noZWrites)
-			{
-				QD3D_SetZWrite(false);
-				noZWrites = true;
-			}
-		}
-		else
-		if (noZWrites)
-		{
-			noZWrites = false;
-			QD3D_SetZWrite(true);
-		}
-	
-			/****************/
-			/* CHECK NO FOG */
-			/****************/
-	
-		if (statusBits & STATUS_BIT_NOFOG)
-		{
-			if (!noFog)
-			{
-				QD3D_DisableFog(setupInfo);
-				noFog = true;
-			}
-		}
-		else
-		if (noFog)
-		{
-			noFog = false;
-			QD3D_ReEnableFog(setupInfo);
-		}
-				
-			/********************/
-			/* CHECK GLOW BLEND */
-			/********************/
-	
-		if (statusBits & STATUS_BIT_GLOW)
-		{
-			if (!glow)
-			{
-				QD3D_SetAdditiveBlending(true);
-				glow = true;
-			}
-		}
-		else
-		if (glow)
-		{
-			glow = false;
-			QD3D_SetAdditiveBlending(false);
-		}
-	
-		
-			/************************/
-			/* SHOW COLLISION BOXES */
-			/************************/
-			
-		if (gShowDebug)
-		{
-			DrawCollisionBoxes(theNode,view);
-			DrawBoundingSphere(theNode, view);
+			theNode->RenderModifiers.autoFadeFactor = 1.0f;
 		}
 
-				
 			/***********************/
 			/* SUBMIT THE GEOMETRY */
 			/***********************/
-						
+
 		switch(theNode->Genre)
 		{
-			case	SKELETON_GENRE:	
+			case	SKELETON_GENRE:
 					UpdateSkinnedGeometry(theNode);													// update skeleton geometry
-					numTriMeshes = theNode->Skeleton->skeletonDefinition->numDecomposedTriMeshes;
-					skelType = theNode->Type;
-					for (i = 0; i < numTriMeshes; i++)												// submit each trimesh of it
-						Q3TriMesh_Submit(&gLocalTriMeshesOfSkelType[skelType][i], view);
-
+					Render_SubmitMeshList(															// submit each trimesh of it
+							theNode->NumMeshes,
+							theNode->MeshList,
+							nil,		// Don't mult matrix with BaseTransformMatrix -- skeleton code already does it
+							&theNode->RenderModifiers,
+							&theNode->Coord);
 					break;
 			
 			case	DISPLAY_GROUP_GENRE:
-					if (theNode->BaseGroup)
-					{
-						myStatus = Q3Object_Submit(theNode->BaseGroup, view);
-						GAME_ASSERT(myStatus);
-					}
+					Render_SubmitMeshList(
+							theNode->NumMeshes,
+							theNode->MeshList,
+							&theNode->BaseTransformMatrix,
+							&theNode->RenderModifiers,
+							&theNode->Coord);
 					break;
 					
 			case	CUSTOM_GENRE:
 					if (theNode->CustomDrawFunction)
 					{
-						theNode->CustomDrawFunction(theNode, view);					
+						theNode->CustomDrawFunction(theNode);
 					}
 					break;
 		}
@@ -603,31 +438,6 @@ short			skelType;
 next:
 		theNode = (ObjNode *)theNode->NextNode;
 	}while (theNode != nil);
-
-
-				/*****************************/
-				/* RESET SETTINGS TO DEFAULT */
-				/*****************************/
-		
-	if (autoFade)
-		Q3Attribute_Submit(kQ3AttributeTypeTransparencyColor, &white, view);			
-
-	if (noCache)												// if caching disabled, reenable it
-		QD3D_SetTriangleCacheMode(true);
-
-	if (useNullShader)
-		Q3Shader_Submit(setupInfo->shaderObject, view);
-
-	if (noZWrites)
-		QD3D_SetZWrite(true);
-
-	if (noFog)
-		QD3D_ReEnableFog(setupInfo);
-
-	if (glow)
-		QD3D_SetAdditiveBlending(false);
-
-	SubmitReflectionMapQueue(setupInfo);						// draw anything in the reflection map queue
 }
 
 
@@ -662,7 +472,6 @@ void DeleteAllObjects(void)
 		DeleteObject(gFirstNodePtr);
 		
 	FlushObjectDeleteQueue();
-	InitReflectionMapQueue();						// also purge data from here
 }
 
 
@@ -683,12 +492,18 @@ void DeleteObject(ObjNode	*theNode)
 			// since it's going to be used next pass thru the moveobjects loop.  This
 			// assumes that all chained nodes are later in list.
 			//
-			
+
 	if (theNode->ChainNode)
+	{
 		DeleteObject(theNode->ChainNode);
+		theNode->ChainNode = nil;
+	}
 
 	if (theNode->ShadowNode)
+	{
 		DeleteObject(theNode->ShadowNode);
+		theNode->ShadowNode = nil;
+	}
 
 
 			/* SEE IF NEED TO FREE UP SPECIAL MEMORY */
@@ -703,21 +518,42 @@ void DeleteObject(ObjNode	*theNode)
 	{
 		DisposePtr((Ptr)theNode->CollisionBoxes);
 		theNode->CollisionBoxes = nil;
+		theNode->NumCollisionBoxes = 0;
 	}
 
-//	if (theNode->CollisionTriangles)				// free collision triangle memory
-//		DisposeCollisionTriangleMemory(theNode);
+	if (theNode->OldCollisionBoxes != nil)			// free old collision box memory
+	{
+		DisposePtr((Ptr)theNode->OldCollisionBoxes);
+		theNode->OldCollisionBoxes = nil;
+	}
 
-	
+
 			/* SEE IF STOP SOUND CHANNEL */
-			
+
 	StopObjectStreamEffect(theNode);
 
 
 		/* SEE IF NEED TO DEREFERENCE A QD3D OBJECT */
-	
-	DisposeObjectBaseGroup(theNode);		
 
+	for (int i = 0; i < theNode->NumMeshes; i++)
+	{
+		// If the node has ownership of this mesh's OpenGL texture name, delete it
+		if (theNode->MeshList[i]->glTextureName && theNode->OwnsMeshTexture[i])
+		{
+			glDeleteTextures(1, &theNode->MeshList[i]->glTextureName);
+			theNode->MeshList[i]->glTextureName = 0;
+		}
+
+		// If the node has ownership of this mesh's memory, dispose of it
+		if (theNode->OwnsMeshMemory[i])
+		{
+			Q3TriMeshData_Dispose(theNode->MeshList[i]);
+		}
+
+		theNode->MeshList[i] = nil;
+		theNode->OwnsMeshMemory[i] = false;
+	}
+	theNode->NumMeshes = 0;
 
 			/* REMOVE NODE FROM LINKED LIST */
 
@@ -870,28 +706,6 @@ long	i,num;
 }
 
 
-/****************** DISPOSE OBJECT BASE GROUP **********************/
-
-void DisposeObjectBaseGroup(ObjNode *theNode)
-{
-TQ3Status	status;
-
-	if (theNode->BaseGroup != nil)
-	{
-		status = Q3Object_Dispose(theNode->BaseGroup);
-		GAME_ASSERT(status);
-
-		theNode->BaseGroup = nil;
-	}
-	
-	if (theNode->BaseTransformObject != nil)							// also nuke extra ref to transform object
-	{
-		Q3Object_Dispose(theNode->BaseTransformObject);
-		theNode->BaseTransformObject = nil;
-	}
-}
-
-
 
 
 //============================================================================================================
@@ -978,51 +792,6 @@ TQ3Matrix4x4	m,m2;
 	m2.value[3][2] = theNode->Coord.z;
 	
 	MatrixMultiplyFast(&m,&m2, &theNode->BaseTransformMatrix);
-
-
-				/* UPDATE TRANSFORM OBJECT */
-				
-	SetObjectTransformMatrix(theNode);
-}
-
-
-/***************** SET OBJECT TRANSFORM MATRIX *******************/
-//
-// This call simply resets the base transform object so that it uses the latest
-// base transform matrix
-//
-
-void SetObjectTransformMatrix(ObjNode *theNode)
-{
-TQ3Status 				error;
-
-	if (theNode->CType == INVALID_NODE_FLAG)		// see if invalid
-		return;
-		
-	if (theNode->BaseTransformObject)				// see if this has a trans obj
-	{
-		error = Q3MatrixTransform_Set(theNode->BaseTransformObject,&theNode->BaseTransformMatrix);
-		GAME_ASSERT(error);
-	}
-}
-
-/********************* MAKE OBJECT KEEP BACKFACES ***********************/
-//
-// Puts a backfacing style object in the base group.
-//
-
-void MakeObjectKeepBackfaces(ObjNode *theNode)
-{
-//TQ3Status			status;
-
-	GAME_ASSERT(theNode->BaseGroup);
-
-//	status = Q3Group_GetFirstPosition(theNode->BaseGroup, &position);
-//	if ((status == kQ3Failure) || (position == nil))
-//		DoFatalAlert("MakeObjectKeepBackfaces: Q3Group_GetFirstPosition failed!");
-	
-	TQ3GroupPosition pos = Q3Group_AddObject(theNode->BaseGroup, gKeepBackfaceStyleObject);
-	GAME_ASSERT(pos);
 }
 
 
@@ -1036,69 +805,7 @@ void MakeObjectKeepBackfaces(ObjNode *theNode)
 
 void MakeObjectTransparent(ObjNode *theNode, float transPercent)
 {
-TQ3GroupPosition	position;
-TQ3Status			status;
-//TQ3ObjectType		oType;
-TQ3Object			attrib;
-TQ3ColorRGB			transColor;
-TQ3AttributeType	attribType;
-
-	GAME_ASSERT(theNode->BaseGroup);
-
-//	oType = Q3Group_GetType(theNode->BaseGroup);
-//	if (oType == kQ3ObjectTypeInvalid)
-//		DoFatalAlert("MakeObjectTransparent: BaseGroup is not a Group Object!");
-
-
-			/* GET CURRENT ATTRIBUTE OBJECT OR MAKE NEW ONE */
-
-	status = Q3Group_GetFirstPositionOfType(theNode->BaseGroup, kQ3SharedTypeSet, &position);	// see if attribute object in the group
-	if (position != nil)																		// YES
-	{
-		status = Q3Group_GetPositionObject(theNode->BaseGroup, position, &attrib);				// get the attribute object
-		GAME_ASSERT(status);
-
-		if (transPercent >= 1.0f)															// if totally opaque then remove this attrib
-		{
-			Q3AttributeSet_Clear(attrib, kQ3AttributeTypeTransparencyColor);				// remove this attrib type from attrib
-			
-			attribType = kQ3AttributeTypeNone;
-			Q3AttributeSet_GetNextAttributeType(attrib, &attribType);						// if nothing in attrib set then remove attrib obj
-			if (attribType == kQ3AttributeTypeNone)
-			{
-				TQ3Object	removedObj;
-				
-				removedObj = (TQ3Object)Q3Group_RemovePosition(theNode->BaseGroup, position);			// remove attrib from group		
-				if (removedObj)
-					Q3Object_Dispose(removedObj);											// now throw it out
-			}
-			goto bye;
-		}		
-	}
-	
-					/* NO ATTRIB OBJ IN GROUP, SO MAKE NEW ATTRIB SET */
-	else
-	{
-		if (transPercent >= 1.0)															// if totally opaque then dont do it
-			return;
-
-		attrib = Q3AttributeSet_New();														// make new attrib set
-		GAME_ASSERT(attrib);
-			
-				/* ADD NEW ATTRIB SET TO GROUP */
-					
-		position = Q3Group_AddObject(theNode->BaseGroup, attrib);
-		GAME_ASSERT(position);
-	}
-				
-					/* ADD TRANSPARENCY */
-					
-	transColor.r = transColor.g = transColor.b = transPercent;
-	status = Q3AttributeSet_Add(attrib, kQ3AttributeTypeTransparencyColor, &transColor);
-	GAME_ASSERT(status);
-
-bye:
-	Q3Object_Dispose(attrib);								// dispose of extra ref
+	theNode->RenderModifiers.diffuseColor.a = transPercent;
 }
 
 
@@ -1107,19 +814,17 @@ bye:
 
 /************************ DRAW COLLISION BOXES ****************************/
 
-static void DrawCollisionBoxes(ObjNode *theNode, TQ3ViewObject view)
+void DrawCollisionBoxes(const ObjNode* theNode)
 {
 int	n,i;
 CollisionBoxType	*c;
-TQ3PolyLineData	line;
-TQ3Vertex3D		v[5];
 float			left,right,top,bottom,front,back;
 
 	n = theNode->NumCollisionBoxes;							// get # collision boxes	
 	c = theNode->CollisionBoxes;							// pt to array
 	if (c == nil)
 		return;
-		
+
 	for (i = 0; i < n; i++)
 	{
 		left 	= c[i].left;
@@ -1129,128 +834,38 @@ float			left,right,top,bottom,front,back;
 		front 	= c[i].front;
 		back 	= c[i].back;
 
-			/* SETUP */
-			
-		line.numVertices = 5;
-		line.vertices = &v[0];
-		line.segmentAttributeSet = nil;
-		line.polyLineAttributeSet = nil;
-		v[0].attributeSet = nil;
-		v[1].attributeSet = nil;
-		v[2].attributeSet = nil;
-		v[3].attributeSet = nil;
-		v[4].attributeSet = nil;
-	
+
 			/* DRAW TOP */
-			
-		v[0].point.x = left;
-		v[0].point.y = top;
-		v[0].point.z = back;
-		v[1].point.x = left;
-		v[1].point.y = top;
-		v[1].point.z = front;
-		v[2].point.x = right;
-		v[2].point.y = top;
-		v[2].point.z = front;
-		v[3].point.x = right;
-		v[3].point.y = top;
-		v[3].point.z = back;
-		v[4].point.x = left;
-		v[4].point.y = top;
-		v[4].point.z = back;
-		Q3PolyLine_Submit(&line, view);
+
+		glBegin(GL_LINE_STRIP);
+		glVertex3f(left,		top,		back);
+		glVertex3f(left,		top,		front);
+		glVertex3f(right,		top,		front);
+		glVertex3f(right,		top,		back);
+		glVertex3f(left,		top,		back);
+		glEnd();
 
 			/* DRAW BOTTOM */
-			
-		v[0].point.x = left;
-		v[0].point.y = bottom;
-		v[0].point.z = back;
-		v[1].point.x = left;
-		v[1].point.y = bottom;
-		v[1].point.z = front;
-		v[2].point.x = right;
-		v[2].point.y = bottom;
-		v[2].point.z = front;
-		v[3].point.x = right;
-		v[3].point.y = bottom;
-		v[3].point.z = back;
-		v[4].point.x = left;
-		v[4].point.y = bottom;
-		v[4].point.z = back;
-		Q3PolyLine_Submit(&line, view);
 
-			/* DRAW LEFT */
-			
-		line.numVertices = 2;
-		v[0].point.x = left;
-		v[0].point.y = top;
-		v[0].point.z = back;
-		v[1].point.x = left;
-		v[1].point.y = bottom;
-		v[1].point.z = back;
-		Q3PolyLine_Submit(&line, view);
-		v[0].point.x = left;
-		v[0].point.y = top;
-		v[0].point.z = front;
-		v[1].point.x = left;
-		v[1].point.y = bottom;
-		v[1].point.z = front;
-		Q3PolyLine_Submit(&line, view);
+		glBegin(GL_LINE_STRIP);
+		glVertex3f(left,		bottom,		back);
+		glVertex3f(left,		bottom,		front);
+		glVertex3f(right,		bottom,		front);
+		glVertex3f(right,		bottom,		back);
+		glVertex3f(left,		bottom,		back);
+		glEnd();
 
-			/* DRAW RIGHT */
-			
-		v[0].point.x = right;
-		v[0].point.y = top;
-		v[0].point.z = back;
-		v[1].point.x = right;
-		v[1].point.y = bottom;
-		v[1].point.z = back;
-		Q3PolyLine_Submit(&line, view);
-		v[0].point.x = right;
-		v[0].point.y = top;
-		v[0].point.z = front;
-		v[1].point.x = right;
-		v[1].point.y = bottom;
-		v[1].point.z = front;
-		Q3PolyLine_Submit(&line, view);
+			/* DRAW LEFT & RIGHT */
+
+		glBegin(GL_LINES);
+		glVertex3f(left,		top,		back);
+		glVertex3f(left,		bottom,		back);
+		glVertex3f(left,		top,		front);
+		glVertex3f(left,		bottom,		front);
+		glVertex3f(right,		top,		back);
+		glVertex3f(right,		bottom,		back);
+		glVertex3f(right,		top,		front);
+		glVertex3f(right,		bottom,		front);
+		glEnd();
 	}
 }
-
-/************************ DRAW BOUNDING SPHERE (FOR CULLING) ****************************/
-
-static void DrawBoundingSphere(ObjNode* theNode, TQ3ViewObject view)
-{
-	static TQ3SubdivisionStyleData sub;
-	sub.method = kQ3SubdivisionMethodConstant;
-	sub.c1 = 64;
-	sub.c2 = 64;
-	Q3SubdivisionStyle_Submit(&sub, view);
-
-	TQ3Point3D C = theNode->Coord;
-	C.x += theNode->BoundingSphere.origin.x;
-	C.y += theNode->BoundingSphere.origin.y;
-	C.z += theNode->BoundingSphere.origin.z;
-	float R = theNode->BoundingSphere.radius;
-	static const TQ3Vector3D up = {0,1,0};
-	TQ3Matrix4x4 m;
-	SetLookAtMatrix(&m, &up, &C, &gGameViewInfoPtr->currentCameraCoords);
-
-	TQ3Vector3D majorV = {R,0,0};
-	TQ3Vector3D minorV = {0,R,0};
-	Q3Point3D_Transform((TQ3Point3D*) &majorV, &m, (TQ3Point3D*) &majorV);
-	Q3Vector3D_Normalize(&majorV, &majorV);
-	majorV.x *= R;
-	majorV.y *= R;
-	majorV.z *= R;
-
-	TQ3EllipseData ellipseData;
-	ellipseData.uMin = 0;
-	ellipseData.uMax = 1;
-	ellipseData.ellipseAttributeSet = nil;
-	ellipseData.origin = C;
-	ellipseData.majorRadius = majorV;
-	ellipseData.minorRadius = minorV;
-	Q3Ellipse_Submit(&ellipseData, view);
-}
-
-
