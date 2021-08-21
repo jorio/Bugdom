@@ -903,6 +903,10 @@ float					verts2x,verts2y;
 				verts2x = point->x;
 				verts2y = point->y;
 				break;
+
+		default:
+				DoFatalAlert("IsPointInTriangle3D: unknown component");
+				return false;
 	}
 	
 	
