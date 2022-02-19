@@ -1,4 +1,4 @@
-# Bugdom 1.3.1 Cheats
+# Bugdom Cheats
 
 ## In main menu
 

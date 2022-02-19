@@ -1,5 +1,7 @@
 # Bugdom changelog
 
+- **1.3.2 (NOT RELEASED YET)**
+
 - **1.3.1 (August 2021)**
     - Full rewrite of the 3D renderer, replacing legacy QuickDraw 3D code. The game should work better on systems that had trouble running the previous version.
     - Cosmetic touchups on 3DMF model textures. Some textures could use UV clamping, and some had incorrect alpha (spider teeth, etc.).

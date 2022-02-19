@@ -1,4 +1,4 @@
-# Bugdom 1.3.1 Command Line Switches
+# Bugdom Command Line Switches
 
 ## --stats
 
