@@ -700,7 +700,10 @@ static TQ3Vector3D	faceNormal[NUM_TRIS_IN_SUPERTILE];
 		}
 	
 					/* UPDATE TRIMESH DATA WITH NEW INFO */
-					
+#if _DEBUG
+		memset(gTempTextureBuffer, 0xFF, TEMP_TEXTURE_BUFF_SIZE * TEMP_TEXTURE_BUFF_SIZE * sizeof(uint16_t));
+#endif
+
 		i = 0;			
 		for (row2 = 0; row2 < SUPERTILE_SIZE; row2++)
 		{
@@ -1005,14 +1008,14 @@ static void BuildSuperTileLOD(SuperTileMemoryType *superTilePtr, short lod)
 
 /********************* DRAW TILE INTO MIPMAP *************************/
 
-static void DrawTileIntoMipmap(uint16_t tile, int row, int col, uint16_t* buffer)
+static void DrawTileIntoMipmap(uint16_t tile, int row, int col, uint16_t *buffer)
 {
-uint16_t		texMapNum,flipRotBits;
-const uint64_t*	tileData64;
-const uint16_t* tileData16;
-int				y;
-uint64_t*		ptr64;
-uint16_t*		ptr16;
+uint16_t texMapNum;
+uint16_t flipRotBits;
+const uint16_t* tileData;
+const int bufWidth = TEMP_TEXTURE_BUFF_SIZE;
+const int tileSize = OREOMAP_TILE_SIZE;
+
 
 			/* EXTRACT BITS INFO FROM TILE */
 				
@@ -1024,26 +1027,29 @@ uint16_t*		ptr16;
 //		DoFatalAlert("DrawTileIntoMipmap: illegal tile #");
 		texMapNum = 0;
 	}
+
 				/* CALC PTRS */
-				
-	buffer += ((row * OREOMAP_TILE_SIZE) * (SUPERTILE_SIZE * OREOMAP_TILE_SIZE)) + (col * OREOMAP_TILE_SIZE);		// get dest
-	tileData64 = (const uint64_t *)((*gTileDataHandle) + (texMapNum * OREOMAP_TILE_SIZE * OREOMAP_TILE_SIZE));		// get src
+
+	const int startX = col * tileSize;
+	const int startY = row * tileSize;
+
+	buffer += (startY * bufWidth) + startX;						// get dest
+	tileData = (*gTileDataHandle) + (texMapNum * tileSize*tileSize);	// get src
 
 
-	switch(flipRotBits)         											// set uv's based on flip & rot bits
+	switch(flipRotBits)         								// set uv's based on flip & rot bits
 	{
 				/* NO FLIP & NO ROT */
 					/* XYFLIP ROT 2 */
 
 		case	0:
 		case	TILE_FLIPXY_MASK | TILE_ROT2:
-				ptr64 = (uint64_t *)buffer;
-				for (y =  0; y < OREOMAP_TILE_SIZE; y++)
+				for (int y = 0; y < tileSize; y++)
 				{
-					memcpy(ptr64, tileData64, 8*sizeof(uint64_t));
-						
-					ptr64 += (OREOMAP_TILE_SIZE/4)*SUPERTILE_SIZE;			// next line in dest
-					tileData64 += (OREOMAP_TILE_SIZE/4);						// next line in src
+					memcpy(buffer, tileData, tileSize * sizeof(uint16_t));
+
+					buffer += bufWidth;						// next line in dest
+					tileData += tileSize;					// next line in src
 				}
 				break;
 
@@ -1052,15 +1058,13 @@ uint16_t*		ptr16;
 
 		case	TILE_FLIPX_MASK:
 		case	TILE_FLIPY_MASK | TILE_ROT2:
-				ptr16 = (uint16_t *)buffer;
-				tileData16 = (const uint16_t *)tileData64;
-				for (y =  0; y < OREOMAP_TILE_SIZE; y++)
+				for (int y = 0; y < tileSize; y++)
 				{
-					for (int x = 0; x < 32; x++)
-						ptr16[x] = tileData16[31-x];
-						
-					ptr16 += OREOMAP_TILE_SIZE * SUPERTILE_SIZE;		// next line in dest
-					tileData16 += OREOMAP_TILE_SIZE;					// next line in src
+					for (int x = 0; x < tileSize; x++)
+						buffer[x] = tileData[tileSize-1-x];
+
+					buffer += bufWidth;						// next line in dest
+					tileData += tileSize;					// next line in src
 				}
 				break;
 
@@ -1069,14 +1073,13 @@ uint16_t*		ptr16;
 
 		case	TILE_FLIPY_MASK:
 		case	TILE_FLIPX_MASK | TILE_ROT2:
-				ptr64 = (uint64_t *)buffer;
-				tileData64 += (OREOMAP_TILE_SIZE*(OREOMAP_TILE_SIZE-1)*2)/8;
-				for (y =  0; y < OREOMAP_TILE_SIZE; y++)
+				tileData += tileSize*(tileSize-1);
+				for (int y = 0; y < tileSize; y++)
 				{
-					memcpy(ptr64, tileData64, 8*sizeof(uint64_t));
+					memcpy(buffer, tileData, tileSize * sizeof(uint16_t));
 
-					ptr64 += (OREOMAP_TILE_SIZE/4)*SUPERTILE_SIZE;			// next line in dest
-					tileData64 -= (OREOMAP_TILE_SIZE*2/8);					// next line in src
+					buffer += bufWidth;						// next line in dest
+					tileData -= tileSize;					// next line in src
 				}
 				break;
 
@@ -1086,15 +1089,14 @@ uint16_t*		ptr16;
 
 		case	TILE_FLIPXY_MASK:
 		case	TILE_ROT2:
-				ptr16 = (uint16_t *)buffer;
-				tileData16 = (uint16_t *)(tileData64 + (OREOMAP_TILE_SIZE*(OREOMAP_TILE_SIZE-1)*2)/8);
-				for (y =  0; y < OREOMAP_TILE_SIZE; y++)
+				tileData += tileSize*(tileSize-1);
+				for (int y = 0; y < tileSize; y++)
 				{
-					for (int x = 0; x < 32; x++)
-						ptr16[x] = tileData16[31-x];
-						
-					ptr16 += (OREOMAP_TILE_SIZE/4)*SUPERTILE_SIZE*4;			// next line in dest
-					tileData16 -= (OREOMAP_TILE_SIZE*2/2);					// next line in src
+					for (int x = 0; x < tileSize; x++)
+						buffer[x] = tileData[tileSize-1-x];
+
+					buffer += bufWidth;						// next line in dest
+					tileData -= tileSize;					// next line in src
 				}
 				break;
 
@@ -1103,15 +1105,14 @@ uint16_t*		ptr16;
 
 		case	TILE_ROT1:
 		case	TILE_FLIPXY_MASK | TILE_ROT3:
-				ptr16 = (uint16_t *)buffer + (OREOMAP_TILE_SIZE-1);			// draw to right col from top row of src
-				tileData16 = (uint16_t *)tileData64;
-				for (y =  0; y < OREOMAP_TILE_SIZE; y++)
+				buffer += (tileSize-1);						// draw to right col from top row of src
+				for (int y = 0; y < tileSize; y++)
 				{
-					for (int x = 0; x < 32; x++)
-						ptr16[OREOMAP_TILE_SIZE*SUPERTILE_SIZE*x] = tileData16[x];
+					for (int x = 0; x < tileSize; x++)
+						buffer[bufWidth*x] = tileData[x];
 						
-					ptr16--;											// prev col in dest
-					tileData16 += OREOMAP_TILE_SIZE;					// next line in src
+					buffer--;								// prev col in dest
+					tileData += tileSize;					// next line in src
 				}
 				break;
 
@@ -1120,15 +1121,13 @@ uint16_t*		ptr16;
 
 		case	TILE_ROT3:
 		case	TILE_FLIPXY_MASK | TILE_ROT1:
-				ptr16 = (u_short *)buffer;
-				tileData16 = (u_short *)tileData64;
-				for (y =  0; y < OREOMAP_TILE_SIZE; y++)
+				for (int y = 0; y < tileSize; y++)
 				{
-					for (int x = 0; x < 32; x++)
-						ptr16[OREOMAP_TILE_SIZE*SUPERTILE_SIZE*(31-x)] = tileData16[x];		// backwards
+					for (int x = 0; x < tileSize; x++)
+						buffer[bufWidth*(tileSize-1-x)] = tileData[x];		// backwards
 
-					ptr16++;											// next col in dest
-					tileData16 += OREOMAP_TILE_SIZE;					// next line in src
+					buffer++;								// next col in dest
+					tileData += tileSize;					// next line in src
 				}
 				break;
 
@@ -1137,15 +1136,14 @@ uint16_t*		ptr16;
 
 		case	TILE_FLIPX_MASK | TILE_ROT1:
 		case	TILE_FLIPY_MASK | TILE_ROT3:
-				ptr16 = (uint16_t *)buffer + (OREOMAP_TILE_SIZE-1);
-				tileData16 = (const uint16_t *)tileData64;
-				for (y =  0; y < OREOMAP_TILE_SIZE; y++)
+				buffer += (tileSize-1);
+				for (int y = 0; y < tileSize; y++)
 				{
-					for (int x = 0; x < 32; x++)
-						ptr16[OREOMAP_TILE_SIZE*SUPERTILE_SIZE*(31-x)] = tileData16[x];		// backwards
-						
-					ptr16--;											// next col in dest
-					tileData16 += OREOMAP_TILE_SIZE;					// next line in src
+					for (int x = 0; x < tileSize; x++)
+						buffer[bufWidth*(tileSize-1-x)] = tileData[x];		// backwards
+
+					buffer--;								// prev col in dest
+					tileData += tileSize;					// next line in src
 				}
 				break;
 
@@ -1154,23 +1152,17 @@ uint16_t*		ptr16;
 
 		case	TILE_FLIPX_MASK | TILE_ROT3:
 		case	TILE_FLIPY_MASK | TILE_ROT1:
-				ptr16 = (uint16_t *)buffer;							// draw to right col from top row of src
-				tileData16 = (uint16_t *)tileData64;
-				for (y =  0; y < OREOMAP_TILE_SIZE; y++)
+				for (int y = 0; y < tileSize; y++)			// draw to right col from top row of src
 				{
-					for (int x = 0; x < 32; x++)
-						ptr16[OREOMAP_TILE_SIZE*SUPERTILE_SIZE*x] = tileData16[x];
+					for (int x = 0; x < tileSize; x++)
+						buffer[bufWidth*x] = tileData[x];
 
-					ptr16++;											// prev col in dest
-					tileData16 += OREOMAP_TILE_SIZE;					// next line in src
+					buffer++;								// next col in dest
+					tileData += tileSize;					// next line in src
 				}
 				break;
 	}
-
-
 }
-
-
 
 
 /************ SHRINK SUPERTILE TEXTURE MAP ********************/
