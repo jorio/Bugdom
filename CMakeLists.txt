@@ -3,11 +3,11 @@ cmake_minimum_required(VERSION 3.13)
 set(GAME_TARGET				"Bugdom")
 set(GAME_VERSION			"1.3.1")
 set(GAME_MAC_ICNS			"packaging/${GAME_TARGET}.icns")
-set(GAME_MAC_COPYRIGHT		"© 1999 Pangea Software, Inc.\n© 2021 Iliyas Jorio.")
+set(GAME_MAC_COPYRIGHT		"© 1999 Pangea Software, Inc.\n© 2022 Iliyas Jorio.")
 set(GAME_MAC_BUNDLE_ID		"io.jor.bugdom")
 
 set(CMAKE_MODULE_PATH		"${CMAKE_SOURCE_DIR}/cmake")
-set(CMAKE_C_STANDARD		11)
+set(CMAKE_C_STANDARD		17)
 set(CMAKE_CXX_STANDARD		20)
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.11" CACHE STRING "Minimum OS X deployment version")
@@ -75,7 +75,7 @@ source_group(TREE ${GAME_SRCDIR} PREFIX "" FILES ${GAME_ALL_SOURCES})
 set(GAME_LIBRARIES
 	Pomme
 	${SDL2_LIBRARIES}
-	${OPENGL_LIBRARIES}
+	OpenGL::GL
 )
 
 if(WIN32)
@@ -105,7 +105,6 @@ target_include_directories(${GAME_TARGET} PRIVATE
 	${OPENGL_INCLUDE_DIR}
 	extern/Pomme/src
 	extern/Pomme/src/QD3D
-	${GAME_SRCDIR}
 	${GAME_SRCDIR}/Headers
 )
 
@@ -164,6 +163,7 @@ else()
 		/wd4244 # conversion from double to float
 		/wd4305 # truncation from double to float
 		/wd5105 # see https://developercommunity.visualstudio.com/t/1249671
+		/MP
 	)
 endif()
 
@@ -252,11 +252,10 @@ if(WIN32)
 		add_custom_command(TARGET ${GAME_TARGET} POST_BUILD
 			COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DLL} ${APP_PARENT_DIR})
 	endforeach()
+
+	include(InstallRequiredSystemLibraries)
 endif()
 
 # Copy documentation to output folder
-if(WIN32)
-	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/packaging/ReadMe-Win32.txt.in ${CMAKE_CURRENT_BINARY_DIR}/ReadMe.txt)
-else()
-	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/packaging/ReadMe.txt.in ${CMAKE_CURRENT_BINARY_DIR}/ReadMe.txt)
-endif()
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/packaging/ReadMe.txt.in ${CMAKE_CURRENT_BINARY_DIR}/ReadMe.txt)
+
