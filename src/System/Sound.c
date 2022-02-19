@@ -233,6 +233,8 @@ OSErr err;
 	loadedSound->sndHandle = Pomme_SndLoadFileAsResource(refNum);
 	GAME_ASSERT_MESSAGE(loadedSound->sndHandle, path);
 
+	FSClose(refNum);
+
 			/* GET OFFSET INTO IT */
 
 	GetSoundHeaderOffset(loadedSound->sndHandle, &loadedSound->sndOffset);
