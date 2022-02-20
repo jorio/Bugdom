@@ -319,18 +319,6 @@ typedef struct
 
 		/* PREFERENCES */
 
-enum
-{
-	// 3 LODs: 128x128, 64x64, 32x32
-	TERRAIN_TEXTURE_PREF_3_LOD_128 = 0,
-
-	// 1 LOD: 128x128
-	TERRAIN_TEXTURE_PREF_1_LOD_128 = 1,
-
-	// 1 LOD: 160x160
-	TERRAIN_TEXTURE_PREF_1_LOD_160 = 2,
-};
-
 typedef struct
 {
 	Boolean	easyMode;

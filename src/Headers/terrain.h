@@ -27,7 +27,25 @@ enum
 	SUPERTILE_MODE_USED
 };
 
-#define	SUPERTILE_TEXMAP_SIZE	128						// the width & height of a supertile's texture
+		/* SUPER TILE TEXTURE LODs */
+
+enum
+{
+	// 3 LODs: 128x128, 64x64, 32x32 (low-detail mode in OS 9 version)
+	SUPERTILE_DETAIL_PROGRESSIVE = 0,
+
+	// 1 LOD: 128x128 (high-detail mode in OS 9 version)
+	SUPERTILE_DETAIL_SHRUNK = 1,
+
+	// 1 LOD: 160x160 (no texture shrinking)
+	SUPERTILE_DETAIL_LOSSLESS = 2,
+
+	// 1 LOD: 160x160 + 32x32 border for seamless texturing
+	SUPERTILE_DETAIL_SEAMLESS = 3,
+
+	SUPERTILE_DETAIL_WORST = SUPERTILE_DETAIL_PROGRESSIVE,
+	SUPERTILE_DETAIL_BEST = SUPERTILE_DETAIL_SEAMLESS,
+};
 
 #define	OREOMAP_TILE_SIZE		32 						// pixel w/h of texture tile
 #define TERRAIN_HMTILE_SIZE		32						// pixel w/h of heightmap tile
@@ -39,7 +57,10 @@ enum
 #define	NUM_TRIS_IN_SUPERTILE	(SUPERTILE_SIZE * SUPERTILE_SIZE * 2)			// 2 triangles per tile
 #define	NUM_VERTICES_IN_SUPERTILE	((SUPERTILE_SIZE+1)*(SUPERTILE_SIZE+1))		// # vertices in a supertile
 
-#define	TEMP_TEXTURE_BUFF_SIZE	(OREOMAP_TILE_SIZE * SUPERTILE_SIZE)
+#define	SUPERTILE_TEXSIZE_SHRUNK		128
+#define	SUPERTILE_TEXSIZE_LOSSLESS		(OREOMAP_TILE_SIZE * SUPERTILE_SIZE)
+#define	SUPERTILE_TEXSIZE_SEAMLESS		(OREOMAP_TILE_SIZE * (SUPERTILE_SIZE + 2))
+#define	SUPERTILE_TEXSIZE_MAX			SUPERTILE_TEXSIZE_SEAMLESS
 
 #define	MAP2UNIT_VALUE			((float)TERRAIN_POLYGON_SIZE/OREOMAP_TILE_SIZE)	//value to xlate Oreo map pixel coords to 3-space unit coords
 

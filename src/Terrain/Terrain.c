@@ -47,7 +47,7 @@ static void BuildSuperTileLOD(SuperTileMemoryType *superTilePtr, short lod);
 /*     VARIABLES      */
 /**********************/
 
-int				gTerrainTextureDetail = TERRAIN_TEXTURE_PREF_1_LOD_160;
+static int		gTerrainTextureDetail = SUPERTILE_DETAIL_BEST;
 int				gSuperTileActiveRange;
 
 Boolean			gDoCeiling;
@@ -161,7 +161,7 @@ void InitTerrainManager(void)
 			
 	if (gTempTextureBuffer == nil)
 	{
-		gTempTextureBuffer = (u_short *)AllocPtr(TEMP_TEXTURE_BUFF_SIZE * TEMP_TEXTURE_BUFF_SIZE * sizeof(u_short));
+		gTempTextureBuffer = (uint16_t*) AllocPtr(SUPERTILE_TEXSIZE_MAX * SUPERTILE_TEXSIZE_MAX * sizeof(uint16_t));
 		GAME_ASSERT(gTempTextureBuffer);
 	}
 
@@ -321,53 +321,75 @@ static	TQ3Param2D				uvs[NUM_VERTICES_IN_SUPERTILE];
 			/* PREPARE TEXTURE DETAIL CONSTANTS ACCORDING TO USER PREFS */
 
 	// Fill out gNumLODs and textureSize[] according to user pref for texture detail (source port addition)
-	gTerrainTextureDetail = gGamePrefs.lowDetail? TERRAIN_TEXTURE_PREF_3_LOD_128: TERRAIN_TEXTURE_PREF_1_LOD_160;
+	gTerrainTextureDetail = gGamePrefs.lowDetail
+		? SUPERTILE_DETAIL_WORST
+		: SUPERTILE_DETAIL_BEST;
 
 retryParseLODPref:
 	switch (gTerrainTextureDetail)
 	{
-	case TERRAIN_TEXTURE_PREF_3_LOD_128:
+	case SUPERTILE_DETAIL_PROGRESSIVE:
 		gNumLODs = 3;
-		gTextureSizePerLOD[0] = SUPERTILE_TEXMAP_SIZE;
-		gTextureSizePerLOD[1] = SUPERTILE_TEXMAP_SIZE / 2;
-		gTextureSizePerLOD[2] = SUPERTILE_TEXMAP_SIZE / 4;
+		gTextureSizePerLOD[0] = SUPERTILE_TEXSIZE_SHRUNK;
+		gTextureSizePerLOD[1] = SUPERTILE_TEXSIZE_SHRUNK / 2;
+		gTextureSizePerLOD[2] = SUPERTILE_TEXSIZE_SHRUNK / 4;
 		break;
 
-	case TERRAIN_TEXTURE_PREF_1_LOD_128:
+	case SUPERTILE_DETAIL_SHRUNK:
 		gNumLODs = 1;
-		gTextureSizePerLOD[0] = SUPERTILE_TEXMAP_SIZE;
+		gTextureSizePerLOD[0] = SUPERTILE_TEXSIZE_SHRUNK;
 		break;
 
-	case TERRAIN_TEXTURE_PREF_1_LOD_160:
+	case SUPERTILE_DETAIL_LOSSLESS:
 		gNumLODs = 1;
-		gTextureSizePerLOD[0] = TEMP_TEXTURE_BUFF_SIZE;
+		gTextureSizePerLOD[0] = SUPERTILE_TEXSIZE_LOSSLESS;
 		break;
-		
+
+	case SUPERTILE_DETAIL_SEAMLESS:
+		gNumLODs = 1;
+		gTextureSizePerLOD[0] = SUPERTILE_TEXSIZE_SEAMLESS;
+		break;
+
 	default:
 		DoAlert("Unknown terrain texture detail pref!");
 		ShowSystemErr_NonFatal(gTerrainTextureDetail);
 
 		// Set a sane fallback value and try again
-		gTerrainTextureDetail = TERRAIN_TEXTURE_PREF_3_LOD_128;
+		gTerrainTextureDetail = SUPERTILE_DETAIL_BEST;
 		goto retryParseLODPref;
 	}
 
 
 	
 			/* INIT UV LIST */
-			
+	
 	i = 0;	
-	for (v = 0; v <= SUPERTILE_SIZE; v++)						// sets uv's 0.0 -> 1.0 for single texture map
+	if (gTerrainTextureDetail == SUPERTILE_DETAIL_SEAMLESS)
 	{
-		for (u = 0; u <= SUPERTILE_SIZE; u++)
+		for (v = 0; v <= SUPERTILE_SIZE; v++)						// sets uv's 0.0 -> 1.0 for single texture map
 		{
-			uvs[i].u = (float)u / (float)SUPERTILE_SIZE;
-			uvs[i].v = (float)v / (float)SUPERTILE_SIZE;
-			i++;
-		}	
+			for (u = 0; u <= SUPERTILE_SIZE; u++)
+			{
+				uvs[i].u = (1.0f + u) / (2.0f + SUPERTILE_SIZE);
+				uvs[i].v = (1.0f + v) / (2.0f + SUPERTILE_SIZE);
+				i++;
+			}	
+		}
 	}
-	
-	
+	else
+	{
+		for (v = 0; v <= SUPERTILE_SIZE; v++)						// sets uv's 0.0 -> 1.0 for single texture map
+		{
+			for (u = 0; u <= SUPERTILE_SIZE; u++)
+			{
+				uvs[i].u = (float)u / (float)SUPERTILE_SIZE;
+				uvs[i].v = (float)v / (float)SUPERTILE_SIZE;
+				i++;
+			}	
+		}
+	}
+
+
 		/* INIT COLOR LIST */
 		
 	i = 0;	
@@ -701,10 +723,10 @@ static TQ3Vector3D	faceNormal[NUM_TRIS_IN_SUPERTILE];
 	
 					/* UPDATE TRIMESH DATA WITH NEW INFO */
 #if _DEBUG
-		memset(gTempTextureBuffer, 0xFF, TEMP_TEXTURE_BUFF_SIZE * TEMP_TEXTURE_BUFF_SIZE * sizeof(uint16_t));
+		memset(gTempTextureBuffer, 0xFF, SUPERTILE_TEXSIZE_MAX * SUPERTILE_TEXSIZE_MAX * sizeof(uint16_t));
 #endif
 
-		i = 0;			
+		i = 0;
 		for (row2 = 0; row2 < SUPERTILE_SIZE; row2++)
 		{
 			row = row2 + startRow;
@@ -714,16 +736,6 @@ static TQ3Vector3D	faceNormal[NUM_TRIS_IN_SUPERTILE];
 	
 				col = col2 + startCol;
 	
-						/* ADD TILE TO PIXMAP */
-						
-				if (layer == 0)
-					tile = gFloorMap[row][col];				// get tile from floor map...
-				else
-					tile = gCeilingMap[row][col];				// ...or get tile from ceiling map
-					
-				DrawTileIntoMipmap(tile,row2,col2,gTempTextureBuffer);		// draw into mipmap
-
-
 						/* SET SPLITTING INFO */
 
 				const Byte* tri1;
@@ -750,7 +762,6 @@ static TQ3Vector3D	faceNormal[NUM_TRIS_IN_SUPERTILE];
 				triangleList[i++].pointIndices[2] 	= tri2[gTileTriangleWinding[layer][2]];
 			}
 		}
-
 
 							/* CALC FACE NORMALS */
 						
@@ -887,7 +898,59 @@ static TQ3Vector3D	faceNormal[NUM_TRIS_IN_SUPERTILE];
 				}
 			}
 		}
-				
+
+					/********************/
+					/* ASSEMBLE TEXTURE */
+					/********************/
+
+		int textureMinRow = 0;
+		int textureMinCol = 0;
+		int textureMaxRow = textureMinRow + SUPERTILE_SIZE;
+		int textureMaxCol = textureMinCol + SUPERTILE_SIZE;
+
+		if (!gGamePrefs.lowDetail)
+		{
+			textureMinRow--;
+			textureMinCol--;
+			textureMaxRow++;
+			textureMaxCol++;
+		}
+
+		for (row2 = textureMinRow; row2 < textureMaxRow; row2++)
+		{
+			row = row2 + startRow;
+	
+			for (col2 = textureMinCol; col2 < textureMaxRow; col2++)
+			{
+				col = col2 + startCol;
+	
+						/* ADD TILE TO PIXMAP */
+
+				if (row < 0 || row >= gTerrainTileDepth ||
+					col < 0 || col >= gTerrainTileWidth)
+				{
+					tile = 0;
+				}
+				else if (layer == 0)
+				{
+					tile = gFloorMap[row][col];				// get tile from floor map...
+				}
+				else
+				{
+					tile = gCeilingMap[row][col];			// ...or get tile from ceiling map
+				}
+
+				if (!gGamePrefs.lowDetail)
+				{
+					DrawTileIntoMipmap(tile, row2+1, col2+1, gTempTextureBuffer);		// draw into mipmap
+				}
+				else
+				{
+					DrawTileIntoMipmap(tile, row2, col2, gTempTextureBuffer);		// draw into mipmap
+				}
+			}
+		}
+
 				/************************/
 				/* UPDATE TEXTURE LOD 0 */
 				/************************/
@@ -896,7 +959,8 @@ static TQ3Vector3D	faceNormal[NUM_TRIS_IN_SUPERTILE];
 				//
 
 		{
-			if (gTerrainTextureDetail == TERRAIN_TEXTURE_PREF_1_LOD_160)
+			if (gTerrainTextureDetail == SUPERTILE_DETAIL_LOSSLESS
+					|| gTerrainTextureDetail == SUPERTILE_DETAIL_SEAMLESS)
 			{
 				memcpy(superTilePtr->textureData[layer][0], gTempTextureBuffer, sizeof(gTempTextureBuffer[0]) * gTextureSizePerLOD[0] * gTextureSizePerLOD[0]);
 			}
@@ -1013,8 +1077,13 @@ static void DrawTileIntoMipmap(uint16_t tile, int row, int col, uint16_t *buffer
 uint16_t texMapNum;
 uint16_t flipRotBits;
 const uint16_t* tileData;
-const int bufWidth = TEMP_TEXTURE_BUFF_SIZE;
+
 const int tileSize = OREOMAP_TILE_SIZE;
+
+const int bufWidth
+	= (gTerrainTextureDetail == SUPERTILE_DETAIL_SEAMLESS)
+	? SUPERTILE_TEXSIZE_SEAMLESS
+	: SUPERTILE_TEXSIZE_LOSSLESS;
 
 
 			/* EXTRACT BITS INFO FROM TILE */
@@ -1172,7 +1241,7 @@ const int tileSize = OREOMAP_TILE_SIZE;
 
 static void	ShrinkSuperTileTextureMap(const u_short *srcPtr, u_short *dstPtr)
 {
-	_Static_assert(SUPERTILE_TEXMAP_SIZE == 128, "rewrite this for new supertile texmap size!");
+	_Static_assert(SUPERTILE_TEXSIZE_SHRUNK == 128, "rewrite this for new supertile texmap size!");
 	_Static_assert(SUPERTILE_SIZE * OREOMAP_TILE_SIZE == 160, "rewrite this for new oreomap tile size!");
 
 	for (int y = 0; y < 128; y++)
@@ -1348,7 +1417,7 @@ void DrawTerrain(const QD3DSetupOutputType *setupInfo)
 
 			int lod = 0;
 
-			if (gTerrainTextureDetail == TERRAIN_TEXTURE_PREF_3_LOD_128)
+			if (gTerrainTextureDetail == SUPERTILE_DETAIL_PROGRESSIVE)	// the only detail level with 3 LODs
 			{
 						/* SEE WHICH LOD TO USE */
 
