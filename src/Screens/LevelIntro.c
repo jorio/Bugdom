@@ -868,7 +868,6 @@ ObjNode	*l;
 static void DoForest1Intro(void)
 {
 TQ3Point3D from,to;
-ObjNode	*foot;
 int		i;
 float	x;
 static Byte	letters[] = {LINTRO_MObjType_L, LINTRO_MObjType_E, LINTRO_MObjType_V, LINTRO_MObjType_E,
@@ -930,7 +929,7 @@ static Byte	letters[] = {LINTRO_MObjType_L, LINTRO_MObjType_E, LINTRO_MObjType_V
 	gNewObjectDefinition.moveCall 	= MoveIntroFoot;
 	gNewObjectDefinition.rot 		= -PI/2;
 	gNewObjectDefinition.scale 		= 11.0;
-	foot = MakeNewSkeletonObject(&gNewObjectDefinition);			
+	MakeNewSkeletonObject(&gNewObjectDefinition);			
 			
 	WaitAndDraw(4);
 }
@@ -999,7 +998,6 @@ int		i;
 static void DoForest2Intro(void)
 {
 TQ3Point3D from,to;
-ObjNode	*fly;
 
 			/* SETUP CAMERA */
 			
@@ -1025,8 +1023,8 @@ ObjNode	*fly;
 	gNewObjectDefinition.moveCall 	= MoveIntroDragonFly;
 	gNewObjectDefinition.rot 		= -PI/2;
 	gNewObjectDefinition.scale 		= 1.5;
-	fly = MakeNewSkeletonObject(&gNewObjectDefinition);			
-	
+	MakeNewSkeletonObject(&gNewObjectDefinition);			
+
 
 	WaitAndDraw(10);
 }

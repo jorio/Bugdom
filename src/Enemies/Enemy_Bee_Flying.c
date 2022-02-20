@@ -514,7 +514,10 @@ static void  MoveFlyingBee_Dead(ObjNode *theNode)
 
 Boolean KillFlyingBee(ObjNode *theNode, float dx, float dy, float dz)
 {
-#pragma unused (dx, dy, dz)
+	(void) dx;
+	(void) dy;
+	(void) dz;
+
 long			pg,i;
 TQ3Vector3D		delta;
 

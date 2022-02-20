@@ -141,9 +141,7 @@ if(NOT MSVC)
 		-Wshadow
 		-Wno-multichar
 		-Wno-unknown-pragmas
-		$<$<CXX_COMPILER_ID:GNU>:-Wno-unused-but-set-variable>
 		-Werror=return-type
-		-Wno-unused-parameter
 	)
 else()
 	# By default, MSVC may add /EHsc to CMAKE_CXX_FLAGS, which we don't want (we use /EHs below)
@@ -158,7 +156,6 @@ else()
 		/EHs	# synchronous exceptions; also, extern "C" functions may throw exceptions
 		/W4
 		/wd4068 # ignore unrecognized pragmas
-		/wd4100 # unreferenced formal parameters
 		/wd4201 # nonstandard extension (nameless struct)
 		/wd4244 # conversion from double to float
 		/wd4305 # truncation from double to float

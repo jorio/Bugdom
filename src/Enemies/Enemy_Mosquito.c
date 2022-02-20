@@ -92,7 +92,7 @@ static const TQ3Point3D gTipOffset = {0,-28,92};
 
 Boolean AddEnemy_Mosquito(TerrainItemEntryType *itemPtr, long x, long z)
 {
-ObjNode	*newObj,*shadowObj;
+ObjNode	*newObj;
 
 	if (gNumEnemies >= MAX_ENEMIES)								// keep from getting absurd
 		return(false);
@@ -127,7 +127,7 @@ ObjNode	*newObj,*shadowObj;
 
 				/* MAKE SHADOW */
 				
-	shadowObj = AttachShadowToObject(newObj, 7, 7, false);
+	AttachShadowToObject(newObj, 7, 7, false);
 
 	newObj->InitCoord = newObj->Coord;							// remember where started
 
@@ -173,7 +173,7 @@ static	void(*myMoveTable[])(ObjNode *) =
 static void  MoveMosquito_Flying(ObjNode *theNode)
 {
 float	fps = gFramesPerSecondFrac;
-float	r,aim;
+float	r;
 
 	theNode->Skeleton->AnimSpeed = 2.0f;
 
@@ -253,7 +253,7 @@ float	r,aim;
 		
 						/* MOVE TOWARD PLAYER */
 						
-				aim = TurnObjectTowardTarget(theNode, &gCoord, gMyCoord.x, gMyCoord.z, MOSQUITO_TURN_SPEED, false);			
+				TurnObjectTowardTarget(theNode, &gCoord, gMyCoord.x, gMyCoord.z, MOSQUITO_TURN_SPEED, false);			
 
 				r = theNode->Rot.y;
 				gDelta.x = sin(r) * -MOSQUITO_CHASE_SPEED;

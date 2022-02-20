@@ -322,13 +322,9 @@ got_slot:
 
 static void EnterPlayerName(unsigned long newScore)
 {
-ObjNode		*frameObj;
 TQ3Point3D	camPt = gGameViewInfoPtr->currentCameraCoords;
 float		camWobble = 0;
 short		i;
-#if 0
-EventRecord	theEvent;
-#endif
 
 				/*********/
 				/* SETUP */
@@ -363,7 +359,7 @@ EventRecord	theEvent;
 	gNewObjectDefinition.moveCall = nil;
 	gNewObjectDefinition.rot = 0;
 	gNewObjectDefinition.scale = 1;
-	frameObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
+	MakeNewDisplayGroupObject(&gNewObjectDefinition);
 
 
 			/* MAKE CURSOR */
@@ -619,7 +615,6 @@ char	c;
 static void PrepHighScoresShow(void)
 {
 short	slot,place;
-ObjNode	*newObj;
 unsigned long score,digit;
 static TQ3Point3D	from = {0,1100+40,650};
 static TQ3Point3D	to = {0,1100,0};
@@ -657,7 +652,7 @@ static const TQ3Point2D xyCoords[NUM_SCORES][2] =
 	gNewObjectDefinition.moveCall 	= nil;
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= 1.0;
-	newObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
+	MakeNewDisplayGroupObject(&gNewObjectDefinition);
 
 			/*************************/
 			/* CREATE THE BACKGROUND */
@@ -719,7 +714,7 @@ static const TQ3Point2D xyCoords[NUM_SCORES][2] =
 			gNewObjectDefinition.moveCall 	= nil;
 			gNewObjectDefinition.rot 		= 0;
 			gNewObjectDefinition.scale 		= 1.0;
-			newObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
+			MakeNewDisplayGroupObject(&gNewObjectDefinition);
 			
 			place++;
 		}

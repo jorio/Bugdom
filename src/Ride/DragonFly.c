@@ -179,7 +179,7 @@ Boolean DoTrig_DragonFly(ObjNode *theNode, ObjNode *whoNode, Byte sideBits)
 {
 ObjNode	*whoShadow;
 
-#pragma unused (sideBits)
+	(void) sideBits;
 
 			/* IF PLAYER IS BALL, THEN DO NOTHING */
 			
@@ -251,14 +251,14 @@ void DriveDragonFly(ObjNode *bug, ObjNode *player)
 {
 float	fps = gFramesPerSecondFrac;
 float	rot;
-float	mouseDX,mouseDY,oldSpeed;
+float	mouseDX,mouseDY;
 float	mx,my;
 
 static const TQ3Vector3D unit = {0,0,-MAX_THRUST};
 TQ3Vector3D		forward;
 TQ3Matrix4x4	m;
 
-#pragma unused (player)
+	(void) player;
 
 	GetObjectInfo(bug);									// this will override object info for player
 
@@ -301,7 +301,7 @@ TQ3Matrix4x4	m;
 	
 				/* CALC SPEED */
 				
-	oldSpeed = bug->Speed;
+//	oldSpeed = bug->Speed;
 	bug->Speed = FastVectorLength3D(gDelta.x, gDelta.y, gDelta.z);	// calc 3D speed value
 
 	if (bug->Speed > DRAGONFLY_MAX_SPEED)							// check max/min speeds

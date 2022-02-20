@@ -166,13 +166,13 @@ static	void(*myMoveTable[])(ObjNode *) =
 static void  MoveLarva_Walk(ObjNode *theNode)
 {
 float	fps = gFramesPerSecondFrac;
-float	r,aim;
+float	r;
 
 	theNode->Skeleton->AnimSpeed = 2.0f;
 
 			/* MOVE TOWARD PLAYER */
 			
-	aim = TurnObjectTowardTarget(theNode, &gCoord, gMyCoord.x, gMyCoord.z, LARVA_TURN_SPEED, false);			
+	TurnObjectTowardTarget(theNode, &gCoord, gMyCoord.x, gMyCoord.z, LARVA_TURN_SPEED, false);			
 
 	r = theNode->Rot.y;
 	gDelta.x = sin(r) * -LARVA_CHASE_SPEED;

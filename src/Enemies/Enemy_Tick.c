@@ -88,7 +88,7 @@ ObjNode	*newObj;
 static void MoveTick(ObjNode *theNode)
 {
 float	fps = gFramesPerSecondFrac;
-float	r,aim;
+float	r;
 
 	if (TrackTerrainItem(theNode))						// just check to see if it's gone
 	{
@@ -104,7 +104,7 @@ float	r,aim;
 
 			/* MOVE TOWARD PLAYER */
 			
-	aim = TurnObjectTowardTarget(theNode, &gCoord, gMyCoord.x, gMyCoord.z, TICK_TURN_SPEED, false);			
+	TurnObjectTowardTarget(theNode, &gCoord, gMyCoord.x, gMyCoord.z, TICK_TURN_SPEED, false);			
 
 	r = theNode->Rot.y;
 	gDelta.x = sin(r) * -TICK_CHASE_SPEED;

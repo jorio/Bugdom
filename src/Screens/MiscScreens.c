@@ -162,7 +162,6 @@ const float imageAspectRatio = 200.0f/152.0f;
 void DoPangeaLogo(void)
 {
 OSErr		err;
-ObjNode		*backObj;
 TQ3Point3D			cameraFrom = { 0, 0, 70.0 };
 QD3DSetupInputType		viewDef;
 FSSpec			spec;
@@ -240,7 +239,7 @@ Boolean			fo = false;
 	gNewObjectDefinition.moveCall 	= MovePangeaLogoPart;
 	gNewObjectDefinition.rot 		= PI/2;
 	gNewObjectDefinition.scale 		= .18;
-	backObj = MakeNewDisplayGroupObject(&gNewObjectDefinition);
+	MakeNewDisplayGroupObject(&gNewObjectDefinition);
 	
 	
 	MakeFadeEvent(true);	

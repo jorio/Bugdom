@@ -842,11 +842,10 @@ new_pgroup:
 		{
 			TQ3Vector3D	delta;
 			TQ3Point3D  pt;
-			float		x,y,z;
+			float		x,z;
 			int			i;
 
 			x = theNode->Coord.x;
-			y = theNode->Coord.y;
 			z = theNode->Coord.z;
 
 			for (i = 0; i < n; i++)

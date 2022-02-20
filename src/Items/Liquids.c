@@ -479,7 +479,7 @@ static void UpdateWaterTextureAnimation(void)
 static void DrawWaterPatch(ObjNode *theNode)
 {
 float			patchW,patchD;
-float			x,y,z,left,back, right, front, width, depth;
+float			x,y,z,left,back, right, front;
 TQ3Point3D		*p;
 
 	TQ3TriMeshData* tmd = gLiquidMeshPtrs[theNode->PatchMeshID];
@@ -504,8 +504,8 @@ TQ3Point3D		*p;
 	back = z - patchD * (TERRAIN_POLYGON_SIZE/2);
 	front = back + patchD * TERRAIN_POLYGON_SIZE;
 
-	width = right - left;
-	depth = front - back;
+//	width = right - left;
+//	depth = front - back;
 
 			/******************/
 			/* BUILD GEOMETRY */
@@ -607,7 +607,7 @@ TQ3Point3D		*p;
 
 static void DrawWaterPatchTesselated(ObjNode *theNode)
 {
-float			x,y,z,left,back, right, front, width, depth;
+float			x,y,z,left,back, right, front;
 float			u,v;
 TQ3Point3D		*p;
 int				width2,depth2,w,h,i;
@@ -641,8 +641,8 @@ TQ3TriMeshTriangleData	*t;
 	back = z - (float)(depth2) * TERRAIN_POLYGON_SIZE;
 	front = back + (float)theNode->PatchDepth * TERRAIN_POLYGON_SIZE;
 
-	width = right - left;
-	depth = front - back;
+//	width = right - left;
+//	depth = front - back;
 	
 
 			/******************/
@@ -913,7 +913,7 @@ float				width,depth;
 
 static void DrawSolidLiquidPatchTesselated(ObjNode *theNode)
 {
-float			x,y,z,left,back, right, front, width, depth;
+float			x,y,z,left,back, right, front;
 float			u,v;
 TQ3Point3D		*p;
 int				width2,depth2,w,h,i;
@@ -944,8 +944,8 @@ TQ3TriMeshTriangleData	*t;
 	back = z - (depth2*.5f) * TERRAIN_POLYGON_SIZE;
 	front = back + depth2 * TERRAIN_POLYGON_SIZE;
 
-	width = right - left;
-	depth = front - back;
+//	width = right - left;
+//	depth = front - back;
 
 
 			/******************/

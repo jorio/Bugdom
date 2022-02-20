@@ -306,7 +306,6 @@ void CreateSuperTileMemoryList(void)
 {
 long							u,v,i,maxSuperTilesNeeded,numLayers;
 static 	TQ3TriMeshTriangleData	newTriangle[NUM_TRIS_IN_SUPERTILE];
-static  TQ3ColorRGB				vertexColors[NUM_VERTICES_IN_SUPERTILE];
 static	TQ3Param2D				uvs[NUM_VERTICES_IN_SUPERTILE];
 
 
@@ -390,6 +389,7 @@ retryParseLODPref:
 	}
 
 
+#if 0
 		/* INIT COLOR LIST */
 		
 	i = 0;	
@@ -403,6 +403,7 @@ retryParseLODPref:
 			i++;
 		}	
 	}
+#endif
 
 			/********************************************/
 			/* FOR EACH POSSIBLE SUPERTILE ALLOC MEMORY */

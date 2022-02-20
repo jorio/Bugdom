@@ -373,7 +373,7 @@ ObjNode	*spearObj;
 
 static void  MoveAnt_Walking(ObjNode *theNode)
 {
-float		r,fps,aim;
+float		r,fps;
 ObjNode		*spearObj;
 
 	fps = gFramesPerSecondFrac;
@@ -400,7 +400,7 @@ ObjNode		*spearObj;
 		
 						/* MOVE TOWARD SPEAR */
 						
-				aim = TurnObjectTowardTarget(theNode, &gCoord, spearObj->Coord.x, spearObj->Coord.z,
+				TurnObjectTowardTarget(theNode, &gCoord, spearObj->Coord.x, spearObj->Coord.z,
 											ANT_TURN_SPEED, false);			
 		
 				r = theNode->Rot.y;
@@ -430,7 +430,7 @@ ObjNode		*spearObj;
 		default:
 						/* MOVE TOWARD PLAYER */
 						
-				aim = TurnObjectTowardTarget(theNode, &gCoord, gMyCoord.x, gMyCoord.z, ANT_TURN_SPEED, false);			
+				TurnObjectTowardTarget(theNode, &gCoord, gMyCoord.x, gMyCoord.z, ANT_TURN_SPEED, false);			
 
 				r = theNode->Rot.y;
 				gDelta.x = -sin(r) * ANT_WALK_SPEED;

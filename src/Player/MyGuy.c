@@ -497,7 +497,7 @@ void KillPlayer(Boolean changeAnims)
 
 static void PlayerBopEnemy(ObjNode *me, ObjNode *enemy)
 {
-#pragma unused (me)
+	(void) me;
 
 	switch(enemy->Kind)
 	{

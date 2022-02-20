@@ -182,11 +182,11 @@ static	void(*myMoveTable[])(ObjNode *) =
 
 static void  MoveWorkerBee_Standing(ObjNode *theNode)
 {
-float	angleToTarget,dist;
+float	dist;
 
 				/* TURN TOWARDS ME */
 				
-	angleToTarget = TurnObjectTowardTarget(theNode, &gCoord, gMyCoord.x, gMyCoord.z, WORKERBEE_TURN_SPEED, false);			
+	TurnObjectTowardTarget(theNode, &gCoord, gMyCoord.x, gMyCoord.z, WORKERBEE_TURN_SPEED, false);			
 
 		
 

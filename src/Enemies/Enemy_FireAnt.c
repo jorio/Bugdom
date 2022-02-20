@@ -87,7 +87,7 @@ enum
 
 Boolean AddEnemy_FireAnt(TerrainItemEntryType *itemPtr, long x, long z)
 {
-ObjNode	*newObj,*shadowObj;
+ObjNode	*newObj;
 
 				/* SEE IF TOO MANY */
 				
@@ -140,7 +140,7 @@ ObjNode	*newObj,*shadowObj;
 
 				/* MAKE SHADOW */
 				
-	shadowObj = AttachShadowToObject(newObj, 8, 8,false);
+	AttachShadowToObject(newObj, 8, 8,false);
 
 	newObj->InitCoord = newObj->Coord;							// remember where started
 	
@@ -284,13 +284,13 @@ float	dist;
 
 static void  MoveFireAnt_Walking(ObjNode *theNode)
 {
-float		r,fps,aim;
+float		r,fps;
 
 	fps = gFramesPerSecondFrac;
 
 			/* MOVE TOWARD PLAYER */
 			
-	aim = TurnObjectTowardTarget(theNode, &gCoord, gMyCoord.x, gMyCoord.z, FIREANT_TURN_SPEED, false);			
+	TurnObjectTowardTarget(theNode, &gCoord, gMyCoord.x, gMyCoord.z, FIREANT_TURN_SPEED, false);			
 
 	r = theNode->Rot.y;
 	gDelta.x = -sin(r) * FIREANT_WALK_SPEED;
@@ -320,13 +320,13 @@ float		r,fps,aim;
 
 static void  MoveFireAnt_Fly(ObjNode *theNode)
 {
-float		r,fps,aim,y;
+float		r,fps,y;
 
 	fps = gFramesPerSecondFrac;
 
 			/* MOVE TOWARD PLAYER */
 			
-	aim = TurnObjectTowardTarget(theNode, &gCoord, gMyCoord.x, gMyCoord.z, FIREANT_TURN_SPEED, false);			
+	TurnObjectTowardTarget(theNode, &gCoord, gMyCoord.x, gMyCoord.z, FIREANT_TURN_SPEED, false);			
 
 	r = theNode->Rot.y;
 	gDelta.x = -sin(r) * FIREANT_FLY_SPEED;

@@ -320,9 +320,8 @@ short		c = *channelNum;
 		return;
 
 	myErr = SndChannelStatus(gSndChannel[c],sizeof(SCStatus),&theStatus);	// get channel info
-	if (theStatus.scChannelBusy)					// if channel busy, then stop it
+	if (myErr == noErr && theStatus.scChannelBusy)					// if channel busy, then stop it
 	{
-
 		mySndCmd.cmd = flushCmd;	
 		mySndCmd.param1 = 0;
 		mySndCmd.param2 = 0;
@@ -493,6 +492,8 @@ stream_again:
 
 static void SongCompletionProc(SndChannelPtr chan)
 {
+	(void) chan;
+
 	if (gSongPlayingFlag)
 		gResetSong = true;
 }

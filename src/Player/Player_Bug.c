@@ -574,7 +574,7 @@ update:
 
 static void DrownInLiquid(void)
 {
-float	ty;
+//float	ty;
 
 	gPlayerGotKilledFlag = true;					// let kill timer in main.c do the 4 second sink
 
@@ -583,16 +583,16 @@ float	ty;
 
 		/* SLOWLY SINK */
 
-	ty = gPlayerCurrentWaterY - 90.0f;				// calc sunken target y
+//	ty = gPlayerCurrentWaterY - 90.0f;				// calc sunken target y
 
-		
+
 	gCoord.y -= gFramesPerSecondFrac * 30.0f;
 //	if (gCoord.y < ty)								// see if completely under
 //		KillPlayer(false);
 
-	
+
 			/* UPDATE IT */
-			
+
 	UpdatePlayer_Bug();
 }
 
@@ -1413,6 +1413,7 @@ void PlayerGrabRootSwing(ObjNode *root, int joint)
 
 static void PlayerLeaveRootSwing(void)
 {
+#if 0
 float	r,dx,dz;
 
 	r = gPlayerObj->Rot.y;
@@ -1422,6 +1423,7 @@ float	r,dx,dz;
 //	gDelta.x += dx;
 //	gDelta.z += dz;
 //	dy = gDelta.y;
+#endif
 
 	FastNormalizeVector(gDelta.x, gDelta.y, gDelta.z, &gDelta);
 

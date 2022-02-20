@@ -307,6 +307,8 @@ void Render_EnableFog(
 		float fogYon,
 		TQ3ColorRGBA fogColor)
 {
+	(void) camHither;
+
 	glHint(GL_FOG_HINT,		GL_NICEST);
 	glFogi(GL_FOG_MODE,		GL_LINEAR);
 	glFogf(GL_FOG_START,	fogHither * camYon);

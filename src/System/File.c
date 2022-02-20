@@ -20,7 +20,7 @@
 /****************************/
 
 static void ReadDataFromSkeletonFile(SkeletonDefType *skeleton, const FSSpec* fsSpec3DMF);
-static void ReadDataFromPlayfieldFile(FSSpec *specPtr);
+static void ReadDataFromPlayfieldFile(void);
 
 
 /****************************/
@@ -726,9 +726,9 @@ short	fRefNum;
 	
 	
 			/* READ PLAYFIELD RESOURCES */
-						
-	ReadDataFromPlayfieldFile(specPtr);
-	
+
+	ReadDataFromPlayfieldFile();
+
 	
 			/* CLOSE REZ FILE */
 			
@@ -765,7 +765,7 @@ short	fRefNum;
 
 /********************** READ DATA FROM PLAYFIELD FILE ************************/
 
-static void ReadDataFromPlayfieldFile(FSSpec *specPtr)
+static void ReadDataFromPlayfieldFile(void)
 {
 Handle					hand;
 PlayfieldHeaderType		**header;
@@ -773,8 +773,6 @@ long					i,row,col,numLayers;
 float					yScale;
 short					**xlateTableHand,*xlateTbl;
 
-#pragma unused (specPtr)
-	
 	if (gDoCeiling)									// see if need to read in ceiling data
 		numLayers = 2;
 	else

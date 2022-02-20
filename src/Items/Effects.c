@@ -592,6 +592,9 @@ TQ3Matrix4x4	m;
 static const TQ3Vector3D up = {0,1,0};
 
 
+	(void) setupInfo;
+
+
 				/* SETUP ENVIRONTMENT */
 
 

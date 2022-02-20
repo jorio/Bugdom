@@ -87,7 +87,7 @@ enum
 
 Boolean AddEnemy_BoxerFly(TerrainItemEntryType *itemPtr, long x, long z)
 {
-ObjNode	*newObj,*shadowObj;
+ObjNode	*newObj;
 
 	if (gNumEnemies >= MAX_ENEMIES)								// keep from getting absurd
 		return(false);
@@ -124,7 +124,7 @@ ObjNode	*newObj,*shadowObj;
 
 				/* MAKE SHADOW */
 				
-	shadowObj = AttachShadowToObject(newObj, 7, 7, false);
+	AttachShadowToObject(newObj, 7, 7, false);
 
 	newObj->InitCoord = newObj->Coord;							// remember where started
 

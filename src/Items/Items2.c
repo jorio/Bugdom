@@ -980,7 +980,10 @@ Boolean isVisible;
 
 Boolean AddRockLedge(TerrainItemEntryType *itemPtr, long  x, long z)
 {
-#pragma unused (itemPtr, x, z)
+	(void) itemPtr;
+	(void) x;
+	(void) z;
+
 	return(true);													// item was added
 }
 

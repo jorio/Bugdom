@@ -378,7 +378,7 @@ static Boolean DoTrig_Nut(ObjNode *theNode, ObjNode *whoNode, Byte sideBits)
 
 void KickNut(ObjNode *kickerObj, ObjNode *nutObj)
 {
-#pragma unused (kickerObj)
+	(void) kickerObj;
 	
 	CreateNutContents(nutObj);						// create the item inside the nut
 			
@@ -573,7 +573,8 @@ delete:
 
 static Boolean DoTrig_HoneycombPlatform(ObjNode *theNode, ObjNode *whoNode, Byte sideBits)
 {
-#pragma unused (whoNode, sideBits)
+	(void) whoNode;
+	(void) sideBits;
 	
 	theNode->Mode = HONEYCOMB_PLATFORM_MODE_FALL;
 	theNode->CType &= ~CTYPE_TRIGGER;							// no longer a trigger
@@ -728,7 +729,8 @@ ObjNode *plunger;
 
 static Boolean DoTrig_Detonator(ObjNode *theNode, ObjNode *whoNode, Byte sideBits)
 {
-#pragma unused (whoNode, sideBits)
+	(void) whoNode;
+	(void) sideBits;
 	
 	theNode->CType = CTYPE_MISC;							// not triggerable anymore
 	theNode->IsPlunging = true;
@@ -880,7 +882,8 @@ static Boolean DoTrig_LawnDoor(ObjNode *theNode, ObjNode *whoNode, Byte sideBits
 {
 int	keyNum;
 
-#pragma unused (whoNode, sideBits)
+	(void) whoNode;
+	(void) sideBits;
 
 	if (gPlayerMode == PLAYER_MODE_BALL)					// doors wont open for ball
 		return(true);
@@ -1196,8 +1199,9 @@ float	fps = gFramesPerSecondFrac;
 
 static Boolean DoTrig_Powerup(ObjNode *theNode, ObjNode *whoNode, Byte sideBits)
 {
-#pragma unused (whoNode, sideBits)
-	
+	(void) whoNode;
+	(void) sideBits;
+
 	switch(theNode->NutContents)
 	{
 		case	NUT_CONTENTS_KEY:
@@ -1422,7 +1426,8 @@ static Boolean DoTrig_WaterValve(ObjNode *theNode, ObjNode *whoNode, Byte sideBi
 short	id;
 ObjNode *handle;
 
-#pragma unused (sideBits, whoNode)
+	(void) sideBits;
+	(void) whoNode;
 
 	theNode->CType = CTYPE_MISC;							// not triggerable anymore
 	theNode->TerrainItemPtr->flags |= ITEM_FLAGS_USER1;		// set item list flag so we'll always know this has detonated

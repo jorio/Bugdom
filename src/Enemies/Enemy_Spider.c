@@ -93,7 +93,7 @@ enum
 
 Boolean AddEnemy_Spider(TerrainItemEntryType *itemPtr, long x, long z)
 {
-ObjNode	*newObj,*threadObj,*shadowObj;
+ObjNode	*newObj,*threadObj;
 static const Byte type[] =
 {
 	0,						// lawn
@@ -158,7 +158,7 @@ static const Byte type[] =
 
 				/* MAKE SHADOW */
 				
-	shadowObj = AttachShadowToObject(newObj, 8, 8, false);
+	AttachShadowToObject(newObj, 8, 8, false);
 
 	gNumEnemies++;
 	gNumEnemyOfKind[ENEMY_KIND_SPIDER]++;
@@ -631,7 +631,8 @@ static const Byte type[] =
 };
 
 
-#pragma unused (whoNode, sideBits)
+	(void) whoNode;
+	(void) sideBits;
 	
 	DeleteObject(theNode);												// delete the web bullet
 

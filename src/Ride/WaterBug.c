@@ -236,7 +236,7 @@ Boolean DoTrig_WaterBug(ObjNode *theNode, ObjNode *whoNode, Byte sideBits)
 {
 ObjNode	*whoShadow;
 
-#pragma unused (sideBits)
+	(void) sideBits;
 	
 			/* IF PLAYER IS BALL, THEN DO NOTHING */
 			

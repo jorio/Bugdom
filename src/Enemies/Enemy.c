@@ -344,7 +344,8 @@ void EnemyGotBonked(ObjNode *theEnemy)
 
 void MoveEnemy(ObjNode *theNode)
 {
-#pragma unused (theNode)
+	(void) theNode;
+
 	gCoord.y += gDelta.y*gFramesPerSecondFrac;					// move
 	gCoord.x += gDelta.x*gFramesPerSecondFrac;
 	gCoord.z += gDelta.z*gFramesPerSecondFrac;

@@ -301,7 +301,10 @@ skip:
 
 static Boolean NilAdd(TerrainItemEntryType *itemPtr,long x, long z)
 {
-#pragma unused (itemPtr, x, z)
+	(void) itemPtr;
+	(void) x;
+	(void) z;
+
 	return(false);
 }
 

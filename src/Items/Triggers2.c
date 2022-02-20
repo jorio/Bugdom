@@ -182,10 +182,11 @@ short			num;
 long			pg,i;
 TQ3Vector3D		delta;
 
-#pragma unused (whoNode, sideBits)
+	(void) whoNode;
+	(void) sideBits;
 
 				/* TAG THE CHECKPOINT */
-				
+
 	num = theNode->CheckPointNum;						// get checkpt #
 	if (num > gBestCheckPoint)							// see if this is the best one so far
 	{
@@ -420,8 +421,10 @@ float		y;
 
 Boolean DoTrig_ExitLog(ObjNode *theNode, ObjNode *whoNode, Byte sideBits)
 {
-#pragma unused (theNode, whoNode, sideBits)
-	
+	(void) theNode;
+	(void) whoNode;
+	(void) sideBits;
+
 	gAreaCompleted = true;
 	return(false);
 }
@@ -576,7 +579,7 @@ new_group:
 
 Boolean DoTrig_KingWaterPipe(ObjNode *theNode, ObjNode *whoNode, Byte sideBits)
 {
-#pragma unused (sideBits)
+	(void) sideBits;
 	
 	if (whoNode->Speed < 500.0f)					// must hit it with reasonable speed
 		return(true);
@@ -819,7 +822,7 @@ static void MoveLadyBug(ObjNode *theNode)
 
 Boolean DoTrig_Cage(ObjNode *theNode, ObjNode *whoNode, Byte sideBits)
 {
-#pragma unused (sideBits)
+	(void) sideBits;
 	
 			/********************************/
 			/* IF BALL, THEN SMASH OPEN NOW */
