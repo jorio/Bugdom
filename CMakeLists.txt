@@ -139,9 +139,10 @@ if(NOT MSVC)
 		-Wall
 		-Wextra
 		-Wshadow
+		-Werror=return-type
 		-Wno-multichar
 		-Wno-unknown-pragmas
-		-Werror=return-type
+		-Wstrict-aliasing=2
 	)
 else()
 	# By default, MSVC may add /EHsc to CMAKE_CXX_FLAGS, which we don't want (we use /EHs below)
@@ -160,8 +161,12 @@ else()
 		/wd4244 # conversion from double to float
 		/wd4305 # truncation from double to float
 		/wd5105 # see https://developercommunity.visualstudio.com/t/1249671
-		/MP
+		/MP		# multiprocessor build
+		/Zi		# output info to PDB
 	)
+
+	# Let executable be debugged with PDB
+	target_link_options(${GAME_TARGET} PRIVATE /DEBUG)
 endif()
 
 #------------------------------------------------------------------------------
@@ -173,8 +178,8 @@ set_target_properties(${GAME_TARGET} PROPERTIES
 	# MSVC/WIN32
 	#--------------------------------------------------------------------------
 
-	VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-	VS_DPI_AWARE "PerMonitor"
+	VS_DEBUGGER_WORKING_DIRECTORY		"${CMAKE_SOURCE_DIR}"
+	VS_DPI_AWARE						"PerMonitor"
 
 	#--------------------------------------------------------------------------
 	# APPLE
@@ -212,11 +217,15 @@ if(APPLE)
 	if(NOT "$ENV{CODE_SIGN_IDENTITY}" STREQUAL "")
 		set_target_properties(${GAME_TARGET} PROPERTIES
 			XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY[variant=Release] "$ENV{CODE_SIGN_IDENTITY}"
+			XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY[variant=RelWithDebInfo] "$ENV{CODE_SIGN_IDENTITY}"
 			XCODE_ATTRIBUTE_DEVELOPMENT_TEAM[variant=Release] "$ENV{CODE_SIGN_IDENTITY}"
+			XCODE_ATTRIBUTE_DEVELOPMENT_TEAM[variant=RelWithDebInfo] "$ENV{CODE_SIGN_IDENTITY}"
 
 			# The following is to pass notarization requirements
 			XCODE_ATTRIBUTE_CODE_SIGN_INJECT_BASE_ENTITLEMENTS[variant=Release] "NO"
+			XCODE_ATTRIBUTE_CODE_SIGN_INJECT_BASE_ENTITLEMENTS[variant=RelWithDebInfo] "NO"
 			XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS[variant=Release] "--options=runtime --timestamp"
+			XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS[variant=RelWithDebInfo] "--options=runtime --timestamp"
 		)
 		message("Release build will be code signed!")
 	endif()
@@ -243,16 +252,17 @@ else()
 		COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Data ${APP_PARENT_DIR}/Data)
 endif()
 
-# Copy SDL2 DLLs to output folder on Windows
+# Windows-specific libraries
 if(WIN32)
+	# Copy SDL2 DLLs to output folder on Windows for convenience
 	foreach(DLL ${SDL2_DLLS})
 		add_custom_command(TARGET ${GAME_TARGET} POST_BUILD
 			COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DLL} ${APP_PARENT_DIR})
 	endforeach()
 
+	# When installing (cmake --install), copy Visual Studio redistributable DLLs to install location
 	include(InstallRequiredSystemLibraries)
 endif()
 
 # Copy documentation to output folder
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/packaging/ReadMe.txt.in ${CMAKE_CURRENT_BINARY_DIR}/ReadMe.txt)
-

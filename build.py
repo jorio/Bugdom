@@ -28,8 +28,6 @@ game_ver            = "1.3.2"
 
 source_check        = "src/Enemies/Enemy_WorkerBee.c"  # some file that's likely to be from the game's source tree
 
-release_config      = "RelWithDebInfo"
-
 sdl_ver             = "2.0.20"
 appimagetool_ver    = "13"
 
@@ -178,7 +176,7 @@ def zipdir(zipname, topleveldir, arc_topleveldir):
             for file in files:
                 filepath = os.path.join(root, file)
                 arcpath = os.path.join(arc_topleveldir, filepath[len(topleveldir)+1:])
-                log(F"Zipping: {filepath} --> {arcpath}")
+                log(F"Zipping: {arcpath}")
                 zipf.write(filepath, arcpath)
 
 #----------------------------------------------------------------
@@ -244,7 +242,8 @@ def copy_documentation(proj, appdir, full=True):
         for docfile in ["CHANGELOG.md", "CHEATS.md", "COMMANDLINE.md"]:
             shutil.copy(docfile, F"{appdir}/Documentation")
 
-def package_windows(proj):
+def package_windows(proj: Project):
+    release_config = proj.build_configs[0]
     windows_dlls = ["SDL2.dll", "msvcp140.dll", "vcruntime140.dll", "vcruntime140_1.dll"]
 
     # Prep DLLs with cmake (copied to {cache_dir}/install/bin)
@@ -254,20 +253,19 @@ def package_windows(proj):
     rmtree_if_exists(appdir)
     os.makedirs(F"{appdir}", exist_ok=True)
 
-    # Copy executable, libs and assets
+    # Copy executable, PDB, assets and libs
+    shutil.copy(F"{proj.dir_name}/{release_config}/{game_name}.exe", appdir)
+    shutil.copy(F"{proj.dir_name}/{release_config}/{game_name}.pdb", appdir)
+    shutil.copytree("Data", F"{appdir}/Data")
     for dll in windows_dlls:
         shutil.copy(F"{cache_dir}/install/bin/{dll}", appdir)
-    shutil.copy(F"{proj.dir_name}/{release_config}/{game_name}.exe", appdir)
-    shutil.copytree("Data", F"{appdir}/Data")
 
     copy_documentation(proj, appdir)
 
     zipdir(F"{dist_dir}/{get_artifact_name()}", appdir, F"{game_name}-{game_ver}")
 
-    # Copy PDB
-    shutil.copy(F"{proj.dir_name}/{release_config}/{game_name}.pdb", dist_dir)
-
-def package_macos(proj):
+def package_macos(proj: Project):
+    release_config = proj.build_configs[0]
     appdir = F"{proj.dir_name}/{release_config}"
 
     # Human-friendly name for .app
@@ -346,11 +344,12 @@ if args.A:
     common_gen_args += ["-A", args.A]
 
 if SYSTEM == "Windows":
-
+    # On Windows, ship a PDB file along with the Release build.
+    # Avoid RelWithDebInfo because bottom-of-the-barrel AVs may raise a false positive with such builds.
     projects = [Project(
         dir_name="build-msvc",
         gen_args=common_gen_args,
-        build_configs=[release_config, "Debug"],
+        build_configs=["Release", "Debug"],
         build_args=["-m"]  # multiprocessor compilation
     )]
 
@@ -358,11 +357,13 @@ elif SYSTEM == "Darwin":
     projects = [Project(
         dir_name="build-xcode",
         gen_args=common_gen_args,
-        build_configs=[release_config],
+        build_configs=["RelWithDebInfo"],
         build_args=["-j", str(NPROC), "-quiet"]
     )]
 
 elif SYSTEM == "Linux":
+    release_config = "RelWithDebInfo"
+
     gen_env = {}
     if not args.system_sdl:
         gen_env["SDL2DIR"] = F"{libs_dir}/SDL2-{sdl_ver}/build"

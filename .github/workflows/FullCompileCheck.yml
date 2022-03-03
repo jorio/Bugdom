@@ -13,7 +13,7 @@ jobs:
         platform:
           - { name: Linux/GCC (ancient), os: ubuntu-18.04, extraflags: "--system-sdl" }
           - { name: Linux/GCC, os: ubuntu-latest, extraflags: "--system-sdl" }
-          - { name: Linux/Clang, os: ubuntu-latest, extraflags: "--system-sdl" }
+          - { name: Linux/Clang, os: ubuntu-latest, extraflags: "--system-sdl", prefix: "CC=clang CXX=clang++"}
           - { name: Windows/VS2022, os: windows-2022, extraflags: "-G 'Visual Studio 17 2022'" }
           - { name: Windows/VS2019, os: windows-2019, extraflags: "-G 'Visual Studio 16 2019'" }
           - { name: Mac, os: macos-11 }
@@ -29,4 +29,4 @@ jobs:
         with:
           submodules: 'recursive'
           
-      - run: python3 build.py --dependencies --configure --build ${{ matrix.platform.extraflags }}
+      - run: ${{matrix.platform.prefix}} python3 build.py --dependencies --configure --build ${{matrix.platform.extraflags}}

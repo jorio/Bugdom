@@ -19,7 +19,7 @@ jobs:
       - run: python3 build.py --package
       - uses: actions/upload-artifact@v2
         with:
-          name: linux-build.zip
+          name: linux-build
           path: dist/
 
   build-windows:
@@ -34,7 +34,7 @@ jobs:
       - run: python3 build.py --package
       - uses: actions/upload-artifact@v2
         with:
-          name: windows-build.zip
+          name: windows-build
           path: dist/
 
   build-macos:
@@ -64,5 +64,5 @@ jobs:
           AC_PASSWORD: ${{ secrets.APPLE_NOTARIZATION_PASSWORD }}
       - uses: actions/upload-artifact@v2
         with:
-          name: mac-build.zip
+          name: mac-build
           path: dist/
