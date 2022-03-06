@@ -135,22 +135,16 @@ static void DisposeLiquidMesh(ObjNode* theNode)
 
 void InitLiquids(void)
 {
-static bool liquidMeshesAllocated = false;
-
 	gNumActiveLiquidMeshes = 0;
 
 	// Initialize trimeshes
-	if (!liquidMeshesAllocated)
+	for (int i = 0; i < MAX_LIQUID_MESHES; i++)
 	{
-		for (int i = 0; i < MAX_LIQUID_MESHES; i++)
-		{
-			gLiquidMeshPtrs[i] = Q3TriMeshData_New(
-					MAX_LIQUID_TRIANGLES,
-					MAX_LIQUID_VERTS,
-					kQ3TriMeshDataFeatureVertexUVs);
-			gFreeLiquidMeshes[i] = i;
-		}
-		liquidMeshesAllocated = true;
+		gLiquidMeshPtrs[i] = Q3TriMeshData_New(
+				MAX_LIQUID_TRIANGLES,
+				MAX_LIQUID_VERTS,
+				kQ3TriMeshDataFeatureVertexUVs);
+		gFreeLiquidMeshes[i] = i;
 	}
 
 	// Clear UV offsets
@@ -194,8 +188,16 @@ void DisposeLiquids(void)
 
 	for (int i = 0; i < MAX_LIQUID_MESHES; i++)
 	{
+		if (gLiquidMeshPtrs[i] != nil)
+		{
+			Q3TriMeshData_Dispose(gLiquidMeshPtrs[i]);
+			gLiquidMeshPtrs[i] = nil;
+		}
+
 		gFreeLiquidMeshes[i] = i;
 	}
+
+	gNumActiveLiquidMeshes = 0;
 }
 
 /*************** UPDATE LIQUID ANIMATION ****************/

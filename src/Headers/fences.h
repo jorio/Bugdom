@@ -32,5 +32,5 @@ void InitFenceManager(void);
 void PrimeFences(void);
 void DoFenceCollision(ObjNode *theNode, float radiusScale);
 void DrawFences(const QD3DSetupOutputType *setupInfo);
-void DisposeFenceShaders(void);
+void DisposeFences(void);
 

@@ -621,11 +621,12 @@ static void CleanupLevel(void)
 	DisposeSuperTileMemoryList();
 	DisposeTerrain();
 	DeleteAllParticleGroups();
-	DisposeFenceShaders();
+	DisposeFences();
 	DisposeLensFlares();
 	DisposeLiquids();
 	DeleteAll3DMFGroups();
 	DisposeInfobarTexture();
+	QD3D_DisposeParticles();
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
 	DisposeAllSoundBanks();
 	Pomme_FlushPtrTracking(true);

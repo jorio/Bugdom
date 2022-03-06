@@ -117,7 +117,9 @@ Boolean			gFenceUsesNullShader[NUM_FENCE_SHADERS] =
 void InitFenceManager(void)
 {
 	for (int i = 0; i < NUM_FENCE_SHADERS; i++)
+	{
 		gFenceTypeTextures[i] = 0;
+	}
 
 	for (int f = 0; f < MAX_FENCES; f++)
 	{
@@ -129,7 +131,7 @@ void InitFenceManager(void)
 
 /******************** DISPOSE FENCE SHADERS ********************/
 
-void DisposeFenceShaders(void)
+void DisposeFences(void)
 {
 			/* DISPOSE OLD SHADER ATTRIBS */
 
@@ -139,6 +141,17 @@ void DisposeFenceShaders(void)
 		{
 			glDeleteTextures(1, &gFenceTypeTextures[i]);
 			gFenceTypeTextures[i] = 0;
+		}
+	}
+
+			/* DISPOSE FENCE MESHES */
+
+	for (int f = 0; f < MAX_FENCES; f++)
+	{
+		if (gFenceTriMeshDataPtrs[f] != nil)
+		{
+			Q3TriMeshData_Dispose(gFenceTriMeshDataPtrs[f]);
+			gFenceTriMeshDataPtrs[f] = nil;
 		}
 	}
 }
@@ -160,7 +173,7 @@ FencePointType			*nubs;
 
 			/* DISPOSE OLD SHADER ATTRIBS */
 
-	DisposeFenceShaders();
+	DisposeFences();
 
 
 			/******************************/
