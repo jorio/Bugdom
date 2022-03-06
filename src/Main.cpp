@@ -74,14 +74,7 @@ static fs::path FindGameData()
 	return dataPath;
 }
 
-static const char* GetWindowTitle()
-{
-	static char windowTitle[256];
-	snprintf(windowTitle, sizeof(windowTitle), "Bugdom %s", PROJECT_VERSION);
-	return windowTitle;
-}
-
-void ParseCommandLine(int argc, const char** argv)
+static void ParseCommandLine(int argc, char** argv)
 {
 	memset(&gCommandLine, 0, sizeof(gCommandLine));
 	gCommandLine.msaa = 0;
@@ -123,16 +116,16 @@ void ParseCommandLine(int argc, const char** argv)
 	}
 }
 
-int CommonMain(int argc, const char** argv)
+static void Boot()
 {
-	ParseCommandLine(argc, argv);
-
 	// Start our "machine"
 	Pomme::Init();
 
 	// Initialize SDL video subsystem
 	if (0 != SDL_Init(SDL_INIT_VIDEO))
+	{
 		throw std::runtime_error("Couldn't initialize SDL video subsystem.");
+	}
 
 	// Create window
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
@@ -145,17 +138,16 @@ int CommonMain(int argc, const char** argv)
 	}
 
 	gSDLWindow = SDL_CreateWindow(
-			GetWindowTitle(),
+			"Bugdom " PROJECT_VERSION,
 			SDL_WINDOWPOS_UNDEFINED,
 			SDL_WINDOWPOS_UNDEFINED,
 			640,
 			480,
 			SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
 	if (!gSDLWindow)
+	{
 		throw std::runtime_error("Couldn't create SDL window.");
-
-	// Uncomment to dump the game's resources to a temporary directory.
-	//Pomme_StartDumpingResources("/tmp/BugdomRezDump");
+	}
 
 	// Find path to game data folder
 	fs::path dataPath = FindGameData();
@@ -169,21 +161,19 @@ int CommonMain(int argc, const char** argv)
 			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING, "Bugdom", "Couldn't load gamecontrollerdb.txt!", gSDLWindow);
 		}
 	}
+}
 
-	// Start the game
-	try
-	{
-		GameMain();
-	}
-	catch (Pomme::QuitRequest&)
-	{
-		// no-op, the game may throw this exception to shut us down cleanly
-	}
-
-	// Clean up
+static void Shutdown()
+{
 	Pomme::Shutdown();
 
-	return 0;
+	if (gSDLWindow)
+	{
+		SDL_DestroyWindow(gSDLWindow);
+		gSDLWindow = nullptr;
+	}
+
+	SDL_Quit();
 }
 
 int main(int argc, char** argv)
@@ -192,17 +182,21 @@ int main(int argc, char** argv)
 	std::string		finalErrorMessage		= "";
 	bool			showFinalErrorMessage	= false;
 
-#if _DEBUG
-	// In debug builds, if CommonMain throws, don't catch.
-	// This way, it's easier to get a clean stack trace.
-	returnCode = CommonMain(argc, const_cast<const char**>(argv));
-#else
-	// In release builds, catch anything that might be thrown by CommonMain
-	// so we can show an error dialog to the user.
+	// Start the game
 	try
 	{
-		returnCode = CommonMain(argc, const_cast<const char**>(argv));
+		ParseCommandLine(argc, argv);
+		Boot();
+		returnCode = GameMain();
+		Shutdown();
 	}
+	catch (Pomme::QuitRequest&)
+	{
+		// no-op, the game may throw this exception to shut us down cleanly
+	}
+#if !(_DEBUG)
+	// In release builds, catch anything that might be thrown by CommonMain
+	// so we can show an error dialog to the user.
 	catch (std::exception& ex)		// Last-resort catch
 	{
 		returnCode = 1;
@@ -219,7 +213,7 @@ int main(int argc, char** argv)
 
 #if __APPLE__
 	// Whether we failed or succeeded, always restore the user's mouse acceleration before exiting.
-	// (NOTE: in debug builds, we might not get here because we don't catch what CommonMain throws.)
+	// (NOTE: in debug builds, we might not get here because we don't catch what GameMain throws.)
 	RestoreMacMouseAcceleration();
 #endif
 
