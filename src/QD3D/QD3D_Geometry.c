@@ -162,6 +162,26 @@ void QD3D_InitParticles(void)
 }
 
 
+/********************** QD3D: DISPOSE PARTICLE MESHES **********************/
+
+
+void QD3D_DisposeParticles(void)
+{
+	gNumParticles = 0;
+
+	for (int i = 0; i < MAX_PARTICLES2; i++)
+	{
+		ParticleType* particle = &gParticles[i];
+		if (particle->mesh)
+		{
+			Q3TriMeshData_Dispose(particle->mesh);
+			particle->mesh = NULL;
+		}
+		particle->isUsed = false;
+	}
+}
+
+
 /********************* FIND FREE PARTICLE ***********************/
 //
 // OUTPUT: -1 == none free found

@@ -130,6 +130,7 @@ void CleanupUIStuff()
 	DeleteAllObjects();
 	FreeAllSkeletonFiles(-1);
 	DeleteAll3DMFGroups();
+	QD3D_DisposeParticles();
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
 	DisposeSoundBank(SOUNDBANK_BONUS);
 	DisposeSoundBank(SOUNDBANK_MAIN);
