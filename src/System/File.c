@@ -584,6 +584,7 @@ OSErr			err;
 			/* CREATE SAVE GAME DATA */
 			/*************************/	
 
+	memset(&saveData, 0, sizeof(saveData));
 	saveData.version		= SAVE_GAME_VERSION;				// save file version #
 	saveData.score 			= gScore;
 	saveData.realLevel		= gRealLevel+1;						// save @ beginning of next level
