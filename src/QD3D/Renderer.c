@@ -313,7 +313,7 @@ void Render_EnableFog(
 	glFogi(GL_FOG_MODE,		GL_LINEAR);
 	glFogf(GL_FOG_START,	fogHither * camYon);
 	glFogf(GL_FOG_END,		fogYon * camYon);
-	glFogfv(GL_FOG_COLOR,	(float *)&fogColor);
+	glFogfv(GL_FOG_COLOR,	&fogColor.r);
 	gState.sceneHasFog = true;
 }
 

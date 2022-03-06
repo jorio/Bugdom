@@ -401,7 +401,7 @@ static void LoadSpriteResources(void)
 {
 FSSpec		spec;
 OSErr		err;
-uint32_t*	pixelData;
+uint8_t*	pixelData;
 TGAHeader	header;
 char		path[256];
 
@@ -412,10 +412,10 @@ char		path[256];
 		snprintf(path, sizeof(path), ":Images:Infobar:%d.tga", 128 + i);
 
 		FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, path, &spec);
-		err = ReadTGA(&spec, (uint8_t**) &pixelData, &header, true);
+		err = ReadTGA(&spec, &pixelData, &header, true);
 		GAME_ASSERT(!err);
 
-		gSprites[i] = pixelData;
+		gSprites[i] = (uint32_t*) pixelData;
 		gSpriteWidths[i] = header.width;
 		gSpriteHeights[i] = header.height;
 
