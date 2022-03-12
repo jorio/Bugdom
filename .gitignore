@@ -11,6 +11,7 @@ src/Headers/version.h
 /build*/
 /cmake-build*/
 /dist/
+/out/
 
 # IDEs
 .vs/
