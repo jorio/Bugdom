@@ -150,7 +150,7 @@ int CommonMain(int argc, const char** argv)
 			SDL_WINDOWPOS_UNDEFINED,
 			640,
 			480,
-			SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
+			SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
 	if (!gSDLWindow)
 		throw std::runtime_error("Couldn't create SDL window.");
 
