@@ -5,6 +5,7 @@ on: [workflow_dispatch]
 jobs:
   build-linux-appimage:
     runs-on: ubuntu-18.04
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v2  # Checks out repository under $GITHUB_WORKSPACE so the job can access it
         with:
@@ -24,6 +25,7 @@ jobs:
 
   build-windows:
     runs-on: windows-2022
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v2
         with:
@@ -39,6 +41,7 @@ jobs:
 
   build-macos:
     runs-on: macos-11
+    timeout-minutes: 15
     env:
       CODE_SIGN_IDENTITY: ${{ secrets.APPLE_CODE_SIGN_IDENTITY }}
     steps:
