@@ -24,6 +24,14 @@ project(${GAME_TARGET}
 	LANGUAGES C CXX
 )
 
+option(SANITIZE "Build with asan/ubsan" OFF)
+
+if(SANITIZE)
+	message("Sanitizers enabled")
+else()
+	message("Sanitizers disabled (pass -DSANITIZE=1 to enable)")
+endif()
+
 #------------------------------------------------------------------------------
 # GLOBAL OPTIONS (BEFORE ADDING SUBDIRECTORIES)
 #------------------------------------------------------------------------------
@@ -111,8 +119,6 @@ target_include_directories(${GAME_TARGET} PRIVATE
 	${GAME_SRCDIR}/Headers
 )
 
-target_link_libraries(${GAME_TARGET} ${GAME_LIBRARIES})
-
 #------------------------------------------------------------------------------
 # COMPILER/LINKER OPTIONS
 #------------------------------------------------------------------------------
@@ -132,7 +138,20 @@ if(NOT MSVC)
 		-Wno-unknown-pragmas
 		-Wstrict-aliasing=2
 	)
+
+	# Build with sanitizers -- When using a debugger, you should export LSAN_OPTIONS=detect_leaks=0
+	if (SANITIZE)
+		list(INSERT GAME_LIBRARIES 0 asan ubsan)
+		target_compile_options(${GAME_TARGET} PRIVATE
+			-fsanitize=alignment
+			-fsanitize=address
+			-fsanitize=undefined
+			-fno-omit-frame-pointer
+		)
+	endif()
 else()
+	# On Win32, we need NOGDI and NOUSER to be able to define some Mac functions
+	# whose names are otherwise taken by Windows APIs.
 	target_compile_definitions(${GAME_TARGET} PRIVATE
 		WIN32_LEAN_AND_MEAN
 		NOGDI						# avoid name clashes with Mac functions
@@ -159,6 +178,8 @@ else()
 	set_target_properties(${GAME_TARGET} PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE")
 	set_target_properties(${GAME_TARGET} PROPERTIES COMPILE_DEFINITIONS_DEBUG "_CONSOLE")
 endif()
+
+target_link_libraries(${GAME_TARGET} ${GAME_LIBRARIES})
 
 #------------------------------------------------------------------------------
 # PLATFORM-SPECIFIC PACKAGING
