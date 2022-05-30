@@ -28,13 +28,13 @@ game_ver            = "1.3.2"
 
 source_check        = "src/Enemies/Enemy_WorkerBee.c"  # some file that's likely to be from the game's source tree
 
-sdl_ver             = "2.0.20"
+sdl_ver             = "2.0.22"
 appimagetool_ver    = "13"
 
 lib_hashes = {  # sha-256
-    "SDL2-2.0.20.tar.gz":           "c56aba1d7b5b0e7e999e4a7698c70b63a3394ff9704b5f6e1c57e0c16f04dd06",
-    "SDL2-2.0.20.dmg":              "e46a3694f5008c4c5ffd33e1dfdffbee64179ad15088781f2f70806dd0102d4d",
-    "SDL2-devel-2.0.20-VC.zip":     "5b1512ca6c9d2427bd2147da01e5e954241f8231df12f54a7074dccde416df18",
+    "SDL2-2.0.22.tar.gz":           "fe7cbf3127882e3fc7259a75a0cb585620272c51745d3852ab9dd87960697f2e",
+    "SDL2-2.0.22.dmg":              "72974672b8359057aa2f6d467c8adae8182a6caedd660e3936e23c3c683c3801",
+    "SDL2-devel-2.0.22-VC.zip":     "32adc96d8b25e5671189f1f38a4fc7deb105fbb1b3ed78ffcb23f5b8f36b3922",
     "appimagetool-x86_64.AppImage": "df3baf5ca5facbecfc2f3fa6713c29ab9cefa8fd8c1eac5d283b79cab33e4acb", # appimagetool v13
 }
 
@@ -184,7 +184,7 @@ def zipdir(zipname, topleveldir, arc_topleveldir):
 def prepare_dependencies_windows():
     rmtree_if_exists(F"{libs_dir}/SDL2-{sdl_ver}")
 
-    sdl_zip_path = get_package(F"http://libsdl.org/release/SDL2-devel-{sdl_ver}-VC.zip")
+    sdl_zip_path = get_package(F"https://libsdl.org/release/SDL2-devel-{sdl_ver}-VC.zip")
     shutil.unpack_archive(sdl_zip_path, libs_dir)
 
 def prepare_dependencies_macos():
@@ -193,7 +193,7 @@ def prepare_dependencies_macos():
 
     rmtree_if_exists(sdl2_framework_target_path)
 
-    sdl_dmg_path = get_package(F"http://libsdl.org/release/SDL2-{sdl_ver}.dmg")
+    sdl_dmg_path = get_package(F"https://libsdl.org/release/SDL2-{sdl_ver}.dmg")
 
     # Mount the DMG and copy SDL2.framework to extern/
     with tempfile.TemporaryDirectory() as mount_point:
@@ -212,7 +212,7 @@ def prepare_dependencies_linux():
         sdl_build_dir = F"{sdl_source_dir}/build"
         rmtree_if_exists(sdl_source_dir)
 
-        sdl_zip_path = get_package(F"http://libsdl.org/release/SDL2-{sdl_ver}.tar.gz")
+        sdl_zip_path = get_package(F"https://libsdl.org/release/SDL2-{sdl_ver}.tar.gz")
         shutil.unpack_archive(sdl_zip_path, libs_dir)
 
         with chdir(sdl_source_dir):
