@@ -82,6 +82,7 @@ extern	Boolean						gRestoringSavedGame;
 extern	Boolean						gShowDebugStats;
 extern	Boolean						gShowDebug;
 extern	Boolean						gSongPlayingFlag;
+extern	Boolean						gSuperTileMemoryListExists;
 extern	Boolean						gTorchPlayer;
 extern	Boolean						gValveIsOpen[];
 extern	Byte						gCurrentLiquidType;

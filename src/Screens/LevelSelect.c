@@ -98,9 +98,9 @@ bool DoLevelSelect(void)
 
 	/* CLEANUP */
 
-	glDeleteTextures(NUM_LEVELS, levelScreenshots);
-
 	CleanupUIStuff();
+
+	glDeleteTextures(NUM_LEVELS, levelScreenshots);
 
 	return proceed;
 }

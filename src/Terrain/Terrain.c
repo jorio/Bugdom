@@ -75,7 +75,7 @@ uint8_t	gTerrainScrollBuffer[MAX_SUPERTILES_DEEP][MAX_SUPERTILES_WIDE];		// 2D a
 
 short	gNumFreeSupertiles;
 static	SuperTileMemoryType		gSuperTileMemoryList[MAX_SUPERTILES];
-static Boolean gSuperTileMemoryListExists = false;
+Boolean gSuperTileMemoryListExists = false;
 
 float	gTerrainItemDeleteWindow_Near,gTerrainItemDeleteWindow_Far,
 		gTerrainItemDeleteWindow_Left,gTerrainItemDeleteWindow_Right;

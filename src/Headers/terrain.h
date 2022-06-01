@@ -48,7 +48,6 @@ enum
 };
 
 #define	OREOMAP_TILE_SIZE		32 						// pixel w/h of texture tile
-#define TERRAIN_HMTILE_SIZE		32						// pixel w/h of heightmap tile
 #define	TERRAIN_POLYGON_SIZE	160						// size in world units of terrain polygon
 
 #define	TERRAIN_POLYGON_SIZE_Frac	((float)1.0f/(float)TERRAIN_POLYGON_SIZE)
@@ -74,7 +73,6 @@ enum
 #define	MAX_SUPERTILES			(MAX_SUPERTILE_ACTIVE_RANGE*2 * MAX_SUPERTILE_ACTIVE_RANGE*2)
 
 
-#define	MAX_TILE_ANIMS			32
 #define	MAX_TERRAIN_TILES		((300*3)+1)										// 10x15 * 3pages + 1 blank/black
 
 #define	MAX_TERRAIN_WIDTH		400

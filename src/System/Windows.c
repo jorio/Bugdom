@@ -55,10 +55,35 @@ void InitWindowStuff(void)
 
 void GammaFadeOut(void)
 {
-#if ALLOW_FADE
-	gGammaFadeFactor = 0;
-	Render_FreezeFrameFadeOut(.3f);
+	float duration = .3f;
+
+#if _DEBUG
+	duration = .05f;
 #endif
+
+	Uint32 startTicks = SDL_GetTicks();
+//	gGammaFadeFactor = 1.0f;
+
+	while (gGammaFadeFactor > 0)
+	{
+		Uint32 ticks = SDL_GetTicks();
+		gGammaFadeFactor = 1.0f - ((ticks - startTicks) / 1000.0f / duration);
+		if (gGammaFadeFactor < 0.0f)
+			gGammaFadeFactor = 0.0f;
+
+		UpdateInput();
+
+		if (gSuperTileMemoryListExists)
+			QD3D_DrawScene(gGameViewInfoPtr, DrawTerrain);
+		else
+			QD3D_DrawScene(gGameViewInfoPtr, DrawObjects);
+
+		QD3D_CalcFramesPerSecond();
+		DoSDLMaintenance();
+	}
+
+	gGammaFadeFactor = 1;
+
 	FlushMouseButtonPress();
 }
 

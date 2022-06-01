@@ -3,14 +3,6 @@
 #include <QD3D.h>
 #include <SDL_opengl.h>
 
-#if !defined(ALLOW_FADE)
-	#if _DEBUG
-		#define ALLOW_FADE		0
-	#else
-		#define ALLOW_FADE		1
-	#endif
-#endif
-
 #if _DEBUG
 #define CHECK_GL_ERROR()												\
 	do {					 											\
@@ -190,11 +182,7 @@ void Render_Exit2D(void);
 
 #pragma mark -
 
-GLuint Render_CaptureFrameIntoTexture(int* outTextureWidth, int* outTextureHeight);
-
 void Render_DrawFadeOverlay(float opacity);
-
-void Render_FreezeFrameFadeOut(float duration);
 
 #pragma mark -
 
