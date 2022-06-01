@@ -43,7 +43,7 @@ typedef struct KeyBinding
 
 #define NUM_MOUSE_BUTTONS 6
 
-#define kJoystickDeadZoneFrac .1f
+#define kJoystickDeadZoneFrac .33f
 #define kJoystickDeadZoneFracSquared (kJoystickDeadZoneFrac*kJoystickDeadZoneFrac)
 
 #define MOUSE_DELTA_MAX 250
