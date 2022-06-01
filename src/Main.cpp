@@ -210,7 +210,6 @@ int main(int argc, char** argv)
 		ParseCommandLine(argc, argv);
 		Boot();
 		returnCode = GameMain();
-		Shutdown();
 	}
 	catch (Pomme::QuitRequest&)
 	{
@@ -238,6 +237,8 @@ int main(int argc, char** argv)
 	// (NOTE: in debug builds, we might not get here because we don't catch what GameMain throws.)
 	RestoreMacMouseAcceleration();
 #endif
+
+	Shutdown();
 
 	if (showFinalErrorMessage)
 	{
