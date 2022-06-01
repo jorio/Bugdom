@@ -203,6 +203,10 @@ void SetFullscreenMode(void)
 		SDL_SetWindowFullscreen(gSDLWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
 	}
 
+	// Window size might not be refreshed if we don't do this
+	SDL_PumpEvents();
+	SDL_FlushEvents(0, 0xFFFFFFFF);
+
 	// Ensure the clipping pane gets resized properly after switching in or out of fullscreen mode
 	int width, height;
 	SDL_GetWindowSize(gSDLWindow, &width, &height);
