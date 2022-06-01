@@ -127,7 +127,7 @@ static void Boot()
 		throw std::runtime_error("Couldn't initialize SDL video subsystem.");
 	}
 
-	// Create window
+	// Set up GL attributes
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
@@ -137,13 +137,35 @@ static void Boot()
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, gCommandLine.msaa);
 	}
 
+	// Prepare window dimensions
+	int display = 0;
+	int initialWidth = 640;
+	int initialHeight = 480;
+	float desiredAspectRatio = (float)initialWidth / (float)initialHeight;
+	float screenFillRatio = 2.0f / 3.0f;
+
+	SDL_Rect displayBounds = { .x = 0, .y = 0, .w = 640, .h = 480 };
+	SDL_GetDisplayUsableBounds(display, &displayBounds);
+	if (displayBounds.w > displayBounds.h)
+	{
+		initialWidth  = displayBounds.h * screenFillRatio * desiredAspectRatio;
+		initialHeight = displayBounds.h * screenFillRatio;
+	}
+	else
+	{
+		initialWidth  = displayBounds.w * screenFillRatio;
+		initialHeight = displayBounds.w * screenFillRatio / desiredAspectRatio;
+	}
+
+	// Create the window
 	gSDLWindow = SDL_CreateWindow(
 			"Bugdom " PROJECT_VERSION,
-			SDL_WINDOWPOS_UNDEFINED,
-			SDL_WINDOWPOS_UNDEFINED,
-			640,
-			480,
+			SDL_WINDOWPOS_UNDEFINED_DISPLAY(display),
+			SDL_WINDOWPOS_UNDEFINED_DISPLAY(display),
+			initialWidth,
+			initialHeight,
 			SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
+
 	if (!gSDLWindow)
 	{
 		throw std::runtime_error("Couldn't create SDL window.");
