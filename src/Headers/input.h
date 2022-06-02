@@ -48,6 +48,9 @@ enum
 	kKey_UI_Confirm,
 	kKey_UI_Skip,
 	kKey_UI_Cancel,
+	kKey_UI_PadConfirm,
+	kKey_UI_PadCancel,
+	kKey_UI_PadBack,
 
 	kKey_MAX
 };
@@ -74,4 +77,9 @@ void CaptureMouse(Boolean doCapture);
 
 SDL_GameController* TryOpenController(bool showMessageOnFailure);
 void OnJoystickRemoved(SDL_JoystickID which);
+TQ3Vector2D GetThumbStickVector(bool rightStick);
 
+void InitAnalogCursor(void);
+void ShutdownAnalogCursor(void);
+bool MoveAnalogCursor(int* outMouseX, int* outMouseY);
+bool IsAnalogCursorClicked(void);

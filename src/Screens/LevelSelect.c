@@ -73,7 +73,7 @@ bool DoLevelSelect(void)
 		QD3D_CalcFramesPerSecond();
 		DoSDLMaintenance();
 
-		bool button = FlushMouseButtonPress();
+		bool button = IsAnalogCursorClicked();
 
 		if (!button && GetSkipScreenInput())
 		{

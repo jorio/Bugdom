@@ -293,6 +293,7 @@ static void SettingsScreenDrawStuff(const QD3DSetupOutputType *setupInfo)
 
 static void SettingsScreenMainLoop()
 {
+
 	while (1)
 	{
 		UpdateInput();
@@ -307,7 +308,7 @@ static void SettingsScreenMainLoop()
 
 		// See if user hovered/clicked on a pickable item
 		int pickID = UpdateHoveredPickID();
-		if (pickID >= 0 && FlushMouseButtonPress())
+		if (pickID >= 0 && IsAnalogCursorClicked())
 		{
 			if (pickID & PICKID_SETTING_MASK)
 			{

@@ -74,8 +74,6 @@ Boolean DoMainMenu(void)
 {
 int			mouseX = 0;
 int			mouseY = 0;
-int			oldMouseX = 0;
-int			oldMouseY = 0;
 float		timer = 0;
 bool		loop = false;
 
@@ -100,7 +98,8 @@ start_again:
 	QD3D_CalcFramesPerSecond();
 	QD3D_CalcFramesPerSecond();
 
-	SDL_ShowCursor(1);
+	InitAnalogCursor();
+
 	while(true)	
 	{
 		MoveObjects();
@@ -109,13 +108,11 @@ start_again:
 
 			/* UPDATE CURSOR */
 
-		oldMouseX = mouseX;
-		oldMouseY = mouseY;
-		SDL_GetMouseState(&mouseX, &mouseY);
+		bool didMove = MoveAnalogCursor(&mouseX, &mouseY);
 
 				/* SEE IF USER CLICKED SOMETHING */
 
-		if (FlushMouseButtonPress())
+		if (IsAnalogCursorClicked())
 		{
 			if (PickObject(mouseX, mouseY, &gMenuSelection))
 				break;
@@ -127,7 +124,7 @@ start_again:
 		
 				/* UPDATE TIMER */
 
-		if ((oldMouseX != mouseX) || (mouseY != oldMouseY))		// reset timer if mouse moved
+		if (didMove)									// reset timer if mouse moved
 			timer = 0;
 		else
 		{
@@ -144,7 +141,8 @@ start_again:
 		/***********************/
 		/* WALK SPIDER TO ICON */
 		/***********************/
-		
+
+	ShutdownAnalogCursor();
 	WalkSpiderToIcon();
 	
 	
@@ -163,6 +161,7 @@ start_again:
 			/***********/
 
 getout:
+	ShutdownAnalogCursor();
 	gCurrentSaveSlot = -1;
 
 	switch (gMenuSelection)
@@ -179,7 +178,7 @@ getout:
 			break;
 	}
 
-	SDL_ShowCursor(0);
+	ShutdownAnalogCursor();
 	DeleteAllObjects();
 	FreeAllSkeletonFiles(-1);
 	DeleteAll3DMFGroups();
@@ -421,14 +420,14 @@ float		d,fps = gFramesPerSecondFrac;
 
 static void WalkSpiderToIcon(void)
 {
-Boolean	b = FlushMouseButtonPress();
+Boolean	b = FlushMouseButtonPress() || GetNewKeyState(kKey_UI_PadConfirm);
 
 
 	MorphToSkeletonAnim(gSpider->Skeleton, 2, 6);
 
 	while(true)	
 	{		
-		if (FlushMouseButtonPress())			// see if user wants to hurry up
+		if (FlushMouseButtonPress() || GetNewKeyState(kKey_UI_PadConfirm))			// see if user wants to hurry up
 		{
 			if (!b)
 				break;

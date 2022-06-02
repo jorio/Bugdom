@@ -91,6 +91,7 @@ int curState = kPauseChoice_Resume;
 	int prevRawMouseY = -1;
 	SDL_GetMouseState(&prevRawMouseX, &prevRawMouseY);
 
+	bool ignoreThumbstick = true;
 
 	while (1)
 	{
@@ -130,24 +131,42 @@ int curState = kPauseChoice_Resume;
 
 		if (!mouseMoved || newState == kPauseChoice_Null)
 		{
-			if (GetNewKeyState(kKey_Forward))
+			int delta = 0;
+
+			TQ3Vector2D thumb = GetThumbStickVector(false);
+			if (!ignoreThumbstick)
 			{
-				if (newState == kPauseChoice_Null)
-					newState = kPauseChoice_Resume;
-				else
+				if (fabsf(thumb.y) > 0.5f)
 				{
-					newState--;
-					if (newState < 0) newState = 0;
+					delta = (thumb.y < 0) ? -1 : 1;
+					ignoreThumbstick = true;
 				}
 			}
-			else if (GetNewKeyState(kKey_Backward))
+			else
+			{
+				if (fabsf(thumb.y) < 0.5f)
+				{
+					ignoreThumbstick = false;
+				}
+			}
+
+			if (GetNewKeyState(kKey_Forward))
+				delta = -1;
+
+			if (GetNewKeyState(kKey_Backward))
+				delta = 1;
+
+			if (delta != 0)
 			{
 				if (newState == kPauseChoice_Null)
 					newState = kPauseChoice_Resume;
 				else
 				{
-					newState++;
-					if (newState >= kPauseChoice_Quit) newState = kPauseChoice_Quit;
+					newState += delta;
+					if (newState < 0)
+						newState = 0;
+					else if (newState > kPauseChoice_Quit)
+						newState = kPauseChoice_Quit;
 				}
 			}
 		}
@@ -163,7 +182,7 @@ int curState = kPauseChoice_Resume;
 
 		// Confirm selection
 		if (newState != kPauseChoice_Null		// ensure mouse is within frame to proceed
-			&& (FlushMouseButtonPress() || GetNewKeyState(kKey_UI_Confirm)))
+			&& (FlushMouseButtonPress() || GetNewKeyState(kKey_UI_Confirm) || GetNewKeyState(kKey_UI_PadConfirm)))
 		{
 			break;
 		}
@@ -186,8 +205,11 @@ int curState = kPauseChoice_Resume;
 				
 		case	2:
 				CleanQuit();
-	
 	}
+
+
+	SDL_ShowCursor(0);
+
 
 			/* CLEANUP */
 			

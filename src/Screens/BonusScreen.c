@@ -84,6 +84,7 @@ Boolean wantToSave = false;
 			/*********/
 
 	SetupUIStuff(kUIBackground_Cyclorama);
+	ShutdownAnalogCursor();
 	SetupBonusScreen();
 
 	QD3D_CalcFramesPerSecond();
@@ -597,6 +598,8 @@ static void TallyTotalScore(void)
 static Boolean AskSaveGame(void)
 {
 int32_t id;
+int mouseX = 0;
+int mouseY = 0;
 
 		/*************************/
 		/* CREATE YES/NO OBJECTS */
@@ -638,7 +641,7 @@ int32_t id;
 	float moveTextUpwardsTween = 0;
 	bool captionsCreatedYet = false;
 
-	SDL_ShowCursor(1);
+	InitAnalogCursor();
 	while(true)
 	{
 		moveTextUpwardsTween += gFramesPerSecondFrac;
@@ -673,22 +676,18 @@ int32_t id;
 		}
 
 		UpdateInput();
+		MoveAnalogCursor(&mouseX, &mouseY);
 		MoveObjects();
 		QD3D_DrawScene(gGameViewInfoPtr,DrawObjects);
 		QD3D_CalcFramesPerSecond();				
 		DoSDLMaintenance();
-		
-		if (FlushMouseButtonPress())
-		{
-			int mouseX = 0;
-			int mouseY = 0;
-			SDL_GetMouseState(&mouseX, &mouseY);
 
-			if (PickObject(mouseX, mouseY, &id))
-				break;
+		if (IsAnalogCursorClicked() && PickObject(mouseX, mouseY, &id))
+		{
+			break;
 		}
 	}
-	SDL_ShowCursor(0);
+	ShutdownAnalogCursor();
 
 		/* SEE IF SAVE GAME */
 

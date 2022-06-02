@@ -44,6 +44,7 @@ void DoAboutScreens(void)
 	/*********/
 
 	SetupUIStuff(kUIBackground_Black);
+	ShutdownAnalogCursor();
 	QD3D_CalcFramesPerSecond();
 
 	/**************/

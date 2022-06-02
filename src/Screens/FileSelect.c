@@ -477,11 +477,15 @@ static int FileScreenMainLoop()
 
 		if (gFileScreenAwaitingInput)
 		{
-			if (GetNewKeyState(kKey_UI_Cancel))
+			if (GetNewKeyState(kKey_UI_Cancel)
+				|| GetNewKeyState(kKey_UI_PadBack)
+				|| GetNewKeyState(kKey_UI_PadCancel))
+			{
 				return -1;
+			}
 
 			int pickID = UpdateHoveredPickID();
-			if (pickID >= 0 && FlushMouseButtonPress())
+			if (pickID >= 0 && IsAnalogCursorClicked())
 			{
 				switch (pickID & ~kPickBits_FileNumberMask)
 				{

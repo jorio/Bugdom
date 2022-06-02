@@ -792,7 +792,7 @@ unsigned long	someLong;
 	TryOpenController(true);
 
 	ToolBoxInit();
- 	
+	SDL_ShowCursor(0);
 
 
 			/* INIT SOME OF MY STUFF */
@@ -812,6 +812,8 @@ unsigned long	someLong;
 	
 	GetDateTime ((unsigned long *)(&someLong));		// init random seed
 	SetMyRandomSeed(someLong);
+
+	SDL_WarpMouseInWindow(gSDLWindow, gWindowWidth/2, gWindowHeight/2);		// prime cursor position
 
 
 			/* DO INTRO */

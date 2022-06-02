@@ -36,6 +36,16 @@ typedef struct KeyBinding
 	int gamepadButton;
 } KeyBinding;
 
+static struct
+{
+	int mouseX;
+	int mouseY;
+	float thumbX;
+	float thumbY;
+	bool didMove;
+	bool steeredByThumbstick;
+} gAnalogCursor;
+
 
 /****************************/
 /*    CONSTANTS             */
@@ -120,6 +130,9 @@ KeyBinding gKeyBindings[kKey_MAX] =
 [kKey_UI_Confirm		] = { "DO_NOT_REBIND",		SDL_SCANCODE_RETURN,	SDL_SCANCODE_KP_ENTER,	0,					SDL_CONTROLLER_BUTTON_INVALID, },
 [kKey_UI_Cancel			] = { "DO_NOT_REBIND",		SDL_SCANCODE_ESCAPE,	0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
 [kKey_UI_Skip			] = { "DO_NOT_REBIND",		SDL_SCANCODE_SPACE,		0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
+[kKey_UI_PadConfirm		] = { "DO_NOT_REBIND",		0,						0,						0,					SDL_CONTROLLER_BUTTON_A, },
+[kKey_UI_PadCancel		] = { "DO_NOT_REBIND",		0,						0,						0,					SDL_CONTROLLER_BUTTON_B, },
+[kKey_UI_PadBack		] = { "DO_NOT_REBIND",		0,						0,						0,					SDL_CONTROLLER_BUTTON_BACK, },
 };
 
 
@@ -151,7 +164,7 @@ static inline void UpdateKeyState(Byte* state, bool downNow)
 	}
 }
 
-static TQ3Vector2D GetThumbStickVector(bool rightStick)
+TQ3Vector2D GetThumbStickVector(bool rightStick)
 {
 	Sint16 dxRaw = SDL_GameControllerGetAxis(gSDLController, rightStick ? SDL_CONTROLLER_AXIS_RIGHTX : SDL_CONTROLLER_AXIS_LEFTX);
 	Sint16 dyRaw = SDL_GameControllerGetAxis(gSDLController, rightStick ? SDL_CONTROLLER_AXIS_RIGHTY : SDL_CONTROLLER_AXIS_LEFTY);
@@ -364,6 +377,9 @@ Boolean GetSkipScreenInput(void)
 	return GetNewKeyState(kKey_UI_Confirm)
 		|| GetNewKeyState(kKey_UI_Cancel)
 		|| GetNewKeyState(kKey_UI_Skip)
+		|| GetNewKeyState(kKey_UI_PadConfirm)
+//		|| GetNewKeyState(kKey_UI_PadBack)
+		|| GetNewKeyState(kKey_UI_PadCancel)
 		|| FlushMouseButtonPress();
 }
 
@@ -388,10 +404,13 @@ void CaptureMouse(Boolean doCapture)
 {
 	SDL_PumpEvents();	// Prevent SDL from thinking mouse buttons are stuck as we switch into relative mode
 	SDL_SetRelativeMouseMode(doCapture ? SDL_TRUE : SDL_FALSE);
-	SDL_ShowCursor(doCapture ? 0 : 1);
+
+	if (doCapture)
+		SDL_ShowCursor(0);
+
 	ClearMouseState();
 	EatMouseEvents();
-    
+
 #if __APPLE__
     if (doCapture)
         KillMacMouseAcceleration();
@@ -539,3 +558,81 @@ void OnJoystickRemoved(SDL_JoystickID which)
 	TryOpenController(false);
 }
 
+#pragma mark -
+
+/***************** ANALOG MOUSE CURSOR *****************/
+
+void InitAnalogCursor(void)
+{
+	memset(&gAnalogCursor, 0, sizeof(gAnalogCursor));
+
+	SDL_GetMouseState(&gAnalogCursor.mouseX, &gAnalogCursor.mouseY);
+	gAnalogCursor.thumbX = gAnalogCursor.mouseX;
+	gAnalogCursor.thumbY = gAnalogCursor.mouseY;
+}
+
+void ShutdownAnalogCursor(void)
+{
+	SDL_ShowCursor(0);
+}
+
+bool MoveAnalogCursor(int* outMouseX, int* outMouseY)
+{
+	SDL_ShowCursor(1);
+
+	gAnalogCursor.didMove = false;
+
+	TQ3Vector2D thumbstick = GetThumbStickVector(false);
+
+	int oldMouseX = gAnalogCursor.mouseX;
+	int oldMouseY = gAnalogCursor.mouseY;
+	SDL_GetMouseState(&gAnalogCursor.mouseX, &gAnalogCursor.mouseY);
+	bool mouseMoved = oldMouseX != gAnalogCursor.mouseX || oldMouseY != gAnalogCursor.mouseY;
+
+	float speed = 300;
+	if (gWindowWidth > gWindowHeight)
+		speed *= (gWindowHeight / 480.0f);
+	else
+		speed *= (gWindowWidth / 640.0f);
+
+	if (mouseMoved)
+	{
+		gAnalogCursor.steeredByThumbstick = false;
+		gAnalogCursor.didMove = true;
+		gAnalogCursor.thumbX = gAnalogCursor.mouseX;
+		gAnalogCursor.thumbY = gAnalogCursor.mouseY;
+	}
+	else if (thumbstick.x != 0 && thumbstick.y != 0)
+	{
+		gAnalogCursor.steeredByThumbstick = true;
+		gAnalogCursor.didMove = true;
+
+		gAnalogCursor.thumbX += thumbstick.x * gFramesPerSecondFrac * speed;
+		gAnalogCursor.thumbY += thumbstick.y * gFramesPerSecondFrac * speed;
+
+		if (gAnalogCursor.thumbX < 0) gAnalogCursor.thumbX = 0;
+		if (gAnalogCursor.thumbY < 0) gAnalogCursor.thumbY = 0;
+
+		if (gAnalogCursor.thumbX > gWindowWidth-1) gAnalogCursor.thumbX = gWindowWidth-1;
+		if (gAnalogCursor.thumbY > gWindowHeight-1) gAnalogCursor.thumbY = gWindowHeight-1;
+
+		gAnalogCursor.mouseX = gAnalogCursor.thumbX;
+		gAnalogCursor.mouseY = gAnalogCursor.thumbY;
+
+		SDL_WarpMouseInWindow(gSDLWindow, gAnalogCursor.mouseX, gAnalogCursor.mouseY);
+	}
+
+	if (outMouseX)
+		*outMouseX = (int) gAnalogCursor.mouseX;
+
+	if (outMouseY)
+		*outMouseY = (int) gAnalogCursor.mouseY;
+
+	return gAnalogCursor.didMove;
+}
+
+bool IsAnalogCursorClicked(void)
+{
+	return FlushMouseButtonPress()
+		|| (gAnalogCursor.steeredByThumbstick && GetNewKeyState(kKey_UI_PadConfirm));
+}

@@ -119,11 +119,12 @@ void SetupUIStuff(int backgroundType)
 
 	MakeFadeEvent(true);
 
-	SDL_ShowCursor(1);
+	InitAnalogCursor();
 }
 
 void CleanupUIStuff()
 {
+	ShutdownAnalogCursor();
 	GammaFadeOut(false);
 	DisposePickableObjects();
 	TextMesh_Shutdown();
@@ -202,7 +203,7 @@ int UpdateHoveredPickID(void)
 	int mouseX, mouseY;
 	mouseX = 0;
 	mouseY = 0;
-	SDL_GetMouseState(&mouseX, &mouseY);
+	MoveAnalogCursor(&mouseX, &mouseY);
 
 	int32_t pickID;
 	if (PickObject(mouseX, mouseY, &pickID))
