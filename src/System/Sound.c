@@ -47,8 +47,6 @@ typedef struct
 } LoadedEffect;
 
 
-#define	STREAM_BUFFER_SIZE	100000
-
 #define	VOLUME_DISTANCE_FACTOR	.004f		// bigger == sound decays FASTER with dist, smaller = louder far away
 
 
@@ -83,13 +81,11 @@ static	ChannelInfoType		gChannelInfo[MAX_CHANNELS];
 static short				gMaxChannels = 0;
 
 Boolean						gSongPlayingFlag = false;
-Boolean						gResetSong = false;
-Boolean						gLoopSongFlag = true;
+static Boolean				gResetSong = false;
+static Boolean				gLoopSongFlag = true;
 
 static	SndChannelPtr		gMusicChannel=nil;
-static short				gMusicFileRefNum = 0x0ded;
 Boolean						gMuteMusicFlag = false;
-static Ptr					gMusicBuffer = nil;					// buffers to use for streaming play
 static short				gCurrentSong = -1;
 
 
@@ -187,16 +183,6 @@ OSErr		iErr;
 		iErr = SndNewChannel(&gSndChannel[gMaxChannels],sampledSynth,0,/*NewSndCallBackUPP(CallBackFn)*/nil);
 		if (iErr)												// if err, stop allocating channels
 			break;
-	}
-	
-
-		/* INIT MUSIC STREAMING BUFFER */
-		
-	if (gMusicBuffer == nil)
-	{
-		gMusicBuffer = AllocPtr(STREAM_BUFFER_SIZE);
-		if (gMusicBuffer == nil)
-			DoFatalAlert("InitSoundTools: gMusicBuffer == nil");
 	}
 }
 
@@ -378,8 +364,6 @@ SCStatus				theStatus;
 
 /******************** PLAY SONG ***********************/
 //
-// if songNum == -1, then play existing open song
-//
 // INPUT: loopFlag = true if want song to loop
 //
 
@@ -392,15 +376,9 @@ OSErr	iErr;
 	if (songNum == gCurrentSong)					// see if this is already playing
 		return;
 
-		/* SEE IF JUST RESTART CURRENT STREAM */
-		
-	if (songNum == -1)	
-		goto stream_again;
-
 		/* ZAP ANY EXISTING SONG */
 		
 	gCurrentSong 	= songNum;
-	gResetSong 		= false;
 	gLoopSongFlag 	= loopFlag;
 	KillSong();
 	DoSoundMaintenance();
@@ -430,7 +408,7 @@ OSErr	iErr;
 			return;
 	}
 
-	gMusicFileRefNum = OpenGameFile(path);
+	short musicFileRefNum = OpenGameFile(path);
 	volume = FULL_CHANNEL_VOLUME;
 
 
@@ -457,14 +435,19 @@ OSErr	iErr;
 			
 			/* START PLAYING FROM FILE */
 
-stream_again:					
-	iErr = SndStartFilePlay(gMusicChannel, gMusicFileRefNum, 0, STREAM_BUFFER_SIZE, gMusicBuffer,
-							nil, SongCompletionProc, true);
+	iErr = SndStartFilePlay(
+			gMusicChannel,
+			musicFileRefNum,
+			0,
+			0, //STREAM_BUFFER_SIZE,
+			nil, // gMusicBuffer
+			nil,
+			SongCompletionProc,
+			true);
 
 	if (iErr)
 	{
-		FSClose(gMusicFileRefNum);								// close the file
-		gMusicFileRefNum = 0x0ded;
+		FSClose(musicFileRefNum);								// close the file
 		DoAlert("PlaySong: SndStartFilePlay failed!");
 		ShowSystemErr(iErr);
 	}
@@ -474,12 +457,15 @@ stream_again:
 			/* SET LOOP FLAG ON STREAM (SOURCE PORT ADDITION) */
 			/* So we don't need to re-read the file over and over. */
 
-	mySndCmd.cmd = pommeSetLoopCmd;
-	mySndCmd.param1 = loopFlag ? 1 : 0;
-	mySndCmd.param2 = 0;
-	iErr = SndDoImmediate(gMusicChannel, &mySndCmd);
-	if (iErr)
-		DoFatalAlert("PlaySong: SndDoImmediate (pomme loop extension) failed!");
+	if (loopFlag)
+	{
+		mySndCmd.cmd = pommeSetLoopCmd;
+		mySndCmd.param1 = loopFlag ? 1 : 0;
+		mySndCmd.param2 = 0;
+		iErr = SndDoImmediate(gMusicChannel, &mySndCmd);
+		if (iErr)
+			DoFatalAlert("PlaySong: SndDoImmediate (pomme loop extension) failed!");
+	}
 
 
 			/* SEE IF WANT TO MUTE THE MUSIC */
@@ -494,8 +480,10 @@ static void SongCompletionProc(SndChannelPtr chan)
 {
 	(void) chan;
 
-	if (gSongPlayingFlag)
+	if (gSongPlayingFlag && !gLoopSongFlag)
+	{
 		gResetSong = true;
+	}
 }
 
 
@@ -503,30 +491,14 @@ static void SongCompletionProc(SndChannelPtr chan)
 
 void KillSong(void)
 {
-OSErr	iErr;
-
 	gCurrentSong = -1;
 
 	if (!gSongPlayingFlag)
 		return;
-		
+
 	gSongPlayingFlag = false;											// tell callback to do nothing
 
-//	SndStopFilePlay(gMusicChannel, true);								// stop it
-	
-	if (gMusicFileRefNum == 0x0ded)
-		DoAlert("KillSong: gMusicFileRefNum == 0x0ded");
-	else
-	{
-		iErr = FSClose(gMusicFileRefNum);								// close the file
-		if (iErr)
-		{
-			DoAlert("KillSong: FSClose failed!");
-			ShowSystemErr_NonFatal(iErr);
-		}
-	}
-		
-	gMusicFileRefNum = 0x0ded;
+	SndStopFilePlay(gMusicChannel, true);								// stop it
 }
 
 #pragma mark -
@@ -845,7 +817,6 @@ void ToggleMusic(void)
 
 void DoSoundMaintenance(void)
 {
-			
 	if (!gEnteringName)
 	{	
 					/* SEE IF TOGGLE MUSIC */
@@ -853,16 +824,15 @@ void DoSoundMaintenance(void)
 		if (GetNewKeyState(kKey_ToggleMusic))
 			ToggleMusic();			
 	}
+
 				/* SEE IF STREAMED MUSIC STOPPED - SO RESET */
-				
+
 	if (gResetSong)
 	{
 		gResetSong = false;
-		if (gLoopSongFlag)							// see if stop song now or loop it
-			PlaySong(-1,true);
-		else
+		if (!gLoopSongFlag)
 			KillSong();
-	}			
+	}
 }
 
 

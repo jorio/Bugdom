@@ -251,7 +251,7 @@ Boolean			fo = false;
 	PlaySong(SONG_PANGEA,false);			
 	QD3D_CalcFramesPerSecond();					
 
-	while((!gResetSong) && gSongPlayingFlag)					// wait until song stops
+	while (gSongPlayingFlag)					// wait until song stops
 	{
 		QD3D_CalcFramesPerSecond();					
 	

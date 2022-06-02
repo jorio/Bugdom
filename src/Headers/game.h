@@ -77,7 +77,6 @@ extern	Boolean						gPlayerCanMove;
 extern	Boolean						gPlayerGotKilledFlag;
 extern	Boolean						gPlayerKnockOnButt;
 extern	Boolean						gPlayerUsingKeyControl;
-extern	Boolean						gResetSong;
 extern	Boolean						gRestoringSavedGame;
 extern	Boolean						gShowDebugStats;
 extern	Boolean						gShowDebug;
