@@ -11,8 +11,6 @@ typedef struct
 	float	leftVolume, rightVolume;
 }ChannelInfoType;
 
-#define		BASE_EFFECT_RESOURCE	10000
-
 #define		FULL_CHANNEL_VOLUME		kFullVolume
 
 
@@ -122,7 +120,7 @@ void DisposeSoundEffect(int effectNum);
 void LoadSoundBank(int bankNum);
 void DisposeSoundBank(int bankNum);
 void DisposeAllSoundBanks(void);
-extern	void WaitEffectsSilent(void);
+void PauseAllChannels(Boolean pause);
 short PlayEffect_Parms(int effectNum, u_long leftVolume, u_long rightVolume, unsigned long rateMultiplier);
 void ChangeChannelVolume(short channel, float leftVol, float rightVol);
 short PlayEffect3D(int effectNum, TQ3Point3D *where);

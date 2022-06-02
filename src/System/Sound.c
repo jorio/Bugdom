@@ -342,23 +342,18 @@ short		i;
 }
 
 
-/****************** WAIT EFFECTS SILENT *********************/
+/*************** PAUSE ALL SOUND CHANNELS **************/
 
-void WaitEffectsSilent(void)
+void PauseAllChannels(Boolean pause)
 {
-short	i;
-Boolean	isBusy;
-SCStatus				theStatus;
+	SndCommand cmd = { .cmd = pause ? pommePausePlaybackCmd : pommeResumePlaybackCmd };
 
-	do
+	for (int c = 0; c < gMaxChannels; c++)
 	{
-		isBusy = 0;
-		for (i=0; i < gMaxChannels; i++)
-		{
-			SndChannelStatus(gSndChannel[i],sizeof(SCStatus),&theStatus);	// get channel info
-			isBusy |= theStatus.scChannelBusy;
-		}
-	}while(isBusy);
+		SndDoImmediate(gSndChannel[c], &cmd);
+	}
+
+	SndDoImmediate(gMusicChannel, &cmd);
 }
 
 

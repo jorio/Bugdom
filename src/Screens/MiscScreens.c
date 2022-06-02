@@ -43,7 +43,7 @@ void DoPaused(void)
 float		dummy;
 const float imageAspectRatio = 200.0f/152.0f;
 
-	Pomme_PauseAllChannels(true);
+	PauseAllChannels(true);
 
 	SDL_ShowCursor(1);
 
@@ -150,7 +150,7 @@ const float imageAspectRatio = 200.0f/152.0f;
 
 	GetMouseDelta(&dummy,&dummy);				// read this once to prevent mouse boom
 
-	Pomme_PauseAllChannels(false);
+	PauseAllChannels(false);
 }
 
 
