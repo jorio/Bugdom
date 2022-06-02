@@ -40,8 +40,18 @@ TQ3TriMeshData* gPauseQuad = nil;
 
 void DoPaused(void)
 {
+enum
+{
+	kPauseChoice_Resume,
+	kPauseChoice_Bail,
+	kPauseChoice_Quit,
+	kPauseChoice_Null,
+};
+
 float		dummy;
 const float imageAspectRatio = 200.0f/152.0f;
+int curState = kPauseChoice_Resume;
+
 
 	PauseAllChannels(true);
 
@@ -62,7 +72,7 @@ const float imageAspectRatio = 200.0f/152.0f;
 	gPauseQuad = MakeQuadMesh(1, 1.0f, 1.0f);
 	gPauseQuad->hasVertexNormals = false;
 	gPauseQuad->texturingMode = kQ3TexturingModeOpaque;
-	gPauseQuad->glTextureName = textures[3];
+	gPauseQuad->glTextureName = textures[curState];		// resume
 
 	float xs = .4f;
 	float ys = xs/imageAspectRatio;
@@ -76,23 +86,71 @@ const float imageAspectRatio = 200.0f/152.0f;
 			/* LET USER SELECT */
 			/*******************/
 
-	int curState = 3;
+
+	int prevRawMouseX = -1;
+	int prevRawMouseY = -1;
+	SDL_GetMouseState(&prevRawMouseX, &prevRawMouseY);
+
+
 	while (1)
 	{
+		QD3D_DrawScene(gGameViewInfoPtr, DrawTerrain);
+		DoSDLMaintenance();
+		UpdateInput();
+		SDL_Delay(10);
+
+		if (GetNewKeyState(kKey_Pause) || GetNewKeyState(kKey_UI_Cancel))						// see if ESC out
+		{
+			curState = kPauseChoice_Resume;
+			break;
+		}
+
 		int rawMouseX, rawMouseY;
 		SDL_GetMouseState(&rawMouseX, &rawMouseY);
+		bool mouseMoved = prevRawMouseX != rawMouseX || prevRawMouseY != rawMouseY;
 
-		TQ3Point3D mouse = {rawMouseX, rawMouseY, 0};
-		Q3Point3D_Transform(&mouse, &gWindowToFrustumCorrectAspect, &mouse);
+		int newState = curState;
 
-		int newState = 3; // empty
-		if      (mouse.x < -xs) newState = 3;		// empty
-		else if (mouse.x > +xs) newState = 3;		// empty
-		else if (mouse.y > ys*+.15f) newState = 3;	// empty
-		else if (mouse.y > ys*-.17f) newState = 0;	// Resume
-		else if (mouse.y > ys*-.47f) newState = 1;	// End Game
-		else if (mouse.y > ys*-.81f) newState = 2;	// Quit
-		else newState = 3;
+		if (mouseMoved)
+		{
+			TQ3Point3D mouse = {rawMouseX, rawMouseY, 0};
+			Q3Point3D_Transform(&mouse, &gWindowToFrustumCorrectAspect, &mouse);
+
+			if      (mouse.x < -xs) newState = kPauseChoice_Null;
+			else if (mouse.x > +xs) newState = kPauseChoice_Null;
+			else if (mouse.y > ys*+.15f) newState = kPauseChoice_Null;
+			else if (mouse.y > ys*-.17f) newState = kPauseChoice_Resume;
+			else if (mouse.y > ys*-.47f) newState = kPauseChoice_Bail;
+			else if (mouse.y > ys*-.81f) newState = kPauseChoice_Quit;
+			else newState = kPauseChoice_Null;
+
+			prevRawMouseX = rawMouseX;
+			prevRawMouseY = rawMouseY;
+		}
+
+		if (!mouseMoved || newState == kPauseChoice_Null)
+		{
+			if (GetNewKeyState(kKey_Forward))
+			{
+				if (newState == kPauseChoice_Null)
+					newState = kPauseChoice_Resume;
+				else
+				{
+					newState--;
+					if (newState < 0) newState = 0;
+				}
+			}
+			else if (GetNewKeyState(kKey_Backward))
+			{
+				if (newState == kPauseChoice_Null)
+					newState = kPauseChoice_Resume;
+				else
+				{
+					newState++;
+					if (newState >= kPauseChoice_Quit) newState = kPauseChoice_Quit;
+				}
+			}
+		}
 
 		if (curState != newState)
 		{
@@ -103,18 +161,9 @@ const float imageAspectRatio = 200.0f/152.0f;
 				PlayEffect(EFFECT_SELECT);
 		}
 
-		UpdateInput();
-		if (GetNewKeyState(kKey_Pause))						// see if ESC out
-		{
-			curState = 0;
-			break;
-		}
-
-		QD3D_DrawScene(gGameViewInfoPtr, DrawTerrain);
-		DoSDLMaintenance();
-		SDL_Delay(10);
-
-		if (FlushMouseButtonPress() && newState != 3)		// ensure mouse is within frame to proceed
+		// Confirm selection
+		if (newState != kPauseChoice_Null		// ensure mouse is within frame to proceed
+			&& (FlushMouseButtonPress() || GetNewKeyState(kKey_UI_Confirm)))
 		{
 			break;
 		}
