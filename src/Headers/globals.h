@@ -67,31 +67,27 @@ enum
 
 enum
 {
-	CTYPE_PLAYER	=	1,			// Me
-	CTYPE_ENEMY		=	(1<<1),		// Enemy
-	CTYPE_VISCOUS	=	(1<<2),		// Viscous object
-	CTYPE_BONUS		=	(1<<3),		// Bonus item
-	CTYPE_TRIGGER	=	(1<<4),		// Trigger
-	CTYPE_SKELETON	=	(1<<5),		// Skeleton
-	CTYPE_MISC		=	(1<<6),		// Misc
-	CTYPE_BLOCKSHADOW =	(1<<7),		// Shadows go over it
-	CTYPE_MPLATFORM	=	(1<<8),		// Moving Platform
-	CTYPE_BGROUND2 	=	(1<<9),		// Collide against Terrain BGround 2 path tiles
-	CTYPE_HURTME	= 	(1<<10),	// Hurt Me
-	CTYPE_HURTENEMY	= 	(1<<11),	// Hurt Enemy
-	CTYPE_BGROUND 	=	(1<<12),	// Terrain BGround path tiles
-	CTYPE_PLAYERTRIGGERONLY	=	(1<<13),	// combined with _TRIGGER, this trigger is only triggerable by player
-	CTYPE_SPIKED	=	(1<<14),	// Ball player cannot hit this
-	CTYPE_KICKABLE 	=	(1<<15),	// if can be kicked by player
-	CTYPE_AUTOTARGET =	(1<<16),	// if can be auto-targeted by player
-	CTYPE_LIQUID	=	(1<<17),	// is a liquid patch
-	CTYPE_BOPPABLE	=	(1<<18),	// enemy that can be bopped on top
-	CTYPE_BLOCKCAMERA =	(1<<19),	// camera goes over this
-	CTYPE_DRAINBALLTIME = (1<<20),	// drain ball time
-	CTYPE_HURTNOKNOCK	= (1<<21),	// CTYPE_HURTME doesnt knock me down
-	CTYPE_IMPENETRABLE	= (1<<22),	// set if object must have high collision priority and cannot be pushed thru this
-	CTYPE_IMPENETRABLE2	= (1<<23),	// set with CTYPE_IMPENETRABLE if dont want player to do coord=oldCoord when touched
-	CTYPE_AUTOTARGETJUMP = (1<<24)	// if auto target when jumping
+	CTYPE_PLAYER			= (1<<0),		// Me
+	CTYPE_ENEMY				= (1<<1),		// Enemy
+	CTYPE_VISCOUS			= (1<<2),		// Viscous object
+	CTYPE_TRIGGER			= (1<<3),		// Trigger
+	CTYPE_MISC				= (1<<4),		// Misc
+	CTYPE_BLOCKSHADOW		= (1<<5),		// Shadows go over it
+	CTYPE_MPLATFORM			= (1<<6),		// Moving Platform
+	CTYPE_HURTME			= (1<<7),		// Hurt Me
+	CTYPE_HURTENEMY			= (1<<8),		// Hurt Enemy
+	CTYPE_PLAYERTRIGGERONLY	= (1<<9),		// combined with _TRIGGER, this trigger is only triggerable by player
+	CTYPE_SPIKED			= (1<<10),		// Ball player cannot hit this
+	CTYPE_KICKABLE			= (1<<11),		// if can be kicked by player
+	CTYPE_AUTOTARGET		= (1<<12),		// if can be auto-targeted by player
+	CTYPE_LIQUID			= (1<<13),		// is a liquid patch
+	CTYPE_BOPPABLE			= (1<<14),		// enemy that can be bopped on top
+	CTYPE_BLOCKCAMERA		= (1<<15),		// camera goes over this
+	CTYPE_DRAINBALLTIME		= (1<<16),		// drain ball time
+	CTYPE_HURTNOKNOCK		= (1<<17),		// CTYPE_HURTME doesnt knock me down
+	CTYPE_IMPENETRABLE		= (1<<18),		// set if object must have high collision priority and cannot be pushed thru this
+	CTYPE_IMPENETRABLE2		= (1<<19),		// set with CTYPE_IMPENETRABLE if dont want player to do coord=oldCoord when touched
+	CTYPE_AUTOTARGETJUMP	= (1<<20)		// if auto target when jumping
 };
 
 
