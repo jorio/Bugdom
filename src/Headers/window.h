@@ -8,7 +8,7 @@
 extern void	InitWindowStuff(void);
 extern	void MakeFadeEvent(Boolean	fadeIn);
 
-extern	void GammaFadeOut(void);
+void GammaFadeOut(Boolean fadeSound);
 extern	void GammaOn(void);
 
 extern	void GameScreenToBlack(void);

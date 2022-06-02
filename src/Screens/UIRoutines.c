@@ -124,7 +124,7 @@ void SetupUIStuff(int backgroundType)
 
 void CleanupUIStuff()
 {
-	GammaFadeOut();
+	GammaFadeOut(false);
 	DisposePickableObjects();
 	TextMesh_Shutdown();
 	DeleteAllObjects();

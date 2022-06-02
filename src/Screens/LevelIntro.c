@@ -193,7 +193,7 @@ void ShowLevelIntroScreen(void)
 	
 			/* CLEANUP */
 
-	GammaFadeOut();
+	GammaFadeOut(false);
 	GameScreenToBlack();
 	
 	DeleteAllObjects();

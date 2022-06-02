@@ -105,7 +105,6 @@ extern	ObjNode						*gCurrentWaterBug;
 extern	ObjNode						*gCyclorama;
 extern	ObjNode						*gFirstNodePtr;
 extern	ObjNode						*gHiveObj;
-extern	ObjNode						*gMenuIcons[NUM_MENU_ICONS];
 extern	ObjNode						*gMostRecentlyAddedNode;
 extern	ObjNode						*gMyBuddy;
 extern	ObjNode						*gNextNode;

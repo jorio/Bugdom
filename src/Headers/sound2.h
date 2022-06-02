@@ -127,4 +127,6 @@ short PlayEffect3D(int effectNum, TQ3Point3D *where);
 Boolean Update3DSoundChannel(int effectNum, short *channel, TQ3Point3D *where);
 Boolean IsEffectChannelPlaying(short chanNum);
 void UpdateListenerLocation(void);
+void FadeGlobalVolume(float fadeVolume);
+
 

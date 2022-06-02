@@ -259,7 +259,7 @@ Boolean			fo = false;
 		if (GetSkipScreenInput())
 		{
 			if (!fo)
-				GammaFadeOut();
+				GammaFadeOut(true);
 			break;
 		}
 

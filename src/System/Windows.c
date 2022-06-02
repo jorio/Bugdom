@@ -53,7 +53,7 @@ void InitWindowStuff(void)
 
 /**************** GAMMA FADE OUT *************************/
 
-void GammaFadeOut(void)
+void GammaFadeOut(Boolean fadeSound)
 {
 	float duration = .3f;
 
@@ -78,11 +78,23 @@ void GammaFadeOut(void)
 		else
 			QD3D_DrawScene(gGameViewInfoPtr, DrawObjects);
 
+		if (fadeSound)
+		{
+			FadeGlobalVolume(gGammaFadeFactor);
+		}
+
 		QD3D_CalcFramesPerSecond();
 		DoSDLMaintenance();
 	}
 
 	gGammaFadeFactor = 1;
+
+	if (fadeSound)
+	{
+		StopAllEffectChannels();
+		KillSong();
+		FadeGlobalVolume(1);
+	}
 
 	FlushMouseButtonPress();
 }

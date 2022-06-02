@@ -296,7 +296,7 @@ static void PlayGame(void)
 
 			/* CLEANUP LEVEL */
 
-		GammaFadeOut();
+		GammaFadeOut(true);
 		CleanupLevel();
 		GameScreenToBlack();		
 		
@@ -642,7 +642,7 @@ static void CleanupLevel(void)
 
 static void DoDeathReset(void)
 {
-	GammaFadeOut();												// fade out
+	GammaFadeOut(false);
 
 			/* SEE IF THAT WAS THE LAST LIFE */
 			

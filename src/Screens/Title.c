@@ -74,7 +74,7 @@ void DoTitleScreen(void)
 			/* CLEANUP */
 
 bail: 
-	GammaFadeOut();
+	GammaFadeOut(false);
 	GameScreenToBlack();
 	DeleteAllObjects();
 	DeleteAllParticleGroups();

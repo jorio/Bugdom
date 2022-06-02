@@ -69,7 +69,9 @@ enum
 /**********************/
 
 float						gGlobalVolume = .4;
-		
+
+float						gSongVolume = 1;		// multiplied by gGlobalVolume
+
 TQ3Point3D					gEarCoords;				// coord of camera plus a bit to get pt in front of camera
 static	TQ3Vector3D			gEyeVector;
 
@@ -357,6 +359,50 @@ void PauseAllChannels(Boolean pause)
 }
 
 
+
+/****************** UPDATE GLOBAL VOLUME ************************/
+//
+// Call this whenever gEffectsVolume is changed.  This will update
+// all of the sounds with the correct volume.
+//
+
+void FadeGlobalVolume(float fadeVolume)
+{
+	float globalVolumeBackup = gGlobalVolume;
+
+	gGlobalVolume = gGlobalVolume * fadeVolume;
+
+			/* ADJUST VOLUMES OF ALL CHANNELS REGARDLESS IF THEY ARE PLAYING OR NOT */
+
+	for (int c = 0; c < gMaxChannels; c++)
+	{
+		ChangeChannelVolume(c, gChannelInfo[c].leftVolume, gChannelInfo[c].rightVolume);
+	}
+
+
+			/* UPDATE SONG VOLUME */
+
+	// First, resume song playback if it was paused --
+	// e.g. when we're adjusting the volume via pause menu
+	SndCommand cmd1 = { .cmd = pommeResumePlaybackCmd };
+	SndDoImmediate(gMusicChannel, &cmd1);
+
+	// Now update song channel volume
+	uint32_t lv2 = kFullVolume * gSongVolume * fadeVolume;
+	uint32_t rv2 = kFullVolume * gSongVolume * fadeVolume;
+	SndCommand cmd2 =
+	{
+		.cmd = volumeCmd,
+		.param1 = 0,
+		.param2 = (rv2 << 16) | lv2,
+	};
+	SndDoImmediate(gMusicChannel, &cmd2);
+
+
+	gGlobalVolume = globalVolumeBackup;
+}
+
+
 /******************** PLAY SONG ***********************/
 //
 // INPUT: loopFlag = true if want song to loop
@@ -404,7 +450,7 @@ OSErr	iErr;
 	}
 
 	short musicFileRefNum = OpenGameFile(path);
-	volume = FULL_CHANNEL_VOLUME;
+	volume = FULL_CHANNEL_VOLUME * gSongVolume;
 
 
 	gCurrentSong = songNum;

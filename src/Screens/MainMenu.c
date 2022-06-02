@@ -41,6 +41,18 @@ enum
 	MENU_MObjType_MainMenu
 };
 
+enum
+{
+	kMenuChoice_About = 0,
+	kMenuChoice_Scores,
+	kMenuChoice_Play,
+	kMenuChoice_Quit,
+	kMenuChoice_Restore,
+	kMenuChoice_Settings,
+	NUM_MENU_ICONS,
+
+	kMenuChoice_TimedOut = 1000,
+};
 
 
 /*********************/
@@ -49,7 +61,7 @@ enum
 
 static double		gCamDX,gCamDY,gCamDZ;
 static TQ3Point3D	gCamCenter = { -10, 10, 250 };		// Source port change from {-40,40,250} (looks better in widescreen)
-ObjNode				*gMenuIcons[NUM_MENU_ICONS];
+static ObjNode		*gMenuIcons[NUM_MENU_ICONS];
 static ObjNode		*gSpider;
 static int32_t		gMenuSelection;
 
@@ -122,7 +134,7 @@ start_again:
 			timer += gFramesPerSecondFrac;
 			if (timer > 20.0f)
 			{
-				gMenuSelection = 1000;
+				gMenuSelection = kMenuChoice_TimedOut;
 				loop = true;
 				goto getout;
 			}
@@ -140,7 +152,7 @@ start_again:
 		/* HANDLE SELECTION */
 		/********************/
 
-	if (gMenuSelection == 3)	// QUIT
+	if (gMenuSelection == kMenuChoice_Quit)
 	{
 		CleanQuit();
 		return false;
@@ -153,7 +165,20 @@ start_again:
 getout:
 	gCurrentSaveSlot = -1;
 
-	GammaFadeOut();
+	switch (gMenuSelection)
+	{
+		case kMenuChoice_About:
+		case kMenuChoice_Restore:
+		case kMenuChoice_Settings:
+		case kMenuChoice_TimedOut:
+			GammaFadeOut(false);			// fade screen to black but don't fade out audio
+			break;
+
+		default:
+			GammaFadeOut(true);				// music will change, so fade out audio as well
+			break;
+	}
+
 	SDL_ShowCursor(0);
 	DeleteAllObjects();
 	FreeAllSkeletonFiles(-1);
@@ -167,16 +192,16 @@ getout:
 			
 	switch(gMenuSelection)
 	{
-		case	0:				// ABOUT
+		case	kMenuChoice_About:
 				DoAboutScreens();
 				goto start_again;
 				
-		case	1:				// HIGH SCORES
+		case	kMenuChoice_Scores:
 				ShowHighScoresScreen(0);
 				goto start_again;
 
-		case	4:				// RESTORE
-			{
+		case	kMenuChoice_Restore:
+		{
 				int pickedFile = DoFileSelectScreen(FILE_SELECT_SCREEN_TYPE_LOAD);
 				if (pickedFile < 0)
 				{
@@ -188,17 +213,17 @@ getout:
 					ShowSystemErr_NonFatal(err);
 					goto start_again;
 				}
-			}
-			break;
+				break;
+		}
 
-		case	5:				// SETTINGS
+		case	kMenuChoice_Settings:
 				DoSettingsScreen();
 				goto start_again;
 				break;
 	}
-	
+
 	GameScreenToBlack();
-	
+
 	return(loop);
 }
 
@@ -213,7 +238,6 @@ TQ3Point3D				cameraTo = {0, 0, 0 };
 TQ3ColorRGB				lightColor = { 1.0, 1.0, .9 };
 TQ3Vector3D				fillDirection1 = { 1, -.4, -.8 };			// key
 TQ3Vector3D				fillDirection2 = { -.7, -.2, -.9 };			// fill
-short					i;
 ObjNode					*newObj;
 
 	gCamDX = 10; gCamDY = -5, gCamDZ = 1;
@@ -319,22 +343,28 @@ ObjNode					*newObj;
 			/* MAKE ICONS */
 			/**************/
 			
-	for (i = 0; i < NUM_MENU_ICONS; i++)
+	for (int i = 0; i < NUM_MENU_ICONS; i++)
 	{
-		static short iconType[NUM_MENU_ICONS] = {MENU_MObjType_AboutIcon,MENU_MObjType_ScoresIcon,
-									MENU_MObjType_PlayIcon,MENU_MObjType_QuitIcon,
-									MENU_MObjType_RestoreIcon,MENU_MObjType_SettingsIcon};
-									
-		TQ3Point3D	iconCoords[NUM_MENU_ICONS] =
+		static const short iconType[NUM_MENU_ICONS] =
 		{
-			{ -90, -67, 4 },			// about
-			{  10,  50, 4 },			// scores
-			{ -90,  30, 4 },			// play
-			{  30,-110, 4 },			// quit
-			{ 100, -40, 4 },			// restore
-			{  80,  30, 4 },			// settings
+			[kMenuChoice_About]		= MENU_MObjType_AboutIcon,
+			[kMenuChoice_Scores]	= MENU_MObjType_ScoresIcon,
+			[kMenuChoice_Play]		= MENU_MObjType_PlayIcon,
+			[kMenuChoice_Quit]		= MENU_MObjType_QuitIcon,
+			[kMenuChoice_Restore]	= MENU_MObjType_RestoreIcon,
+			[kMenuChoice_Settings]	= MENU_MObjType_SettingsIcon
 		};
-	
+
+		static const TQ3Point3D iconCoords[NUM_MENU_ICONS] =
+		{
+			[kMenuChoice_About]		= { -90, -67, 4 },			// about
+			[kMenuChoice_Scores]	= {  10,  50, 4 },			// scores
+			[kMenuChoice_Play]		= { -90,  30, 4 },			// play
+			[kMenuChoice_Quit]		= {  30,-110, 4 },			// quit
+			[kMenuChoice_Restore]	= { 100, -40, 4 },			// restore
+			[kMenuChoice_Settings]	= {  80,  30, 4 },			// settings
+		};
+
 		gNewObjectDefinition.type 		= iconType[i];	
 		gNewObjectDefinition.coord		= iconCoords[i];
 		gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER;

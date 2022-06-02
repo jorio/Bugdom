@@ -116,7 +116,7 @@ Boolean beenHere = false;
 
 	if (!beenHere)
 	{
-		GammaFadeOut();
+		GammaFadeOut(true);
 
 		beenHere = true;
 

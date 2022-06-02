@@ -117,7 +117,7 @@ TQ3Vector3D	camDelta = {0,0,0};
 	
 			/* CLEANUP */
 
-	GammaFadeOut();
+	GammaFadeOut(true);
 	DeleteAllObjects();
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
 	Free3DMFGroup(MODEL_GROUP_HIGHSCORES);
