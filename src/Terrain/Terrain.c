@@ -8,6 +8,7 @@
 /***************/
 
 #include "game.h"
+#include <stdio.h>
 
 
 /****************************/
@@ -19,10 +20,10 @@ static void ScrollTerrainDown(long superRow, long superCol);
 static void ScrollTerrainLeft(void);
 static void ScrollTerrainRight(long superCol, long superRow, long tileCol, long tileRow);
 static short GetFreeSuperTileMemory(void);
-static inline void ReleaseSuperTileObject(short superTileNum);
+static inline void ReleaseSuperTileObject(int32_t superTileNum);
 static void CalcNewItemDeleteWindow(void);
 static short	BuildTerrainSuperTile(long	startCol, long startRow);
-static Boolean IsSuperTileVisible(short superTileNum, Byte layer);
+static Boolean IsSuperTileVisible(int32_t superTileNum, Byte layer);
 static void DrawTileIntoMipmap(uint16_t tile, int row, int col, uint16_t* buffer);
 static void	ShrinkSuperTileTextureMap(const u_short *srcPtr,u_short *destPtr);
 //static void	ShrinkSuperTileTextureMapTo64(u_short *srcPtr,u_short *destPtr);
@@ -71,9 +72,10 @@ long	gNumTerrainTextureTiles = 0;
 long	gNumSuperTilesDeep,gNumSuperTilesWide;	  		// dimensions of terrain in terms of supertiles
 long	gCurrentSuperTileRow,gCurrentSuperTileCol;
 
-uint8_t	gTerrainScrollBuffer[MAX_SUPERTILES_DEEP][MAX_SUPERTILES_WIDE];		// 2D array which has index to supertiles for each possible supertile
+int32_t	gTerrainScrollBuffer[MAX_SUPERTILES_DEEP][MAX_SUPERTILES_WIDE];		// 2D array which has index to supertiles for each possible supertile
 
-short	gNumFreeSupertiles;
+long	gNumFreeSupertiles = 0;
+long	gSupertileBudget = 0;
 static	SuperTileMemoryType		gSuperTileMemoryList[MAX_SUPERTILES];
 Boolean gSuperTileMemoryListExists = false;
 
@@ -304,13 +306,24 @@ int	i;
 
 void CreateSuperTileMemoryList(void)
 {
-long							u,v,i,maxSuperTilesNeeded,numLayers;
+long							u,v,i,numLayers;
 static 	TQ3TriMeshTriangleData	newTriangle[NUM_TRIS_IN_SUPERTILE];
 static	TQ3Param2D				uvs[NUM_VERTICES_IN_SUPERTILE];
 
 
 
-	maxSuperTilesNeeded = gSuperTileActiveRange*gSuperTileActiveRange*4;		// calc # supertiles we will need
+	gSupertileBudget = gSuperTileActiveRange * gSuperTileActiveRange * 4;		// calc # supertiles we will need
+
+	long upperBound = gNumSuperTilesDeep * gNumSuperTilesWide;					// if we have the budget to show the entire map at once,
+	if (gSupertileBudget > upperBound)											// cap supertile budget to # of supertiles in map
+		gSupertileBudget = upperBound;
+
+	GAME_ASSERT(gSupertileBudget <= MAX_SUPERTILES);
+
+#if _DEBUG
+	printf("Supertile budget: %ld\n", gSupertileBudget);
+#endif
+
 	if (gDoCeiling)
 		numLayers = 2;
 	else
@@ -409,13 +422,14 @@ retryParseLODPref:
 			/* FOR EACH POSSIBLE SUPERTILE ALLOC MEMORY */
 			/********************************************/
 
-	gNumFreeSupertiles = maxSuperTilesNeeded;
+	gNumFreeSupertiles = 0;
 
-	for (i = 0; i < maxSuperTilesNeeded; i++)
+	for (i = 0; i < gSupertileBudget; i++)
 	{
 		SuperTileMemoryType* superTile = &gSuperTileMemoryList[i];
 
 		superTile->mode = SUPERTILE_MODE_FREE;									// it's free for use
+		gNumFreeSupertiles++;
 
 				/************************************************/
 				/* CREATE TEXTURE & TRIMESH FOR FLOOR & CEILING */
@@ -487,7 +501,7 @@ retryParseLODPref:
 
 void DisposeSuperTileMemoryList(void)
 {
-int		numSuperTiles,numLayers;
+int		numLayers;
 
 	if (gSuperTileMemoryListExists == false)
 		return;
@@ -501,9 +515,9 @@ int		numSuperTiles,numLayers;
 			/*************************************/
 			/* FOR EACH SUPERTILE DEALLOC MEMORY */
 			/*************************************/
-	
-	numSuperTiles = gSuperTileActiveRange*gSuperTileActiveRange*4;
-				
+
+	const int numSuperTiles = gSupertileBudget;
+
 	for (int i = 0; i < numSuperTiles; i++)
 	{
 		SuperTileMemoryType* superTile = &gSuperTileMemoryList[i];
@@ -546,16 +560,15 @@ int		numSuperTiles,numLayers;
 
 static short GetFreeSuperTileMemory(void)
 {
-short	i;
-
 				/* SCAN FOR A FREE BLOCK */
 
-	for (i = 0; i < MAX_SUPERTILES; i++)
+	for (int32_t i = 0; i < gSupertileBudget; i++)
 	{
 		if (gSuperTileMemoryList[i].mode == SUPERTILE_MODE_FREE)
 		{
 			gSuperTileMemoryList[i].mode = SUPERTILE_MODE_USED;
-			gNumFreeSupertiles--;			
+			gNumFreeSupertiles--;
+			GAME_ASSERT(gNumFreeSupertiles >= 0);
 			return(i);
 		}
 	}
@@ -580,7 +593,7 @@ short	i;
 static short	BuildTerrainSuperTile(long	startCol, long startRow)
 {
 long	 			row,col,row2,col2;
-short				superTileNum;
+int32_t				superTileNum;
 float				height,miny,maxy;
 TQ3TriMeshData		*triMeshData;
 TQ3Vector3D			*vertexNormalList;
@@ -1354,22 +1367,28 @@ static void ShrinkHalf(const uint16_t* input, uint16_t* output, int outputSize)
 // Deactivates the terrain object and releases its memory block
 //
 
-static inline void ReleaseSuperTileObject(short superTileNum)
+static inline void ReleaseSuperTileObject(int32_t superTileNum)
 {
-	gSuperTileMemoryList[superTileNum].mode = SUPERTILE_MODE_FREE;		// it's free!
-	gNumFreeSupertiles++;
+	GAME_ASSERT(superTileNum >= 0);
+	GAME_ASSERT(superTileNum < gSupertileBudget);
+
+	if (gSuperTileMemoryList[superTileNum].mode != SUPERTILE_MODE_FREE)
+	{
+		gSuperTileMemoryList[superTileNum].mode = SUPERTILE_MODE_FREE;		// it's free!
+		gNumFreeSupertiles++;
+	}
+
+	GAME_ASSERT(gNumFreeSupertiles <= gSupertileBudget);
 }
 
 /******************** RELEASE ALL SUPERTILES ************************/
 
 static inline void ReleaseAllSuperTiles(void)
 {
-long	i;
-
-	for (i = 0; i < MAX_SUPERTILES; i++)
+	for (int32_t i = 0; i < gSupertileBudget; i++)
 		ReleaseSuperTileObject(i);
 
-	gNumFreeSupertiles = MAX_SUPERTILES;
+	GAME_ASSERT(gNumFreeSupertiles == gSupertileBudget);
 }
 
 #pragma mark -
@@ -1390,7 +1409,7 @@ void DrawTerrain(const QD3DSetupOutputType *setupInfo)
 
 				/* DRAW STUFF */
 
-	for (int i = 0; i < MAX_SUPERTILES; i++)
+	for (int i = 0; i < gSupertileBudget; i++)
 	{
 		if (gSuperTileMemoryList[i].mode != SUPERTILE_MODE_USED)		// if supertile is being used, then draw it
 			continue;
@@ -1746,7 +1765,7 @@ float	temp,temp2;
 static void ScrollTerrainUp(long superRow, long superCol)
 {
 long	col,i,bottom,left,right;
-short	superTileNum;
+int32_t	superTileNum;
 long	tileRow,tileCol;
 
 	gHiccupEliminator = 0;															// reset this when about to make a new row/col of supertiles
@@ -1840,7 +1859,7 @@ check_items:
 static void ScrollTerrainDown(long superRow, long superCol)
 {
 long	col,i,row,top,left,right;
-short	superTileNum;
+int32_t	superTileNum;
 long	tileRow,tileCol;
 
 	gHiccupEliminator = 0;															// reset this when about to make a new row/col of supertiles
@@ -1936,7 +1955,7 @@ check_items:
 static void ScrollTerrainLeft(void)
 {
 long	row,top,bottom,right;
-short	superTileNum;
+int32_t	superTileNum;
 long 	tileCol,tileRow,newSuperCol;
 long	bottomRow;
 
@@ -2028,7 +2047,7 @@ exit:
 static void ScrollTerrainRight(long superCol, long superRow, long tileCol, long tileRow)
 {
 long	col,i,row;
-short	superTileNum;
+int32_t	superTileNum;
 long	top,bottom,left;
 
 	gHiccupEliminator = 0;															// reset this when about to make a new row/col of supertiles
@@ -2147,7 +2166,7 @@ long	i,w;
 // Returns false if is not in current camera's viewing frustum
 //
 
-static Boolean IsSuperTileVisible(short superTileNum, Byte layer)
+static Boolean IsSuperTileVisible(int32_t superTileNum, Byte layer)
 {
 	const SuperTileMemoryType* superTile = &gSuperTileMemoryList[superTileNum];
 	float radius = superTile->radius[layer];

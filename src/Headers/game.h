@@ -173,17 +173,20 @@ extern	int							gWindowWidth;
 extern	int 						gCurrentSaveSlot;
 extern	int8_t						gNumEnemyOfKind[];
 extern	int32_t						gHoveredPick;
+extern	int32_t						gTerrainScrollBuffer[MAX_SUPERTILES_DEEP][MAX_SUPERTILES_WIDE];
 extern	long						gCurrentSuperTileCol;
 extern	long						gCurrentSuperTileRow;
 extern	long						gEatMouse;
 extern	long						gMyStartX;
 extern	long						gMyStartZ;
 extern	long						gNumFences;
+extern	long						gNumFreeSupertiles;
 extern	long						gNumSplines;
 extern	long						gNumSuperTilesDeep;
 extern	long						gNumSuperTilesWide;
 extern	long						gNumTerrainTextureTiles;
 extern	long						gPrefsFolderDirID;
+extern	long						gSupertileBudget;
 extern	long						gTerrainTileDepth;
 extern	long						gTerrainTileWidth;
 extern	long						gTerrainUnitDepth;
@@ -214,7 +217,6 @@ extern	u_short						gAreaNum;
 extern	u_short						gLevelType;
 extern	u_short						gLevelTypeMask;
 extern	u_short						gRealLevel;
-extern	uint8_t						gTerrainScrollBuffer[MAX_SUPERTILES_DEEP][MAX_SUPERTILES_WIDE];
 extern	unsigned long 				gScore;
 
 #ifdef __cplusplus

@@ -749,7 +749,11 @@ short	fRefNum;
 	gTerrainUnitDepth = gTerrainTileDepth*TERRAIN_POLYGON_SIZE;
 	gNumSuperTilesDeep = gTerrainTileDepth/SUPERTILE_SIZE;						// calc size in supertiles
 	gNumSuperTilesWide = gTerrainTileWidth/SUPERTILE_SIZE;	
-	
+
+#if _DEBUG
+	printf("Terrain dimensions: %ld x %ld\n", gNumSuperTilesWide, gNumSuperTilesDeep);
+#endif
+
 			/* PRECALC THE TILE SPLIT MODE MATRIX */
 			
 	CalculateSplitModeMatrix();
