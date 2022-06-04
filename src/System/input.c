@@ -95,7 +95,6 @@ Byte				gRawKeyboardState[SDLKEYSTATEBUF_SIZE];
 
 SDL_GameController	*gSDLController = NULL;
 SDL_JoystickID		gSDLJoystickInstanceID = -1;		// ID of the joystick bound to gSDLController
-SDL_Haptic			*gSDLHaptic = NULL;
 
 #if __APPLE__
 	#define DEFAULT_JUMP_SCANCODE1 SDL_SCANCODE_LGUI
@@ -529,12 +528,6 @@ SDL_GameController* TryOpenController(bool showMessage)
 	}
 
 	printf("Opened joystick %d as controller: %s\n", gSDLJoystickInstanceID, SDL_GameControllerName(gSDLController));
-
-	gSDLHaptic = SDL_HapticOpenFromJoystick(SDL_GameControllerGetJoystick(gSDLController));
-	if (!gSDLHaptic)
-		printf("This joystick can't do haptic.\n");
-	else
-		printf("This joystick can do haptic!\n");
 
 	return gSDLController;
 }
