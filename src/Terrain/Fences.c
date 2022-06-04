@@ -459,8 +459,8 @@ double			oldX,oldZ,newX,newZ;
 	
 					/* CALC FROM-TO POINTS OF MOTION */
 					
-			fromX = oldX - (lineNormal.x * radius);
-			fromZ = oldZ - (lineNormal.y * radius);
+			fromX = oldX; // - (lineNormal.x * radius);
+			fromZ = oldZ; // - (lineNormal.y * radius);
 			toX = newX - (lineNormal.x * radius);
 			toZ = newZ - (lineNormal.y * radius);
 			
@@ -470,7 +470,7 @@ double			oldX,oldZ,newX,newZ;
 			intersected = IntersectLineSegments(fromX,  fromZ, toX, toZ,
 						                     segFromX, segFromZ, segToX, segToZ,
 				                             &intersectX, &intersectZ);
-	
+
 			if (intersected)
 			{				
 						/***************************/
@@ -502,7 +502,7 @@ double			oldX,oldZ,newX,newZ;
 				newX = gCoord.x;
 				newZ = gCoord.z;
 				if (++numReScans < 5)
-					i = 0;							// reset segment index to scan all again
+					i = -1;							// reset segment index to scan all again (reset to -1 because for loop will auto-inc to 0 for us)
 			}
 			
 			/**********************************************/			
