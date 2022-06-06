@@ -299,6 +299,7 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 	// Set floppy label texture
 	GLuint labelTexture = QD3D_LoadTextureFile(3510 + (saveDataValid? saveData.realLevel: 0), 0);
 	newFloppy->MeshList[1]->glTextureName = labelTexture;
+	newFloppy->OwnsMeshTexture[1] = true;
 
 	snprintf(textBuffer, sizeof(textBuffer), "File %c", 'A' + fileNumber);
 
