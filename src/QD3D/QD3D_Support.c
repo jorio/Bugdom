@@ -33,7 +33,6 @@ static const int kDebugTextMeshQuadCapacity = 1024;
 /*********************/
 
 
-SDL_GLContext					gGLContext = NULL;
 RenderStats						gRenderStats;
 
 int								gWindowWidth				= GAME_VIEW_WIDTH;
@@ -127,12 +126,6 @@ QD3DSetupOutputType	*outputPtr;
 	outputPtr = *outputHandle;
 	GAME_ASSERT(outputPtr);
 
-				/* CREATE & SET DRAW CONTEXT */
-
-	GAME_ASSERT_MESSAGE(!gGLContext, "stale GL context not destroyed before calling SetupWindow");
-
-	gGLContext = SDL_GL_CreateContext(gSDLWindow);									// also makes it current
-	GAME_ASSERT(gGLContext);
 
 				/* PASS BACK INFO */
 
@@ -198,12 +191,9 @@ QD3DSetupOutputType	*data;
 	QD3D_UpdateDebugTextMesh(nil);							// dispose debug text mesh
 	TextMesh_Shutdown();
 
-	SDL_GL_DeleteContext(gGLContext);						// dispose GL context
-	gGLContext = nil;
-
 	data->isActive = false;									// now inactive
 
-	Render_Shutdown();
+	Render_EndScene();
 	
 		/* FREE MEMORY & NIL POINTER */
 		
@@ -264,6 +254,11 @@ static void CreateLights(QD3DLightDefType *lightDefPtr)
 
 		glEnable(GL_LIGHT0+i);								// enable the light
 	}
+
+	for (int i = lightDefPtr->numFillLights; i < MAX_FILL_LIGHTS; i++)
+	{
+		glDisable(GL_LIGHT0 + i);
+	}
 }
 
 
@@ -275,9 +270,6 @@ void QD3D_DrawScene(QD3DSetupOutputType *setupInfo, void (*drawRoutine)(const QD
 	GAME_ASSERT(setupInfo->isActive);									// make sure it's legit
 
 			/* START RENDERING */
-
-	int mkc = SDL_GL_MakeCurrent(gSDLWindow, gGLContext);
-	GAME_ASSERT_MESSAGE(mkc == 0, SDL_GetError());
 
 	Render_StartFrame();
 

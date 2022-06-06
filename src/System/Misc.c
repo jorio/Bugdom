@@ -139,6 +139,8 @@ Boolean beenHere = false;
 
 	SDL_ShowCursor(1);
 	Pomme_FlushPtrTracking(false);
+	Render_EndScene();
+	Render_DeleteContext();
 	ExitToShell();
 }
 

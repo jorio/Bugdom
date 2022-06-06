@@ -176,8 +176,6 @@ static void InitParticleGroup(ParticleGroupType* pg)
 
 void InitParticleSystem(void)
 {
-	GAME_ASSERT(gGLContext);
-
 			/* INIT GROUP ARRAY */
 
 	if (!gParticleGroupsInitialized)

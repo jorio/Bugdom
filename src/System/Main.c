@@ -794,9 +794,9 @@ unsigned long	someLong;
 	ToolBoxInit();
 	SDL_ShowCursor(0);
 
-
 			/* INIT SOME OF MY STUFF */
 
+	Render_CreateContext();
 	InitWindowStuff();
 	InitTerrainManager();
 	InitSkeletonManager();

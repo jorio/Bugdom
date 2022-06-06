@@ -119,6 +119,8 @@ const RenderModifiers kDefaultRenderMods_DebugUI =
 /*    VARIABLES             */
 /****************************/
 
+static SDL_GLContext gGLContext = NULL;
+
 static RendererState gState;
 
 static PFNGLDRAWRANGEELEMENTSPROC __glDrawRangeElements;
@@ -229,6 +231,26 @@ void DoFatalGLError(GLenum error, const char* file, int line)
 }
 #endif
 
+void Render_CreateContext(void)
+{
+	gGLContext = SDL_GL_CreateContext(gSDLWindow);
+
+	GAME_ASSERT(gGLContext);
+
+	// On Windows, proc addresses are only valid for the current context,
+	// so we must get proc addresses everytime we recreate the context.
+	Render_GetGLProcAddresses();
+}
+
+void Render_DeleteContext(void)
+{
+	if (gGLContext)
+	{
+		SDL_GL_DeleteContext(gGLContext);
+		gGLContext = NULL;
+	}
+}
+
 void Render_SetDefaultModifiers(RenderModifiers* dest)
 {
 	memcpy(dest, &kDefaultRenderMods, sizeof(RenderModifiers));
@@ -236,10 +258,6 @@ void Render_SetDefaultModifiers(RenderModifiers* dest)
 
 void Render_InitState(const TQ3ColorRGBA* clearColor)
 {
-	// On Windows, proc addresses are only valid for the current context,
-	// so we must get proc addresses everytime we recreate the context.
-	Render_GetGLProcAddresses();
-
 	SetInitialClientState(GL_VERTEX_ARRAY,				true);
 	SetInitialClientState(GL_NORMAL_ARRAY,				false);
 	SetInitialClientState(GL_COLOR_ARRAY,				false);
@@ -291,7 +309,7 @@ void Render_InitState(const TQ3ColorRGBA* clearColor)
 	CHECK_GL_ERROR();
 }
 
-void Render_Shutdown(void)
+void Render_EndScene(void)
 {
 	if (gFullscreenQuad)
 	{
@@ -497,6 +515,9 @@ void Render_Load3DMFTextures(TQ3MetaFile* metaFile, GLuint* outTextureNames, boo
 
 void Render_StartFrame(void)
 {
+	int mkc = SDL_GL_MakeCurrent(gSDLWindow, gGLContext);
+	GAME_ASSERT_MESSAGE(mkc == 0, SDL_GetError());
+
 	// Clear rendering statistics
 	memset(&gRenderStats, 0, sizeof(gRenderStats));
 

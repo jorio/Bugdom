@@ -79,6 +79,10 @@ void DoFatalGLError(GLenum error, const char* function, int line);
 
 #pragma mark -
 
+void Render_CreateContext(void);
+
+void Render_DeleteContext(void);
+
 // Fills the argument with the default mesh rendering modifiers.
 void Render_SetDefaultModifiers(RenderModifiers* dest);
 
@@ -86,7 +90,7 @@ void Render_SetDefaultModifiers(RenderModifiers* dest);
 // Call this function after creating the OpenGL context.
 void Render_InitState(const TQ3ColorRGBA* clearColor);
 
-void Render_Shutdown(void);
+void Render_EndScene(void);
 
 void Render_EnableFog(
 		float camHither,
