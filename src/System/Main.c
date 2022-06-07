@@ -630,6 +630,12 @@ static void CleanupLevel(void)
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
 	DisposeAllSoundBanks();
 	Pomme_FlushPtrTracking(true);
+
+			/* CLEAR ANY RESIDUAL REFERENCES TO LEVEL OBJECTS */
+
+	gTheQueen = nil;
+	gHiveObj = nil;
+	gAntKingObj = nil;
 }
 
 
