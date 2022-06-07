@@ -95,3 +95,10 @@ static inline void AngleToVector(float angle, TQ3Vector2D *theVector)
 
 #define FastVectorLength2D(_inX, _inY)			sqrtf(((_inY)*(_inY)) + ((_inX)*(_inX)))
 
+
+static inline float ClampFloat(float x, float lo, float hi)
+{
+	if (x < lo) return lo;
+	if (x > hi) return hi;
+	return x;
+}

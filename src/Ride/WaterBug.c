@@ -34,6 +34,8 @@ static void MoveCaption(ObjNode *theNode);
 
 #define	WATER_BUG_FOOT_OFFSET	90.0f
 
+#define WATERBUG_MAX_TURN_SPEED	(275.0f * PI / 180.0f)	// in radians per second
+
 
 /**********************/
 /*     VARIABLES      */
@@ -307,11 +309,19 @@ short	anim;
 
 		/* DO ROTATION WITH MOUSE DX */
 			
-	GetMouseDelta(&mx, &my);
+	GetMouseDelta(&mx, &my);								// remember, this is premultiplied by fractional fps
 	if (gPlayerUsingKeyControl)
+	{
 		mouseDX = mx * .003f;
+	}
 	else
+	{
 		mouseDX = mx * .004f;
+	}
+
+	float maxTurnSpeed = WATERBUG_MAX_TURN_SPEED * fps;			// clamp turn speed to avoid mouse boom
+	mouseDX = ClampFloat(mouseDX, -maxTurnSpeed, maxTurnSpeed);
+
 	bug->Rot.y -= mouseDX;
 	
 			/*********************/

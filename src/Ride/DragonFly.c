@@ -32,6 +32,7 @@ static void ExplodeFireball(ObjNode *theNode);
 
 #define	MAX_THRUST			3000.0f
 #define	DRAGONFLY_MAX_SPEED	900.0f
+#define DRAGONFLY_MAX_TURN_SPEED	(165.0f * PI / 180.0f)	// in radians per second
 
 #define	MAX_TILT				.6f
 
@@ -265,7 +266,7 @@ TQ3Matrix4x4	m;
 
 		/* DO ROTATION WITH MOUSE DX/DY */
 			
-	GetMouseDelta(&mx, &my);
+	GetMouseDelta(&mx, &my);							// remember, this is premultiplied by fractional fps
 	if (gPlayerUsingKeyControl)
 	{
 		mouseDX = mx * .0018f;
@@ -276,6 +277,10 @@ TQ3Matrix4x4	m;
 		mouseDX = mx * .003f;
 		mouseDY = my * -.003f;
 	}
+
+	float maxTurnSpeed = DRAGONFLY_MAX_TURN_SPEED * fps;		// clamp turn speed to prevent mouse boom
+	mouseDX = ClampFloat(mouseDX, -maxTurnSpeed, maxTurnSpeed);
+	mouseDY = ClampFloat(mouseDY, -maxTurnSpeed, maxTurnSpeed);
 
 	bug->Rot.y -= mouseDX;
 	bug->Rot.x -= mouseDY;
