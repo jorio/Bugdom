@@ -14,9 +14,6 @@
 /*    PROTOTYPES            */
 /****************************/
 
-static void SetupSettingsScreen(void);
-static void SettingsScreenMainLoop(void);
-
 
 /****************************/
 /*    CONSTANTS             */
@@ -26,10 +23,19 @@ static const TQ3ColorRGBA kValueTextColor = {0.75f, 0.88f, 0.00f, 1.00f};
 
 enum
 {
-	PICKID_SETTING_MASK		=	0x10000000,
-	PICKID_SPIDER			=	0x20000000,
+	PICKID_SETTING_CYCLER	=	0x10000000,
+	PICKID_SETTING_BUTTON	=	0x20000000,
+	PICKID_SPIDER			=	0x40000000,
 	SLOTID_CAPTION_MASK		=	0x1000,
 	SLOTID_VALUE_MASK		=	0x2000,
+};
+
+enum
+{
+	kEND_SENTINEL,
+	kCycler,
+	kCloverRange,
+	kButton,
 };
 
 #define MAX_CHOICES 8
@@ -42,42 +48,24 @@ _Static_assert(NUM_MOUSE_SENSITIVITY_LEVELS <= MAX_CHOICES, "too many mouse sens
 
 typedef struct
 {
+	uint32_t id;
+	Byte kind;
 	Byte* ptr;
 	const char* label;
 	const char* subtitle;
 	Byte subtitleShownForValue;
 	void (*callback)(void);
-	bool useClovers;
 	unsigned int nChoices;
 	const char* choices[MAX_CHOICES];
 	float y;
 } SettingEntry;
 
-static unsigned int PositiveModulo(int value, unsigned int m)
-{
-	int mod = value % (int) m;
-	if (mod < 0)
-	{
-		mod += m;
-	}
-	return mod;
-}
+static const SettingEntry* gCurrentMenu = NULL;
 
-static void SettingEntry_Cycle(SettingEntry* entry, int delta)
-{
-	unsigned int value = (unsigned int) *entry->ptr;
-
-	value = PositiveModulo(value + delta, entry->nChoices);
-	*entry->ptr = value;
-	if (entry->callback)
-	{
-		entry->callback();
-	}
-}
-
-static SettingEntry gSettingEntries[] =
+static const SettingEntry gSettingsMenu[] =
 {
 	{
+		.kind = kCycler,
 		.ptr = &gGamePrefs.easyMode,
 		.label = "Kiddie mode",
 		.subtitle = "Player takes less damage",
@@ -87,14 +75,44 @@ static SettingEntry gSettingEntries[] =
 	},
 
 	{
+		.kind = kCloverRange,
 		.ptr = &gGamePrefs.mouseSensitivityLevel,
 		.label = "Mouse sensitivity",
-		.useClovers = true,
 		.nChoices = NUM_MOUSE_SENSITIVITY_LEVELS,
 		.choices = {"1","2","3","4","5","6","7","8"},
 	},
 
+#if _DEBUG
 	{
+		.kind = kCycler,
+		.ptr = &gGamePrefs.playerRelativeKeys,
+		.label = "Tank controls",
+		.nChoices = 2,
+		.choices = {"No", "Yes"},
+	},
+#endif
+
+	{
+		.kind = kButton,
+		.ptr = NULL,
+		.label = "Video settings",
+		.id = 'vide',
+	},
+
+	// End sentinel
+	{
+		.kind = kEND_SENTINEL,
+		.ptr = NULL,
+		.label = NULL,
+		.callback = NULL,
+		.nChoices = 0,
+	}
+};
+
+static const SettingEntry gVideoMenu[] =
+{
+	{
+		.kind = kCycler,
 		.ptr = &gGamePrefs.fullscreen,
 		.label = "Fullscreen",
 		.callback = SetFullscreenMode,
@@ -103,13 +121,15 @@ static SettingEntry gSettingEntries[] =
 	},
 
 	{
+		.kind = kCycler,
 		.ptr = &gGamePrefs.showBottomBar,
-		.label = "Show bottom bar",
+		.label = "Bottom bar",
 		.nChoices = 2,
-		.choices = {"No", "Yes"},
+		.choices = {"Hidden", "Visible"},
 	},
 
 	{
+		.kind = kCycler,
 		.ptr = &gGamePrefs.lowDetail,
 		.label = "Level of detail",
 		.subtitle = "The \"ATI Rage II\" look",
@@ -118,17 +138,17 @@ static SettingEntry gSettingEntries[] =
 		.choices = {"High", "Low"},
 	},
 
-#if _DEBUG
 	{
-		.ptr = &gGamePrefs.playerRelativeKeys,
-		.label = "Tank controls",
+		.kind = kCycler,
+		.ptr = &gGamePrefs.force4x3AspectRatio,
+		.label = "Aspect ratio",
 		.nChoices = 2,
-		.choices = {"No", "Yes"},
+		.choices = {"Fit to screen", "4:3"},
 	},
-#endif
 
 	// End sentinel
 	{
+		.kind = kEND_SENTINEL,
 		.ptr = NULL,
 		.label = NULL,
 		.callback = NULL,
@@ -137,35 +157,31 @@ static SettingEntry gSettingEntries[] =
 };
 
 
+/***********************************************/
 
-
-/********************** DO BONUS SCREEN *************************/
-
-void DoSettingsScreen(void)
+static unsigned int PositiveModulo(int value, unsigned int m)
 {
-	/*********/
-	/* SETUP */
-	/*********/
-
-	SetupUIStuff(kUIBackground_Cyclorama);
-	SetupSettingsScreen();
-
-	QD3D_CalcFramesPerSecond();
-
-	/**************/
-	/* PROCESS IT */
-	/**************/
-
-	SettingsScreenMainLoop();
-
-	SavePrefs(&gGamePrefs);
-
-	/* CLEANUP */
-
-	CleanupUIStuff();
+	int mod = value % (int)m;
+	if (mod < 0)
+	{
+		mod += m;
+	}
+	return mod;
 }
 
-/****************** SETUP FILE SCREEN **************************/
+static void SettingEntry_Cycle(SettingEntry* entry, int delta)
+{
+	unsigned int value = (unsigned int)*entry->ptr;
+
+	value = PositiveModulo(value + delta, entry->nChoices);
+	*entry->ptr = value;
+	if (entry->callback)
+	{
+		entry->callback();
+	}
+}
+
+/****************** SETUP SETTINGS SCREEN **************************/
 
 static void MakeSettingEntryObjects(int settingID, bool firstTime)
 {
@@ -176,7 +192,7 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 	const float y = 60 - LH * settingID;
 	const float z = 0;
 
-	SettingEntry* entry = &gSettingEntries[settingID];
+	SettingEntry* entry = &gCurrentMenu[settingID];
 
 	// If it's not the first time we're setting up the screen, nuke old value objects
 	if (!firstTime)
@@ -194,18 +210,31 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 	tmd.scale = 0.25f;
 	tmd.slot = SLOTID_CAPTION_MASK | settingID;
 
+	float pickableX = x;
+	int pickableMask;
+
+	if (entry->kind != kButton)
+	{
+		pickableX += XSPREAD / 2;
+		pickableMask = PICKID_SETTING_CYCLER | settingID;
+	}
+	else
+	{
+		pickableMask = PICKID_SETTING_BUTTON | settingID;
+	}
+
 	if (firstTime)
 	{
 		// Create pickable quad
 		NewPickableQuad(
-				(TQ3Point3D) {x+XSPREAD/2, y, z},
+				(TQ3Point3D) {pickableX, y, z},
 				XSPREAD*1.0f, LH*0.75f,
-				PICKID_SETTING_MASK | settingID);
+				pickableMask);
 
 		// Create grass blade
 		gNewObjectDefinition.group 		= MODEL_GROUP_LEVELSPECIFIC2;
 		gNewObjectDefinition.type 		= LAWN2_MObjType_Grass2;
-		gNewObjectDefinition.coord		= (TQ3Point3D){x+XSPREAD+5, y-1, z-1};
+		gNewObjectDefinition.coord		= (TQ3Point3D){pickableX+XSPREAD/2+5, y-1, z-1};
 		gNewObjectDefinition.slot 		= SLOTID_CAPTION_MASK | settingID;
 		gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER;
 		gNewObjectDefinition.moveCall 	= nil;
@@ -217,41 +246,53 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 		UpdateObjectTransforms(grassBlade);
 
 		// Create caption text
-		tmd.coord.x = -XSPREAD;
-		tmd.align = TEXTMESH_ALIGN_LEFT;
-		TextMesh_Create(&tmd, entry->label);
+		if (entry->kind != kButton)
+		{
+			tmd.coord.x = -XSPREAD;
+			tmd.align = TEXTMESH_ALIGN_LEFT;
+			TextMesh_Create(&tmd, entry->label);
+		}
 	}
 
 	// Create value text
 	tmd.color = kValueTextColor;
-	tmd.coord.x = XSPREAD/2.0f;
+	tmd.coord.x = pickableX;
 	tmd.slot = SLOTID_VALUE_MASK | settingID;
 	if (hasSubtitle)
 		tmd.coord.y += LH * 0.15f;
-	if (entry->useClovers)
+
+	switch (entry->kind)
 	{
-		for (unsigned int i = 0; i < entry->nChoices; i++)
-		{
-			TQ3Point3D coord = {x+XSPREAD/2, y, z};
-			coord.x += 12.0f * (i - (entry->nChoices-1)/2.0f);
-			gNewObjectDefinition.group 		= MODEL_GROUP_BONUS;
-			gNewObjectDefinition.type 		= BONUS_MObjType_GoldClover;
-			gNewObjectDefinition.coord		= coord;
-			gNewObjectDefinition.slot 		= SLOTID_VALUE_MASK | settingID;
-			gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER;
-			gNewObjectDefinition.moveCall 	= nil;
-			gNewObjectDefinition.rot 		= PI+PI/2;
-			gNewObjectDefinition.scale 		= .03;
-			ObjNode* clover = MakeNewDisplayGroupObject(&gNewObjectDefinition);
-			if (i > *entry->ptr)
-				MakeObjectTransparent(clover, 0.25f);
-		}
-	}
-	else
-	{
-		tmd.slot = SLOTID_VALUE_MASK | settingID;
-		tmd.align = TEXTMESH_ALIGN_CENTER;
-		TextMesh_Create(&tmd, entry->choices[*entry->ptr]);
+		case kCloverRange:
+			for (unsigned int i = 0; i < entry->nChoices; i++)
+			{
+				TQ3Point3D coord = {x+XSPREAD/2, y, z};
+				coord.x += 12.0f * (i - (entry->nChoices-1)/2.0f);
+				gNewObjectDefinition.group 		= MODEL_GROUP_BONUS;
+				gNewObjectDefinition.type 		= BONUS_MObjType_GoldClover;
+				gNewObjectDefinition.coord		= coord;
+				gNewObjectDefinition.slot 		= SLOTID_VALUE_MASK | settingID;
+				gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER;
+				gNewObjectDefinition.moveCall 	= nil;
+				gNewObjectDefinition.rot 		= PI+PI/2;
+				gNewObjectDefinition.scale 		= .03;
+				ObjNode* clover = MakeNewDisplayGroupObject(&gNewObjectDefinition);
+				if (i > *entry->ptr)
+					MakeObjectTransparent(clover, 0.25f);
+			}
+			break;
+
+		case kCycler:
+			tmd.slot = SLOTID_VALUE_MASK | settingID;
+			tmd.align = TEXTMESH_ALIGN_CENTER;
+			TextMesh_Create(&tmd, entry->choices[*entry->ptr]);
+			break;
+
+		case kButton:
+			tmd.slot = SLOTID_VALUE_MASK | settingID;
+			tmd.align = TEXTMESH_ALIGN_CENTER;
+			TextMesh_Create(&tmd, entry->label);
+			break;
 	}
 
 	// Create subtitle text
@@ -265,16 +306,20 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 	}
 }
 
-static void SetupSettingsScreen(void)
+static void SetupSettingsScreen(const char* title, const SettingEntry* menu)
 {
+	SetupUIStuff(kUIBackground_Cyclorama);
+
+	gCurrentMenu = menu;
+
 	TextMeshDef tmd;
 	TextMesh_FillDef(&tmd);
 	tmd.align = TEXTMESH_ALIGN_CENTER;
 	tmd.coord.y += 110;
 	tmd.color = kValueTextColor;
-	TextMesh_Create(&tmd, "Settings");
+	TextMesh_Create(&tmd, title);
 
-	for (int i = 0; gSettingEntries[i].ptr; i++)
+	for (int i = 0; gCurrentMenu[i].label; i++)
 	{
 		MakeSettingEntryObjects(i, true);
 	}
@@ -283,7 +328,7 @@ static void SetupSettingsScreen(void)
 }
 
 
-/******************* DRAW BONUS STUFF ********************/
+/******************* DO SETTINGS SCREEN ********************/
 
 static void SettingsScreenDrawStuff(const QD3DSetupOutputType *setupInfo)
 {
@@ -291,10 +336,12 @@ static void SettingsScreenDrawStuff(const QD3DSetupOutputType *setupInfo)
 	QD3D_DrawParticles(setupInfo);
 }
 
-static void SettingsScreenMainLoop()
+void DoSettingsScreen(void)
 {
+	SetupSettingsScreen("Settings", gSettingsMenu);
+	bool done = false;
 
-	while (1)
+	while (!done)
 	{
 		UpdateInput();
 		MoveObjects();
@@ -304,25 +351,45 @@ static void SettingsScreenMainLoop()
 		DoSDLMaintenance();
 
 		if (GetNewKeyState(kKey_UI_Cancel))
-			return;
+		{
+			done = true;
+			continue;
+		}
 
 		// See if user hovered/clicked on a pickable item
 		int pickID = UpdateHoveredPickID();
 		if (pickID >= 0 && IsAnalogCursorClicked())
 		{
-			if (pickID & PICKID_SETTING_MASK)
+			int settingID = pickID & 0xFFFF;
+
+			if (pickID & PICKID_SETTING_CYCLER)
 			{
-				int settingID = pickID & 0xFFFF;
-				SettingEntry_Cycle(&gSettingEntries[settingID], 1);
+				SettingEntry_Cycle(&gCurrentMenu[settingID], 1);
 				MakeSettingEntryObjects(settingID, false);
 
 				PlayEffect(EFFECT_BONUSCLICK);
 			}
+			else if (pickID & PICKID_SETTING_BUTTON)
+			{
+				PlayEffect_Parms(EFFECT_BONUSCLICK, FULL_CHANNEL_VOLUME, FULL_CHANNEL_VOLUME, kMiddleC - 12);
+
+				switch (gCurrentMenu[settingID].id)
+				{
+				case 'vide':
+					CleanupUIStuff();
+					SetupSettingsScreen("Video settings", gVideoMenu);
+				}
+			}
 			else if (pickID == PICKID_SPIDER)
 			{
 				PlayEffect_Parms(EFFECT_BONUSCLICK, FULL_CHANNEL_VOLUME, FULL_CHANNEL_VOLUME, kMiddleC-12);
-				return;
+				done = true;
+				continue;
 			}
 		}
 	}
+
+	CleanupUIStuff();
+
+	SavePrefs(&gGamePrefs);
 }
