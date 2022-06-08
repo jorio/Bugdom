@@ -33,7 +33,6 @@ typedef struct RendererState
 	bool		hasState_GL_CULL_FACE;
 	bool		hasState_GL_ALPHA_TEST;
 	bool		hasState_GL_DEPTH_TEST;
-	bool		hasState_GL_SCISSOR_TEST;
 	bool		hasState_GL_COLOR_MATERIAL;
 	bool		hasState_GL_TEXTURE_2D;
 	bool		hasState_GL_BLEND;
@@ -266,7 +265,6 @@ void Render_InitState(const TQ3ColorRGBA* clearColor)
 	SetInitialState(GL_CULL_FACE,		true);
 	SetInitialState(GL_ALPHA_TEST,		true);
 	SetInitialState(GL_DEPTH_TEST,		true);
-	SetInitialState(GL_SCISSOR_TEST,	false);
 	SetInitialState(GL_COLOR_MATERIAL,	true);
 	SetInitialState(GL_TEXTURE_2D,		false);
 	SetInitialState(GL_BLEND,			false);
@@ -541,19 +539,9 @@ void Render_StartFrame(void)
 	gFrameStarted = true;
 }
 
-void Render_SetViewport(bool scissor, int x, int y, int w, int h)
+void Render_SetViewport(int x, int y, int w, int h)
 {
-	if (scissor)
-	{
-		EnableState(GL_SCISSOR_TEST);
-		glScissor	(x,y,w,h);
-		glViewport	(x,y,w,h);
-		glClear(GL_COLOR_BUFFER_BIT);
-	}
-	else
-	{
-		glViewport	(x,y,w,h);
-	}
+	glViewport(x, y, w, h);
 }
 
 void Render_FlushQueue(void)
@@ -652,8 +640,6 @@ void Render_EndFrame(void)
 	GAME_ASSERT(gFrameStarted);
 
 	Render_FlushQueue();
-
-	DisableState(GL_SCISSOR_TEST);
 
 	gFrameStarted = false;
 }
@@ -1061,7 +1047,6 @@ void Render_ResetColor(void)
 
 void Render_Enter2D_Full640x480(void)
 {
-	DisableState(GL_SCISSOR_TEST);
 	glViewport(0, 0, gWindowWidth, gWindowHeight);
 
 	glMatrixMode(GL_PROJECTION);

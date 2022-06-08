@@ -70,9 +70,9 @@ typedef struct
 typedef struct
 {
 	Boolean					isActive;
+	bool					needPaneClip;
 	Rect					paneClip;			// not pane size, but clip:  left = amount to clip off left
 	float					aspectRatio;
-	bool					needScissorTest;
 	TQ3Point3D				currentCameraCoords;
 	TQ3Point3D				currentCameraLookAt;
 	TQ3Vector3D				currentCameraUpVector;

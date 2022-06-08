@@ -129,9 +129,9 @@ QD3DSetupOutputType	*outputPtr;
 
 				/* PASS BACK INFO */
 
-	outputPtr->paneClip 			= setupDefPtr->view.paneClip;
 	outputPtr->aspectRatio			= 1.0f;								// aspect ratio is set at every frame depending on window size
-	outputPtr->needScissorTest 		= setupDefPtr->view.paneClip.left != 0 || setupDefPtr->view.paneClip.right != 0
+	outputPtr->paneClip				= setupDefPtr->view.paneClip;
+	outputPtr->needPaneClip 		= setupDefPtr->view.paneClip.left != 0 || setupDefPtr->view.paneClip.right != 0
 									|| setupDefPtr->view.paneClip.bottom != 0 || setupDefPtr->view.paneClip.top != 0;
 	outputPtr->hither 				= setupDefPtr->camera.hither;		// remember hither/yon
 	outputPtr->yon 					= setupDefPtr->camera.yon;
@@ -273,21 +273,20 @@ void QD3D_DrawScene(QD3DSetupOutputType *setupInfo, void (*drawRoutine)(const QD
 
 	Render_StartFrame();
 
-			/* SET UP SCISSOR TEST */
+			/* SET UP VIEWPORT */
 
-	if (setupInfo->needScissorTest)
+	if (setupInfo->needPaneClip)
 	{
-		// Set scissor
 		TQ3Area pane	= Render_GetAdjustedViewportRect(setupInfo->paneClip, GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
 		int paneWidth	= pane.max.x-pane.min.x;
 		int paneHeight	= pane.max.y-pane.min.y;
 		setupInfo->aspectRatio = paneWidth / (paneHeight + .001f);
-		Render_SetViewport(true, pane.min.x, gWindowHeight-pane.max.y, paneWidth, paneHeight);
+		Render_SetViewport(pane.min.x, gWindowHeight-pane.max.y, paneWidth, paneHeight);
 	}
 	else
 	{
 		setupInfo->aspectRatio = gWindowWidth / (gWindowHeight + .001f);
-		Render_SetViewport(false, 0, 0, gWindowWidth, gWindowHeight);
+		Render_SetViewport(0, 0, gWindowWidth, gWindowHeight);
 	}
 
 			/* SET UP CAMERA */

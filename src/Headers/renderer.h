@@ -149,7 +149,7 @@ void Render_FlushQueue(void);
 // Flushes the rendering queue and finishes the frame.
 void Render_EndFrame(void);
 
-void Render_SetViewport(bool scissor, int x, int y, int w, int h);
+void Render_SetViewport(int x, int y, int w, int h);
 
 void Render_ResetColor(void);
 
