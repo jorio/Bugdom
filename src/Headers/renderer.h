@@ -182,6 +182,8 @@ void Render_Enter2D_Full640x480(void);
 
 void Render_Enter2D_NormalizedCoordinates(float aspect);
 
+void Render_Enter2D_NativeResolution(void);
+
 void Render_Exit2D(void);
 
 #pragma mark -

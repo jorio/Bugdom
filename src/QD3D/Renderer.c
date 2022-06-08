@@ -112,6 +112,14 @@ const RenderModifiers kDefaultRenderMods_DebugUI =
 	.drawOrder = kDrawOrder_DebugUI
 };
 
+const RenderModifiers kDefaultRenderMods_Pillarbox =
+{
+	.statusBits = STATUS_BIT_NULLSHADER | STATUS_BIT_NOFOG | STATUS_BIT_NOZWRITE | STATUS_BIT_KEEPBACKFACES | STATUS_BIT_DONTCULL,
+	.diffuseColor = {0,0,0,1},
+	.autoFadeFactor = 1.0f,
+	.drawOrder = kDrawOrder_DebugUI
+};
+
 #pragma mark -
 
 /****************************/
@@ -299,7 +307,9 @@ void Render_InitState(const TQ3ColorRGBA* clearColor)
 
 	// Set up fullscreen overlay quad
 	if (!gFullscreenQuad)
-		gFullscreenQuad = MakeQuadMesh_UI(0, 0, 640, 480, 0, 0, 1, 1);
+	{
+		gFullscreenQuad = MakeQuadMesh_UI(0, 0, GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT, 0, 0, 1, 1);
+	}
 
 	// Clear the buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1068,8 +1078,12 @@ void Render_Enter2D_Full640x480(void)
 {
 	if (gGamePrefs.force4x3AspectRatio)
 	{
-		TQ3Vector2D fitted = FitRectKeepAR(640, 480, gWindowWidth, gWindowHeight);
-		glViewport(0.5f * (gWindowWidth-fitted.x), 0.5f * (gWindowHeight-fitted.y), fitted.x, fitted.y);
+		TQ3Vector2D fitted = FitRectKeepAR(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT, gWindowWidth, gWindowHeight);
+		glViewport(
+			(GLint) (0.5f * (gWindowWidth - fitted.x)),
+			(GLint) (0.5f * (gWindowHeight - fitted.y)),
+			(GLint) ceilf(fitted.x),
+			(GLint) ceilf(fitted.y));
 	}
 	else
 	{
@@ -1091,6 +1105,17 @@ void Render_Enter2D_NormalizedCoordinates(float aspect)
 	glPushMatrix();
 	glLoadIdentity();
 	glOrtho(-aspect, aspect, -1, 1, 0, 1000);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+}
+
+void Render_Enter2D_NativeResolution(void)
+{
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho(0, gWindowWidth, gWindowHeight, 0, 0, 1000);
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity();

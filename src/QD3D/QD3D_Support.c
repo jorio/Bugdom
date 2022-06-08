@@ -1,7 +1,8 @@
 /****************************/
 /*   	QD3D SUPPORT.C	    */
-/* (c)1997-99 Pangea Software  */
 /* By Brian Greenstone      */
+/* (c)1997-99 Pangea Software  */
+/* (c)2022 Iliyas Jorio     */
 /****************************/
 
 
@@ -49,6 +50,7 @@ static TQ3Point3D		gNormalWhere;
 static TQ3Vector3D		gNormal;
 
 static TQ3TriMeshData*	gDebugTextMesh = nil;
+static TQ3TriMeshData*	gPillarboxMesh = nil;
 
 
 
@@ -191,6 +193,12 @@ QD3DSetupOutputType	*data;
 	QD3D_UpdateDebugTextMesh(nil);							// dispose debug text mesh
 	TextMesh_Shutdown();
 
+	if (gPillarboxMesh)
+	{
+		Q3TriMeshData_Dispose(gPillarboxMesh);
+		gPillarboxMesh = nil;
+	}
+
 	data->isActive = false;									// now inactive
 
 	Render_EndScene();
@@ -316,6 +324,16 @@ void QD3D_DrawScene(QD3DSetupOutputType *setupInfo, void (*drawRoutine)(const QD
 	QD3D_DrawDebugTextMesh();
 	Render_FlushQueue();
 	Render_Exit2D();
+
+	if (gGamePrefs.force4x3AspectRatio)
+	{
+		float myAR = (float)gWindowWidth / (float)gWindowHeight;
+		float targetAR = (float)GAME_VIEW_WIDTH / (float)GAME_VIEW_HEIGHT;
+		if (fabsf(myAR - targetAR) > (1.0f / GAME_VIEW_WIDTH))
+		{
+			QD3D_DrawPillarbox();
+		}
+	}
 
 	Render_EndFrame();
 
@@ -583,4 +601,71 @@ void QD3D_DrawDebugTextMesh(void)
 	m.value[3][1] = 72;
 	m.value[3][2] = 0;
 	Render_SubmitMesh(gDebugTextMesh, &m, &kDefaultRenderMods_DebugUI, &kQ3Point3D_Zero);
+}
+
+/************ DRAW PILLARBOX COVER QUADS *****************/
+
+void QD3D_DrawPillarbox(void)
+{
+	if (!gPillarboxMesh)
+	{
+		gPillarboxMesh = Q3TriMeshData_New(2*2, 2*4, kQ3TriMeshDataFeatureNone);
+
+		int tri = 0;
+		for (int quad = 0; quad < 2; quad++)
+		{
+			gPillarboxMesh->triangles[tri].pointIndices[0] = quad*4 + 0;
+			gPillarboxMesh->triangles[tri].pointIndices[1] = quad*4 + 1;
+			gPillarboxMesh->triangles[tri].pointIndices[2] = quad*4 + 2;
+			tri++;
+
+			gPillarboxMesh->triangles[tri].pointIndices[0] = quad*4 + 0;
+			gPillarboxMesh->triangles[tri].pointIndices[1] = quad*4 + 2;
+			gPillarboxMesh->triangles[tri].pointIndices[2] = quad*4 + 3;
+			tri++;
+		}
+	}
+
+	TQ3Vector2D fitted = FitRectKeepAR(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT, gWindowWidth, gWindowHeight);
+
+	const float ww = gWindowWidth;
+	const float wh = gWindowHeight;
+
+	if (gWindowWidth > fitted.x)
+	{
+		// tall pillars at left and right edges
+		float pillar = ceilf((ww - fitted.x) * 0.5f);
+
+		gPillarboxMesh->points[0] = (TQ3Point3D){ 0, 0, 0 };
+		gPillarboxMesh->points[1] = (TQ3Point3D){ pillar, 0, 0 };
+		gPillarboxMesh->points[2] = (TQ3Point3D){ pillar, wh, 0 };
+		gPillarboxMesh->points[3] = (TQ3Point3D){ 0, wh, 0 };
+
+		gPillarboxMesh->points[4] = (TQ3Point3D){ ww - pillar, 0, 0 };
+		gPillarboxMesh->points[5] = (TQ3Point3D){ ww, 0, 0 };
+		gPillarboxMesh->points[6] = (TQ3Point3D){ ww, wh, 0 };
+		gPillarboxMesh->points[7] = (TQ3Point3D){ ww - pillar, wh, 0 };
+	}
+	else
+	{
+		// wide pillars at top and bottom edges
+		float pillar = ceilf((wh - fitted.y) * 0.5f);
+
+		gPillarboxMesh->points[0] = (TQ3Point3D){ 0, 0, 0 };
+		gPillarboxMesh->points[1] = (TQ3Point3D){ ww, 0, 0 };
+		gPillarboxMesh->points[2] = (TQ3Point3D){ ww, pillar, 0 };
+		gPillarboxMesh->points[3] = (TQ3Point3D){ 0, pillar, 0 };
+
+		gPillarboxMesh->points[4] = (TQ3Point3D){ 0, wh - pillar, 0 };
+		gPillarboxMesh->points[5] = (TQ3Point3D){ ww, wh - pillar, 0 };
+		gPillarboxMesh->points[6] = (TQ3Point3D){ ww, wh, 0 };
+		gPillarboxMesh->points[7] = (TQ3Point3D){ 0, wh, 0 };
+	}
+
+
+	Render_SetViewport(0, 0, gWindowWidth, gWindowHeight);
+	Render_Enter2D_NativeResolution();
+	Render_SubmitMesh(gPillarboxMesh, NULL, &kDefaultRenderMods_Pillarbox, &kQ3Point3D_Zero);
+	Render_FlushQueue();
+	Render_Exit2D();
 }

@@ -100,6 +100,8 @@ void DrawNormal(void);
 void QD3D_UpdateDebugTextMesh(const char* text);
 void QD3D_DrawDebugTextMesh(void);
 
+void QD3D_DrawPillarbox(void);
+
 #define TQ3ColorRGB_FromInt(c) (TQ3ColorRGB){ (((c)>>16)&0xFF)/255.0f, (((c)>>8)&0xFF)/255.0f, ((c)&0xFF)/255.0f }
 #define TQ3ColorRGBA_FromInt(c) (TQ3ColorRGBA){ (((c)>>24)&0xFF)/255.0f, (((c)>>16)&0xFF)/255.0f, (((c)>>8)&0xFF)/255.0f, ((c)&0xFF)/255.0f }
 
