@@ -67,6 +67,9 @@ typedef struct
 
 //=================================================
 
+void InitPrefsFolder(bool createIt);
+OSErr MakePrefsFSSpec(const char* filename, bool createFolder, FSSpec* spec);
+
 extern	SkeletonDefType *LoadSkeletonFile(short skeletonType);
 short OpenGameFile(const char* filename);
 extern	OSErr LoadPrefs(PrefsType *prefBlock);

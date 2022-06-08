@@ -201,8 +201,8 @@ FSSpec				file;
 long				count;
 
 				/* OPEN FILE */
-					
-	FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, ":Bugdom:HighScores", &file);
+
+	MakePrefsFSSpec("HighScores", false, &file);
 	iErr = FSpOpenDF(&file, fsRdPerm, &refNum);	
 	if (iErr == fnfErr)
 		ClearHighScores();
@@ -237,7 +237,7 @@ long				count;
 
 				/* CREATE BLANK FILE */
 				
-	FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, ":Bugdom:HighScores", &file);
+	MakePrefsFSSpec("HighScores", true, &file);
 	FSpDelete(&file);															// delete any existing file
 	iErr = FSpCreate(&file, 'BalZ', 'Skor', smSystemScript);					// create blank file
 	if (iErr)

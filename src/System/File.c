@@ -36,7 +36,8 @@ static void ReadDataFromPlayfieldFile(void);
 #define	SAVE_GAME_VERSION	0x00000120			// Bugdom v1.2
 
 #define PREFS_HEADER_LENGTH 16
-#define PREFS_FILE_NAME ":Bugdom:Prefs"
+#define PREFS_FOLDER_NAME "Bugdom"
+#define PREFS_FILE_NAME "Prefs"
 const char PREFS_HEADER_STRING[PREFS_HEADER_LENGTH+1] = "NewBugdomPrefs04";		// Bump this every time prefs struct changes -- note: this will reset user prefs
 
 
@@ -433,7 +434,37 @@ short		refNum;
 }
 
 
+/******************** INIT PREFS FOLDER **********************/
 
+void InitPrefsFolder(bool createIt)
+{
+	OSErr iErr;
+	long createdDirID;
+
+			/* CHECK PREFERENCES FOLDER */
+
+	iErr = FindFolder(kOnSystemDisk, kPreferencesFolderType, kDontCreateFolder,		// locate the folder
+		&gPrefsFolderVRefNum, &gPrefsFolderDirID);
+	if (iErr != noErr)
+		DoAlert("Warning: Cannot locate the Preferences folder.");
+
+	if (createIt)
+	{
+		iErr = DirCreate(gPrefsFolderVRefNum, gPrefsFolderDirID, PREFS_FOLDER_NAME, &createdDirID);		// make folder in there
+	}
+}
+
+/******************** MAKE FSSPEC IN PREFS FOLDER **********************/
+
+OSErr MakePrefsFSSpec(const char* filename, bool createFolder, FSSpec* spec)
+{
+	InitPrefsFolder(createFolder);
+	
+	char path[256];
+	snprintf(path, sizeof(path), ":%s:%s", PREFS_FOLDER_NAME, filename);
+
+	return FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, path, spec);
+}
 
 /******************** LOAD PREFS **********************/
 //
@@ -453,7 +484,7 @@ PrefsType	prefBuffer;
 				/* READ FILE */
 				/*************/
 					
-	FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, PREFS_FILE_NAME, &file);
+	MakePrefsFSSpec(PREFS_FILE_NAME, false, &file);
 	iErr = FSpOpenDF(&file, fsRdPerm, &refNum);	
 	if (iErr)
 		return(iErr);
@@ -515,10 +546,10 @@ FSSpec				file;
 OSErr				iErr;
 short				refNum;
 long				count;
-						
+
 				/* CREATE BLANK FILE */
 				
-	FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, PREFS_FILE_NAME, &file);
+	MakePrefsFSSpec(PREFS_FILE_NAME, true, &file);
 	FSpDelete(&file);															// delete any existing file
 	iErr = FSpCreate(&file, 'BalZ', 'Pref', smSystemScript);					// create blank file
 	if (iErr)
@@ -564,8 +595,8 @@ static FSSpec MakeSaveGameFSSpec(int slot)
 	GAME_ASSERT(slot >= 0);
 	GAME_ASSERT(slot < NUM_SAVE_FILES);
 
-	snprintf(path, sizeof(path), ":Bugdom:Save%c", slot + 'A');
-	FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, path, &spec);
+	snprintf(path, sizeof(path), "Save%c", slot + 'A');
+	MakePrefsFSSpec(path, true, &spec);
 
 	return spec;
 }

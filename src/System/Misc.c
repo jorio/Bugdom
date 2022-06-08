@@ -292,7 +292,6 @@ void Free2DArray(void** array)
 void VerifySystem(void)
 {
 OSErr	iErr;
-long		createdDirID;
 
 			/* MAKE FSSPEC FOR DATA FOLDER */
 			// Source port note: our custom main sets gDataSpec already
@@ -308,15 +307,7 @@ long		createdDirID;
 
 			/* CHECK PREFERENCES FOLDER */
 			
-	iErr = FindFolder(kOnSystemDisk,kPreferencesFolderType,kDontCreateFolder,		// locate the folder
-					&gPrefsFolderVRefNum,&gPrefsFolderDirID);
-	if (iErr != noErr)
-		DoAlert("Warning: Cannot locate the Preferences folder.");
-
-	iErr = DirCreate(gPrefsFolderVRefNum,gPrefsFolderDirID,"Bugdom",&createdDirID);		// make folder in there
-	
-
-
+	InitPrefsFolder(false);
 }
 
 
