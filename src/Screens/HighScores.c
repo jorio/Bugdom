@@ -42,6 +42,8 @@ typedef struct
 	unsigned long	score;
 }HighScoreType;
 
+static const char* kGamepadCharset = " ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
 
 
 /***************************/
@@ -388,6 +390,9 @@ short		i;
 	QD3D_CalcFramesPerSecond();					
 		
 	gEnteringName = true;
+
+	float keyRepeatTimer = 0;
+	char newKey = '\0';
 		
 	do
 	{
@@ -398,22 +403,80 @@ short		i;
 				
 		UpdateInput();
 
-		char newKey = '\0';
-		if (GetNewKeyState_SDL(SDL_SCANCODE_LEFT))
+		newKey = '\0';
+		bool canRepeat = true;
+
+		TQ3Vector2D thumbstick = GetThumbStickVector(false);
+		thumbstick.x = roundf(thumbstick.x);
+		thumbstick.y = roundf(thumbstick.y);
+		if (thumbstick.x != 0 && thumbstick.y != 0)
+		{
+			thumbstick.x = 0;
+			thumbstick.y = 0;
+		}
+
+		if (GetKeyState(kKey_UI_CharLeft) || thumbstick.x < 0)
+		{
 			newKey = CHAR_LEFT;
-		else if (GetNewKeyState_SDL(SDL_SCANCODE_RIGHT))
+			gCursorObj->StatusBits &= ~STATUS_BIT_HIDDEN;
+		}
+		else if (GetKeyState(kKey_UI_CharRight) || thumbstick.x > 0)
+		{
 			newKey = CHAR_RIGHT;
-		else if (GetNewKeyState_SDL(SDL_SCANCODE_BACKSPACE))
+			gCursorObj->StatusBits &= ~STATUS_BIT_HIDDEN;
+		}
+		else if (GetKeyState(kKey_UI_CharDelete))
+		{
 			newKey = CHAR_DELETE;
-		else if (GetNewKeyState_SDL(SDL_SCANCODE_DELETE))
+			gCursorObj->StatusBits &= ~STATUS_BIT_HIDDEN;
+		}
+		else if (GetKeyState(kKey_UI_CharDeleteFwd))
+		{
 			newKey = CHAR_FORWARD_DELETE;
+			gCursorObj->StatusBits &= ~STATUS_BIT_HIDDEN;
+		}
+		else if (GetKeyState(kKey_UI_CharMM) || thumbstick.y < 0)
+		{
+			newKey = CHAR_UP;
+			gCursorObj->StatusBits |= STATUS_BIT_HIDDEN;
+		}
+		else if (GetKeyState(kKey_UI_CharPP) || thumbstick.y > 0)
+		{
+			newKey = CHAR_DOWN;
+			gCursorObj->StatusBits |= STATUS_BIT_HIDDEN;
+		}
+		else if (GetNewKeyState(kKey_UI_CharOK)
+			|| GetNewKeyState_SDL(SDL_SCANCODE_RETURN)
+			|| GetNewKeyState_SDL(SDL_SCANCODE_KP_ENTER))
+		{
+			newKey = CHAR_RETURN;
+		}
 		else
+		{
 			newKey = gTypedAsciiKey;
+			canRepeat = false;
+		}
+
 
 		if (newKey)
 		{
-			TypeNewKey(newKey);
-			UpdateNameAndCursor(true,LEFT_EDGE,0,0);
+			if (keyRepeatTimer <= 0)
+			{
+				gCursorObj->SpecialF[0] = 0.3f;
+
+				keyRepeatTimer = canRepeat ? 0.15f: 1000;
+
+				TypeNewKey(newKey);
+				UpdateNameAndCursor(true, LEFT_EDGE, 0, 0);
+			}
+			else
+			{
+				keyRepeatTimer -= gFramesPerSecondFrac;
+			}
+		}
+		else
+		{
+			keyRepeatTimer = 0;
 		}
 		
 				/* MOVE CAMERA */
@@ -426,7 +489,7 @@ short		i;
 				
 		QD3D_DrawScene(gGameViewInfoPtr,DrawObjects);	
 		DoSDLMaintenance();
-	} while (!GetNewKeyState(kKey_UI_Confirm));
+	} while (newKey != CHAR_RETURN);
 
 			/* CLEANUP */
 
@@ -443,6 +506,8 @@ short		i;
 static void TypeNewKey(char c)
 {
 short	i;
+bool	advance = true;
+
 			/*******************/
 			/* SEE IF EDIT KEY */
 			/*******************/
@@ -491,10 +556,43 @@ short	i;
 		return;
 	}
 
+			/* UP ARROW */
+
+	if (c == CHAR_UP)
+	{
+		char* charsetCursor = strchr(kGamepadCharset, gNewName.name[gCursorPosition]);
+		c = ' ';
+		if (charsetCursor && *charsetCursor)
+		{
+			if (*charsetCursor == kGamepadCharset[0])
+				c = kGamepadCharset[strlen(kGamepadCharset) - 1];
+			else
+				c = charsetCursor[-1];
+		}
+		advance = false;
+	}
+
+			/* DOWN ARROW */
+
+	if (c == CHAR_DOWN)
+	{
+		char* charsetCursor = strchr(kGamepadCharset, gNewName.name[gCursorPosition]);
+		c = '\0';
+		if (charsetCursor && *charsetCursor)
+		{
+			if (*charsetCursor == kGamepadCharset[strlen(kGamepadCharset) - 1])
+				c = kGamepadCharset[0];
+			else
+				c = charsetCursor[1];
+		}
+		advance = false;
+	}
+
 			/* ADD NEW LETTER TO NAME */
 			
 	gNewName.name[gCursorPosition] = c;							// add to string
-	if (gCursorPosition < (MAX_NAME_LENGTH-1))
+
+	if (advance && gCursorPosition < (MAX_NAME_LENGTH-1))
 		gCursorPosition++;
 		
 	PlayEffect(EFFECT_SELECT);				

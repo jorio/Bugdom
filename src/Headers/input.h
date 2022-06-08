@@ -52,6 +52,14 @@ enum
 	kKey_UI_PadCancel,
 	kKey_UI_PadBack,
 
+	kKey_UI_CharMM,
+	kKey_UI_CharPP,
+	kKey_UI_CharLeft,
+	kKey_UI_CharRight,
+	kKey_UI_CharDelete,
+	kKey_UI_CharDeleteFwd,
+	kKey_UI_CharOK,
+
 	kKey_MAX
 };
 

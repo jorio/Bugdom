@@ -120,7 +120,7 @@ KeyBinding gKeyBindings[kKey_MAX] =
 [kKey_MorphPlayer		] = { "Morph Into Ball",	SDL_SCANCODE_SPACE,		0,						SDL_BUTTON_MIDDLE,	SDL_CONTROLLER_BUTTON_B, },
 [kKey_BuddyAttack		] = { "Buddy Attack",		SDL_SCANCODE_TAB,		0,						0,					SDL_CONTROLLER_BUTTON_Y, },
 [kKey_Jump				] = { "Jump / Boost",		DEFAULT_JUMP_SCANCODE1,	DEFAULT_JUMP_SCANCODE2,	SDL_BUTTON_RIGHT,	SDL_CONTROLLER_BUTTON_A, },
-[kKey_Kick				] = { "Kick / Boost",		DEFAULT_KICK_SCANCODE1, DEFAULT_KICK_SCANCODE2, SDL_BUTTON_LEFT, SDL_CONTROLLER_BUTTON_X, },
+[kKey_Kick				] = { "Kick / Boost",		DEFAULT_KICK_SCANCODE1, DEFAULT_KICK_SCANCODE2, SDL_BUTTON_LEFT,	SDL_CONTROLLER_BUTTON_X, },
 [kKey_AutoWalk			] = { "Auto-Walk",			SDL_SCANCODE_LSHIFT,	SDL_SCANCODE_RSHIFT,	0,					SDL_CONTROLLER_BUTTON_INVALID, },
 [kKey_Forward			] = { "Forward",			SDL_SCANCODE_UP,		SDL_SCANCODE_W,			0,					SDL_CONTROLLER_BUTTON_DPAD_UP, },
 [kKey_Backward			] = { "Backward",			SDL_SCANCODE_DOWN,		SDL_SCANCODE_S,			0,					SDL_CONTROLLER_BUTTON_DPAD_DOWN, },
@@ -132,6 +132,13 @@ KeyBinding gKeyBindings[kKey_MAX] =
 [kKey_UI_PadConfirm		] = { "DO_NOT_REBIND",		0,						0,						0,					SDL_CONTROLLER_BUTTON_A, },
 [kKey_UI_PadCancel		] = { "DO_NOT_REBIND",		0,						0,						0,					SDL_CONTROLLER_BUTTON_B, },
 [kKey_UI_PadBack		] = { "DO_NOT_REBIND",		0,						0,						0,					SDL_CONTROLLER_BUTTON_BACK, },
+[kKey_UI_CharMM			] = { "DO_NOT_REBIND",		SDL_SCANCODE_UP,		0,						0,					SDL_CONTROLLER_BUTTON_DPAD_UP, },
+[kKey_UI_CharPP			] = { "DO_NOT_REBIND",		SDL_SCANCODE_DOWN,		0,						0,					SDL_CONTROLLER_BUTTON_DPAD_DOWN, },
+[kKey_UI_CharLeft		] = { "DO_NOT_REBIND",		SDL_SCANCODE_LEFT,		0,						0,					SDL_CONTROLLER_BUTTON_DPAD_LEFT, },
+[kKey_UI_CharRight		] = { "DO_NOT_REBIND",		SDL_SCANCODE_RIGHT,		0,						0,					SDL_CONTROLLER_BUTTON_DPAD_RIGHT, },
+[kKey_UI_CharDelete		] = { "DO_NOT_REBIND",		SDL_SCANCODE_BACKSPACE,	0,						0,					SDL_CONTROLLER_BUTTON_B, },
+[kKey_UI_CharDeleteFwd	] = { "DO_NOT_REBIND",		SDL_SCANCODE_DELETE,	0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
+[kKey_UI_CharOK			] = { "DO_NOT_REBIND",		SDL_SCANCODE_DELETE,	0,						0,					SDL_CONTROLLER_BUTTON_A, },
 };
 
 
