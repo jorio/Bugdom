@@ -14,6 +14,9 @@
 /*    PROTOTYPES            */
 /****************************/
 
+static const char* GenerateKiddieModeSubtitle(void);
+static const char* GenerateDetailSubtitle(void);
+static const char* GenerateMSAASubtitle(void);
 
 /****************************/
 /*    CONSTANTS             */
@@ -52,8 +55,7 @@ typedef struct
 	Byte kind;
 	Byte* ptr;
 	const char* label;
-	const char* subtitle;
-	Byte subtitleShownForValue;
+	const char* (*subtitle)(void);
 	void (*callback)(void);
 	unsigned int nChoices;
 	const char* choices[MAX_CHOICES];
@@ -68,8 +70,7 @@ static const SettingEntry gSettingsMenu[] =
 		.kind = kCycler,
 		.ptr = &gGamePrefs.easyMode,
 		.label = "Kiddie mode",
-		.subtitle = "Player takes less damage",
-		.subtitleShownForValue = 1,
+		.subtitle = GenerateKiddieModeSubtitle,
 		.nChoices = 2,
 		.choices = {"No", "Yes"},
 	},
@@ -132,8 +133,7 @@ static const SettingEntry gVideoMenu[] =
 		.kind = kCycler,
 		.ptr = &gGamePrefs.lowDetail,
 		.label = "Level of detail",
-		.subtitle = "The \"ATI Rage II\" look",
-		.subtitleShownForValue = 1,
+		.subtitle = GenerateDetailSubtitle,
 		.nChoices = 2,
 		.choices = {"High", "Low"},
 	},
@@ -145,6 +145,17 @@ static const SettingEntry gVideoMenu[] =
 		.nChoices = 2,
 		.choices = {"Fit to screen", "4:3"},
 	},
+
+#if !(__APPLE__)
+	{
+		.kind = kCycler,
+		.ptr = &gGamePrefs.antialiasingLevel,
+		.label = "Antialiasing",
+		.nChoices = 4,
+		.choices = {"None", "MSAA 2x", "MSAA 4x", "MSAA 8x"},
+		.subtitle = GenerateMSAASubtitle,
+	},
+#endif
 
 	// End sentinel
 	{
@@ -169,7 +180,7 @@ static unsigned int PositiveModulo(int value, unsigned int m)
 	return mod;
 }
 
-static void SettingEntry_Cycle(SettingEntry* entry, int delta)
+static void SettingEntry_Cycle(const SettingEntry* entry, int delta)
 {
 	unsigned int value = (unsigned int)*entry->ptr;
 
@@ -179,6 +190,23 @@ static void SettingEntry_Cycle(SettingEntry* entry, int delta)
 	{
 		entry->callback();
 	}
+}
+
+static const char* GenerateKiddieModeSubtitle(void)
+{
+	return gGamePrefs.easyMode ? "Player takes less damage" : NULL;
+}
+
+static const char* GenerateDetailSubtitle(void)
+{
+	return gGamePrefs.lowDetail ? "The \"ATI Rage II\" look" : NULL;
+}
+
+static const char* GenerateMSAASubtitle(void)
+{
+	return gGamePrefs.antialiasingLevel != gAntialiasingLevelAppliedOnBoot
+		? "Will apply when you restart the game"
+		: NULL;
 }
 
 /****************** SETUP SETTINGS SCREEN **************************/
@@ -192,7 +220,7 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 	const float y = 60 - LH * settingID;
 	const float z = 0;
 
-	SettingEntry* entry = &gCurrentMenu[settingID];
+	const SettingEntry* entry = &gCurrentMenu[settingID];
 
 	// If it's not the first time we're setting up the screen, nuke old value objects
 	if (!firstTime)
@@ -200,7 +228,7 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 		NukeObjectsInSlot(SLOTID_VALUE_MASK | settingID);
 	}
 
-	bool hasSubtitle = entry->subtitle && *entry->ptr == entry->subtitleShownForValue;
+	const char* subtitleGenerator = entry->subtitle ? entry->subtitle() : NULL;
 
 	TextMeshDef tmd;
 	TextMesh_FillDef(&tmd);
@@ -258,7 +286,7 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 	tmd.color = kValueTextColor;
 	tmd.coord.x = pickableX;
 	tmd.slot = SLOTID_VALUE_MASK | settingID;
-	if (hasSubtitle)
+	if (subtitleGenerator)
 		tmd.coord.y += LH * 0.15f;
 
 	switch (entry->kind)
@@ -297,11 +325,11 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 
 	// Create subtitle text
 	tmd.coord.y -= LH * 0.15f * 2.0f;
-	if (entry->subtitle && *entry->ptr == entry->subtitleShownForValue)
+	if (subtitleGenerator)
 	{
 		float scaleBackup = tmd.scale;
 		tmd.scale *= 0.5f;
-		TextMesh_Create(&tmd, entry->subtitle);
+		TextMesh_Create(&tmd, subtitleGenerator);
 		tmd.scale = scaleBackup;
 	}
 }
@@ -327,6 +355,17 @@ static void SetupSettingsScreen(const char* title, const SettingEntry* menu)
 	MakeSpiderButton((TQ3Point3D) {-100, -100, 0}, "DONE", PICKID_SPIDER);
 }
 
+static void MakeMSAAWarning(void)
+{
+	TextMeshDef tmd;
+	TextMesh_FillDef(&tmd);
+	tmd.align = TEXTMESH_ALIGN_RIGHT;
+	tmd.coord = (TQ3Point3D){ 220, -220, 0 };
+	tmd.color = kValueTextColor;
+	tmd.scale = .2;
+
+	TextMesh_Create(&tmd, "The new antialiasing level will take effect when you restart the game.");
+}
 
 /******************* DO SETTINGS SCREEN ********************/
 
@@ -378,6 +417,7 @@ void DoSettingsScreen(void)
 				case 'vide':
 					CleanupUIStuff();
 					SetupSettingsScreen("Video settings", gVideoMenu);
+					MakeMSAAWarning();
 				}
 			}
 			else if (pickID == PICKID_SPIDER)

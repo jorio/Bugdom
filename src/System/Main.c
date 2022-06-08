@@ -227,10 +227,15 @@ void ToolBoxInit(void)
 				
 	VerifySystem();
 
+	InitPrefs();
+}
 
-			/* INIT PREFERENCES */
-			
+/******************** INIT PREFS ************************/
+
+void InitPrefs(void)
+{
 	memset(&gGamePrefs, 0, sizeof(PrefsType));
+
 	gGamePrefs.easyMode				= false;	
 	gGamePrefs.playerRelativeKeys	= false;	
 	gGamePrefs.fullscreen			= true;
@@ -238,7 +243,8 @@ void ToolBoxInit(void)
 	gGamePrefs.mouseSensitivityLevel= DEFAULT_MOUSE_SENSITIVITY_LEVEL;
 	gGamePrefs.showBottomBar		= true;
 	gGamePrefs.force4x3AspectRatio	= false;
-				
+	gGamePrefs.antialiasingLevel	= 0;
+
 	LoadPrefs(&gGamePrefs);							// attempt to read from prefs file		
 }
 

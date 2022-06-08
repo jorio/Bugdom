@@ -37,4 +37,5 @@ enum
 
 extern	int GameMain(void);
 extern	void ToolBoxInit(void);
+void InitPrefs(void);
 

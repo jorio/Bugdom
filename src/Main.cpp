@@ -32,6 +32,8 @@ extern "C"
 	__declspec(dllexport) unsigned long NvOptimusEnablement = 1;
 #endif
 
+	int gAntialiasingLevelAppliedOnBoot = 0;
+
 	int GameMain(void);
 }
 
@@ -127,15 +129,23 @@ static void Boot()
 		throw std::runtime_error("Couldn't initialize SDL video subsystem.");
 	}
 
+	// Load our prefs
+	InitPrefs();
+
+	if (gCommandLine.msaa != 0)
+		gGamePrefs.antialiasingLevel = gCommandLine.msaa;
+
+tryAgain:
 	// Set up GL attributes
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-	if (gCommandLine.msaa != 0)
+	if (gGamePrefs.antialiasingLevel)
 	{
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, gCommandLine.msaa);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, gGamePrefs.antialiasingLevel);
 	}
+	gAntialiasingLevelAppliedOnBoot = gGamePrefs.antialiasingLevel;
 
 	// Prepare window dimensions
 	int display = 0;
@@ -158,7 +168,15 @@ static void Boot()
 
 	if (!gSDLWindow)
 	{
-		throw std::runtime_error("Couldn't create SDL window.");
+		if (gGamePrefs.antialiasingLevel == 0)
+		{
+			throw std::runtime_error("Couldn't create SDL window.");
+		}
+		else
+		{
+			gGamePrefs.antialiasingLevel = 0;
+			goto tryAgain;
+		}
 	}
 
 	// Find path to game data folder
