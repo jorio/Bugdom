@@ -1041,13 +1041,40 @@ void Render_ResetColor(void)
 
 //=======================================================================================================
 
+TQ3Vector2D FitRectKeepAR(
+	int logicalWidth,
+	int logicalHeight,
+	float displayWidth,
+	float displayHeight)
+{
+	float displayAR = (float)displayWidth / (float)displayHeight;
+	float logicalAR = (float)logicalWidth / (float)logicalHeight;
+
+	if (displayAR >= logicalAR)
+	{
+		return (TQ3Vector2D) { displayHeight * logicalAR, displayHeight };
+	}
+	else
+	{
+		return (TQ3Vector2D) { displayWidth, displayWidth / logicalAR };
+	}
+}
+
 /****************************/
 /*    2D    */
 /****************************/
 
 void Render_Enter2D_Full640x480(void)
 {
-	glViewport(0, 0, gWindowWidth, gWindowHeight);
+	if (gGamePrefs.force4x3AspectRatio)
+	{
+		TQ3Vector2D fitted = FitRectKeepAR(640, 480, gWindowWidth, gWindowHeight);
+		glViewport(0.5f * (gWindowWidth-fitted.x), 0.5f * (gWindowHeight-fitted.y), fitted.x, fitted.y);
+	}
+	else
+	{
+		glViewport(0, 0, gWindowWidth, gWindowHeight);
+	}
 
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -1099,15 +1126,36 @@ void Render_DrawFadeOverlay(float opacity)
 
 TQ3Area Render_GetAdjustedViewportRect(Rect paneClip, int logicalWidth, int logicalHeight)
 {
-	float scaleX = gWindowWidth / (float)logicalWidth;	// scale clip pane to window size
-	float scaleY = gWindowHeight / (float)logicalHeight;
+	float scaleX;
+	float scaleY;
+	float xoff = 0;
+	float yoff = 0;
+
+	if (!gGamePrefs.force4x3AspectRatio)
+	{
+		scaleX = gWindowWidth / (float)logicalWidth;	// scale clip pane to window size
+		scaleY = gWindowHeight / (float)logicalHeight;
+	}
+	else
+	{
+		TQ3Vector2D fitted = FitRectKeepAR(logicalWidth, logicalHeight, gWindowWidth, gWindowHeight);
+		xoff = (gWindowWidth - fitted.x) * 0.5f;
+		yoff = (gWindowHeight - fitted.y) * 0.5f;
+		scaleX = fitted.x / (float)logicalWidth;
+		scaleY = fitted.y / (float)logicalHeight;
+	}
+
+	float left   = xoff + scaleX * paneClip.left;
+	float right  = xoff + scaleX * (logicalWidth - paneClip.right);
+	float top    = yoff + scaleY * paneClip.top;
+	float bottom = yoff + scaleY * (logicalHeight - paneClip.bottom);
 
 	// Floor min to avoid seam at edges of HUD if scale ratio is dirty
-	float left = floorf( scaleX * paneClip.left );
-	float top = floorf( scaleY * paneClip.top  );
+	left = floorf(left);
+	top = floorf(top);
 	// Ceil max to avoid seam at edges of HUD if scale ratio is dirty
-	float right = ceilf( scaleX * (logicalWidth  - paneClip.right ) );
-	float bottom = ceilf( scaleY * (logicalHeight - paneClip.bottom) );
+	right = ceilf(right);
+	bottom = ceilf(bottom);
 
 	return (TQ3Area) {{left,top},{right,bottom}};
 }

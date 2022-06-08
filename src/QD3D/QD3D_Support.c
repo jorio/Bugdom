@@ -275,8 +275,9 @@ void QD3D_DrawScene(QD3DSetupOutputType *setupInfo, void (*drawRoutine)(const QD
 
 			/* SET UP VIEWPORT */
 
-	if (setupInfo->needPaneClip)
+	if (setupInfo->needPaneClip || gGamePrefs.force4x3AspectRatio)
 	{
+		// Set scissor
 		TQ3Area pane	= Render_GetAdjustedViewportRect(setupInfo->paneClip, GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT);
 		int paneWidth	= pane.max.x-pane.min.x;
 		int paneHeight	= pane.max.y-pane.min.y;

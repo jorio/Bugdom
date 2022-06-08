@@ -327,6 +327,7 @@ typedef struct
 	Boolean lowDetail;
 	Byte	mouseSensitivityLevel;
 	Boolean	showBottomBar;
+	Boolean	force4x3AspectRatio;
 }PrefsType;
 
 typedef struct

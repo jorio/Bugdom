@@ -191,3 +191,9 @@ void Render_DrawFadeOverlay(float opacity);
 #pragma mark -
 
 TQ3Area Render_GetAdjustedViewportRect(Rect paneClip, int logicalWidth, int logicalHeight);
+
+TQ3Vector2D FitRectKeepAR(
+	int logicalWidth,
+	int logicalHeight,
+	float displayWidth,
+	float displayHeight);

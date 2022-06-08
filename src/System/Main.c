@@ -237,6 +237,7 @@ void ToolBoxInit(void)
 	gGamePrefs.lowDetail			= false;
 	gGamePrefs.mouseSensitivityLevel= DEFAULT_MOUSE_SENSITIVITY_LEVEL;
 	gGamePrefs.showBottomBar		= true;
+	gGamePrefs.force4x3AspectRatio	= false;
 				
 	LoadPrefs(&gGamePrefs);							// attempt to read from prefs file		
 }

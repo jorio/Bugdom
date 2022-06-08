@@ -37,7 +37,7 @@ static void ReadDataFromPlayfieldFile(void);
 
 #define PREFS_HEADER_LENGTH 16
 #define PREFS_FILE_NAME ":Bugdom:Prefs"
-const char PREFS_HEADER_STRING[PREFS_HEADER_LENGTH+1] = "NewBugdomPrefs03";		// Bump this every time prefs struct changes -- note: this will reset user prefs
+const char PREFS_HEADER_STRING[PREFS_HEADER_LENGTH+1] = "NewBugdomPrefs04";		// Bump this every time prefs struct changes -- note: this will reset user prefs
 
 
 		/* PLAYFIELD HEADER */

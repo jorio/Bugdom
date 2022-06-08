@@ -139,23 +139,13 @@ static void Boot()
 
 	// Prepare window dimensions
 	int display = 0;
-	int initialWidth = 640;
-	int initialHeight = 480;
-	float desiredAspectRatio = (float)initialWidth / (float)initialHeight;
 	float screenFillRatio = 2.0f / 3.0f;
 
-	SDL_Rect displayBounds = { .x = 0, .y = 0, .w = 640, .h = 480 };
+	SDL_Rect displayBounds = { .x = 0, .y = 0, .w = GAME_VIEW_WIDTH, .h = GAME_VIEW_HEIGHT };
 	SDL_GetDisplayUsableBounds(display, &displayBounds);
-	if (displayBounds.w > displayBounds.h)
-	{
-		initialWidth  = displayBounds.h * screenFillRatio * desiredAspectRatio;
-		initialHeight = displayBounds.h * screenFillRatio;
-	}
-	else
-	{
-		initialWidth  = displayBounds.w * screenFillRatio;
-		initialHeight = displayBounds.w * screenFillRatio / desiredAspectRatio;
-	}
+	TQ3Vector2D fitted = FitRectKeepAR(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT, displayBounds.w, displayBounds.h);
+	int initialWidth  = (int) (fitted.x * screenFillRatio);
+	int initialHeight = (int) (fitted.y * screenFillRatio);
 
 	// Create the window
 	gSDLWindow = SDL_CreateWindow(
