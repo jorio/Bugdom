@@ -655,7 +655,6 @@ static void CleanupLevel(void)
 
 static void DoDeathReset(void)
 {
-	GammaFadeOut(false);
 
 			/* SEE IF THAT WAS THE LAST LIFE */
 			
@@ -664,8 +663,12 @@ static void DoDeathReset(void)
 	if (gNumLives <= 0)
 	{
 		gGameOverFlag = true;
-		return;
+		return;		// don't fade out -- PlayGame() does a final fade out as it cleans up after PlayArea returns
 	}
+
+			/* FADE OUT IF WE HAVE MORE LIVES */
+
+	GammaFadeOut(false);
 	
 
 			/* RESET THE PLAYER & CAMERA INFO */
