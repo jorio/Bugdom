@@ -355,7 +355,10 @@ void PauseAllChannels(Boolean pause)
 		SndDoImmediate(gSndChannel[c], &cmd);
 	}
 
-	SndDoImmediate(gMusicChannel, &cmd);
+	if (!gMuteMusicFlag)
+	{
+		SndDoImmediate(gMusicChannel, &cmd);
+	}
 }
 
 
