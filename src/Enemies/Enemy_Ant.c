@@ -117,6 +117,16 @@ enum
 
 
 
+/********************** IS THROWN SPEAR VALID *********************/
+
+static Boolean IsThrownSpearValid(ObjNode* owner, ObjNode* spearObj)
+{
+	return spearObj
+		&& (spearObj->CType != INVALID_NODE_FLAG)
+		&& (spearObj->SpearOwner == owner);
+}
+
+
 /************************ ADD ANT ENEMY *************************/
 //
 // parm[0] = attack type:  0 = spear, 1 = rock
@@ -293,9 +303,10 @@ ObjNode	*spearObj;
 						/* VERIFY SPEAR */
 						
 				spearObj = (ObjNode *)theNode->ThrownSpear;												// get objnode of spear
-				if ((spearObj->SpearOwner != theNode) || (spearObj->CType == INVALID_NODE_FLAG))	// see if isnt valid anymore
+				if (!IsThrownSpearValid(theNode, spearObj))													// see if isnt valid anymore
 				{
 					theNode->Mode = ANT_MODE_NONE;
+					theNode->ThrownSpear = nil;
 					break;				
 				}
 						
@@ -392,8 +403,9 @@ ObjNode		*spearObj;
 						/* VERIFY SPEAR */
 						
 				spearObj = (ObjNode *)theNode->ThrownSpear;												// get objnode of spear
-				if ((spearObj->SpearOwner != theNode) || (spearObj->CType == INVALID_NODE_FLAG))		// see if isnt valid anymore
+				if (!IsThrownSpearValid(theNode, spearObj))													// see if isnt valid anymore
 				{
+					theNode->ThrownSpear = nil;
 					theNode->Mode = ANT_MODE_NONE;
 					break;				
 				}
@@ -524,9 +536,12 @@ ObjNode	*spearObj;
 				/* VERIFY SPEAR */
 				
 		spearObj = (ObjNode *)theNode->ThrownSpear;												// get objnode of spear
-		if ((spearObj->SpearOwner == theNode) && (spearObj->CType != INVALID_NODE_FLAG))		// make sure spear obj is valid
+		if (IsThrownSpearValid(theNode, spearObj))													// make sure spear obj is valid
+		{
 			DeleteObject(spearObj);																// delete the old spear
-			
+			theNode->ThrownSpear = nil;
+		}
+
 		GiveAntASpear(theNode);																// give it a new spear (even if old is invalid)
 	}
 
