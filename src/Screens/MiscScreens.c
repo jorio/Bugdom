@@ -1,7 +1,8 @@
 /****************************/
 /*   	MISCSCREENS.C	    */
-/* (c)1999 Pangea Software  */
 /* By Brian Greenstone      */
+/* (c)1999 Pangea Software  */
+/* (c)2022 Iliyas Jorio     */
 /****************************/
 
 
@@ -34,6 +35,45 @@ static void MoveLogoBG(ObjNode *theNode);
 
 TQ3TriMeshData* gPauseQuad = nil;
 
+
+
+/****************** ADJUST CAMERA WHILE PAUSED **********************/
+
+static void CheckPauseCameraKeys(void)
+{
+	const float fadeSpeed = 3.0f;
+	const float pauseDelay = -10 * fadeSpeed;
+
+	if (GetKeyState(kKey_SwivelCameraLeft))
+	{
+		gPauseQuad->diffuseColor.a = pauseDelay;
+		gCameraControlDelta.x -= 2.0f;
+	}
+	else if (GetKeyState(kKey_SwivelCameraRight))
+	{
+		gPauseQuad->diffuseColor.a = pauseDelay;
+		gCameraControlDelta.x += 2.0f;
+	}
+
+	if (GetKeyState(kKey_ZoomIn))
+	{
+		gPauseQuad->diffuseColor.a = pauseDelay;
+	}
+	else if (GetKeyState(kKey_ZoomOut))
+	{
+		gPauseQuad->diffuseColor.a = pauseDelay;
+	}
+
+	if (gPauseQuad->diffuseColor.a < 1)
+	{
+		UpdateCamera();
+		if (gCyclorama && gCyclorama->MoveCall)
+			gCyclorama->MoveCall(gCyclorama);
+		gPauseQuad->diffuseColor.a += gFramesPerSecondFrac * fadeSpeed;
+		if (gPauseQuad->diffuseColor.a > 1.0f)
+			gPauseQuad->diffuseColor.a = 1.0f;
+	}
+}
 
 
 /************************ DO PAUSED ******************************/
@@ -71,8 +111,9 @@ int curState = kPauseChoice_Resume;
 
 	gPauseQuad = MakeQuadMesh(1, 1.0f, 1.0f);
 	gPauseQuad->hasVertexNormals = false;
-	gPauseQuad->texturingMode = kQ3TexturingModeOpaque;
+	gPauseQuad->texturingMode = kQ3TexturingModeAlphaBlend;
 	gPauseQuad->glTextureName = textures[curState];		// resume
+	gPauseQuad->diffuseColor = (TQ3ColorRGBA) {1, 1, 1, 1};
 
 	float xs = .4f;
 	float ys = xs/imageAspectRatio;
@@ -100,94 +141,103 @@ int curState = kPauseChoice_Resume;
 		UpdateInput();
 		SDL_Delay(10);
 
+
 		if (GetNewKeyState(kKey_Pause) || GetNewKeyState(kKey_UI_Cancel))						// see if ESC out
 		{
 			curState = kPauseChoice_Resume;
 			break;
 		}
 
-		int rawMouseX, rawMouseY;
-		SDL_GetMouseState(&rawMouseX, &rawMouseY);
-		bool mouseMoved = prevRawMouseX != rawMouseX || prevRawMouseY != rawMouseY;
-
-		int newState = curState;
-
-		if (mouseMoved)
+		if (gPauseQuad->diffuseColor.a >= 0.9f)
 		{
-			TQ3Point3D mouse = {rawMouseX, rawMouseY, 0};
-			Q3Point3D_Transform(&mouse, &gWindowToFrustumCorrectAspect, &mouse);
+			int rawMouseX, rawMouseY;
+			SDL_GetMouseState(&rawMouseX, &rawMouseY);
+			bool mouseMoved = prevRawMouseX != rawMouseX || prevRawMouseY != rawMouseY;
 
-			if      (mouse.x < -xs) newState = kPauseChoice_Null;
-			else if (mouse.x > +xs) newState = kPauseChoice_Null;
-			else if (mouse.y > ys*+.15f) newState = kPauseChoice_Null;
-			else if (mouse.y > ys*-.17f) newState = kPauseChoice_Resume;
-			else if (mouse.y > ys*-.47f) newState = kPauseChoice_Bail;
-			else if (mouse.y > ys*-.81f) newState = kPauseChoice_Quit;
-			else newState = kPauseChoice_Null;
+			int newState = curState;
 
-			prevRawMouseX = rawMouseX;
-			prevRawMouseY = rawMouseY;
-		}
-
-		if (!mouseMoved || newState == kPauseChoice_Null)
-		{
-			int delta = 0;
-
-			TQ3Vector2D thumb = GetThumbStickVector(false);
-			if (!ignoreThumbstick)
+			if (mouseMoved)
 			{
-				if (fabsf(thumb.y) > 0.5f)
-				{
-					delta = (thumb.y < 0) ? -1 : 1;
-					ignoreThumbstick = true;
-				}
-			}
-			else
-			{
-				if (fabsf(thumb.y) < 0.5f)
-				{
-					ignoreThumbstick = false;
-				}
+				TQ3Point3D mouse = {rawMouseX, rawMouseY, 0};
+				Q3Point3D_Transform(&mouse, &gWindowToFrustumCorrectAspect, &mouse);
+
+				if      (mouse.x < -xs) newState = kPauseChoice_Null;
+				else if (mouse.x > +xs) newState = kPauseChoice_Null;
+				else if (mouse.y > ys*+.15f) newState = kPauseChoice_Null;
+				else if (mouse.y > ys*-.17f) newState = kPauseChoice_Resume;
+				else if (mouse.y > ys*-.47f) newState = kPauseChoice_Bail;
+				else if (mouse.y > ys*-.81f) newState = kPauseChoice_Quit;
+				else newState = kPauseChoice_Null;
+
+				prevRawMouseX = rawMouseX;
+				prevRawMouseY = rawMouseY;
 			}
 
-			if (GetNewKeyState(kKey_Forward))
-				delta = -1;
-
-			if (GetNewKeyState(kKey_Backward))
-				delta = 1;
-
-			if (delta != 0)
+			if (!mouseMoved || newState == kPauseChoice_Null)
 			{
-				if (newState == kPauseChoice_Null)
-					newState = kPauseChoice_Resume;
+				int delta = 0;
+
+				TQ3Vector2D thumb = GetThumbStickVector(false);
+				if (!ignoreThumbstick)
+				{
+					if (fabsf(thumb.y) > 0.5f)
+					{
+						delta = (thumb.y < 0) ? -1 : 1;
+						ignoreThumbstick = true;
+					}
+				}
 				else
 				{
-					newState += delta;
-					if (newState < 0)
-						newState = 0;
-					else if (newState > kPauseChoice_Quit)
-						newState = kPauseChoice_Quit;
+					if (fabsf(thumb.y) < 0.5f)
+					{
+						ignoreThumbstick = false;
+					}
 				}
+
+				if (GetNewKeyState(kKey_Forward))
+					delta = -1;
+
+				if (GetNewKeyState(kKey_Backward))
+					delta = 1;
+
+				if (delta != 0)
+				{
+					if (newState == kPauseChoice_Null)
+						newState = kPauseChoice_Resume;
+					else
+					{
+						newState += delta;
+						if (newState < 0)
+							newState = 0;
+						else if (newState > kPauseChoice_Quit)
+							newState = kPauseChoice_Quit;
+					}
+				}
+			}
+
+			if (curState != newState)
+			{
+				curState = newState;
+				GAME_ASSERT(curState >= 0 && curState < NUM_PAUSE_TEXTURES);
+				gPauseQuad->glTextureName = textures[newState];
+				if (curState != 3)
+					PlayEffect(EFFECT_SELECT);
+			}
+
+			// Confirm selection
+			if (newState != kPauseChoice_Null		// ensure mouse is within frame to proceed
+				&& (FlushMouseButtonPress() || GetNewKeyState(kKey_UI_Confirm) || GetNewKeyState(kKey_UI_PadConfirm)))
+			{
+				break;
 			}
 		}
 
-		if (curState != newState)
-		{
-			curState = newState;
-			GAME_ASSERT(curState >= 0 && curState < NUM_PAUSE_TEXTURES);
-			gPauseQuad->glTextureName = textures[newState];
-			if (curState != 3)
-				PlayEffect(EFFECT_SELECT);
-		}
-
-		// Confirm selection
-		if (newState != kPauseChoice_Null		// ensure mouse is within frame to proceed
-			&& (FlushMouseButtonPress() || GetNewKeyState(kKey_UI_Confirm) || GetNewKeyState(kKey_UI_PadConfirm)))
-		{
-			break;
-		}
+		// Check </> keys to prepare good-looking screenshots
+		CheckPauseCameraKeys();
 	}
 	while(FlushMouseButtonPress());							// wait for button up
+
+	ResetInputState();
 
 			/* FREE MESH/TEXTURES */
 
