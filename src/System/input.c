@@ -23,6 +23,8 @@
 /*     PROTOTYPES     */
 /**********************/
 
+typedef uint8_t KeyState;
+
 static Boolean WeAreFrontProcess(void);
 
 static void ClearMouseState(void);
@@ -72,10 +74,15 @@ static const float kMouseSensitivityTable[NUM_MOUSE_SENSITIVITY_LEVELS] =
 
 enum
 {
-	KEY_OFF,
-	KEY_DOWN,
-	KEY_HELD,
-	KEY_UP,
+	KEYSTATE_ACTIVE_BIT		= 0b001,
+	KEYSTATE_CHANGE_BIT		= 0b010,
+	KEYSTATE_IGNORE_BIT		= 0b100,
+
+	KEYSTATE_OFF			= 0b000,
+	KEYSTATE_PRESSED		= KEYSTATE_ACTIVE_BIT | KEYSTATE_CHANGE_BIT,
+	KEYSTATE_HELD			= KEYSTATE_ACTIVE_BIT,
+	KEYSTATE_UP				= KEYSTATE_OFF | KEYSTATE_CHANGE_BIT,
+	KEYSTATE_IGNOREHELD		= KEYSTATE_OFF | KEYSTATE_IGNORE_BIT,
 };
 
 
@@ -84,14 +91,13 @@ enum
 /**********************/
 
 long				gEatMouse = 0;
-static Byte			gMouseButtonState[NUM_MOUSE_BUTTONS];
+static KeyState		gMouseButtonState[NUM_MOUSE_BUTTONS];
+static KeyState		gKeyStates[kKey_MAX];
+static KeyState		gRawKeyboardState[SDLKEYSTATEBUF_SIZE];
 
 Boolean				gPlayerUsingKeyControl 	= false;
 
 TQ3Vector2D			gCameraControlDelta;
-
-Byte				gKeyStates[kKey_MAX];
-Byte				gRawKeyboardState[SDLKEYSTATEBUF_SIZE];
 
 SDL_GameController	*gSDLController = NULL;
 SDL_JoystickID		gSDLJoystickInstanceID = -1;		// ID of the joystick bound to gSDLController
@@ -112,7 +118,6 @@ KeyBinding gKeyBindings[kKey_MAX] =
 {
 [kKey_Pause				] = { "Pause",				SDL_SCANCODE_ESCAPE,	0,						0,					SDL_CONTROLLER_BUTTON_START, },
 [kKey_ToggleMusic		] = { "Toggle Music",		SDL_SCANCODE_M,			0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
-[kKey_ToggleFullscreen	] = { "Toggle Fullscreen",	SDL_SCANCODE_F11,		0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
 [kKey_SwivelCameraLeft	] = { "Swivel Camera Left",	SDL_SCANCODE_COMMA,		0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
 [kKey_SwivelCameraRight	] = { "Swivel Camera Right",SDL_SCANCODE_PERIOD,	0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
 [kKey_ZoomIn			] = { "Zoom In",			SDL_SCANCODE_2,			0,						0,					SDL_CONTROLLER_BUTTON_LEFTSHOULDER, },
@@ -153,20 +158,24 @@ static Boolean WeAreFrontProcess(void)
 	return 0 != (SDL_GetWindowFlags(gSDLWindow) & SDL_WINDOW_INPUT_FOCUS);
 }
 
-
-static inline void UpdateKeyState(Byte* state, bool downNow)
+static inline void UpdateKeyState(KeyState* state, bool downNow)
 {
 	switch (*state)	// look at prev state
 	{
-	case KEY_HELD:
-	case KEY_DOWN:
-		*state = downNow ? KEY_HELD : KEY_UP;
-		break;
-	case KEY_OFF:
-	case KEY_UP:
-	default:
-		*state = downNow ? KEY_DOWN : KEY_OFF;
-		break;
+		case KEYSTATE_HELD:
+		case KEYSTATE_PRESSED:
+			*state = downNow ? KEYSTATE_HELD : KEYSTATE_UP;
+			break;
+
+		case KEYSTATE_OFF:
+		case KEYSTATE_UP:
+		default:
+			*state = downNow ? KEYSTATE_PRESSED : KEYSTATE_OFF;
+			break;
+
+		case KEYSTATE_IGNOREHELD:
+			*state = downNow ? KEYSTATE_IGNOREHELD : KEYSTATE_OFF;
+			break;
 	}
 }
 
@@ -278,15 +287,26 @@ void UpdateInput(void)
 static void ClearMouseState(void)
 {
 	MouseSmoothing_ResetState();
-	memset(gMouseButtonState, KEY_OFF, sizeof(gMouseButtonState));
+	memset(gMouseButtonState, KEYSTATE_IGNOREHELD, sizeof(gMouseButtonState));
 }
 
 void ResetInputState(void)
 {
-	memset(gKeyStates, KEY_OFF, sizeof(gKeyStates));
-	ClearMouseState();
+	_Static_assert(1 == sizeof(KeyState), "sizeof(KeyState) has changed -- Rewrite this function without memset()!");
+
+	memset(gKeyStates, KEYSTATE_IGNOREHELD, kKey_MAX);
+	memset(gRawKeyboardState, KEYSTATE_IGNOREHELD, SDL_NUM_SCANCODES);
+	memset(gMouseButtonState, KEYSTATE_IGNOREHELD, sizeof(gMouseButtonState));
+
+	MouseSmoothing_ResetState();
 	EatMouseEvents();
 }
+
+void InvalidateKeyState(int need)
+{
+	gKeyStates[need] = KEYSTATE_IGNOREHELD;
+}
+
 
 
 /**************** UPDATE KEY MAP *************/
@@ -335,13 +355,13 @@ void UpdateKeyMap(void)
 		/* WHILE WE'RE HERE LET'S DO SOME SPECIAL KEY CHECKS */
 		/*****************************************************/
 
-	if (GetNewKeyState(kKey_ToggleFullscreen))
+	if (GetNewKeyState_SDL(SDL_SCANCODE_RETURN)
+		&& (GetKeyState_SDL(SDL_SCANCODE_LALT) || GetKeyState_SDL(SDL_SCANCODE_RALT)))
 	{
 		gGamePrefs.fullscreen = gGamePrefs.fullscreen ? 0 : 1;
 		SetFullscreenMode();
 
 		ResetInputState();
-		gKeyStates[kKey_ToggleFullscreen] = KEY_HELD;
 	}
 
 }
@@ -351,14 +371,14 @@ void UpdateKeyMap(void)
 
 Boolean GetKeyState(unsigned short key)
 {
-	return gKeyStates[key] == KEY_HELD || gKeyStates[key] == KEY_DOWN;
+	return 0 != (gKeyStates[key] & KEYSTATE_ACTIVE_BIT);
 }
 
 Boolean GetKeyState_SDL(unsigned short key)
 {
 	if (key >= SDLKEYSTATEBUF_SIZE)
 		return false;
-	return gRawKeyboardState[key] == KEY_HELD || gRawKeyboardState[key] == KEY_DOWN;
+	return 0 != (gRawKeyboardState[key] & KEYSTATE_ACTIVE_BIT);
 }
 
 
@@ -366,14 +386,15 @@ Boolean GetKeyState_SDL(unsigned short key)
 
 Boolean GetNewKeyState(unsigned short key)
 {
-	return gKeyStates[key] == KEY_DOWN;
+	GAME_ASSERT(key < kKey_MAX);
+	return gKeyStates[key] == KEYSTATE_PRESSED;
 }
 
 Boolean GetNewKeyState_SDL(unsigned short key)
 {
 	if (key >= SDLKEYSTATEBUF_SIZE)
 		return false;
-	return gRawKeyboardState[key] == KEY_DOWN;
+	return gRawKeyboardState[key] == KEYSTATE_PRESSED;
 }
 
 /******* DOES USER WANT TO SKIP TO NEXT SCREEN *******/
@@ -395,9 +416,9 @@ Boolean GetSkipScreenInput(void)
 
 Boolean FlushMouseButtonPress()
 {
-	Boolean gotPress = KEY_DOWN == gMouseButtonState[SDL_BUTTON_LEFT];
+	Boolean gotPress = KEYSTATE_PRESSED == gMouseButtonState[SDL_BUTTON_LEFT];
 	if (gotPress)
-		gMouseButtonState[SDL_BUTTON_LEFT] = KEY_HELD;
+		gMouseButtonState[SDL_BUTTON_LEFT] = KEYSTATE_HELD;
 	return gotPress;
 }
 
