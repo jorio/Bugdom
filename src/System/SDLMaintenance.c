@@ -60,14 +60,14 @@ void DoSDLMaintenance(void)
 		switch (event.type)
 		{
 			case SDL_QUIT:
-				ExitToShell();			// throws Pomme::QuitRequest
+				CleanQuit();
 				return;
 
 			case SDL_WINDOWEVENT:
 				switch (event.window.event)
 				{
 					case SDL_WINDOWEVENT_CLOSE:
-						ExitToShell();	// throws Pomme::QuitRequest
+						CleanQuit();
 						return;
 
 					case SDL_WINDOWEVENT_RESIZED:
