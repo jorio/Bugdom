@@ -236,8 +236,6 @@ float	y;
 
 Boolean DoTrig_WaterBug(ObjNode *theNode, ObjNode *whoNode, Byte sideBits)
 {
-ObjNode	*whoShadow;
-
 	(void) sideBits;
 	
 			/* IF PLAYER IS BALL, THEN DO NOTHING */
@@ -263,10 +261,7 @@ ObjNode	*whoShadow;
 			/* SET PLAYER ANIMATION TO RIDE THIS GUY */
 			
 	MorphToSkeletonAnim(whoNode->Skeleton, PLAYER_ANIM_RIDEWATERBUG, 7);
-	whoShadow = whoNode->ShadowNode;						// hide my shadow while riding
-	if (whoShadow)
-		whoShadow->StatusBits |= STATUS_BIT_HIDDEN;
-		
+
 	gCurrentWaterBug = theNode;								// remember who we're riding
 	gWaterSprayRegulator = 0;
 	gWaterBugParticleGroup = -1;							// make a new particle group

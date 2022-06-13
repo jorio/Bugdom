@@ -672,6 +672,14 @@ float			s;
 			
 	Q3Point3D_Transform(&zero, &gPlayerObj->BaseTransformMatrix, &gMyCoord);
 	gPlayerObj->Coord = gMyCoord;	
+
+
+			/* HIDE MY SHADOW WHILE RIDING */
+
+	if (gPlayerObj->ShadowNode)
+	{
+		gPlayerObj->ShadowNode->StatusBits |= STATUS_BIT_HIDDEN;
+	}
 }
 
 
@@ -740,6 +748,14 @@ hop_off:
 		/* UPDATE COLLISION BOX */
 		
 	CalcObjectBoxFromNode(gPlayerObj);
+
+
+		/* HIDE MY SHADOW WHILE RIDING */
+
+	if (gPlayerObj->ShadowNode)
+	{
+		gPlayerObj->ShadowNode->StatusBits |= STATUS_BIT_HIDDEN;
+	}
 }
 
 
