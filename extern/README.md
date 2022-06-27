@@ -1,1 +1,1 @@
-External libraries go here (Quesa, SDL)
+External libraries go here (Pomme, SDL)

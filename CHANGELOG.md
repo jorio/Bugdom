@@ -1,8 +1,22 @@
 # Bugdom changelog
 
-- **1.3.2 (NOT RELEASED YET)**
+- **1.3.2 (June 27, 2022)**
+    - Seamless terrain texturing
+    - Mouse-driven menus can now be navigated with a controller
+    - Increase joystick deadzone to prevent Rollie from drifting continuously with a badly-calibrated controller
+    - Smoother mouse control for waterbugs and dragonflies
+    - Add option to constrain the viewport to a 4:3 aspect ratio
+    - Default window dimensions adapt to screen size
+    - Bump SDL to 2.0.22
+    - To make cool screenshots, you can now swivel the camera with `<` `>` while the game is paused
+    - To toggle fullscreen mode, use Alt+Enter instead of F11
+    - Minor bugfixes, including:
+        - Fix rare occurrences of garbled screens after fading out
+        - Fix rare crash in between levels during a long game session, especially on macOS
+        - Fix minor fence collision bugs
+        - Fix boss health bar sometimes showing incorrect value at start of level
 
-- **1.3.1 (August 2021)**
+- **1.3.1 (August 21, 2021)**
     - Full rewrite of the 3D renderer, replacing legacy QuickDraw 3D code. The game should work better on systems that had trouble running the previous version.
     - Cosmetic touchups on 3DMF model textures. Some textures could use UV clamping, and some had incorrect alpha (spider teeth, etc.).
     - Native Apple Silicon support in macOS build.
@@ -11,7 +25,7 @@
     - Bump SDL to 2.0.16.
     - Minor gameplay & presentation bugfixes.
 
-- **1.3.0 (December 2020)**
+- **1.3.0 (December 29, 2020)**
     - Major update so the game works on modern systems.
     - Support for arbitrary screen resolutions beyond 640x480.
     - Presentation enhancements (built-in save & settings dialogs, widescreen touchups, etc.).

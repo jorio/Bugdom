@@ -49,9 +49,8 @@ Bugdom® is a registered trademark of Pangea Software, Inc.
 - All music herein is © Mike Beckett.
 - This software includes portions © 2020 Iliyas Jorio.
 
-## Other Pangea game ports
+## More Pangea stuff!
 
-If you like games by Pangea Software, you might also enjoy my ports of
-[Nanosaur](https://github.com/jorio/nanosaur),
-[Mighty Mike](https://github.com/jorio/mightymike),
-and [Otto Matic](https://github.com/jorio/ottomatic).
+Check out my ports of [Cro-Mag Rally](https://github.com/jorio/CroMagRally), [Nanosaur](https://github.com/jorio/Nanosaur), [Mighty Mike (Power Pete)](https://github.com/jorio/MightyMike) and [Otto Matic](https://github.com/jorio/OttoMatic).
+
+All ports are provided free of charge! If you’d like to support the development of Pangea game ports, feel free to visit https://jorio.itch.io and name your own price for any of the games there. Much appreciated! 😊

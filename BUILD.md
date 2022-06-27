@@ -15,7 +15,7 @@ build.py is the script that is used by the CI setup to produce builds. If you wa
     ```
     git clone --recurse-submodules https://github.com/jorio/Bugdom
     ```
-1. Download [SDL2-2.0.20.dmg](https://libsdl.org/release/SDL2-2.0.20.dmg), open it, and copy **SDL2.framework** to the **extern** folder
+1. Download [SDL2-2.0.22.dmg](https://libsdl.org/release/SDL2-2.0.22.dmg), open it, and copy **SDL2.framework** to the **extern** folder
 1. Prep the Xcode project:
     ```
     cmake -G Xcode -S . -B build
@@ -35,7 +35,7 @@ build.py is the script that is used by the CI setup to produce builds. If you wa
     ```
     git clone --recurse-submodules https://github.com/jorio/Bugdom
     ```
-1. Download [SDL2-devel-2.0.20-VC.zip](https://libsdl.org/release/SDL2-devel-2.0.20-VC.zip) and extract the contents into the **extern** folder
+1. Download [SDL2-devel-2.0.22-VC.zip](https://libsdl.org/release/SDL2-devel-2.0.22-VC.zip) and extract the contents into the **extern** folder
 1. Prep the Visual Studio solution:
     ```
     cmake -G "Visual Studio 17 2022" -A x64 -S . -B build
@@ -62,5 +62,6 @@ build.py is the script that is used by the CI setup to produce builds. If you wa
     cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
     cmake --build build
     ```
+    If you'd like to enable runtime sanitizers, append `-DSANITIZE=1` to the **first** `cmake` call above.
 1. The game gets built in `build/Release/Bugdom`. Enjoy!
 

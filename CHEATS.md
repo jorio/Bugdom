@@ -1,24 +1,28 @@
-# Bugdom Cheats
+# Bugdom Cheats & Secrets
 
 ## In main menu
 
-Hold down F10 and click on the START icon to bring up a level select dialog.
+Hold down `F10` and click on the START icon to bring up a level select dialog.
 
 ## In game
 
-For most of these you need to hold down the tilde/backtick key while pressing an F-number key.
-Tilde is the key above Tab on a US keyboard layout.
+For most of these you need to hold down the tilde/backtick key (~ `) while pressing an F-number key.
+The backtick key is just above Tab on a US keyboard layout.
 
-- \` + F1 = win this level
-- \` + F2 = get shield
-- \` + F3 = full health
-- \` + F4 = full ball timer
-- \` + F5 = full inventory
-- \` + F6 = toggle liquid invincibility
-- \` + F7 = hurt player
-- \` + F8 = display debug statistics
-- \` + F9 = display bounding boxes
-- F11 (without tilde) = toggle fullscreen/windowed mode
+| Key combo       | What it does                    |
+|-----------------|---------------------------------|
+| backtick + `F1` | win this level                  |
+| backtick + `F2` | get shield                      |
+| backtick + `F3` | full health                     |
+| backtick + `F4` | full ball timer                 |
+| backtick + `F5` | full inventory                  |
+| backtick + `F6` | toggle liquid invincibility     |
+| backtick + `F7` | hurt player                     |
+| backtick + `F8` | display debug statistics        |
+| backtick + `F9` | display bounding boxes          |
+| `Alt` + `Enter` | toggle fullscreen/windowed mode |
+
+Also, you can pause the game then press `<` or `>` to adjust the camera to prepare cool screenshots.
 
 ## During Pangea splash screen
 

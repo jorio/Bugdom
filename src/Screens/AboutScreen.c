@@ -145,7 +145,7 @@ static void MakeAboutScreenObjects(int slideNumber)
 			y -= LH*4;
 
 			MakeCreditPart(-XSPREAD,	y, "Musical Direction", "Mike Beckett", "Nuclear Kangaroo Music");
-			MakeCreditPart(XSPREAD,		y, "Enhanced Update", "Iliyas Jorio", "github.com/jorio/bugdom");
+			MakeCreditPart(XSPREAD,		y, "Enhanced Update", "Iliyas Jorio", "github.com/jorio");
 
 			tmd.coord.x = 0;
 			tmd.coord.y = -110;
@@ -252,7 +252,7 @@ static void MakeAboutScreenObjects(int slideNumber)
 			float y = tmd.coord.y - LH*4;
 
 			MakeCreditPart(0, y-LH*0, "The Makers of Bugdom:", "www.pangeasoft.net", "");
-			MakeCreditPart(0, y-LH*4, "Get Updates At:", "github.com/jorio/bugdom", "");
+			MakeCreditPart(0, y-LH*4, "Get Updates At:", "https://jorio.itch.io/bugdom", "");
 
 			char sdlVersionString[256];
 			SDL_version compiled;
