@@ -19,10 +19,33 @@ endif()
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.11" CACHE STRING "Minimum OS X deployment version")
 set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Target macOS architectures")
 
+set(VITA ON)
+
+if (VITA)
+  if( DEFINED ENV{VITASDK} )
+    set(CMAKE_TOOLCHAIN_FILE "$ENV{VITASDK}/share/vita.toolchain.cmake" CACHE PATH "toolchain file")
+  else()
+    message(FATAL_ERROR "Please define VITASDK to point to your SDK path!")
+  endif()
+  include("$ENV{VITASDK}/share/vita.cmake" REQUIRED)
+
+  ## Vita config options
+  # Display name (under bubble in LiveArea)
+  set(VITA_APP_NAME "Bugdom")
+  # Unique ID must be exactly 9 characters. Recommended: XXXXYYYYY where X =
+  # unique string of developer and Y = a unique number for this app
+  set(VITA_TITLEID  "BGDM00099")
+  # Optional version string to show in LiveArea's more info screen
+  set(VITA_VERSION  "1.3.2")
+endif()
+
 project(${GAME_TARGET}
 	VERSION ${GAME_VERSION}
 	LANGUAGES C CXX
 )
+
+# export compile commands for vim-coc-clangd
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(SANITIZE "Build with asan/ubsan" OFF)
 
@@ -55,8 +78,14 @@ set(POMME_NO_GRAPHICS true)
 
 add_subdirectory(extern/Pomme)
 
-find_package(SDL2 REQUIRED COMPONENTS main)
-find_package(OpenGL REQUIRED)
+if (NOT VITA)
+    find_package(SDL2 REQUIRED COMPONENTS main)
+else()
+    find_library(SDL2_LIBRARIES SDL2)
+    find_path(SDL2_INCLUDE_DIRS SDL2/SDL.h)
+    set(SDL2_INCLUDE_DIRS ${SDL2_INCLUDE_DIRS}/SDL2)
+endif()
+#find_package(OpenGL REQUIRED)
 
 #------------------------------------------------------------------------------
 # GAME SOURCES
@@ -66,6 +95,9 @@ set(GAME_SRCDIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Write header file containing version info
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.h.in ${GAME_SRCDIR}/Headers/version.h)
+
+# Write header file containing other system info (specifically, whether building for Vita or not)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/SystemInfo.h.in ${GAME_SRCDIR}/Headers/SystemInfo.h)
 
 file(GLOB_RECURSE GAME_SOURCES CONFIGURE_DEPENDS ${GAME_SRCDIR}/*.c ${GAME_SRCDIR}/*.cpp)
 
@@ -86,7 +118,7 @@ source_group(TREE ${GAME_SRCDIR} PREFIX "" FILES ${GAME_ALL_SOURCES})
 set(GAME_LIBRARIES
 	Pomme
 	${SDL2_LIBRARIES}
-	OpenGL::GL
+	#OpenGL::GL
 )
 
 if(WIN32)
@@ -113,7 +145,7 @@ endif()
 
 target_include_directories(${GAME_TARGET} PRIVATE
 	${SDL2_INCLUDE_DIRS}
-	${OPENGL_INCLUDE_DIR}
+	#${OPENGL_INCLUDE_DIR}
 	extern/Pomme/src
 	extern/Pomme/src/QD3D
 	${GAME_SRCDIR}/Headers
@@ -180,6 +212,29 @@ else()
 endif()
 
 target_link_libraries(${GAME_TARGET} ${GAME_LIBRARIES})
+
+# VITA
+if(VITA)
+  target_link_libraries(${GAME_TARGET}
+    SDL2_image SDL2_mixer SDL2 SDL
+    m mathneon
+    vita2d
+    #vitaGL # we'll build locally instead
+    vitashark
+    SceAppMgr_stub SceKernelDmacMgr_stub
+    SceShaccCgExt SceShaccCg_stub taihen_stub
+    SceKernelThreadMgr_stub ScePower_stub
+    SceAppUtil_stub SceDisplay_stub SceGxm_stub SceSysmodule_stub
+    SceAudio_stub SceAudioIn_stub
+    SceCommonDialog_stub
+    SceCtrl_stub
+    SceHid_stub SceMotion_stub SceTouch_stub
+    )
+
+target_include_directories(${GAME_TARGET} PUBLIC "extern/vitaGL/source")
+target_link_directories(${GAME_TARGET} PUBLIC "extern/vitaGL")
+target_link_libraries(${GAME_TARGET} vitaGL)
+endif()
 
 #------------------------------------------------------------------------------
 # PLATFORM-SPECIFIC PACKAGING
@@ -262,6 +317,23 @@ else()
 	# Copy assets besides executable
 	add_custom_command(TARGET ${GAME_TARGET} POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Data ${APP_PARENT_DIR}/Data)
+endif()
+
+if(VITA)
+  ## Create Vita files
+  vita_create_self(eboot.bin ${GAME_TARGET}) # SAFE)
+
+  # vita_create_vpk is creating malformed param.sfo for me....
+  # The FILE directive lets you add additional files to the VPK, the syntax is
+  # FILE src_path dst_path_in_vpk. In this case, we add the LiveArea paths.
+  #vita_create_vpk(${VITA_APP_NAME}.vpk ${VITA_TITLEID} eboot.bin
+    #VERSION ${VITA_VERSION}
+    #NAME ${VITA_APP_NAME}
+    #FILE helloworld_sce_sys/icon0.png sce_sys/icon0.png
+    #FILE helloworld_sce_sys/livearea/contents/bg.png sce_sys/livearea/contents/bg.png
+    #FILE helloworld_sce_sys/livearea/contents/startup.png sce_sys/livearea/contents/startup.png
+    #FILE helloworld_sce_sys/livearea/contents/template.xml sce_sys/livearea/contents/template.xml
+    #)
 endif()
 
 # Windows-specific libraries

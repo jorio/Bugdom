@@ -4,6 +4,7 @@
 #include "QD3D.h"
 #include "QD3DMath.h"
 #include <SDL.h>
+#include <vitaGL.h>
 
 #if _MSC_VER
 #define _Static_assert static_assert

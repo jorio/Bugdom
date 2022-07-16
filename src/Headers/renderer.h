@@ -1,7 +1,17 @@
 #pragma once
 
 #include <QD3D.h>
-#include <SDL_opengl.h>
+#include <vitaGL.h>
+
+#define GLAPIENTRY
+#ifndef APIENTRY
+#define APIENTRY GLAPIENTRY
+#endif
+
+/* "P" suffix to be used for a pointer to a function */
+#ifndef APIENTRYP
+#define APIENTRYP APIENTRY *
+#endif
 
 #if _DEBUG
 #define CHECK_GL_ERROR()												\
@@ -42,6 +52,13 @@ typedef struct RenderModifiers
 	// and transparent meshes are drawn back-to-front.
 	int						drawOrder;
 } RenderModifiers;
+
+enum
+{
+    DETAIL_LEVEL_HIGH,
+    DETAIL_LEVEL_LOW,
+    DETAIL_LEVEL_TERRAIN_LOW,
+};
 
 enum
 {

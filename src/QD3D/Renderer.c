@@ -9,8 +9,7 @@
 
 #include "game.h"
 #include <SDL.h>
-#include <SDL_opengl.h>
-#include <SDL_opengl_glext.h>
+#include <vitaGL.h>
 #include <QD3D.h>
 #include <stdlib.h>		// qsort
 #include <stdio.h>
@@ -126,11 +125,9 @@ const RenderModifiers kDefaultRenderMods_Pillarbox =
 /*    VARIABLES             */
 /****************************/
 
-static SDL_GLContext gGLContext = NULL;
+//static SDL_GLContext gGLContext = NULL;
 
 static RendererState gState;
-
-static PFNGLDRAWRANGEELEMENTSPROC __glDrawRangeElements;
 
 float gGammaFadeFactor = 1.0f;
 
@@ -141,12 +138,6 @@ static TQ3TriMeshData* gFullscreenQuad = nil;
 /****************************/
 /*    MACROS/HELPERS        */
 /****************************/
-
-static void Render_GetGLProcAddresses(void)
-{
-	__glDrawRangeElements = (PFNGLDRAWRANGEELEMENTSPROC)SDL_GL_GetProcAddress("glDrawRangeElements");
-	GAME_ASSERT(__glDrawRangeElements);
-}
 
 static void __SetInitialState(GLenum stateEnum, bool* stateFlagPtr, bool initialValue)
 {
@@ -240,22 +231,26 @@ void DoFatalGLError(GLenum error, const char* file, int line)
 
 void Render_CreateContext(void)
 {
-	gGLContext = SDL_GL_CreateContext(gSDLWindow);
+    // Initialize vitaGL
+    //vglInit(0x800000);
+
+	/*gGLContext = SDL_GL_CreateContext(gSDLWindow);
 
 	GAME_ASSERT(gGLContext);
 
 	// On Windows, proc addresses are only valid for the current context,
 	// so we must get proc addresses everytime we recreate the context.
-	Render_GetGLProcAddresses();
+	Render_GetGLProcAddresses();*/
 }
 
 void Render_DeleteContext(void)
 {
-	if (gGLContext)
+    vglEnd();
+	/*if (gGLContext)
 	{
 		SDL_GL_DeleteContext(gGLContext);
 		gGLContext = NULL;
-	}
+	}*/
 }
 
 void Render_SetDefaultModifiers(RenderModifiers* dest)
@@ -270,9 +265,9 @@ void Render_InitState(const TQ3ColorRGBA* clearColor)
 	SetInitialClientState(GL_COLOR_ARRAY,				false);
 	SetInitialClientState(GL_TEXTURE_COORD_ARRAY,		false);
 	SetInitialState(GL_NORMALIZE,		true);		// Normalize normal vectors. Required so lighting looks correct on scaled meshes.
-	SetInitialState(GL_CULL_FACE,		true);
+    SetInitialState(GL_CULL_FACE,		true);
 	SetInitialState(GL_ALPHA_TEST,		true);
-	SetInitialState(GL_DEPTH_TEST,		true);
+    SetInitialState(GL_DEPTH_TEST,		true);
 	SetInitialState(GL_COLOR_MATERIAL,	true);
 	SetInitialState(GL_TEXTURE_2D,		false);
 	SetInitialState(GL_BLEND,			false);
@@ -335,7 +330,7 @@ void Render_EnableFog(
 {
 	(void) camHither;
 
-	glHint(GL_FOG_HINT,		GL_NICEST);
+	//glHint(GL_FOG_HINT,		GL_NICEST); // TODO replace....
 	glFogi(GL_FOG_MODE,		GL_LINEAR);
 	glFogf(GL_FOG_START,	fogHither * camYon);
 	glFogf(GL_FOG_END,		fogYon * camYon);
@@ -368,7 +363,7 @@ GLuint Render_LoadTexture(
 		const GLvoid* pixels,
 		RendererTextureFlags flags)
 {
-	GAME_ASSERT(gGLContext);
+	//GAME_ASSERT(gGLContext);
 
 	GLuint textureName;
 
@@ -378,8 +373,8 @@ GLuint Render_LoadTexture(
 	Render_BindTexture(textureName);				// this is now the currently active texture
 	CHECK_GL_ERROR();
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, !gGamePrefs.lowDetail? GL_LINEAR: GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, !gGamePrefs.lowDetail? GL_LINEAR: GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (gGamePrefs.detailLevel != DETAIL_LEVEL_LOW) ? GL_LINEAR: GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (gGamePrefs.detailLevel != DETAIL_LEVEL_LOW) ? GL_LINEAR: GL_NEAREST);
 
 	if (flags & kRendererTextureFlags_ClampU)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -413,34 +408,34 @@ void Render_UpdateTexture(
 		const GLvoid* pixels,
 		int rowBytesInInput)
 {
-	GLint pUnpackRowLength = 0;
-
 	Render_BindTexture(textureName);
 
 	// Set unpack row length (if valid rowbytes input given)
-	if (rowBytesInInput > 0)
-	{
-		glGetIntegerv(GL_UNPACK_ROW_LENGTH, &pUnpackRowLength);
-		glPixelStorei(GL_UNPACK_ROW_LENGTH, rowBytesInInput);
-	}
-
-	glTexSubImage2D(
-			GL_TEXTURE_2D,
-			0,
-			x,
-			y,
-			width,
-			height,
-			bufferFormat,
-			bufferType,
-			pixels);
-	CHECK_GL_ERROR();
-
-	// Restore unpack row length
-	if (rowBytesInInput > 0)
-	{
-		glPixelStorei(GL_UNPACK_ROW_LENGTH, pUnpackRowLength);
-	}
+    if (rowBytesInInput > 0) {
+        glTexSubImage2DUnpackRow(
+                GL_TEXTURE_2D,
+                0,
+                x,
+                y,
+                width,
+                height,
+                bufferFormat,
+                bufferType,
+                pixels,
+                rowBytesInInput);
+    } else {
+        glTexSubImage2D(
+                GL_TEXTURE_2D,
+                0,
+                x,
+                y,
+                width,
+                height,
+                bufferFormat,
+                bufferType,
+                pixels);
+    }
+    CHECK_GL_ERROR();
 }
 
 void Render_Load3DMFTextures(TQ3MetaFile* metaFile, GLuint* outTextureNames, bool forceClampUVs)
@@ -460,26 +455,34 @@ void Render_Load3DMFTextures(TQ3MetaFile* metaFile, GLuint* outTextureNames, boo
 			case kQ3PixelTypeRGB32:
 				meshTexturingMode = kQ3TexturingModeOpaque;
 				internalFormat = GL_RGB;
-				format = GL_BGRA;
-				type = GL_UNSIGNED_INT_8_8_8_8_REV;
+				//format = GL_BGRA;
+				//type = GL_UNSIGNED_INT_8_8_8_8_REV;
+				format = GL_RGBA;
+                type = GL_UNSIGNED_BYTE;
 				break;
 			case kQ3PixelTypeARGB32:
 				meshTexturingMode = kQ3TexturingModeAlphaBlend;
 				internalFormat = GL_RGBA;
-				format = GL_BGRA;
-				type = GL_UNSIGNED_INT_8_8_8_8_REV;
+				//format = GL_BGRA;
+				//type = GL_UNSIGNED_INT_8_8_8_8_REV;
+				format = GL_RGBA;
+                type = GL_UNSIGNED_BYTE;
 				break;
 			case kQ3PixelTypeRGB16:
 				meshTexturingMode = kQ3TexturingModeOpaque;
 				internalFormat = GL_RGB;
-				format = GL_BGRA;
-				type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
+				//format = GL_BGRA;
+				//type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
+				format = GL_RGBA;
+                type = GL_UNSIGNED_SHORT_5_5_5_1;
 				break;
 			case kQ3PixelTypeARGB16:
 				meshTexturingMode = kQ3TexturingModeAlphaTest;
 				internalFormat = GL_RGBA;
-				format = GL_BGRA;
-				type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
+				//format = GL_BGRA;
+				//type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
+				format = GL_RGBA;
+                type = GL_UNSIGNED_SHORT_5_5_5_1;
 				break;
 			case kQ3PixelTypeRGB24:
 				meshTexturingMode = kQ3TexturingModeOpaque;
@@ -523,8 +526,8 @@ void Render_Load3DMFTextures(TQ3MetaFile* metaFile, GLuint* outTextureNames, boo
 
 void Render_StartFrame(void)
 {
-	int mkc = SDL_GL_MakeCurrent(gSDLWindow, gGLContext);
-	GAME_ASSERT_MESSAGE(mkc == 0, SDL_GetError());
+	/*int mkc = SDL_GL_MakeCurrent(gSDLWindow, gGLContext);
+	GAME_ASSERT_MESSAGE(mkc == 0, SDL_GetError());*/
 
 	// Clear rendering statistics
 	memset(&gRenderStats, 0, sizeof(gRenderStats));
@@ -561,6 +564,7 @@ void Render_FlushQueue(void)
 	// Nothing to draw?
 	if (gMeshQueueSize == 0)
 		return;
+
 
 	//--------------------------------------------------------------
 	// SORT DRAW QUEUE ENTRIES
@@ -832,26 +836,55 @@ static void SendGeometry(const MeshQueueEntry* entry)
 	if (statusBits & STATUS_BIT_KEEPBACKFACES_2PASS)
 		glCullFace(GL_FRONT);		// Pass 1: draw backfaces (cull frontfaces)
 
+    // Copy mesh points and apply transformation manually,
+    // since I couldn't get it working with vitaGL.
+    // It probably just needs to be transposed or something....
+    TQ3Point3D* pointsCopy = (TQ3Point3D*) NewPtrClear((mesh->numPoints) * sizeof(TQ3Point3D));
+
+    memcpy(pointsCopy, mesh->points, mesh->numPoints*sizeof(TQ3Point3D));
+    for (int j = 0; j < mesh->numPoints; j++) {
+        const TQ3Matrix4x4* m = entry->transform;
+        if (m) {
+            TQ3Point3D v = mesh->points[j];
+            float x2 = (m->value[0][0])*v.x + (m->value[1][0])*v.y + (m->value[2][0])*v.z + (m->value[3][0]);
+            float y2 = (m->value[0][1])*v.x + (m->value[1][1])*v.y + (m->value[2][1])*v.z + (m->value[3][1]);
+            float z2 = (m->value[0][2])*v.x + (m->value[1][2])*v.y + (m->value[2][2])*v.z + (m->value[3][2]);
+            pointsCopy[j].x = x2;
+            pointsCopy[j].y = y2;
+            pointsCopy[j].z = z2;
+        }
+    }
+
+
+
+
+
+
 	// Submit vertex data
-	glVertexPointer(3, GL_FLOAT, 0, mesh->points);
+	glVertexPointer(3, GL_FLOAT, 0, pointsCopy);//mesh->points);
 
 	// Submit transformation matrix if any
-	if (gState.currentTransform != entry->transform)
-	{
-		if (gState.currentTransform)	// nuke old transform
-			glPopMatrix();
+    if (gState.currentTransform != entry->transform)
+    {
+        if (gState.currentTransform)	// nuke old transform
+        {
+            glPopMatrix();
+        }
 
-		if (entry->transform)			// apply new transform
-		{
-			glPushMatrix();
-			glMultMatrixf((float*)entry->transform->value);
-		}
+        if (entry->transform)			// apply new transform
+        {
+            glPushMatrix();
+            // TODO: can we get this working instead of doing manual matrix work above??
+            //glMultMatrixf((float*)entry->transform->value);
+        }
 
-		gState.currentTransform = entry->transform;
-	}
+        gState.currentTransform = entry->transform;
+    }
 
 	// Draw the mesh
-	__glDrawRangeElements(GL_TRIANGLES, 0, mesh->numPoints-1, mesh->numTriangles*3, GL_UNSIGNED_SHORT, mesh->triangles);
+    // TODO: implement glDrawRangeElements
+	//__glDrawRangeElements(GL_TRIANGLES, 0, mesh->numPoints-1, mesh->numTriangles*3, GL_UNSIGNED_SHORT, mesh->triangles);
+	glDrawElements(GL_TRIANGLES, mesh->numTriangles*3, GL_UNSIGNED_SHORT, mesh->triangles);
 	CHECK_GL_ERROR();
 
 	// Pass 2 to draw transparent meshes without face culling (see above for an explanation)
@@ -861,9 +894,13 @@ static void SendGeometry(const MeshQueueEntry* entry)
 		glCullFace(GL_BACK);	// pass 2: draw frontfaces (cull backfaces)
 
 		// Draw the mesh again
-		__glDrawRangeElements(GL_TRIANGLES, 0, mesh->numPoints - 1, mesh->numTriangles * 3, GL_UNSIGNED_SHORT, mesh->triangles);
+        // TODO: implement glDrawRangeElements
+		//__glDrawRangeElements(GL_TRIANGLES, 0, mesh->numPoints - 1, mesh->numTriangles * 3, GL_UNSIGNED_SHORT, mesh->triangles);
+		glDrawElements(GL_TRIANGLES, mesh->numTriangles * 3, GL_UNSIGNED_SHORT, mesh->triangles);
 		CHECK_GL_ERROR();
 	}
+
+    DisposePtr((Ptr) pointsCopy);
 }
 
 static void BeginDepthPass(const MeshQueueEntry* entry)

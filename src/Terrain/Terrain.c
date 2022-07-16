@@ -40,8 +40,10 @@ static void BuildSuperTileLOD(SuperTileMemoryType *superTilePtr, short lod);
 #define	OUTER_SIZE		0.6f		// size of border out of add window for delete window (can be float)
 
 #define TILE_TEXTURE_INTERNAL_FORMAT	GL_RGB
-#define TILE_TEXTURE_FORMAT				GL_BGRA_EXT
-#define TILE_TEXTURE_TYPE				GL_UNSIGNED_SHORT_1_5_5_5_REV
+//#define TILE_TEXTURE_FORMAT				GL_BGRA_EXT
+//#define TILE_TEXTURE_TYPE				GL_UNSIGNED_SHORT_1_5_5_5_REV
+#define TILE_TEXTURE_FORMAT				GL_RGBA
+#define TILE_TEXTURE_TYPE				GL_UNSIGNED_SHORT_5_5_5_1
 
 
 /**********************/
@@ -333,7 +335,7 @@ static	TQ3Param2D				uvs[NUM_VERTICES_IN_SUPERTILE];
 			/* PREPARE TEXTURE DETAIL CONSTANTS ACCORDING TO USER PREFS */
 
 	// Fill out gNumLODs and textureSize[] according to user pref for texture detail (source port addition)
-	gTerrainTextureDetail = gGamePrefs.lowDetail
+	gTerrainTextureDetail = (gGamePrefs.detailLevel != DETAIL_LEVEL_HIGH)
 		? SUPERTILE_DETAIL_WORST
 		: SUPERTILE_DETAIL_BEST;
 
@@ -922,7 +924,7 @@ static TQ3Vector3D	faceNormal[NUM_TRIS_IN_SUPERTILE];
 		int textureMaxRow = textureMinRow + SUPERTILE_SIZE;
 		int textureMaxCol = textureMinCol + SUPERTILE_SIZE;
 
-		if (!gGamePrefs.lowDetail)
+		if (gGamePrefs.detailLevel == DETAIL_LEVEL_HIGH)
 		{
 			textureMinRow--;
 			textureMinCol--;
@@ -954,7 +956,7 @@ static TQ3Vector3D	faceNormal[NUM_TRIS_IN_SUPERTILE];
 					tile = gCeilingMap[row][col];			// ...or get tile from ceiling map
 				}
 
-				if (!gGamePrefs.lowDetail)
+				if (gGamePrefs.detailLevel == DETAIL_LEVEL_HIGH)
 				{
 					DrawTileIntoMipmap(tile, row2+1, col2+1, gTempTextureBuffer);		// draw into mipmap
 				}
@@ -1130,6 +1132,7 @@ const int bufWidth
 				for (int y = 0; y < tileSize; y++)
 				{
 					memcpy(buffer, tileData, tileSize * sizeof(uint16_t));
+                    Convert1555To5551(tileSize, buffer);
 
 					buffer += bufWidth;						// next line in dest
 					tileData += tileSize;					// next line in src
@@ -1145,6 +1148,7 @@ const int bufWidth
 				{
 					for (int x = 0; x < tileSize; x++)
 						buffer[x] = tileData[tileSize-1-x];
+                    Convert1555To5551(tileSize, buffer);
 
 					buffer += bufWidth;						// next line in dest
 					tileData += tileSize;					// next line in src
@@ -1160,6 +1164,7 @@ const int bufWidth
 				for (int y = 0; y < tileSize; y++)
 				{
 					memcpy(buffer, tileData, tileSize * sizeof(uint16_t));
+                    Convert1555To5551(tileSize, buffer);
 
 					buffer += bufWidth;						// next line in dest
 					tileData -= tileSize;					// next line in src
@@ -1176,7 +1181,7 @@ const int bufWidth
 				for (int y = 0; y < tileSize; y++)
 				{
 					for (int x = 0; x < tileSize; x++)
-						buffer[x] = tileData[tileSize-1-x];
+						buffer[x] = ConvertSingle1555To5551(tileData[tileSize-1-x]);
 
 					buffer += bufWidth;						// next line in dest
 					tileData -= tileSize;					// next line in src
@@ -1192,7 +1197,7 @@ const int bufWidth
 				for (int y = 0; y < tileSize; y++)
 				{
 					for (int x = 0; x < tileSize; x++)
-						buffer[bufWidth*x] = tileData[x];
+						buffer[bufWidth*x] = ConvertSingle1555To5551(tileData[x]);
 						
 					buffer--;								// prev col in dest
 					tileData += tileSize;					// next line in src
@@ -1207,7 +1212,7 @@ const int bufWidth
 				for (int y = 0; y < tileSize; y++)
 				{
 					for (int x = 0; x < tileSize; x++)
-						buffer[bufWidth*(tileSize-1-x)] = tileData[x];		// backwards
+						buffer[bufWidth*(tileSize-1-x)] = ConvertSingle1555To5551(tileData[x]);		// backwards
 
 					buffer++;								// next col in dest
 					tileData += tileSize;					// next line in src
@@ -1223,7 +1228,7 @@ const int bufWidth
 				for (int y = 0; y < tileSize; y++)
 				{
 					for (int x = 0; x < tileSize; x++)
-						buffer[bufWidth*(tileSize-1-x)] = tileData[x];		// backwards
+						buffer[bufWidth*(tileSize-1-x)] = ConvertSingle1555To5551(tileData[x]);		// backwards
 
 					buffer--;								// prev col in dest
 					tileData += tileSize;					// next line in src
@@ -1238,7 +1243,7 @@ const int bufWidth
 				for (int y = 0; y < tileSize; y++)			// draw to right col from top row of src
 				{
 					for (int x = 0; x < tileSize; x++)
-						buffer[bufWidth*x] = tileData[x];
+						buffer[bufWidth*x] = ConvertSingle1555To5551(tileData[x]);
 
 					buffer++;								// next col in dest
 					tileData += tileSize;					// next line in src
@@ -1264,14 +1269,15 @@ static void	ShrinkSuperTileTextureMap(const u_short *srcPtr, u_short *dstPtr)
 		{
 			u_short c1 = srcPtr[3];							// get colors to average
 			u_short c2 = srcPtr[4];
-			u_short r = ((c1>>10) + (c2>>10))>>1;			// compute average
-			u_short g = (((c1>>5)&0x1f) + ((c2>>5)&0x1f))>>1;
-			u_short b = ((c1&0x1f) + (c2&0x1f)) >> 1;
+            // Note: fixed rgb order here for vita RGBA
+			u_short r = ((c1>>11) + (c2>>11))>>1;			// compute average
+			u_short g = (((c1>>6)&0x1f) + ((c2>>6)&0x1f))>>1;
+			u_short b = (((c1>>1)&0x1f) + ((c2>>1)&0x1f)) >> 1;
 
 			dstPtr[0] = srcPtr[0];							// save #0
 			dstPtr[1] = srcPtr[1];							// save #1
 			dstPtr[2] = srcPtr[2];							// save #2
-			dstPtr[3] = (r<<10)|(g<<5)|b;					// save #3 as average of #3 and #4
+			dstPtr[3] = (r<<11)|(g<<6)|(b<<1);					// save #3 as average of #3 and #4
 
 			dstPtr += 4;
 			srcPtr += 5;
@@ -1325,35 +1331,36 @@ static void ShrinkHalf(const uint16_t* input, uint16_t* output, int outputSize)
 	{
 		for (int x = 0; x < outputSize; x++)
 		{
+            // Note: fixed rgb order here for vita RGBA
 			uint16_t	r,g,b;
 			uint16_t	pixel;
 
 			pixel = *input++;							// get a pixel
-			r = (pixel >> 10) & 0x1f;
-			g = (pixel >> 5) & 0x1f;
-			b = pixel & 0x1f;
+			r = (pixel >> 11) & 0x1f;
+			g = (pixel >> 6) & 0x1f;
+			b = (pixel >> 1) & 0x1f;
 
 			pixel = *input++;							// get next pixel
-			r += (pixel >> 10) & 0x1f;
-			g += (pixel >> 5) & 0x1f;
-			b += pixel & 0x1f;
+			r += (pixel >> 11) & 0x1f;
+			g += (pixel >> 6) & 0x1f;
+			b += (pixel >> 1) & 0x1f;
 
 
 			pixel = *nextLine++;						// get a pixel from next line
-			r += (pixel >> 10) & 0x1f;
-			g += (pixel >> 5) & 0x1f;
-			b += pixel & 0x1f;
+			r += (pixel >> 11) & 0x1f;
+			g += (pixel >> 6) & 0x1f;
+			b += (pixel >> 1) & 0x1f;
 
 			pixel = *nextLine++;						// get next pixel from next line
-			r += (pixel >> 10) & 0x1f;
-			g += (pixel >> 5) & 0x1f;
-			b += pixel & 0x1f;
+			r += (pixel >> 11) & 0x1f;
+			g += (pixel >> 6) & 0x1f;
+			b += (pixel >> 1) & 0x1f;
 
 			r >>= 2;									// calc average
 			g >>= 2;
 			b >>= 2;
 
-			*output++ = (r<<10) | (g<<5) | b;			// save new pixel
+			*output++ = (r<<11) | (g<<6) | (b<<1);			// save new pixel
 		}
 		input += inputWidth;							// skip a line
 		nextLine += inputWidth;

@@ -17,6 +17,7 @@
 static const char* GenerateKiddieModeSubtitle(void);
 static const char* GenerateDetailSubtitle(void);
 static const char* GenerateMSAASubtitle(void);
+static void MoveGrass(ObjNode *theNode);
 
 /****************************/
 /*    CONSTANTS             */
@@ -75,6 +76,7 @@ static const SettingEntry gSettingsMenu[] =
 		.choices = {"No", "Yes"},
 	},
 
+    /*
 	{
 		.kind = kCloverRange,
 		.ptr = &gGamePrefs.mouseSensitivityLevel,
@@ -82,16 +84,39 @@ static const SettingEntry gSettingsMenu[] =
 		.nChoices = NUM_MOUSE_SENSITIVITY_LEVELS,
 		.choices = {"1","2","3","4","5","6","7","8"},
 	},
+    */
 
-#if _DEBUG
+//#if _DEBUG
 	{
 		.kind = kCycler,
 		.ptr = &gGamePrefs.playerRelativeKeys,
-		.label = "Tank controls",
+		.label = "Tank controls (D-pad)",
 		.nChoices = 2,
 		.choices = {"No", "Yes"},
 	},
-#endif
+//#endif
+
+	{
+		.kind = kCycler,
+		.ptr = &gGamePrefs.flipCameraHorizontal,
+		.label = "Camera controls (horizontal)",
+		.nChoices = 2,
+		.choices = {"Normal", "Reversed"},
+	},
+	{
+		.kind = kCycler,
+		.ptr = &gGamePrefs.flipFlightHorizontal,
+		.label = "Dragonfly controls (horizontal)",
+		.nChoices = 2,
+		.choices = {"Normal", "Reversed"},
+	},
+	{
+		.kind = kCycler,
+		.ptr = &gGamePrefs.flipFlightVertical,
+		.label = "Dragonfly controls (vertical)",
+		.nChoices = 2,
+		.choices = {"Normal", "Reversed"},
+	},
 
 	{
 		.kind = kButton,
@@ -112,7 +137,8 @@ static const SettingEntry gSettingsMenu[] =
 
 static const SettingEntry gVideoMenu[] =
 {
-	{
+	/*
+    {
 		.kind = kCycler,
 		.ptr = &gGamePrefs.fullscreen,
 		.label = "Fullscreen",
@@ -120,6 +146,7 @@ static const SettingEntry gVideoMenu[] =
 		.nChoices = 2,
 		.choices = {"No", "Yes"},
 	},
+    */
 
 	{
 		.kind = kCycler,
@@ -131,11 +158,11 @@ static const SettingEntry gVideoMenu[] =
 
 	{
 		.kind = kCycler,
-		.ptr = &gGamePrefs.lowDetail,
+		.ptr = &gGamePrefs.detailLevel,
 		.label = "Level of detail",
 		.subtitle = GenerateDetailSubtitle,
-		.nChoices = 2,
-		.choices = {"High", "Low"},
+		.nChoices = 3,
+		.choices = {"High", "Low", "High except terrain"},
 	},
 
 	{
@@ -146,6 +173,7 @@ static const SettingEntry gVideoMenu[] =
 		.choices = {"Fit to screen", "4:3"},
 	},
 
+/*
 #if !(__APPLE__)
 	{
 		.kind = kCycler,
@@ -156,6 +184,7 @@ static const SettingEntry gVideoMenu[] =
 		.subtitle = GenerateMSAASubtitle,
 	},
 #endif
+*/
 
 	// End sentinel
 	{
@@ -166,6 +195,10 @@ static const SettingEntry gVideoMenu[] =
 		.nChoices = 0,
 	}
 };
+
+// array to hold the grass blade objects, used to sync motion
+// 10 is more than the # of settings we have in any screen
+ObjNode* grassBladeObjs[10];
 
 
 /***********************************************/
@@ -199,7 +232,12 @@ static const char* GenerateKiddieModeSubtitle(void)
 
 static const char* GenerateDetailSubtitle(void)
 {
-	return gGamePrefs.lowDetail ? "The \"ATI Rage II\" look" : NULL;
+    if (gGamePrefs.detailLevel == DETAIL_LEVEL_LOW) 
+        return "The \"ATI Rage II\" look";
+    else if (gGamePrefs.detailLevel == DETAIL_LEVEL_TERRAIN_LOW)
+        return "The middle ground";
+    else
+        return NULL;
 }
 
 static const char* GenerateMSAASubtitle(void)
@@ -213,7 +251,7 @@ static const char* GenerateMSAASubtitle(void)
 
 static void MakeSettingEntryObjects(int settingID, bool firstTime)
 {
-	static const float XSPREAD = 120;
+	static const float XSPREAD = 150;
 	static const float LH = 28;
 
 	const float x = 0;
@@ -265,7 +303,7 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 		gNewObjectDefinition.coord		= (TQ3Point3D){pickableX+XSPREAD/2+5, y-1, z-1};
 		gNewObjectDefinition.slot 		= SLOTID_CAPTION_MASK | settingID;
 		gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER;
-		gNewObjectDefinition.moveCall 	= nil;
+		gNewObjectDefinition.moveCall 	= MoveGrass;
 		gNewObjectDefinition.rot 		= 0;//PI+PI/2;
 		gNewObjectDefinition.scale 		= .02;
 		ObjNode* grassBlade = MakeNewDisplayGroupObject(&gNewObjectDefinition);
@@ -273,22 +311,33 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 		grassBlade->Scale.z = 0.001f;
 		UpdateObjectTransforms(grassBlade);
 
+        grassBlade->SpecialL[0] = settingID;
+
 		// Create caption text
 		if (entry->kind != kButton)
 		{
 			tmd.coord.x = -XSPREAD;
 			tmd.align = TEXTMESH_ALIGN_LEFT;
-			TextMesh_Create(&tmd, entry->label);
+            tmd.moveCall = MoveGrass;
+			ObjNode* captionText = TextMesh_Create(&tmd, entry->label);
+            captionText->SpecialL[0] = settingID;
+            captionText->ShadowNode->MoveCall = MoveGrass;
+            captionText->ShadowNode->SpecialL[0] = settingID;
+            captionText->SpecialPtr[0] = grassBlade; // to sync timer
 		}
+
+        grassBladeObjs[settingID] = grassBlade;
 	}
 
 	// Create value text
 	tmd.color = kValueTextColor;
 	tmd.coord.x = pickableX;
 	tmd.slot = SLOTID_VALUE_MASK | settingID;
+    tmd.moveCall = MoveGrass;
 	if (subtitleGenerator)
 		tmd.coord.y += LH * 0.15f;
 
+    ObjNode* grassText;
 	switch (entry->kind)
 	{
 		case kCloverRange:
@@ -301,10 +350,11 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 				gNewObjectDefinition.coord		= coord;
 				gNewObjectDefinition.slot 		= SLOTID_VALUE_MASK | settingID;
 				gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER;
-				gNewObjectDefinition.moveCall 	= nil;
+				gNewObjectDefinition.moveCall 	= MoveGrass;
 				gNewObjectDefinition.rot 		= PI+PI/2;
 				gNewObjectDefinition.scale 		= .03;
 				ObjNode* clover = MakeNewDisplayGroupObject(&gNewObjectDefinition);
+                clover->SpecialL[0] = settingID;
 				if (i > *entry->ptr)
 					MakeObjectTransparent(clover, 0.25f);
 			}
@@ -313,13 +363,19 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 		case kCycler:
 			tmd.slot = SLOTID_VALUE_MASK | settingID;
 			tmd.align = TEXTMESH_ALIGN_CENTER;
-			TextMesh_Create(&tmd, entry->choices[*entry->ptr]);
+			grassText = TextMesh_Create(&tmd, entry->choices[*entry->ptr]);
+            grassText->SpecialL[0] = settingID;
+            grassText->ShadowNode->MoveCall = MoveGrass;
+            grassText->ShadowNode->SpecialL[0] = settingID;
 			break;
 
 		case kButton:
 			tmd.slot = SLOTID_VALUE_MASK | settingID;
 			tmd.align = TEXTMESH_ALIGN_CENTER;
-			TextMesh_Create(&tmd, entry->label);
+			grassText = TextMesh_Create(&tmd, entry->label);
+            grassText->SpecialL[0] = settingID;
+            grassText->ShadowNode->MoveCall = MoveGrass;
+            grassText->ShadowNode->SpecialL[0] = settingID;
 			break;
 	}
 
@@ -329,7 +385,10 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 	{
 		float scaleBackup = tmd.scale;
 		tmd.scale *= 0.5f;
-		TextMesh_Create(&tmd, subtitleGenerator);
+		grassText = TextMesh_Create(&tmd, subtitleGenerator);
+        grassText->SpecialL[0] = settingID;
+        grassText->ShadowNode->MoveCall = MoveGrass;
+        grassText->ShadowNode->SpecialL[0] = settingID;
 		tmd.scale = scaleBackup;
 	}
 }
@@ -337,6 +396,13 @@ static void MakeSettingEntryObjects(int settingID, bool firstTime)
 static void SetupSettingsScreen(const char* title, const SettingEntry* menu)
 {
 	SetupUIStuff(kUIBackground_Cyclorama);
+
+    // set initial selection
+    if ((menu[0].kind != kButton)) {
+        gHoveredPick = PICKID_SETTING_CYCLER | 0;
+    } else {
+        gHoveredPick = PICKID_SETTING_BUTTON | 0;
+    }
 
 	gCurrentMenu = menu;
 
@@ -389,15 +455,60 @@ void DoSettingsScreen(void)
 		QD3D_CalcFramesPerSecond();
 		DoSDLMaintenance();
 
-		if (GetNewKeyState(kKey_UI_Cancel))
+		if (GetNewKeyState(kKey_UI_Cancel) || GetNewKeyState(kKey_UI_Start))
 		{
 			done = true;
 			continue;
 		}
 
+
+        // get current menu # of items
+        int menuLength = 0;
+        for (menuLength = 0; menuLength < 10; menuLength++) { // 10 is an arbitrary max of possible items
+            if (gCurrentMenu[menuLength].kind == kEND_SENTINEL)
+                break;
+        }
+
+        int curPick = 0;
+        if (gHoveredPick == PICKID_SPIDER) {
+            if (GetNewKeyState(kKey_Forward)) // up
+            {
+                curPick = menuLength - 1;
+                if ((gCurrentMenu[curPick].kind != kButton)) {
+                    gHoveredPick = PICKID_SETTING_CYCLER | curPick;
+                } else {
+                    gHoveredPick = PICKID_SETTING_BUTTON | curPick;
+                }
+            }
+        } else {
+            curPick = gHoveredPick & 0xFFFF;
+            if (GetNewKeyState(kKey_Forward) && (curPick > 0)) // up
+            {
+                curPick -= 1;
+                if ((gCurrentMenu[curPick].kind != kButton)) {
+                    gHoveredPick = PICKID_SETTING_CYCLER | curPick;
+                } else {
+                    gHoveredPick = PICKID_SETTING_BUTTON | curPick;
+                }
+            }
+            else if (GetNewKeyState(kKey_Backward)) // down
+            {
+                if  (curPick < menuLength - 1) {
+                    curPick += 1;
+                    if ((gCurrentMenu[curPick].kind != kButton)) {
+                        gHoveredPick = PICKID_SETTING_CYCLER | curPick;
+                    } else {
+                        gHoveredPick = PICKID_SETTING_BUTTON | curPick;
+                    }
+                } else {
+                    gHoveredPick = PICKID_SPIDER;
+                }
+            }
+        }
+
 		// See if user hovered/clicked on a pickable item
-		int pickID = UpdateHoveredPickID();
-		if (pickID >= 0 && IsAnalogCursorClicked())
+		int pickID = gHoveredPick;
+		if (pickID >= 0 && GetNewKeyState(kKey_UI_PadConfirm))
 		{
 			int settingID = pickID & 0xFFFF;
 
@@ -432,4 +543,64 @@ void DoSettingsScreen(void)
 	CleanupUIStuff();
 
 	SavePrefs(&gGamePrefs);
+}
+
+/****************** SETTINGS ITEM MOTION **************************/
+
+static float UpdateGrassState(ObjNode* theNode, long currentStateID)
+{
+	long*	stateID		= &theNode->SpecialL[5];
+
+    ObjNode* grassBlade = grassBladeObjs[theNode->SpecialL[0]];
+	float*	stateTimer;
+    if (grassBlade)
+        stateTimer = &grassBlade->SpecialF[5];
+    else
+    {
+        stateTimer = &theNode->SpecialF[5];
+    }
+
+	if (*stateID != currentStateID)
+	{
+		*stateID = currentStateID;
+        *stateTimer = 0;
+	}
+	else
+	{
+        if ( (theNode == grassBlade) || (!grassBlade) )
+            *stateTimer += gFramesPerSecondFrac;
+	}
+
+	return *stateTimer;
+}
+
+static void MoveGrass_Wave(ObjNode* theNode)
+{
+	const float t = UpdateGrassState(theNode, 'WAVE');
+	const float D = 0.5f;
+
+	TweenTowardsTQ3Point3D(t, D, &theNode->Coord, (TQ3Point3D){
+		theNode->InitCoord.x,
+		theNode->InitCoord.y,
+		theNode->InitCoord.z - (1 + cosf(5*t)) * 7
+	});
+}
+
+static void MoveGrass_Neutral(ObjNode* theNode)
+{
+	const float t = UpdateGrassState(theNode, 'NTRL');
+	const float D = 0.5f;
+	TweenTowardsTQ3Point3D(t, D, &theNode->Coord, theNode->InitCoord);
+}
+
+
+static void MoveGrass(ObjNode *theNode)
+{
+    if (((gHoveredPick & 0xFFFF) == theNode->SpecialL[0]) && (gHoveredPick != PICKID_SPIDER)) {
+        MoveGrass_Wave(theNode);
+    } else {
+        MoveGrass_Neutral(theNode);
+    }
+
+	UpdateObjectTransforms(theNode);
 }

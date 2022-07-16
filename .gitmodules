@@ -1,3 +1,8 @@
 [submodule "extern/Pomme"]
 	path = extern/Pomme
-	url = https://github.com/jorio/Pomme
+	url = https://github.com/ywnico/Pomme-vita
+	branch = main
+[submodule "extern/vitaGL"]
+	path = extern/vitaGL
+	url = https://github.com/ywnico/vitaGL
+	branch = unpack_row_length

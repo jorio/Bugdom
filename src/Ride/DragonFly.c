@@ -262,6 +262,16 @@ TQ3Matrix4x4	m;
 		/* DO ROTATION WITH MOUSE DX/DY */
 			
 	GetMouseDelta(&mx, &my);							// remember, this is premultiplied by fractional fps
+
+    if (gGamePrefs.flipFlightHorizontal)
+    {
+        mx *= -1;
+    }
+    if (gGamePrefs.flipFlightVertical)
+    {
+        my *= -1;
+    }
+
 	if (gPlayerUsingKeyControl)
 	{
 		mouseDX = mx * .0018f;

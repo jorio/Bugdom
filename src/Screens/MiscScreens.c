@@ -115,7 +115,7 @@ int curState = kPauseChoice_Resume;
 	gPauseQuad->glTextureName = textures[curState];		// resume
 	gPauseQuad->diffuseColor = (TQ3ColorRGBA) {1, 1, 1, 1};
 
-	float xs = .4f;
+	float xs = .7f;
 	float ys = xs/imageAspectRatio;
 
 	gPauseQuad->points[0] = (TQ3Point3D) { -xs, -ys, 0 };
@@ -302,7 +302,7 @@ Boolean			fo = false;
 	viewDef.camera.yon 				= 2000;
 	viewDef.camera.fov 				= .9;
 	viewDef.camera.from				= cameraFrom;
-	viewDef.view.clearColor			= TQ3ColorRGBA_FromInt(0x000000FF);
+    viewDef.view.clearColor			= TQ3ColorRGBA_FromInt(0x000000FF);
 	viewDef.styles.usePhong 		= false;
 
 	viewDef.lights.numFillLights 	= 2;

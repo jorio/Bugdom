@@ -640,7 +640,7 @@ float			s;
 
 			/* SEE IF HOP OFF BUG */
 			
-	if (GetNewKeyState(kKey_Jump))
+	if (GetNewKeyState(kKey_Jump) && !GetCheatKeysInput())
 	{
 		gCurrentWaterBug->Mode = WATERBUG_MODE_COAST;
 		MorphToSkeletonAnim(gPlayerObj->Skeleton, PLAYER_ANIM_JUMP, 9);
@@ -696,7 +696,7 @@ float			s;
 
 			/* SEE IF HOP OFF BUG */
 			
-	if (GetNewKeyState(kKey_Jump))
+	if (GetNewKeyState(kKey_Jump) && !GetCheatKeysInput())
 	{
 hop_off:	
 		if (!gPlayerGotKilledFlag)
@@ -910,7 +910,7 @@ float			dx,dy;
 
 			/* SEE IF HOP OFF BUG */
 			
-	if (GetNewKeyState(kKey_Jump))
+	if (GetNewKeyState(kKey_Jump) && !GetCheatKeysInput())
 	{
 		PlayerLeaveRootSwing();
 		MovePlayerBug_Fall();									// reroute to the fall function now
@@ -1087,7 +1087,7 @@ Boolean	isOnGround,isSwimming;
 	{
 		if ((anim == PLAYER_ANIM_STAND) || (anim == PLAYER_ANIM_WALK))
 		{
-			if (GetNewKeyState(kKey_Kick))
+			if (GetNewKeyState(kKey_Kick) && !GetCheatKeysInput())
 			{
 				MorphToSkeletonAnim(gPlayerObj->Skeleton, PLAYER_ANIM_KICK, 9);	
 				gPlayerObj->KickNow = false;
@@ -1102,7 +1102,7 @@ Boolean	isOnGround,isSwimming;
 		((anim == PLAYER_ANIM_STAND) || (anim == PLAYER_ANIM_WALK) ||	// or in one of these anims & on the ground
 		(anim == PLAYER_ANIM_SWIM)))
 	{
-		if (GetNewKeyState(kKey_Jump))
+		if (GetNewKeyState(kKey_Jump) && !GetCheatKeysInput())
 		{
 			MorphToSkeletonAnim(gPlayerObj->Skeleton, PLAYER_ANIM_JUMP, 9);
 			if (isSwimming)

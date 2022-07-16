@@ -13,11 +13,17 @@
 #include "game.h"
 #include "version.h"
 
+#include <vitasdk.h>
+#include <vitaGL.h>
+
 #if __APPLE__
 #include "killmacmouseacceleration.h"
 #include <libproc.h>
 #include <unistd.h>
 #endif
+
+// increase heap size
+int _newlib_heap_size_user = 128 * 1024 * 1024;
 
 extern "C"
 {
@@ -124,10 +130,10 @@ static void Boot()
 	Pomme::Init();
 
 	// Initialize SDL video subsystem
-	if (0 != SDL_Init(SDL_INIT_VIDEO))
+	/*if (0 != SDL_Init(SDL_INIT_VIDEO))
 	{
 		throw std::runtime_error("Couldn't initialize SDL video subsystem.");
-	}
+	}*/
 
 	// Load our prefs
 	InitPrefs();
@@ -137,21 +143,21 @@ static void Boot()
 
 tryAgain:
 	// Set up GL attributes
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+	/*SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 	if (gGamePrefs.antialiasingLevel)
 	{
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, gGamePrefs.antialiasingLevel);
-	}
+	}*/
 	gAntialiasingLevelAppliedOnBoot = gGamePrefs.antialiasingLevel;
 
 	// Prepare window dimensions
-	int display = 0;
+	//int display = 0;
 	float screenFillRatio = 2.0f / 3.0f;
 
-	SDL_Rect displayBounds = { .x = 0, .y = 0, .w = GAME_VIEW_WIDTH, .h = GAME_VIEW_HEIGHT };
+	/*SDL_Rect displayBounds = { .x = 0, .y = 0, .w = GAME_VIEW_WIDTH, .h = GAME_VIEW_HEIGHT };
 	SDL_GetDisplayUsableBounds(display, &displayBounds);
 	TQ3Vector2D fitted = FitRectKeepAR(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT, displayBounds.w, displayBounds.h);
 	int initialWidth  = (int) (fitted.x * screenFillRatio);
@@ -164,9 +170,19 @@ tryAgain:
 			SDL_WINDOWPOS_UNDEFINED_DISPLAY(display),
 			initialWidth,
 			initialHeight,
-			SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
+            SDL_WINDOW_FULLSCREEN | SDL_WINDOW_SHOWN);
+			//SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN | SDL_WINDOW_SHOWN);*/
 
-	if (!gSDLWindow)
+    int vita_height = 544;
+    int vita_width = 960;
+
+    gWindowWidth = vita_width;
+    gWindowHeight = vita_height;
+
+    InitLogVita();
+    vglInitExtended(0, 960, 544, 0x800000, SCE_GXM_MULTISAMPLE_4X);
+
+	/*if (!gSDLWindow)
 	{
 		if (gGamePrefs.antialiasingLevel == 0)
 		{
@@ -177,7 +193,7 @@ tryAgain:
 			gGamePrefs.antialiasingLevel = 0;
 			goto tryAgain;
 		}
-	}
+	}*/
 
 	// Find path to game data folder
 	fs::path dataPath = FindGameData();
@@ -206,7 +222,7 @@ static void Shutdown()
 	SDL_Quit();
 }
 
-int main(int argc, char** argv)
+int bugdom_main(unsigned int argc, void* argv)
 {
 	int				returnCode				= 0;
 	std::string		finalErrorMessage		= "";
@@ -215,7 +231,7 @@ int main(int argc, char** argv)
 	// Start the game
 	try
 	{
-		ParseCommandLine(argc, argv);
+		ParseCommandLine(argc, (char**) argv);
 		Boot();
 		returnCode = GameMain();
 	}
@@ -255,4 +271,32 @@ int main(int argc, char** argv)
 	}
 
 	return returnCode;
+}
+
+// Set clock frequencies, check for libshacccg.suprx, and increase
+// stack size, following Rinnegatamante's Quake3 port.
+int main(int argc, char **argv)
+{
+	scePowerSetArmClockFrequency(444);
+	scePowerSetBusClockFrequency(222);
+	scePowerSetGpuClockFrequency(222);
+	scePowerSetGpuXbarClockFrequency(166);
+	
+    // Throw an error if libshacccg.suprx can't be found.
+	SceIoStat st1, st2;
+	if (!(sceIoGetstat("ur0:/data/libshacccg.suprx", &st1) >= 0 || sceIoGetstat("ur0:/data/external/libshacccg.suprx", &st2) >= 0))
+    {
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", "Error: libshacccg.suprx not found. For an installation guide, see https://samilops2.gitbook.io/vita-troubleshooting-guide/shader-compiler/extract-libshacccg.suprx .", NULL);
+		sceKernelExitProcess(0);
+	}
+	
+	// Increase stack size
+	SceUID main_thread = sceKernelCreateThread("Bugdom", bugdom_main, 0x40, 0x200000, 0, 0, NULL);
+	if (main_thread >= 0)
+    {
+		sceKernelStartThread(main_thread, 0, NULL);
+		sceKernelWaitThreadEnd(main_thread, NULL, NULL);
+	}
+
+	return 0;
 }

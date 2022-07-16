@@ -148,8 +148,13 @@ static void MakeAboutScreenObjects(int slideNumber)
 			MakeCreditPart(XSPREAD,		y, "Enhanced Update", "Iliyas Jorio", "github.com/jorio");
 
 			tmd.coord.x = 0;
-			tmd.coord.y = -110;
+			tmd.coord.y = -95;
 			tmd.scale *= .66f;
+			tmd.color = kNameColor;
+			TextMesh_Create(&tmd, "PS Vita port by ywnico");
+
+			tmd.coord.x = 0;
+			tmd.coord.y = -110;
 			tmd.color = kDimmedColor;
 			TextMesh_Create(&tmd, "Copyright 1999 Pangea Software, Inc.");
 			tmd.coord.y -= LH * .66f;
@@ -253,6 +258,7 @@ static void MakeAboutScreenObjects(int slideNumber)
 
 			MakeCreditPart(0, y-LH*0, "The Makers of Bugdom:", "www.pangeasoft.net", "");
 			MakeCreditPart(0, y-LH*4, "Get Updates At:", "https://jorio.itch.io/bugdom", "");
+			MakeCreditPart(0, y-LH*8, "PS Vita Port:", "https://github.com/ywnico/bugdom-vita", "");
 
 			char sdlVersionString[256];
 			SDL_version compiled;

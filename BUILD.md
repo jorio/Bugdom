@@ -1,67 +1,26 @@
-# How to build Bugdom
+# How to build Bugdom for PS Vita
+These instructions apply to Linux. I haven't tried other operating systems.
 
-## TL;DR: Automated build script
-
-Clone the repo **recursively**, then run `python3 build.py` to execute the build steps described in this document and package up the game.
-
-build.py is the script that is used by the CI setup to produce builds. If you want to build the game manually instead, read on.
-
-## How to build the game on macOS
-
-1. Install the prerequisites:
-    - Xcode 12+
-    - [CMake](https://formulae.brew.sh/formula/cmake) 3.16+
+1. Install the Vita toolchain
 1. Clone the repo **recursively**:
     ```
-    git clone --recurse-submodules https://github.com/jorio/Bugdom
-    ```
-1. Download [SDL2-2.0.22.dmg](https://libsdl.org/release/SDL2-2.0.22.dmg), open it, and copy **SDL2.framework** to the **extern** folder
-1. Prep the Xcode project:
-    ```
-    cmake -G Xcode -S . -B build
-    ```
-1. Now you can open `build/Bugdom.xcodeproj` in Xcode, or you can just go ahead and build the game:
-    ```
-    cmake --build build --config Release
-    ```
-1. The game gets built in `build/Release/Bugdom.app`. Enjoy!
-
-## How to build the game on Windows
-
-1. Install the prerequisites:
-    - Visual Studio 2022 with the C++ toolchain
-    - [CMake](https://cmake.org/download/) 3.16+
-1. Clone the repo **recursively**:
-    ```
-    git clone --recurse-submodules https://github.com/jorio/Bugdom
-    ```
-1. Download [SDL2-devel-2.0.22-VC.zip](https://libsdl.org/release/SDL2-devel-2.0.22-VC.zip) and extract the contents into the **extern** folder
-1. Prep the Visual Studio solution:
-    ```
-    cmake -G "Visual Studio 17 2022" -A x64 -S . -B build
-    ```
-1. Now you can open `build/Bugdom.sln` in Visual Studio, or you can just go ahead and build the game:
-    ```
-    cmake --build build --config Release
-    ```
-1. The game gets built in `build/Release/Bugdom.exe`. Enjoy!
-
-## How to build the game on Linux et al.
-
-1. Install the prerequisites from your package manager:
-    - Any C++20 compiler
-    - CMake 3.16+
-    - SDL2 development library (e.g. "libsdl2-dev" on Ubuntu, "sdl2" on Arch, "SDL-devel" on Fedora)
-    - OpenGL development libraries (e.g. "libgl1-mesa-dev" on Ubuntu)
-1. Clone the repo **recursively**:
-    ```
-    git clone --recurse-submodules https://github.com/jorio/Bugdom
+    git clone --recurse-submodules https://github.com/ywnico/bugdom-vita
     ```
 1. Build the game:
     ```
-    cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-    cmake --build build
-    ```
-    If you'd like to enable runtime sanitizers, append `-DSANITIZE=1` to the **first** `cmake` call above.
-1. The game gets built in `build/Release/Bugdom`. Enjoy!
+    # Compile eboot.bin
+    mkdir build
+    cd build
+    cmake .. -DCMAKE_BUILD_TYPE=Release -DVITA=ON
+    cmake --build .
 
+    # Package into vpk
+    cd ..
+    ./make_vpk.sh .
+    ```
+
+## Notes
+
+- This repository depends on ywnico's forks of Pomme (https://github.com/ywnico/Pomme-vita) and VitaGL (the `unpack_row_length` branch of https://github.com/ywnico/vitaGL).
+- The Pomme fork includes file access and ARGB -> RGBA pixel conversion routines needed for the Vita.
+- The vitaGL fork includes an additional function, `glTexSubImage2DUnpackRow`, to simulate the OpenGL calls `glPixelStorei(GL_UNPACK_ROW_LENGTH, some_row_length); glTexSubImage2D(...);` for for unpacking subtextures.

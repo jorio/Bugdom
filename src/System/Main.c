@@ -239,11 +239,14 @@ void InitPrefs(void)
 	gGamePrefs.easyMode				= false;	
 	gGamePrefs.playerRelativeKeys	= false;	
 	gGamePrefs.fullscreen			= true;
-	gGamePrefs.lowDetail			= false;
+	gGamePrefs.detailLevel          = DETAIL_LEVEL_TERRAIN_LOW;
 	gGamePrefs.mouseSensitivityLevel= DEFAULT_MOUSE_SENSITIVITY_LEVEL;
 	gGamePrefs.showBottomBar		= true;
 	gGamePrefs.force4x3AspectRatio	= false;
 	gGamePrefs.antialiasingLevel	= 0;
+	gGamePrefs.flipCameraHorizontal = false;
+	gGamePrefs.flipFlightHorizontal = false;
+	gGamePrefs.flipFlightVertical   = false;
 
 	LoadPrefs(&gGamePrefs);							// attempt to read from prefs file		
 }
@@ -267,7 +270,9 @@ static void PlayGame(void)
 
 	UpdateInput();
 	
-	if (GetKeyState_SDL(SDL_SCANCODE_F10))				// see if do level cheat
+	if (GetKeyState_SDL(SDL_SCANCODE_F10) ||
+            GetCheatKeysInput()
+       )				// see if do level cheat
 	{
 		if (!DoLevelSelect())
 			return;
@@ -392,7 +397,7 @@ float fps;
 
 			/* SEE IF PAUSE GAME */
 
-		if (GetNewKeyState(kKey_Pause))				// see if pause/abort
+		if (GetNewKeyState(kKey_Pause) && !GetCheatKeysInput())				// see if pause/abort
 		{
 			CaptureMouse(false);
 			DoPaused();
@@ -450,10 +455,10 @@ QD3DSetupInputType	viewDef;
 	gPlayerMode 			= PLAYER_MODE_BUG;						// init this here so infobar looks correct
 	gPlayerObj 				= nil;
 
-	gUseCyclorama			= !gGamePrefs.lowDetail && gLevelHasCyc[gLevelType];
+	gUseCyclorama			= (gGamePrefs.detailLevel != DETAIL_LEVEL_LOW) && gLevelHasCyc[gLevelType];
 	gAutoFadeStartDist		= gUseCyclorama ? gLevelAutoFadeStart[gLevelType] : 0;
 	gDoAutoFade				= gAutoFadeStartDist > 0.0f;
-	gDrawLensFlare			= !gGamePrefs.lowDetail && gLevelHasLensFlare[gLevelType];
+	gDrawLensFlare			= (gGamePrefs.detailLevel != DETAIL_LEVEL_LOW) && gLevelHasLensFlare[gLevelType];
 
 	gDoCeiling				= gLevelHasCeiling[gLevelType];
 	gSuperTileActiveRange	= gLevelSuperTileActiveRange[gLevelType];
@@ -691,26 +696,31 @@ static void DoDeathReset(void)
 
 static void CheckForCheats(void)
 {
-#if !(_DEBUG)	// in debug builds, expose cheats without needing command/control key
-	if (GetKeyState_SDL(SDL_SCANCODE_GRAVE))	// must hold down the help key
-#endif
+//#if !(_DEBUG)	// in debug builds, expose cheats without needing command/control key
+	//if (GetKeyState_SDL(SDL_SCANCODE_GRAVE))	// must hold down the help key
+//#endif
 	{
-		if (GetNewKeyState_SDL(SDL_SCANCODE_F1))	// win the level!
+		if (GetNewKeyState_SDL(SDL_SCANCODE_F1) ||	// win the level!
+            (GetCheatKeysInput() && GetKeyState(kKey_UI_Start))) // Start
 			gAreaCompleted = true;
 
-		if (GetNewKeyState_SDL(SDL_SCANCODE_F2))	// get shield
+		if (GetNewKeyState_SDL(SDL_SCANCODE_F2) ||	// get shield
+            (GetCheatKeysInput() && GetKeyState(kKey_UI_CharMM))) // D-pad up
 			gShieldTimer = SHIELD_TIME;
 
-		if (GetKeyState_SDL(SDL_SCANCODE_F3))	// get full health
+		if (GetKeyState_SDL(SDL_SCANCODE_F3) ||	// get full health
+            (GetCheatKeysInput() && GetKeyState(kKey_UI_CharRight))) // D-pad right
 			GetHealth(1.0);							
 			
-		if (GetKeyState_SDL(SDL_SCANCODE_F4))	// get full ball-time
+		if (GetKeyState_SDL(SDL_SCANCODE_F4) ||	// get full ball-time
+            (GetCheatKeysInput() && GetKeyState(kKey_UI_CharLeft))) // D-pad left
 		{
 			gBallTimer = 1.0f;
 			gInfobarUpdateBits |= UPDATE_TIMER;	
 		}	
 		
-		if (GetKeyState_SDL(SDL_SCANCODE_F5))	// get full inventory
+		if (GetKeyState_SDL(SDL_SCANCODE_F5) ||	// get full inventory
+            (GetCheatKeysInput() && GetKeyState(kKey_UI_CharPP))) // D-pad down
 		{
 			GetMoney();
 			GetKey(0);
@@ -720,20 +730,27 @@ static void CheckForCheats(void)
 			GetKey(4);
 		}
 
-		if (GetNewKeyState_SDL(SDL_SCANCODE_F6))	// see if liquid invincible
+		if (GetNewKeyState_SDL(SDL_SCANCODE_F6) ||	// see if liquid invincible
+            (GetCheatKeysInput() && GetKeyState(kKey_BuddyAttack))) // Triangle
 			gLiquidCheat = !gLiquidCheat;
 
-		if (GetKeyState_SDL(SDL_SCANCODE_F7))		// hurt player
+		if (GetKeyState_SDL(SDL_SCANCODE_F7) ||		// hurt player
+            (GetCheatKeysInput() && GetKeyState(kKey_UI_PadBack))) // Select
 			PlayerGotHurt(NULL, 1/60.0f, 1.0f, false, true, 1/60.0f);
 
-		if (GetNewKeyState_SDL(SDL_SCANCODE_F8))
+		if (GetNewKeyState_SDL(SDL_SCANCODE_F8) ||
+            (GetCheatKeysInput() && GetKeyState(kKey_UI_PadCancel))) // Circle
 		{
 			gShowDebugStats = !gShowDebugStats;
 			QD3D_UpdateDebugTextMesh(NULL);
 		}
 
+        // Note: crashes on Vita
 		if (GetNewKeyState_SDL(SDL_SCANCODE_F9))
+        {
+                //|| (GetCheatKeysInput() && GetKeyState(kKey_UI_PadConfirm))) // Cross
 			gShowDebug = !gShowDebug;
+        }
 	}
 }
 
@@ -813,6 +830,7 @@ unsigned long	someLong;
 			/* INIT SOME OF MY STUFF */
 
 	Render_CreateContext();
+
 	InitWindowStuff();
 	InitTerrainManager();
 	InitSkeletonManager();
@@ -836,7 +854,7 @@ unsigned long	someLong;
 
 	Pomme_FlushPtrTracking(false);
 
-	DoPangeaLogo();
+    DoPangeaLogo();
 	CheckDebugShortcutKeysOnBoot();
 
 

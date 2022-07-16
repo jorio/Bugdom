@@ -134,6 +134,7 @@ KeyBinding gKeyBindings[kKey_MAX] =
 [kKey_UI_Confirm		] = { "DO_NOT_REBIND",		SDL_SCANCODE_RETURN,	SDL_SCANCODE_KP_ENTER,	0,					SDL_CONTROLLER_BUTTON_INVALID, },
 [kKey_UI_Cancel			] = { "DO_NOT_REBIND",		SDL_SCANCODE_ESCAPE,	0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
 [kKey_UI_Skip			] = { "DO_NOT_REBIND",		SDL_SCANCODE_SPACE,		0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
+[kKey_UI_Start			] = { "DO_NOT_REBIND",		0,						0,						0,					SDL_CONTROLLER_BUTTON_START, },
 [kKey_UI_PadConfirm		] = { "DO_NOT_REBIND",		0,						0,						0,					SDL_CONTROLLER_BUTTON_A, },
 [kKey_UI_PadCancel		] = { "DO_NOT_REBIND",		0,						0,						0,					SDL_CONTROLLER_BUTTON_B, },
 [kKey_UI_PadBack		] = { "DO_NOT_REBIND",		0,						0,						0,					SDL_CONTROLLER_BUTTON_BACK, },
@@ -155,7 +156,8 @@ KeyBinding gKeyBindings[kKey_MAX] =
 
 static Boolean WeAreFrontProcess(void)
 {
-	return 0 != (SDL_GetWindowFlags(gSDLWindow) & SDL_WINDOW_INPUT_FOCUS);
+	//return 0 != (SDL_GetWindowFlags(gSDLWindow) & SDL_WINDOW_INPUT_FOCUS);
+    return true; // always true on vita (TODO: check....)
 }
 
 static inline void UpdateKeyState(KeyState* state, bool downNow)
@@ -267,18 +269,24 @@ void UpdateInput(void)
 	gCameraControlDelta.x = 0;
 	gCameraControlDelta.y = 0;
 
+    float xReverser = 1.0;
+    if (gGamePrefs.flipCameraHorizontal)
+    {
+        xReverser = -1.0;
+    }
+
 	if (gSDLController)
 	{
 		TQ3Vector2D rsVec = GetThumbStickVector(true);
-		gCameraControlDelta.x -= rsVec.x * 3.0f;
+		gCameraControlDelta.x -= xReverser*rsVec.x * 3.0f;
 		gCameraControlDelta.y += rsVec.y * 3.0f;
 	}
 
 	if (GetKeyState(kKey_SwivelCameraLeft))
-		gCameraControlDelta.x -= 2.0f;
+		gCameraControlDelta.x -= xReverser*2.0f;
 
 	if (GetKeyState(kKey_SwivelCameraRight))
-		gCameraControlDelta.x += 2.0f;
+		gCameraControlDelta.x += xReverser*2.0f;
 }
 
 
@@ -405,9 +413,17 @@ Boolean GetSkipScreenInput(void)
 		|| GetNewKeyState(kKey_UI_Cancel)
 		|| GetNewKeyState(kKey_UI_Skip)
 		|| GetNewKeyState(kKey_UI_PadConfirm)
+		|| GetNewKeyState(kKey_UI_Start)
 //		|| GetNewKeyState(kKey_UI_PadBack)
 		|| GetNewKeyState(kKey_UI_PadCancel)
 		|| FlushMouseButtonPress();
+}
+
+/******* ARE THE CHEAT CODE KEYS PRESSED *******/
+
+Boolean GetCheatKeysInput(void)
+{
+	return (GetKeyState(kKey_ZoomIn) && GetKeyState(kKey_ZoomOut));
 }
 
 

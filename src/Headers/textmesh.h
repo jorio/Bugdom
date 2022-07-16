@@ -21,6 +21,7 @@ typedef struct
 	float 			letterSpacing;
 	bool			withShadow;
 	TQ3ColorRGBA	shadowColor;
+	void		(*moveCall)(ObjNode *);
 } TextMeshDef;
 
 void TextMesh_Init(void);

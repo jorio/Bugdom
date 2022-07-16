@@ -3,6 +3,8 @@
 //
 
 extern	void ShowSystemErr(long err);
+extern void	InitLogVita();
+extern void	LogVita(const char*);
 extern void	DoAlert(const char*);
 extern void	DoFatalAlert(const char*);
 extern	void DoFatalAlert2(const char* s1, const char* s2);

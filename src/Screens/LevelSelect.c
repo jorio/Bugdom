@@ -17,6 +17,7 @@
 
 static void LevelSelectDrawStuff(const QD3DSetupOutputType *setupInfo);
 static void MakeLevelSelectObjects(void);
+static void MoveText(ObjNode *theNode);
 
 
 /****************************/
@@ -43,6 +44,8 @@ bool DoLevelSelect(void)
 
 	SetupUIStuff(kUIBackground_White);
 	QD3D_CalcFramesPerSecond();
+
+    gHoveredPick = 0;
 
 	GLuint levelScreenshots[NUM_LEVELS];
 	for (int i = 0; i < NUM_LEVELS; i++)
@@ -73,7 +76,7 @@ bool DoLevelSelect(void)
 		QD3D_CalcFramesPerSecond();
 		DoSDLMaintenance();
 
-		bool button = IsAnalogCursorClicked();
+		bool button = IsAnalogCursorClicked() || GetNewKeyState(kKey_UI_PadConfirm);
 
 		if (!button && GetSkipScreenInput())
 		{
@@ -81,7 +84,12 @@ bool DoLevelSelect(void)
 			break;
 		}
 
-		UpdateHoveredPickID();
+        if (GetNewKeyState(kKey_Forward) && (gHoveredPick > 0)) // up
+            gHoveredPick -= 1;
+        else if (GetNewKeyState(kKey_Backward) && (gHoveredPick < NUM_LEVELS-1)) // down
+            gHoveredPick += 1;
+
+		//UpdateHoveredPickID();
 		if (gHoveredPick >= 0)
 		{
 			GAME_ASSERT(gHoveredPick < NUM_LEVELS);
@@ -132,7 +140,9 @@ static void MakeLevelSelectObjects(void)
 		snprintf(caption, sizeof(caption), "Level %d: %s", i+1, kLevelNames[i]);
 
 		tmd.coord.y -= LH;
-		TextMesh_Create(&tmd, caption);
+		ObjNode* levelText = TextMesh_Create(&tmd, caption);
+        levelText->SpecialL[0] = i;
+        levelText->MoveCall = MoveText;
 
 		TQ3Point3D quadCenter = tmd.coord;
 		quadCenter.x += 50;
@@ -168,3 +178,53 @@ static void LevelSelectDrawStuff(const QD3DSetupOutputType *setupInfo)
 	QD3D_DrawParticles(setupInfo);
 }
 
+/******************* Selection motion ********************/
+
+static float UpdateTextState(ObjNode* theNode, long currentStateID)
+{
+	long*	stateID		= &theNode->SpecialL[5];
+	float*	stateTimer	= &theNode->SpecialF[5];
+
+	if (*stateID != currentStateID)
+	{
+		*stateID = currentStateID;
+        *stateTimer = 0;
+	}
+	else
+	{
+        *stateTimer += gFramesPerSecondFrac;
+	}
+
+	return *stateTimer;
+}
+
+static void MoveText_Wave(ObjNode* theNode)
+{
+	const float t = UpdateTextState(theNode, 'WAVE');
+	const float D = 0.5f;
+
+	TweenTowardsTQ3Point3D(t, D, &theNode->Coord, (TQ3Point3D){
+		theNode->InitCoord.x,
+		theNode->InitCoord.y,
+		theNode->InitCoord.z + (1 + cosf(5*t)) * 7
+	});
+}
+
+static void MoveText_Neutral(ObjNode* theNode)
+{
+	const float t = UpdateTextState(theNode, 'NTRL');
+	const float D = 0.5f;
+	TweenTowardsTQ3Point3D(t, D, &theNode->Coord, theNode->InitCoord);
+}
+
+
+static void MoveText(ObjNode *theNode)
+{
+    if (gHoveredPick == theNode->SpecialL[0]) {
+        MoveText_Wave(theNode);
+    } else {
+        MoveText_Neutral(theNode);
+    }
+
+	UpdateObjectTransforms(theNode);
+}

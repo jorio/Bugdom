@@ -211,8 +211,10 @@ void GameScreenToBlack(void)
 
 void QD3D_OnWindowResized(int windowWidth, int windowHeight)
 {
+    /*
 	gWindowWidth = windowWidth;
 	gWindowHeight = windowHeight;
+    */ // removed for vita
 }
 
 
@@ -222,7 +224,7 @@ void SetFullscreenMode(void)
 {
 	if (!gGamePrefs.fullscreen)
 	{
-		SDL_SetWindowFullscreen(gSDLWindow, 0);
+		//SDL_SetWindowFullscreen(gSDLWindow, 0);
 	}
 	else if (gCommandLine.fullscreenWidth > 0 && gCommandLine.fullscreenHeight > 0)
 	{
@@ -232,12 +234,12 @@ void SetFullscreenMode(void)
 		mode.refresh_rate = gCommandLine.fullscreenRefreshRate;
 		mode.driverdata = nil;
 		mode.format = SDL_PIXELFORMAT_UNKNOWN;
-		SDL_SetWindowDisplayMode(gSDLWindow, &mode);
-		SDL_SetWindowFullscreen(gSDLWindow, SDL_WINDOW_FULLSCREEN);
+		//SDL_SetWindowDisplayMode(gSDLWindow, &mode);
+		//SDL_SetWindowFullscreen(gSDLWindow, SDL_WINDOW_FULLSCREEN);
 	}
 	else
 	{
-		SDL_SetWindowFullscreen(gSDLWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
+		//SDL_SetWindowFullscreen(gSDLWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
 	}
 
 	// Window size might not be refreshed if we don't do this
@@ -246,7 +248,7 @@ void SetFullscreenMode(void)
 
 	// Ensure the clipping pane gets resized properly after switching in or out of fullscreen mode
 	int width, height;
-	SDL_GetWindowSize(gSDLWindow, &width, &height);
+	//SDL_GetWindowSize(gSDLWindow, &width, &height);
 	QD3D_OnWindowResized(width, height);
 
 	// Some systems may not display textures properly in the first GL context created by the game

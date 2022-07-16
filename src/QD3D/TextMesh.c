@@ -33,6 +33,7 @@ static const TextMeshDef gDefaultTextMeshDef =
 	.slot				= 100,
 	.align				= TEXTMESH_ALIGN_LEFT,
 	.letterSpacing		= 0,
+	.moveCall			= nil,
 };
 
 TQ3TriMeshData* TextMesh_CreateMesh(const TextMeshDef* def, const char* text)
@@ -267,7 +268,7 @@ ObjNode* TextMesh_Create(const TextMeshDef* def, const char* text)
 	gNewObjectDefinition.slot		= def->slot;
 	gNewObjectDefinition.coord		= def->coord;
 	gNewObjectDefinition.flags		= STATUS_BIT_NULLSHADER | STATUS_BIT_NOZWRITE | STATUS_BIT_NOFOG;
-	gNewObjectDefinition.moveCall 	= nil;
+	gNewObjectDefinition.moveCall 	= def->moveCall;
 	gNewObjectDefinition.rot		= 0.0f;
 	gNewObjectDefinition.scale		= def->scale;
 	ObjNode* textNode = MakeNewObject(&gNewObjectDefinition);

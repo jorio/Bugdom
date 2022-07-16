@@ -324,11 +324,14 @@ typedef struct
 	Boolean	easyMode;
 	Boolean	playerRelativeKeys;
 	Boolean fullscreen;
-	Boolean lowDetail;
+	Byte    detailLevel;
 	Byte	mouseSensitivityLevel;
 	Boolean	showBottomBar;
 	Boolean	force4x3AspectRatio;
 	Byte	antialiasingLevel;
+	Boolean	flipCameraHorizontal;
+	Boolean	flipFlightHorizontal;
+	Boolean	flipFlightVertical;
 }PrefsType;
 
 typedef struct

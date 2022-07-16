@@ -19,6 +19,7 @@
 static void MoveMenuCamera(void);
 static void SetupMainMenu(void);
 static void WalkSpiderToIcon(void);
+static void MoveMenuItem(ObjNode *theNode);
 
 
 /****************************/
@@ -44,11 +45,11 @@ enum
 enum
 {
 	kMenuChoice_About = 0,
-	kMenuChoice_Scores,
 	kMenuChoice_Play,
-	kMenuChoice_Quit,
-	kMenuChoice_Restore,
+	kMenuChoice_Scores,
 	kMenuChoice_Settings,
+	kMenuChoice_Restore,
+	kMenuChoice_Quit,
 	NUM_MENU_ICONS,
 
 	kMenuChoice_TimedOut = 1000,
@@ -64,6 +65,8 @@ static TQ3Point3D	gCamCenter = { -10, 10, 250 };		// Source port change from {-4
 static ObjNode		*gMenuIcons[NUM_MENU_ICONS];
 static ObjNode		*gSpider;
 static int32_t		gMenuSelection;
+static int32_t		gHighlightedMenuItem = kMenuChoice_Play;
+static bool			gMenuScreenAwaitingInput = true;
 
 /********************** DO MAIN MENU *************************/
 //
@@ -80,6 +83,7 @@ bool		loop = false;
 start_again:
 
 	timer = 0;
+	gMenuScreenAwaitingInput = true;
 	PlaySong(SONG_MENU,true);
 
 			/*********/
@@ -117,6 +121,36 @@ start_again:
 			if (PickObject(mouseX, mouseY, &gMenuSelection))
 				break;
 		}
+
+		if (gMenuScreenAwaitingInput)
+		{
+			if (GetNewKeyState(kKey_Right))
+			{
+                gHighlightedMenuItem = (gHighlightedMenuItem + 1) % NUM_MENU_ICONS;
+                didMove = true;
+			}
+			else if (GetNewKeyState(kKey_Left))
+			{
+                gHighlightedMenuItem = (NUM_MENU_ICONS + gHighlightedMenuItem - 1) % NUM_MENU_ICONS;
+                didMove = true;
+			}
+			else if (GetNewKeyState(kKey_UI_PadConfirm))
+			{
+                gMenuSelection = gHighlightedMenuItem;
+                didMove = true;
+                break;
+			}
+			else if (GetNewKeyState(kKey_UI_Start))
+            {
+				gMenuSelection = kMenuChoice_TimedOut;
+				loop = true;
+				goto getout;
+            }
+			else if (GetNewKeyState(kKey_UI_PadCancel))
+            {
+                didMove = true;
+            }
+        }
 		
 		QD3D_CalcFramesPerSecond();
 		DoSDLMaintenance();
@@ -367,7 +401,7 @@ ObjNode					*newObj;
 		gNewObjectDefinition.type 		= iconType[i];	
 		gNewObjectDefinition.coord		= iconCoords[i];
 		gNewObjectDefinition.flags 		= STATUS_BIT_NULLSHADER;
-		gNewObjectDefinition.moveCall 	= nil;
+		gNewObjectDefinition.moveCall 	= MoveMenuItem;
 		gNewObjectDefinition.rot 		= 0;
 		gNewObjectDefinition.scale 		= .25;
 		gMenuIcons[i] = MakeNewDisplayGroupObject(&gNewObjectDefinition);
@@ -472,3 +506,70 @@ Boolean	b = FlushMouseButtonPress() || GetNewKeyState(kKey_UI_PadConfirm);
 
 
 
+/****************** SETUP MENU ITEM MOTION **************************/
+
+static float UpdateMenuItemState(ObjNode* theNode, long currentStateID)
+{
+	long*	stateID		= &theNode->SpecialL[5];
+	float*	stateTimer	= &theNode->SpecialF[5];
+
+	if (*stateID != currentStateID)
+	{
+		*stateID = currentStateID;
+		*stateTimer = 0;
+	}
+	else
+	{
+		*stateTimer += gFramesPerSecondFrac;
+	}
+
+	return *stateTimer;
+}
+
+static void MoveMenuItem_Bounce(ObjNode* theNode)
+{
+	const float t = UpdateMenuItemState(theNode, 'BNCE');
+	const float D = 0.5f;
+
+	TweenTowardsTQ3Vector3D(t, D, &theNode->Rot, (TQ3Vector3D){
+		0,
+		cosf(2.5f*t) * 0.1f,
+		0
+	});
+
+	TweenTowardsTQ3Point3D(t, D, &theNode->Coord, (TQ3Point3D){
+		theNode->InitCoord.x,
+		theNode->InitCoord.y + fabsf(cosf(5*t)) * 7,
+		theNode->InitCoord.z
+	});
+}
+
+static void MoveMenuItem_Neutral(ObjNode* theNode)
+{
+	const float t = UpdateMenuItemState(theNode, 'NTRL');
+	const float D = 0.5f;
+	TweenTowardsTQ3Vector3D(t, D, &theNode->Rot, (TQ3Vector3D){0,0,0});
+	TweenTowardsTQ3Point3D(t, D, &theNode->Coord, theNode->InitCoord);
+}
+
+static void MoveMenuItem(ObjNode *theNode)
+{
+	int pickID = theNode->PickID;
+
+	float* age = &theNode->SpecialF[0];
+
+	bool isHighlighted = (gHighlightedMenuItem == pickID);
+
+	if (isHighlighted)
+	{
+        MoveMenuItem_Bounce(theNode);
+	}
+	else
+	{
+		MoveMenuItem_Neutral(theNode);
+	}
+
+	*age += gFramesPerSecondFrac;
+
+	UpdateObjectTransforms(theNode);
+}

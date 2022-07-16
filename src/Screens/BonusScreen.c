@@ -20,6 +20,7 @@ static void SetupBonusScreen(void);
 static void MoveBonusText(ObjNode *theNode);
 static void BuildBonusDigits(void);
 static void MoveBonusDigit(ObjNode *theNode);
+static void MoveFloppy(ObjNode *theNode);
 static void TallyLadyBugs(void);
 static void TallyTotalScore(void);
 static void BuildScoreDigits(void);
@@ -71,6 +72,8 @@ static float	gSD2[MAX_DIGITS_IN_SCORE];
 ObjNode	*gSaveYes,*gSaveNo;
 
 static float	gMoveTextUpwards;
+
+int gHighlightedFloppy = 0;
 
 /********************** DO BONUS SCREEN *************************/
 
@@ -372,6 +375,92 @@ float	fps = gFramesPerSecondFrac;
 	UpdateObjectTransforms(theNode);
 }
 
+/****************** MOVE FLOPPIES **************************/
+
+static float UpdateFloppyState(ObjNode* theNode, long currentStateID)
+{
+	long*	stateID		= &theNode->SpecialL[5];
+	float*	stateTimer	= &theNode->SpecialF[5];
+
+	if (*stateID != currentStateID)
+	{
+		*stateID = currentStateID;
+		*stateTimer = 0;
+	}
+	else
+	{
+		*stateTimer += gFramesPerSecondFrac;
+	}
+
+	return *stateTimer;
+}
+
+static void MoveFloppy_Bounce(ObjNode* theNode)
+{
+	const float t = UpdateFloppyState(theNode, 'BNCE');
+	const float D = 0.5f;
+
+	TweenTowardsTQ3Vector3D(t, D, &theNode->Rot, (TQ3Vector3D){
+		0,
+		cosf(2.5f*t) * 0.53f,
+		0
+	});
+
+	TweenTowardsTQ3Point3D(t, D, &theNode->Coord, (TQ3Point3D){
+		theNode->InitCoord.x,
+		theNode->InitCoord.y + fabsf(cosf(5*t)) * 7 + gMoveTextUpwards,
+		theNode->InitCoord.z
+	});
+}
+
+static void MoveFloppy_Shiver(ObjNode* theNode)
+{
+	const float t = UpdateFloppyState(theNode, 'SHVR');
+	const float D = 0.5f;
+	TweenTowardsTQ3Vector3D(t, D, &theNode->Rot, (TQ3Vector3D){
+		0,
+		0,
+		cosf(1*9*t) * 0.1f * sinf(3*9*t)
+	});
+}
+
+static void MoveFloppy_Neutral(ObjNode* theNode)
+{
+	const float t = UpdateFloppyState(theNode, 'NTRL');
+	const float D = 0.5f;
+	TweenTowardsTQ3Vector3D(t, D, &theNode->Rot, (TQ3Vector3D){0,0,0});
+	TweenTowardsTQ3Point3D(t, D, &theNode->Coord, (TQ3Point3D){
+		theNode->InitCoord.x,
+		theNode->InitCoord.y + gMoveTextUpwards,
+		theNode->InitCoord.z
+	});
+}
+
+static void MoveFloppy(ObjNode *theNode)
+{
+	int pickID = theNode->PickID;
+
+	float* age = &theNode->SpecialF[0];
+
+	bool isHighlighted = (gHighlightedFloppy == pickID);
+
+	if (isHighlighted)
+	{
+        if (pickID == 0)
+            MoveFloppy_Bounce(theNode);
+        else
+            MoveFloppy_Shiver(theNode);
+	}
+	else
+	{
+		MoveFloppy_Neutral(theNode);
+	}
+
+	*age += gFramesPerSecondFrac;
+
+	UpdateObjectTransforms(theNode);
+}
+
 
 #pragma mark -
 
@@ -614,7 +703,7 @@ int mouseY = 0;
 	gNewObjectDefinition.coord.z 	= 0;
 	gNewObjectDefinition.slot 		= 100;
 	gNewObjectDefinition.flags 		= 0;
-	gNewObjectDefinition.moveCall 	= MoveBonusText;
+	gNewObjectDefinition.moveCall 	= MoveFloppy;
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= .7;
 	gSaveYes = MakeNewDisplayGroupObject(&gNewObjectDefinition);
@@ -630,7 +719,7 @@ int mouseY = 0;
 	gNewObjectDefinition.coord.z 	= 0;
 	gNewObjectDefinition.slot 		= 100;
 	gNewObjectDefinition.flags 		= 0;
-	gNewObjectDefinition.moveCall 	= MoveBonusText;
+	gNewObjectDefinition.moveCall 	= MoveFloppy;
 	gNewObjectDefinition.rot 		= 0;
 	gNewObjectDefinition.scale 		= .7;
 	gSaveNo = MakeNewDisplayGroupObject(&gNewObjectDefinition);
@@ -655,7 +744,7 @@ int mouseY = 0;
 			tmd.align = TEXTMESH_ALIGN_CENTER;
 			tmd.scale = 0.2f;
 
-			tmd.coord = (TQ3Point3D) {-50,-100,0};
+			tmd.coord = (TQ3Point3D) {-50,-105,0};
 			tmd.color = TQ3ColorRGBA_FromInt(0x0080FFFF);
 			if (gCurrentSaveSlot >= 0)
 			{
@@ -668,7 +757,7 @@ int mouseY = 0;
 				TextMesh_Create(&tmd, "Save");
 			}
 
-			tmd.coord = (TQ3Point3D) {50,-100,0};
+			tmd.coord = (TQ3Point3D) {50,-105,0};
 			tmd.color = TQ3ColorRGBA_FromInt(0xe54c19ff);
 			TextMesh_Create(&tmd, "Don't save yet");
 
@@ -686,6 +775,15 @@ int mouseY = 0;
 		{
 			break;
 		}
+        if (GetNewKeyState(kKey_Right) || GetNewKeyState(kKey_Left))
+        {
+            gHighlightedFloppy = (gHighlightedFloppy + 1) % 2;
+        }
+        else if (GetNewKeyState(kKey_UI_PadConfirm))
+        {
+            id = gHighlightedFloppy;
+            break;
+        }
 	}
 	ShutdownAnalogCursor();
 

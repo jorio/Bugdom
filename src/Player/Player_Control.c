@@ -100,20 +100,20 @@ Boolean				killed = false;
 						
 			if (gPlayerUsingKeyControl && gGamePrefs.playerRelativeKeys)						
 			{
-				if (GetKeyState(kKey_Left))										// see if rotate ccw
+				if (GetKeyState(kKey_Left) && !GetCheatKeysInput())		// see if rotate ccw
 					gPlayerObj->Rot.y += fps * 4.0f;	
 				else
-				if (GetKeyState(kKey_Right))									// see if rotate cw
+				if (GetKeyState(kKey_Right) && !GetCheatKeysInput())	// see if rotate cw
 					gPlayerObj->Rot.y -= fps * 4.0f;	
 			
-				if (GetKeyState(kKey_Forward))									// see if go forward
+				if (GetKeyState(kKey_Forward) && !GetCheatKeysInput())	// see if go forward
 				{
 					float	rot = gPlayerObj->Rot.y;
 					gDelta.x += sin(rot) * (fps * -KEY_THRUST);
 					gDelta.z += cos(rot) * (fps * -KEY_THRUST);		
 				}
 				else
-				if (GetKeyState(kKey_Backward))									// see if go backward
+				if (GetKeyState(kKey_Backward) && !GetCheatKeysInput())	// see if go backward
 				{
 					float	rot = gPlayerObj->Rot.y;
 					gDelta.x += sin(rot) * (fps * KEY_THRUST);
@@ -139,7 +139,7 @@ Boolean				killed = false;
 							
 				if (gPlayerCanMove)
 				{
-					if (GetKeyState(kKey_AutoWalk))										// see if forward thrust
+					if (GetKeyState(kKey_AutoWalk) && !GetCheatKeysInput())			// see if forward thrust
 					{
 						float	rot = gPlayerObj->Rot.y;
 						gDelta.x += sin(rot) * (fps * -KEY_THRUST);

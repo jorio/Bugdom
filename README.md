@@ -1,30 +1,69 @@
 # Bugdom
 
-This is Pangea Software's **Bugdom** updated to run on modern operating systems.
-This version, at https://github.com/jorio/bugdom, is approved by Pangea Software.
-
-**Download the game for macOS, Windows and Linux here:** https://github.com/jorio/bugdom/releases
+This is a port of Pangea Software's **Bugdom** to PlayStation Vita, based on the [modern version of Bugdom](https://github.com/jorio/bugdom) written by Iliyas Jorio. For more information on the history of Bugdom and [@jorio](https://github.com/jorio)'s rewrite, see https://github.com/jorio/bugdom.
 
 ![Bugdom Screenshot](docs/screenshot.png)
 
-## About this port
+## Installation
 
-Bugdom is a 1999 Macintosh game by Pangea Software. You play as Rollie McFly, a pill bug on a quest to save ladybugs from King Thorax’s iron grip on the Bugdom.
+The Vita port uses Rinnegatamante's [VitaGL](https://github.com/Rinnegatamante/vitaGL) library. Therefore, you must first install `libshaccg.suprx`; for instructions see https://samilops2.gitbook.io/vita-troubleshooting-guide/shader-compiler/extract-libshacccg.suprx.
 
-The game was bundled with some Mac models of the era. It is probably the most advanced game that uses QuickDraw 3D. Unfortunately, QuickDraw 3D has not been updated past Mac OS 9, so experiencing the game used to require booting a PowerPC Mac into OS 9 — until this port came out.
+Once you have `libshaccg.suprx`, you can then download and install the Bugdom VPK from the release page.
 
-After I finished porting [Nanosaur](https://github.com/jorio/Nanosaur), Pangea offered to let me port Bugdom. I was excited to update this gem of a game because it was a childhood favorite of mine.
+## Controls and cheats
+Controls are the same as they were implemented by [@jorio](https://github.com/jorio); the help (nut) item in the main menu explains them.
 
-This port aims to provide the best way to experience Bugdom today. It introduces some modern comforts (such as support for arbitrary resolutions) and fixes some gameplay bugs. The overall experience is intended to be faithful to the spirit of the original game, so modifications to the game’s design are out of the scope of this project.
+Cheats have been given new controls. The following have been implemented:
 
-The first release of this port used a custom fork of [Quesa](https://github.com/jwwalker/Quesa) for rendering. Bugdom has switched to a tailor-made renderer as of version 1.3.1.
+### In main menu
+
+Hold down `L1` and `R1` and select the START icon to bring up a level select dialog.
+
+### In game
+
+For all in-game cheats, you must simultaneously hold down the left and right shoulder buttons (`L1+R1`) along with a given key.
+
+| Key combo               | What it does                |
+|-------------------------|-----------------------------|
+| `L1+R1` + `Start`       | win this level              |
+| `L1+R1` + `D-pad up`    | get shield                  |
+| `L1+R1` + `D-pad right` | full health                 |
+| `L1+R1` + `D-pad down`  | full inventory              |
+| `L1+R1` + `D-pad left`  | full ball timer             |
+| `L1+R1` + `Triangle`    | toggle liquid invincibility |
+| `L1+R1` + `Circle`      | display debug statistics    |
+| `L1+R1` + `Select`      | hurt player                 |
+
+### Level maps and walkthroughs
+
+Pangea Software's official Bugdom cheat page has maps of the levels:
+https://pangeasoft.net/bug/cheats.html
+
+Here's the official strategy guide for the game:
+https://pangeasoft.net/bug/strategyguide/index.html
+
+## Notes on Vita Port
+### Issues
+Overall the port seems to run quite smoothly. The levels are a bit slow to load, typically taking ~15s.
+
+If you notice any bugs (...), please feel free to open an issue.
+This is simply a port of [@jorio](https://github.com/jorio)'s excellent work, so new features are beyond the scope of this project (unless they are straightforward and Vita-specific).
+
+### Save files
+Games are saved to `ux0:data/Bugdom/`. There are only 3 save slots, but you can back up the files from this directory to effectively have more.
+
+### What's different from upstream
+- Controller navigation has been added to all menus and most cheat codes
+- Settings have been added to allow reversing camera and flight controls
+- A third level of detail has been added between high and low.
+- Pixels have been switched from ARGB/BGRA to RGBA
 
 ## Documentation
 
-- [BUILD.md](BUILD.md) — How to build on macOS, Windows or Linux.
-- [CHANGELOG.md](CHANGELOG.md) — Bugdom version history.
+- [BUILD.md](BUILD.md) — How to build Bugdom VPK on Linux
+- [CHANGELOG.md](CHANGELOG.md) — Bugdom version history ([@jorio](https://github.com/jorio)).
 - [LICENSE.md](LICENSE.md) — Licensing information (see also below).
-- [Instructions.pdf](docs/Instructions.pdf) — Original instruction manual. Int'l versions:
+- [Instructions.pdf](docs/Instructions.pdf) — Original instruction manual. International versions:
     [DE](docs/Instructions-DE.pdf)
     [EN](docs/Instructions-EN.pdf)
     [FR](docs/Instructions-FR.pdf)
@@ -32,12 +71,10 @@ The first release of this port used a custom fork of [Quesa](https://github.com/
     [JA](docs/Instructions-JA.pdf)
     [SP](docs/Instructions-ES.pdf)
     [SV](docs/Instructions-SV.pdf)
-- [CHEATS.md](CHEATS.md) — Cheat codes!
-- [COMMANDLINE.md](COMMANDLINE.md) — Advanced command-line switches.
 
 ## License
 
-Bugdom is being re-released here (https://github.com/jorio/bugdom) under the [CC BY-NC-SA 4.0](LICENSE.md) license with permission from Pangea Software, Inc.
+Bugdom is being re-released at https://github.com/jorio/bugdom under the [CC BY-NC-SA 4.0](LICENSE.md) license with permission from Pangea Software, Inc. This Vita port therefore has the same license.
 
 Bugdom® is a registered trademark of Pangea Software, Inc.
 
@@ -48,9 +85,8 @@ Bugdom® is a registered trademark of Pangea Software, Inc.
 - All artwork herein is © Toucan Studio, Inc.
 - All music herein is © Mike Beckett.
 - This software includes portions © 2020 Iliyas Jorio.
+- The Vita port includes portions © 2022 ywnico.
 
-## More Pangea stuff!
+## Support
 
-Check out my ports of [Cro-Mag Rally](https://github.com/jorio/CroMagRally), [Nanosaur](https://github.com/jorio/Nanosaur), [Mighty Mike (Power Pete)](https://github.com/jorio/MightyMike) and [Otto Matic](https://github.com/jorio/OttoMatic).
-
-All ports are provided free of charge! If you’d like to support the development of Pangea game ports, feel free to visit https://jorio.itch.io and name your own price for any of the games there. Much appreciated! 😊
+If you'd like to support the development of this software, please consider buying the desktop version of Bugdom (or another Pangea game) from Iliyas Jorio at https://jorio.itch.io, or make a contribution to [https://github.com/Rinnegatamante](Rinnegatamante) ([Patreon link](https://patreon.com/Rinnegatamante)), who developed VitaGL and so much more for PS Vita.

@@ -56,6 +56,8 @@ static const TQ3Point2D gFloppyPositions[NUM_SAVE_FILES] =
 struct
 {
 	bool		isSaveDataValid;
+    time_t      timestamp;
+    ObjNode*    deleteTextMesh;
 } fileInfos[NUM_SAVE_FILES];
 
 
@@ -78,7 +80,7 @@ enum
 };
 
 
-static ObjNode* floppies[3];
+static ObjNode* floppies[NUM_SAVE_FILES];
 
 
 
@@ -92,6 +94,10 @@ static int 			gCurrentFileScreenType = FILE_SELECT_SCREEN_TYPE_LOAD;
 
 static bool			gFileScreenAwaitingInput = true;
 
+const float gs = .9f;			// global scale of objects created in this function
+const float deleteScale = 0.33f; // delete text scale (relative to gs)
+
+int32_t lastHoveredPick;
 
 /********************** DO BONUS SCREEN *************************/
 
@@ -105,6 +111,36 @@ int DoFileSelectScreen(int type)
 
 	SetupUIStuff(kUIBackground_Cyclorama);
 	SetupFileScreen();
+
+    // If we're in the loading screen, default to the last save.
+    // Otherwise, default to the first new slot or the last save.
+    int iBestPick = 0;
+    time_t latestTime = 0;
+    if (gCurrentFileScreenType == FILE_SELECT_SCREEN_TYPE_LOAD) {
+        // pick last save
+        for (int j = 0; j < NUM_SAVE_FILES; j++) {
+            if (fileInfos[j].timestamp > latestTime) {
+                iBestPick = j;
+                latestTime = fileInfos[j].timestamp;
+            }
+        }
+    } else {
+        // pick first new slot or last save
+        for (int j = 0; j < NUM_SAVE_FILES; j++) {
+            if (!fileInfos[j].isSaveDataValid) {
+                iBestPick = j;
+                break;
+            }
+            if (fileInfos[j].timestamp > latestTime) {
+                iBestPick = j;
+                latestTime = fileInfos[j].timestamp;
+            }
+        }
+    }
+
+    gHoveredPick = kPickBits_Floppy | iBestPick;
+    lastHoveredPick = gHoveredPick;
+
 
 	QD3D_CalcFramesPerSecond();
 
@@ -257,6 +293,51 @@ static void MoveFloppy(ObjNode *theNode)
 	UpdateObjectTransforms(theNode);
 }
 
+static void MoveDontSave(ObjNode *theNode)
+{
+    if (gHoveredPick & kPickBits_DontSave) {
+        MoveFloppy_Shiver(theNode);
+    } else {
+        MoveFloppy_Neutral(theNode);
+    }
+
+	UpdateObjectTransforms(theNode);
+}
+
+static void MoveDeleteText_Shiver(ObjNode* theNode)
+{
+	const float t = UpdateFloppyState(theNode, 'SHVR');
+	const float D = 0.5f;
+	TweenTowardsTQ3Vector3D(t, D, &theNode->Rot, (TQ3Vector3D){
+		0,
+		0,
+		cosf(1*9*t) * 0.1f * sinf(3*9*t)
+	});
+    theNode->Scale = (TQ3Vector3D) {1.5*deleteScale * gs, 1.5*deleteScale * gs, 1.5*deleteScale * gs};
+}
+
+static void MoveDeleteText_Neutral(ObjNode* theNode)
+{
+	const float t = UpdateFloppyState(theNode, 'NTRL');
+	const float D = 0.5f;
+	TweenTowardsTQ3Vector3D(t, D, &theNode->Rot, (TQ3Vector3D){0,0,0});
+	TweenTowardsTQ3Point3D(t, D, &theNode->Coord, theNode->InitCoord);
+	TweenTowardsTQ3Vector3D(t, D, &theNode->Scale, (TQ3Vector3D){deleteScale * gs, deleteScale * gs, deleteScale * gs});
+}
+
+static void MoveDeleteText(ObjNode *theNode)
+{
+	int fileNumber = theNode->SpecialL[0];
+
+    if ((gHoveredPick & kPickBits_Delete) && ((gHoveredPick & kPickBits_FileNumberMask) == fileNumber)) {
+        MoveDeleteText_Shiver(theNode);
+    } else {
+        MoveDeleteText_Neutral(theNode);
+    }
+
+	UpdateObjectTransforms(theNode);
+}
+
 static void MakeFileObjects(const int fileNumber, bool createPickables)
 {
 	bool canDelete = gCurrentFileScreenType == FILE_SELECT_SCREEN_TYPE_LOAD;
@@ -271,10 +352,9 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 	const float y = gFloppyPositions[fileNumber].y +
 			(gCurrentFileScreenType == FILE_SELECT_SCREEN_TYPE_LOAD? 15: 0);
 
-	const float gs = .9f;			// global scale of objects created in this function
-	const float deleteScale = 0.33f;
-
 	fileInfos[fileNumber].isSaveDataValid = saveDataValid;
+	fileInfos[fileNumber].timestamp = 0;
+    fileInfos[fileNumber].deleteTextMesh = nil;
 
 	short objNodeSlotID = 10000 + fileNumber;				// all nodes related to this file slot will have this
 
@@ -325,6 +405,7 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 		TextMesh_Create(&tmd, textBuffer);
 
 		time_t timestamp = saveData.timestamp;
+        fileInfos[fileNumber].timestamp = timestamp;
 		struct tm tm;
 		tm = *localtime(&timestamp);
 		strftime(textBuffer, sizeof(textBuffer), "%e %b %Y  %H:%M", &tm);
@@ -337,7 +418,10 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 			tmd.coord.x		= x+30 * gs;
 			tmd.coord.y		= y-65 * gs;
 			tmd.scale		= deleteScale * gs;
-			TextMesh_Create(&tmd, "delete");
+            tmd.moveCall	= MoveDeleteText;
+            fileInfos[fileNumber].deleteTextMesh = TextMesh_Create(&tmd, "delete");
+            fileInfos[fileNumber].deleteTextMesh->SpecialL[0] = fileNumber;
+            fileInfos[fileNumber].deleteTextMesh->ShadowNode->SpecialL[0] = fileNumber;
 		}
 	}
 
@@ -391,6 +475,7 @@ static void SetupFileScreen(void)
 		tmd.scale = .33f;
 		tmd.color = gDeleteColor;
 		tmd.align = TEXTMESH_ALIGN_RIGHT;
+		tmd.moveCall = MoveDontSave;
 		TextMesh_Create(&tmd, "Don't save");
 
 		// Make floppy
@@ -401,7 +486,7 @@ static void SetupFileScreen(void)
 		gNewObjectDefinition.coord.z 	= 0;
 		gNewObjectDefinition.slot 		= 100;
 		gNewObjectDefinition.flags 		= STATUS_BIT_CLONE;
-		gNewObjectDefinition.moveCall 	= nil;
+		gNewObjectDefinition.moveCall 	= MoveDontSave;
 		gNewObjectDefinition.rot 		= 0;
 		gNewObjectDefinition.scale 		= 0.3f;
 		MakeNewDisplayGroupObject(&gNewObjectDefinition);
@@ -446,6 +531,8 @@ static void DeleteFileInSlot(int fileNumber)
 	DeleteSavedGame(fileNumber);
 
 	MakeFileObjects(fileNumber, false);
+
+    gHoveredPick = kPickBits_Floppy | fileNumber;
 }
 
 
@@ -479,14 +566,78 @@ static int FileScreenMainLoop()
 		if (gFileScreenAwaitingInput)
 		{
 			if (GetNewKeyState(kKey_UI_Cancel)
-				|| GetNewKeyState(kKey_UI_PadBack)
-				|| GetNewKeyState(kKey_UI_PadCancel))
+				|| GetNewKeyState(kKey_UI_PadCancel)
+				|| GetNewKeyState(kKey_UI_Start))
 			{
 				return -1;
 			}
 
-			int pickID = UpdateHoveredPickID();
-			if (pickID >= 0 && IsAnalogCursorClicked())
+            int curPick = gHoveredPick & kPickBits_FileNumberMask;
+            bool curCanDelete = (gCurrentFileScreenType == FILE_SELECT_SCREEN_TYPE_LOAD)
+                && (curPick >= 0) && (curPick < NUM_SAVE_FILES) && (fileInfos[curPick].isSaveDataValid);
+
+            switch (gHoveredPick & ~kPickBits_FileNumberMask)
+            {
+                case kPickBits_Floppy:
+                    if (GetNewKeyState(kKey_Right))
+                    {
+                        if (curPick < NUM_SAVE_FILES-1)
+                            gHoveredPick = kPickBits_Floppy | (curPick+1);
+                    }
+                    else if (GetNewKeyState(kKey_Left))
+                    {
+                        if (curPick > 0)
+                            gHoveredPick = kPickBits_Floppy | (curPick-1);
+                    }
+                    else if (GetNewKeyState(kKey_Backward)) // down
+                    {
+                        if (curCanDelete) {
+                            gHoveredPick = kPickBits_Delete | curPick;
+                        } else if (gCurrentFileScreenType == FILE_SELECT_SCREEN_TYPE_LOAD) {
+                            gHoveredPick = kPickBits_Spider;
+                            lastHoveredPick = kPickBits_Floppy | curPick;
+                        } else {
+                            gHoveredPick = kPickBits_DontSave;
+                            lastHoveredPick = kPickBits_Floppy | curPick;
+                        }
+                    }
+                    break;
+                case kPickBits_Delete:
+                    if (GetNewKeyState(kKey_Right))
+                    {
+                        if (curPick < NUM_SAVE_FILES-1)
+                            gHoveredPick = kPickBits_Floppy | (curPick+1);
+                    }
+                    else if (GetNewKeyState(kKey_Left))
+                    {
+                        if (curPick > 0)
+                            gHoveredPick = kPickBits_Floppy | (curPick-1);
+                    }
+                    else if (GetNewKeyState(kKey_Forward)) // up
+                    {
+                        gHoveredPick = kPickBits_Floppy | curPick;
+                    }
+                    else if (GetNewKeyState(kKey_Backward)) // down
+                    {
+                        if (gCurrentFileScreenType == FILE_SELECT_SCREEN_TYPE_LOAD) {
+                            gHoveredPick = kPickBits_Spider;
+                            lastHoveredPick = kPickBits_Floppy | curPick;
+                        } else {
+                            gHoveredPick = kPickBits_DontSave;
+                            lastHoveredPick = kPickBits_Floppy | curPick;
+                        }
+                    }
+                    break;
+                case kPickBits_DontSave:
+                case kPickBits_Spider:
+                    if (GetNewKeyState(kKey_Forward)) // up
+                    {
+                        gHoveredPick = lastHoveredPick;
+                    }
+            }
+
+			int pickID = gHoveredPick;
+			if (pickID >= 0 && GetNewKeyState(kKey_UI_PadConfirm))
 			{
 				switch (pickID & ~kPickBits_FileNumberMask)
 				{

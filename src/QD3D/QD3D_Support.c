@@ -10,10 +10,9 @@
 /*    EXTERNALS             */
 /****************************/
 
-#include <SDL_opengl.h>
+#include <vitaGL.h>
 #include <stdio.h>
 #include "game.h"
-
 
 /****************************/
 /*    PROTOTYPES            */
@@ -153,7 +152,8 @@ QD3DSetupOutputType	*outputPtr;
 
 				/* SET UP OPENGL RENDERER PROPERTIES NOW THAT WE HAVE A CONTEXT */
 
-	SDL_GL_SetSwapInterval(gCommandLine.vsync);
+	// Enable V-Sync
+	vglWaitVblankStart(GL_TRUE);
 
 	CreateLights(&setupDefPtr->lights);
 
@@ -337,7 +337,7 @@ void QD3D_DrawScene(QD3DSetupOutputType *setupInfo, void (*drawRoutine)(const QD
 
 	Render_EndFrame();
 
-	SDL_GL_SwapWindow(gSDLWindow);
+    vglSwapBuffers(GL_FALSE);
 }
 
 
@@ -465,14 +465,26 @@ OSErr					err;
 		internalFormat = GL_RGB;
 	}
 
+    // rearrange ARGB -> RGBA for vita
+    for (int p = 0; p < 4 * header.width * header.height; p += 4) {
+            uint8_t temp;
+
+            temp = pixelData[p+0];
+            pixelData[p+0] = pixelData[p+1];
+            pixelData[p+1] = pixelData[p+2];
+            pixelData[p+2] = pixelData[p+3];
+            pixelData[p+3] = temp;
+    }
+
 			/* LOAD TEXTURE */
 
 	GLuint glTextureName = Render_LoadTexture(
 			internalFormat,
 			header.width,
 			header.height,
-			GL_BGRA,
-			GL_UNSIGNED_INT_8_8_8_8,
+			GL_RGBA,
+			//GL_UNSIGNED_INT_8_8_8_8,
+			GL_UNSIGNED_BYTE,
 			pixelData,
 			flags
 			);

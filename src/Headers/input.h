@@ -46,6 +46,7 @@ enum
 
 	kKey_UI_Confirm,
 	kKey_UI_Skip,
+	kKey_UI_Start,
 	kKey_UI_Cancel,
 	kKey_UI_PadConfirm,
 	kKey_UI_PadCancel,
@@ -73,6 +74,7 @@ Boolean GetKeyState_SDL(unsigned short sdlScanCode);
 Boolean GetKeyState(unsigned short key);
 Boolean GetNewKeyState_SDL(unsigned short sdlScanCode);
 Boolean GetSkipScreenInput(void);
+Boolean GetCheatKeysInput(void);
 void ResetInputState(void);
 void UpdateKeyMap(void);
 

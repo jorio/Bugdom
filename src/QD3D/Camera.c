@@ -271,14 +271,14 @@ float	fps = gFramesPerSecondFrac;
 			/* HANDLE CAMERA MOTION */
 			/************************/
 
-	if (GetKeyState(kKey_ZoomIn))	
+	if (GetKeyState(kKey_ZoomIn) && !GetKeyState(kKey_ZoomOut))
 	{
 		gCameraDistFromMe -= fps * 200.0f;		// closer camera
 		if (gCameraDistFromMe < CAMERA_CLOSEST)
 			gCameraDistFromMe = CAMERA_CLOSEST;
 	}
 	else
-	if (GetKeyState(kKey_ZoomOut))	
+	if (GetKeyState(kKey_ZoomOut) && !GetKeyState(kKey_ZoomIn))
 	{
 		gCameraDistFromMe += fps * 200.0f;		// farther camera
 		if (gCameraDistFromMe > CAMERA_FARTHEST)

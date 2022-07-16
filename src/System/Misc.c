@@ -60,6 +60,21 @@ Str255		numStr;
 	DoAlert (numStr);
 }
 
+/*********************** VITA LOG *******************/
+void InitLogVita()
+{
+    FILE *fd = fopen("ux0:data/bugdom_debug_log.txt", "w");
+    fprintf(fd, "");
+    fclose(fd);
+}
+void LogVita(const char* s)
+{
+    FILE *fd = fopen("ux0:data/bugdom_debug_log.txt", "a");
+    fprintf(fd, "\n");
+    fprintf(fd, s);
+    fclose(fd);
+}
+
 /*********************** DO ALERT *******************/
 
 void DoAlert(const char* s)
@@ -67,7 +82,8 @@ void DoAlert(const char* s)
 	if (gSDLWindow)
 		SDL_SetWindowFullscreen(gSDLWindow, 0);
 	printf("BUGDOM ALERT: %s\n", s);
-	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", s, gSDLWindow);
+	/*SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", s, gSDLWindow);*/
+    LogVita(s);
 }
 
 

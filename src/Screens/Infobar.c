@@ -250,6 +250,27 @@ void DisposeInfobarTexture(void)
 //
 // Doesnt init inventories, just the physical infobar itself.
 //
+void Convert8888ARGBTo8888BGRA(int intCount, void* buffer)
+{
+    uint32_t* byteBuffer = (uint32_t*) buffer;
+
+    for (int i = 0; i < intCount; i++)
+    {
+        uint32_t pixel = *byteBuffer;
+        uint32_t a = pixel >> 24;
+        uint32_t r = (pixel >> 16) & 0xff; // mask lowest eight bits
+        uint32_t g = (pixel >> 8) & 0xff;
+        uint32_t b = pixel & 0xff;
+
+        // arbg -> rgba
+        //pixel = (r << 24) | (g << 16) | (b << 8) | a;
+        //
+        pixel = (b << 24) | (g << 16) | (r << 8) | a;
+        *byteBuffer = pixel;
+        byteBuffer += 1;
+    }
+}
+
 
 void InitInfobar(void)
 {
@@ -278,7 +299,8 @@ void InitInfobar(void)
 			1024,
 			128,
 			GL_BGRA,
-			GL_UNSIGNED_INT_8_8_8_8,
+			//GL_UNSIGNED_INT_8_8_8_8,
+            GL_UNSIGNED_BYTE,
 			gInfobarTexture,
 			kRendererTextureFlags_ClampBoth
 	);
@@ -419,11 +441,14 @@ char		path[256];
 		gSpriteWidths[i] = header.width;
 		gSpriteHeights[i] = header.height;
 
+        // Rearrange colors for vita
+        Convert8888ARGBTo8888BGRA(gSpriteWidths[i]*gSpriteHeights[i], gSprites[i]);
+
 		gSpriteMasks[i] = (uint32_t*) NewPtrClear(4 * header.width * header.height);
 
 		for (int p = 0; p < header.width * header.height; p++)
 		{
-			gSpriteMasks[i][p] = gSprites[i][p]==0x000000FF? 0x00000000: 0xFFFFFFFF;
+			gSpriteMasks[i][p] = gSprites[i][p]==0xFF000000? 0x00000000: 0xFFFFFFFF;
 		}
 	}
 }
@@ -673,15 +698,18 @@ static void DrawNitroGauge(int arcSpan)
 			
 			if (t <= arcSpan)						// green (original: 0x0000,0xBDEF,0x294A)
 			{
-				outRow[x] = 0x00bd29FF; 			// (BGRA)
+				//outRow[x] = 0x00bd29FF; 			// (BGRA)
+				outRow[x] = 0xFF29bd00; 			// (ARGB)
 			}
 			else if (wantMargin && t <= arcSpan+3)	// margin line (original: 0xffff,0xF7BD,0x0000)
 			{
-				outRow[x] = 0x00f7ffFF;				// (BGRA)
+				//outRow[x] = 0x00f7ffFF;				// (BGRA)
+				outRow[x] = 0xFFfff700;				// (ARGB)
 			}
 			else									// black
 			{
-				outRow[x] = 0x000000FF;
+				//outRow[x] = 0x000000FF;             // (BGRA)
+				outRow[x] = 0xFF000000;             // (ARGB)
 			}
 
 			x++;
@@ -1054,7 +1082,8 @@ Rect	r;
 
 	if (r.right > r.left)
 	{
-		FillInfobarRect(r, 0x1800F7FF);		// (BGRA)
+		//FillInfobarRect(r, 0x1800F7FF);		// (BGRA)
+		FillInfobarRect(r, 0xFFF70018);		// (ARGB)
 	}
 
 			/* EMPTY FILLER */
@@ -1064,7 +1093,8 @@ Rect	r;
 
 	if (r.right > r.left)
 	{
-		FillInfobarRect(r, 0x000000FF);		// (BGRA)
+		//FillInfobarRect(r, 0x000000FF);		// (BGRA)
+		FillInfobarRect(r, 0xFF000000);		// (ARGB)
 	}
 
 			/* MARGIN LINE */
@@ -1074,7 +1104,8 @@ Rect	r;
 
 	if (r.right < (n-2))
 	{
-		FillInfobarRect(r, 0x00F7FFFF);		// (BGRA)
+		//FillInfobarRect(r, 0x00F7FFFF);		// (BGRA)
+		FillInfobarRect(r, 0xFFFFF700);		// (ARGB)
 	}
 }
 
@@ -1223,7 +1254,8 @@ int		w,x;
 			
 		/* FRAME */
 
-	FillInfobarRect(r, 0x000000FF);			// (BGRA)
+	//FillInfobarRect(r, 0x000000FF);			// (BGRA)
+	FillInfobarRect(r, 0xFF000000);			// (ARGB)
 
 		/* METER */
 		
@@ -1234,7 +1266,8 @@ int		w,x;
 	r.right = r.left + w - 4; 	
 	if (w > 0)
 	{
-		FillInfobarRect(r, 0x0608ddff);		// (BGRA)
+		//FillInfobarRect(r, 0x0608ddff);		// (BGRA)
+		FillInfobarRect(r, 0xffdd0806);		// (ARGB)
 	}
 		
 		/* EMPTY */
@@ -1243,7 +1276,8 @@ int		w,x;
 	{
 		r.left = r.right;
 		r.right = x-2;
-		FillInfobarRect(r, 0x000000FF);		// (BGRA)
+		//FillInfobarRect(r, 0x000000FF);		// (BGRA)
+		FillInfobarRect(r, 0xFF000000);		// (ARGB)
 	}
 
 
@@ -1266,7 +1300,8 @@ void SubmitInfobarOverlay(void)
 				gInfobarTextureDirtyRect.right - gInfobarTextureDirtyRect.left,
 				gInfobarTextureDirtyRect.bottom - gInfobarTextureDirtyRect.top,
 				GL_BGRA,
-				GL_UNSIGNED_INT_8_8_8_8,
+				//GL_UNSIGNED_INT_8_8_8_8,
+                GL_UNSIGNED_BYTE,
 				GetInfobarTextureOffset(gInfobarTextureDirtyRect.left, gInfobarTextureDirtyRect.top),
 				INFOBAR_TEXTURE_WIDTH);
 
