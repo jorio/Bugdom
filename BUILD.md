@@ -8,14 +8,19 @@ These instructions apply to Linux. I haven't tried other operating systems.
     ```
 1. Build the game:
     ```
+    # Build vitaGL
+    cd extern/vitaGL
+    make
+    cd ../..
+
     # Compile eboot.bin
     mkdir build
     cd build
     cmake .. -DCMAKE_BUILD_TYPE=Release -DVITA=ON
     cmake --build .
+    cd ..
 
     # Package into vpk
-    cd ..
     ./make_vpk.sh .
     ```
 
