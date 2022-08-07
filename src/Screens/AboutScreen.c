@@ -278,7 +278,7 @@ static void MakeAboutScreenObjects(int slideNumber)
 #define MAKE_TECH_TEXT(key, caption) \
             tmd.coord.y -= 10; tmd.coord.x = -80; TextMesh_Create(&tmd, key);	tmd.coord.x = -30; TextMesh_Create(&tmd, caption);
 
-			MAKE_TECH_TEXT("Game ver:",	PROJECT_VERSION);
+			MAKE_TECH_TEXT("Game ver:",	VITA_LONGVERSION);
 			MAKE_TECH_TEXT("Renderer:",	(const char*)glGetString(GL_RENDERER));
 			MAKE_TECH_TEXT("OpenGL:",	(const char*)glGetString(GL_VERSION));
 			MAKE_TECH_TEXT("SDL:",		sdlVersionString);

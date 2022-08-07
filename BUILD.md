@@ -1,5 +1,5 @@
 # How to build Bugdom for PS Vita
-These instructions apply to Linux. I haven't tried other operating systems. In the future, the vitaGL and vpk steps should be added to cmake to simplify the process.
+These instructions apply to Linux. I haven't tried other operating systems.
 
 1. Install the Vita toolchain
 1. Clone the repo **recursively**:
@@ -12,17 +12,12 @@ These instructions apply to Linux. I haven't tried other operating systems. In t
     make
     cd ../..
     ```
-1. Compile Bugdom (eboot.bin):
+1. Build Bugdom:
     ```
     mkdir build
     cd build
     cmake .. -DCMAKE_BUILD_TYPE=Release -DVITA=ON
     cmake --build .
-    cd ..
-    ```
-1. Package into vpk
-    ```
-    ./make_vpk.sh .
     ```
 
 ## Notes

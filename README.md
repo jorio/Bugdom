@@ -56,7 +56,6 @@ Games are saved to `ux0:data/Bugdom/`. There are only 3 save slots, but you can 
 - Controller navigation has been added to all menus and most cheat codes
 - Settings have been added to allow reversing camera and flight controls
 - A third level of detail has been added between high and low.
-- Pixels have been switched from ARGB/BGRA to RGBA
 
 ## Documentation
 

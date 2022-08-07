@@ -36,7 +36,12 @@ if (VITA)
   # unique string of developer and Y = a unique number for this app
   set(VITA_TITLEID  "BGDM00099")
   # Optional version string to show in LiveArea's more info screen
-  set(VITA_VERSION  "1.3.2")
+  # Note that we can't fit a long enough string in here to show the Vita revision on top of the upstream game version.
+  # Therefore, we just don't set the version here at all, and instead rely on the in-game about page.
+  #set(VITA_VERSION  GAME_VERSION)
+
+  # Version string to show in the game about page
+  set(VITA_LONGVERSION "1.3.2-vita.2")
 endif()
 
 project(${GAME_TARGET}
@@ -323,17 +328,16 @@ if(VITA)
   ## Create Vita files
   vita_create_self(eboot.bin ${GAME_TARGET}) # SAFE)
 
-  # vita_create_vpk is creating malformed param.sfo for me....
-  # The FILE directive lets you add additional files to the VPK, the syntax is
-  # FILE src_path dst_path_in_vpk. In this case, we add the LiveArea paths.
-  #vita_create_vpk(${VITA_APP_NAME}.vpk ${VITA_TITLEID} eboot.bin
+  vita_create_vpk(${VITA_APP_NAME}.vpk ${VITA_TITLEID} eboot.bin
     #VERSION ${VITA_VERSION}
-    #NAME ${VITA_APP_NAME}
-    #FILE helloworld_sce_sys/icon0.png sce_sys/icon0.png
-    #FILE helloworld_sce_sys/livearea/contents/bg.png sce_sys/livearea/contents/bg.png
-    #FILE helloworld_sce_sys/livearea/contents/startup.png sce_sys/livearea/contents/startup.png
-    #FILE helloworld_sce_sys/livearea/contents/template.xml sce_sys/livearea/contents/template.xml
-    #)
+    NAME ${VITA_APP_NAME}
+    FILE sce_sys/icon0.png sce_sys/icon0.png
+    FILE sce_sys/livearea/contents/bg.png sce_sys/livearea/contents/bg.png
+    FILE sce_sys/livearea/contents/startup.png sce_sys/livearea/contents/startup.png
+    FILE sce_sys/livearea/contents/template.xml sce_sys/livearea/contents/template.xml
+    FILE build/ReadMe.txt ReadMe.txt
+    FILE Data Data
+    )
 endif()
 
 # Windows-specific libraries
