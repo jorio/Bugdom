@@ -89,4 +89,4 @@ Bugdom® is a registered trademark of Pangea Software, Inc.
 
 ## Support
 
-If you'd like to support the development of this software, please consider buying the desktop version of Bugdom (or another Pangea game) from Iliyas Jorio at https://jorio.itch.io, or make a contribution to [Rinnegatamante](https://github.com/Rinnegatamante) ([Patreon link](https://patreon.com/Rinnegatamante)), who developed VitaGL and so much more for PS Vita.
+If you'd like to support the development of this software, please consider buying the desktop version of Bugdom (or another Pangea game) from Iliyas Jorio at https://jorio.itch.io, or make a contribution to [https://github.com/Rinnegatamante](Rinnegatamante) ([Patreon link](https://patreon.com/Rinnegatamante)), who developed VitaGL and so much more for PS Vita.

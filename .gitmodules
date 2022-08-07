@@ -5,4 +5,4 @@
 [submodule "extern/vitaGL"]
 	path = extern/vitaGL
 	url = https://github.com/ywnico/vitaGL
-	branch = unpack_row_length
+	branch = ywnico_bugdom

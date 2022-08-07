@@ -1,3 +1,12 @@
+# Bugdom-vita changelog
+
+- **1.3.2-vita.2 (August 7, 2022)**
+    - Get rid of BGRA-RGBA pixel conversion code in Bugdom and Pomme, moving it to a vitaGL fork. Future maintenance should be much easier.
+    - Fix 1-byte offset bug making textures look grainy.
+
+- **1.3.2-vita.1 (July 16, 2022)**
+    - Initial Vita port.
+
 # Bugdom changelog
 
 - **1.3.2 (June 27, 2022)**

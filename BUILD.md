@@ -8,24 +8,22 @@ These instructions apply to Linux. I haven't tried other operating systems.
     ```
 1. Build the game:
     ```
-    # Build vitaGL
-    cd extern/vitaGL
-    make
-    cd ../..
-
     # Compile eboot.bin
     mkdir build
     cd build
     cmake .. -DCMAKE_BUILD_TYPE=Release -DVITA=ON
     cmake --build .
-    cd ..
 
     # Package into vpk
+    cd ..
     ./make_vpk.sh .
     ```
 
 ## Notes
 
-- This repository depends on ywnico's forks of Pomme (https://github.com/ywnico/Pomme-vita) and VitaGL (the `unpack_row_length` branch of https://github.com/ywnico/vitaGL).
-- The Pomme fork includes file access and ARGB -> RGBA pixel conversion routines needed for the Vita.
-- The vitaGL fork includes an additional function, `glTexSubImage2DUnpackRow`, to simulate the OpenGL calls `glPixelStorei(GL_UNPACK_ROW_LENGTH, some_row_length); glTexSubImage2D(...);` for for unpacking subtextures.
+- This repository depends on ywnico's forks of Pomme (https://github.com/ywnico/Pomme-vita) and VitaGL (the `ywnico_bugdom` branch of https://github.com/ywnico/vitaGL).
+- The Pomme fork includes:
+    - Updated data directory for Vita.
+- The vitaGL fork includes:
+    - An additional function, `glTexSubImage2DUnpackRow`, to simulate the OpenGL calls `glPixelStorei(GL_UNPACK_ROW_LENGTH, some_row_length); glTexSubImage2D(...);` for for unpacking subtextures.
+    - Implementation of `GL_UNSIGNED_INT_8_8_8_8`, `GL_UNSIGNED_INT_8_8_8_8_REV`, and `GL_UNSIGNED_INT_1_5_5_5_REV`.

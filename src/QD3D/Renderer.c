@@ -265,9 +265,9 @@ void Render_InitState(const TQ3ColorRGBA* clearColor)
 	SetInitialClientState(GL_COLOR_ARRAY,				false);
 	SetInitialClientState(GL_TEXTURE_COORD_ARRAY,		false);
 	SetInitialState(GL_NORMALIZE,		true);		// Normalize normal vectors. Required so lighting looks correct on scaled meshes.
-    SetInitialState(GL_CULL_FACE,		true);
+	SetInitialState(GL_CULL_FACE,		true);
 	SetInitialState(GL_ALPHA_TEST,		true);
-    SetInitialState(GL_DEPTH_TEST,		true);
+	SetInitialState(GL_DEPTH_TEST,		true);
 	SetInitialState(GL_COLOR_MATERIAL,	true);
 	SetInitialState(GL_TEXTURE_2D,		false);
 	SetInitialState(GL_BLEND,			false);
@@ -455,34 +455,26 @@ void Render_Load3DMFTextures(TQ3MetaFile* metaFile, GLuint* outTextureNames, boo
 			case kQ3PixelTypeRGB32:
 				meshTexturingMode = kQ3TexturingModeOpaque;
 				internalFormat = GL_RGB;
-				//format = GL_BGRA;
-				//type = GL_UNSIGNED_INT_8_8_8_8_REV;
-				format = GL_RGBA;
-                type = GL_UNSIGNED_BYTE;
+				format = GL_BGRA;
+				type = GL_UNSIGNED_INT_8_8_8_8_REV;
 				break;
 			case kQ3PixelTypeARGB32:
 				meshTexturingMode = kQ3TexturingModeAlphaBlend;
 				internalFormat = GL_RGBA;
-				//format = GL_BGRA;
-				//type = GL_UNSIGNED_INT_8_8_8_8_REV;
-				format = GL_RGBA;
-                type = GL_UNSIGNED_BYTE;
+				format = GL_BGRA;
+				type = GL_UNSIGNED_INT_8_8_8_8_REV;
 				break;
 			case kQ3PixelTypeRGB16:
 				meshTexturingMode = kQ3TexturingModeOpaque;
 				internalFormat = GL_RGB;
-				//format = GL_BGRA;
-				//type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
-				format = GL_RGBA;
-                type = GL_UNSIGNED_SHORT_5_5_5_1;
+				format = GL_BGRA;
+				type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
 				break;
 			case kQ3PixelTypeARGB16:
 				meshTexturingMode = kQ3TexturingModeAlphaTest;
 				internalFormat = GL_RGBA;
-				//format = GL_BGRA;
-				//type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
-				format = GL_RGBA;
-                type = GL_UNSIGNED_SHORT_5_5_5_1;
+				format = GL_BGRA;
+				type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
 				break;
 			case kQ3PixelTypeRGB24:
 				meshTexturingMode = kQ3TexturingModeOpaque;
