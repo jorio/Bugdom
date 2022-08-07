@@ -61,7 +61,7 @@ Games are saved to `ux0:data/Bugdom/`. There are only 3 save slots, but you can 
 ## Documentation
 
 - [BUILD.md](BUILD.md) — How to build Bugdom VPK on Linux
-- [CHANGELOG.md](CHANGELOG.md) — Bugdom version history ([@jorio](https://github.com/jorio)).
+- [CHANGELOG.md](CHANGELOG.md) — Bugdom-vita and Bugdom version history
 - [LICENSE.md](LICENSE.md) — Licensing information (see also below).
 - [Instructions.pdf](docs/Instructions.pdf) — Original instruction manual. International versions:
     [DE](docs/Instructions-DE.pdf)
