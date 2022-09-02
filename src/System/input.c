@@ -181,6 +181,11 @@ static inline void UpdateKeyState(KeyState* state, bool downNow)
 
 TQ3Vector2D GetThumbStickVector(bool rightStick)
 {
+#if NOJOYSTICK
+	// no-op
+	(void) rightStick;
+	return (TQ3Vector2D) {0,0};
+#else
 	Sint16 dxRaw = SDL_GameControllerGetAxis(gSDLController, rightStick ? SDL_CONTROLLER_AXIS_RIGHTX : SDL_CONTROLLER_AXIS_LEFTX);
 	Sint16 dyRaw = SDL_GameControllerGetAxis(gSDLController, rightStick ? SDL_CONTROLLER_AXIS_RIGHTY : SDL_CONTROLLER_AXIS_LEFTY);
 
@@ -217,13 +222,13 @@ TQ3Vector2D GetThumbStickVector(bool rightStick)
 
 		return (TQ3Vector2D) { cosf(angle) * magnitude, sinf(angle) * magnitude };
 	}
+#endif	// NOJOYSTICK
 }
 
 /********************** UPDATE INPUT ******************************/
 
 void UpdateInput(void)
 {
-
 	SDL_PumpEvents();
 
 		/* CHECK FOR NEW MOUSE BUTTONS */
@@ -513,9 +518,13 @@ void GetMouseDelta(float *dx, float *dy)
 	*dy = gFramesPerSecondFrac * mdy * mouseSensitivity;
 }
 
-
 SDL_GameController* TryOpenController(bool showMessage)
 {
+#if NOJOYSTICK
+	// no-op
+	(void) showMessage;
+	return NULL;
+#else
 	if (gSDLController)
 	{
 		printf("Already have a valid controller.\n");
@@ -558,10 +567,15 @@ SDL_GameController* TryOpenController(bool showMessage)
 	printf("Opened joystick %d as controller: %s\n", gSDLJoystickInstanceID, SDL_GameControllerName(gSDLController));
 
 	return gSDLController;
+#endif	// NOJOYSTICK
 }
 
 void OnJoystickRemoved(SDL_JoystickID which)
 {
+#if NOJOYSTICK
+	// no-op
+	(void) which;
+#else
 	if (NULL == gSDLController)		// don't care, I didn't open any controller
 		return;
 
@@ -577,6 +591,7 @@ void OnJoystickRemoved(SDL_JoystickID which)
 
 	// Try to open another joystick if any is connected.
 	TryOpenController(false);
+#endif	// NOJOYSTICK
 }
 
 #pragma mark -

@@ -55,6 +55,12 @@ void DoAboutScreens(void)
 
 	for (int i = 0; i < 4; i++)
 	{
+#if NOJOYSTICK
+		// Skip gamepad slide
+		if (i == 1)
+			i++;
+#endif
+
 		NukeObjectsInSlot(kAboutScreenObjNodeSlot);		// nuke text from previous slide
 
 		MakeAboutScreenObjects(i);

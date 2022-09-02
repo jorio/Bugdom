@@ -182,6 +182,7 @@ tryAgain:
 	// Find path to game data folder
 	fs::path dataPath = FindGameData();
 
+#if !(NOJOYSTICK)
 	// Init joystick subsystem
 	{
 		SDL_Init(SDL_INIT_JOYSTICK);
@@ -191,6 +192,7 @@ tryAgain:
 			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING, "Bugdom", "Couldn't load gamecontrollerdb.txt!", gSDLWindow);
 		}
 	}
+#endif
 }
 
 static void Shutdown()
