@@ -140,7 +140,8 @@ static uint8_t* ConvertToARGB(const uint8_t* in, const TGAHeader* header)
 			const uint16_t* inPtr16 = (const uint16_t*) in;
 			for (int p = 0; p < pixelCount; p++)
 			{
-				uint16_t inRGB16 = *inPtr16;
+				uint16_t inRGB16 = UnpackU16LE(inPtr16);
+
 				argbOut[0] = 0xFF;
 				argbOut[1] = (((inRGB16 >> 10) & 0b11111) * 255) / 31;
 				argbOut[2] = (((inRGB16 >> 5) & 0b11111) * 255) / 31;
@@ -215,6 +216,10 @@ OSErr ReadTGA(const FSSpec* spec, uint8_t** outPtr, TGAHeader* outHeader, bool f
 		FSClose(refNum);
 		return err;
 	}
+
+	// Byteswap it (for big-endian systems; no-op on little-endian because
+	// the struct format starts with '<')
+	UnpackStructs(STRUCTFORMAT_TGAHeader, sizeof(TGAHeader), 1, &header);
 
 	// Make sure we support the format
 	switch (header.imageType)

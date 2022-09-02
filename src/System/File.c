@@ -201,7 +201,7 @@ SkeletonFile_AnimHeader_Type	*animHeaderPtr;
 	hand = GetResource('Hedr',1000);
 	GAME_ASSERT(hand);
 	headerPtr = (SkeletonFile_Header_Type *)*hand;
-	BYTESWAP_STRUCTS(SkeletonFile_Header_Type, 1, headerPtr);
+	UNPACK_STRUCTS(SkeletonFile_Header_Type, 1, headerPtr);
 	version = headerPtr->version;
 	GAME_ASSERT_MESSAGE(version == SKELETON_FILE_VERS_NUM, "Skeleton file has wrong version #");
 	
@@ -258,7 +258,7 @@ SkeletonFile_AnimHeader_Type	*animHeaderPtr;
 		GAME_ASSERT(hand);
 		HLock(hand);
 		bonePtr = (File_BoneDefinitionType *)*hand;
-		BYTESWAP_STRUCTS(File_BoneDefinitionType, 1, bonePtr);
+		UNPACK_STRUCTS(File_BoneDefinitionType, 1, bonePtr);
 
 			/* COPY BONE DATA INTO ARRAY */
 		
@@ -282,7 +282,7 @@ SkeletonFile_AnimHeader_Type	*animHeaderPtr;
 		GAME_ASSERT(hand);
 		HLock(hand);
 		indexPtr = (u_short *)(*hand);
-		ByteswapInts(sizeof(u_short), skeleton->Bones[i].numPointsAttachedToBone, indexPtr);
+		UNPACK_BE_SCALARS_HANDLE(u_short, skeleton->Bones[i].numPointsAttachedToBone, hand);
 			
 			/* COPY POINT INDEX ARRAY INTO BONE STRUCT */
 
@@ -297,7 +297,7 @@ SkeletonFile_AnimHeader_Type	*animHeaderPtr;
 		GAME_ASSERT(hand);
 		HLock(hand);
 		indexPtr = (u_short *)(*hand);
-		ByteswapInts(sizeof(u_short), skeleton->Bones[i].numNormalsAttachedToBone, indexPtr);
+		UNPACK_BE_SCALARS_HANDLE(u_short, skeleton->Bones[i].numNormalsAttachedToBone, hand);
 			
 			/* COPY NORMAL INDEX ARRAY INTO BONE STRUCT */
 
@@ -325,7 +325,7 @@ SkeletonFile_AnimHeader_Type	*animHeaderPtr;
 		DoFatalAlert("# of points in Reference Model has changed!");
 	else
 	{
-		BYTESWAP_STRUCTS(TQ3Point3D, skeleton->numDecomposedPoints, pointPtr);
+		UNPACK_STRUCTS(TQ3Point3D, skeleton->numDecomposedPoints, pointPtr);
 		for (i = 0; i < skeleton->numDecomposedPoints; i++)
 			skeleton->decomposedPointList[i].boneRelPoint = pointPtr[i];
 	}
@@ -345,7 +345,7 @@ SkeletonFile_AnimHeader_Type	*animHeaderPtr;
 		GAME_ASSERT(hand);
 		HLock(hand);
 		animHeaderPtr = (SkeletonFile_AnimHeader_Type *)*hand;
-		BYTESWAP_STRUCTS(SkeletonFile_AnimHeader_Type, 1, animHeaderPtr);
+		UNPACK_STRUCTS(SkeletonFile_AnimHeader_Type, 1, animHeaderPtr);
 
 		skeleton->NumAnimEvents[i] = animHeaderPtr->numAnimEvents;			// copy # anim events in anim	
 		ReleaseResource(hand);
@@ -355,7 +355,7 @@ SkeletonFile_AnimHeader_Type	*animHeaderPtr;
 		hand = GetResource('Evnt',1000+i);
 		GAME_ASSERT(hand);
 		animEventPtr = (AnimEventType *)*hand;
-		BYTESWAP_STRUCTS(AnimEventType, skeleton->NumAnimEvents[i], animEventPtr);
+		UNPACK_STRUCTS(AnimEventType, skeleton->NumAnimEvents[i], animEventPtr);
 		for (j=0;  j < skeleton->NumAnimEvents[i]; j++)
 			skeleton->AnimEventsList[i][j] = *animEventPtr++;
 		ReleaseResource(hand);		
@@ -392,7 +392,7 @@ SkeletonFile_AnimHeader_Type	*animHeaderPtr;
 			hand = GetResource('KeyF',1000+(i*100)+j);
 			GAME_ASSERT(hand);
 			keyFramePtr = (JointKeyframeType *)*hand;
-			BYTESWAP_STRUCTS(JointKeyframeType, numKeyframes, keyFramePtr);
+			UNPACK_STRUCTS(JointKeyframeType, numKeyframes, keyFramePtr);
 			for (k = 0; k < numKeyframes; k++)												// copy this joint's keyframes for this anim
 				skeleton->JointKeyframes[j].keyFrames[i][k] = *keyFramePtr++;
 			ReleaseResource(hand);		
@@ -821,7 +821,7 @@ short					**xlateTableHand,*xlateTbl;
 	hand = GetResource('Hedr',1000);
 	GAME_ASSERT(hand);
 
-	BYTESWAP_STRUCT_ARRAY_HANDLE_2(PlayfieldHeaderType, 1, hand);
+	UNPACK_STRUCTS_HANDLE(PlayfieldHeaderType, 1, hand);
 	header = (PlayfieldHeaderType **)hand;
 	gNumTerrainItems		= (**header).numItems;
 	gTerrainTileWidth		= (**header).mapWidth;
@@ -847,7 +847,7 @@ short					**xlateTableHand,*xlateTbl;
 	GAME_ASSERT(hand);
 	{
 		DetachResource(hand);							// lets keep this data around
-		BYTESWAP_SCALAR_ARRAY_HANDLE(u_short, hand);
+		UNPACK_BE_SCALARS_AUTOSIZEHANDLE(u_short, hand);
 		gTileDataHandle = (u_short **)hand;
 	}
 
@@ -859,7 +859,7 @@ short					**xlateTableHand,*xlateTbl;
 		GAME_ASSERT(hand);
 		DetachResource(hand);
 		HLockHi(hand);									// hold on to this rez until we're done reading maps below
-		BYTESWAP_SCALAR_ARRAY_HANDLE(short, hand);
+		UNPACK_BE_SCALARS_AUTOSIZEHANDLE(short, hand);
 		xlateTableHand = (short **)hand;
 		xlateTbl = *xlateTableHand;
 	}
@@ -878,7 +878,7 @@ short					**xlateTableHand,*xlateTbl;
 	GAME_ASSERT(hand);
 																					// copy rez into 2D array
 	{
-		BYTESWAP_SCALAR_ARRAY_HANDLE_2(u_short, gTerrainTileDepth*gTerrainTileWidth, hand);
+		UNPACK_BE_SCALARS_HANDLE(u_short, gTerrainTileDepth * gTerrainTileWidth, hand);
 		u_short	*src = (u_short*) *hand;
 		for (row = 0; row < gTerrainTileDepth; row++)
 			for (col = 0; col < gTerrainTileWidth; col++)
@@ -903,7 +903,7 @@ short					**xlateTableHand,*xlateTbl;
 		GAME_ASSERT(hand);
 																						// copy rez into 2D array
 		{
-			BYTESWAP_SCALAR_ARRAY_HANDLE_2(u_short, gTerrainTileDepth*gTerrainTileWidth, hand);
+			UNPACK_BE_SCALARS_HANDLE(u_short, gTerrainTileDepth * gTerrainTileWidth, hand);
 			u_short	*src = (u_short*) *hand;
 			for (row = 0; row < gTerrainTileDepth; row++)
 				for (col = 0; col < gTerrainTileWidth; col++)
@@ -932,7 +932,7 @@ short					**xlateTableHand,*xlateTbl;
 		hand = GetResource('YCrd',1000+i);
 		GAME_ASSERT(hand);
 		{
-			BYTESWAP_SCALAR_ARRAY_HANDLE_2(float, (gTerrainTileDepth+1)*(gTerrainTileWidth+1), hand);
+			UNPACK_BE_SCALARS_HANDLE(float, (gTerrainTileDepth + 1) * (gTerrainTileWidth + 1), hand);
 			float* src = (float*) *hand;
 			for (row = 0; row <= gTerrainTileDepth; row++)
 				for (col = 0; col <= gTerrainTileWidth; col++)
@@ -953,7 +953,7 @@ short					**xlateTableHand,*xlateTbl;
 		hand = GetResource('Vcol',1000+i);
 		GAME_ASSERT(hand);
 		{
-			BYTESWAP_SCALAR_ARRAY_HANDLE_2(u_short, (gTerrainTileDepth+1)*(gTerrainTileWidth+1), hand);
+			UNPACK_BE_SCALARS_HANDLE(u_short, (gTerrainTileDepth + 1) * (gTerrainTileWidth + 1), hand);
 			u_short* src = (u_short*) *hand;
 			for (row = 0; row <= gTerrainTileDepth; row++)
 				for (col = 0; col <= gTerrainTileWidth; col++)
@@ -992,7 +992,7 @@ short					**xlateTableHand,*xlateTbl;
 		DetachResource(hand);							// lets keep this data around		
 		HLockHi(hand);									// LOCK this one because we have the lookup table into this
 		gMasterItemList = (TerrainItemEntryType **)hand;
-		BYTESWAP_STRUCT_ARRAY_HANDLE_2(TerrainItemEntryType, gNumTerrainItems, gMasterItemList);
+		UNPACK_STRUCTS_HANDLE(TerrainItemEntryType, gNumTerrainItems, gMasterItemList);
 	}
 		
 	
@@ -1010,7 +1010,7 @@ short					**xlateTableHand,*xlateTbl;
 
 		// SOURCE PORT NOTE: we have to convert this structure manually,
 		// because the original contains 4-byte pointers
-		BYTESWAP_STRUCT_ARRAY_HANDLE_2(File_SplineDefType, gNumSplines, hand);
+		UNPACK_STRUCTS_HANDLE(File_SplineDefType, gNumSplines, hand);
 
 		gSplineList = (SplineDefType **) NewHandleClear(gNumSplines * sizeof(SplineDefType));
 
@@ -1053,7 +1053,7 @@ short					**xlateTableHand,*xlateTbl;
 		{
 			DetachResource(hand);
 			HLockHi(hand);
-			BYTESWAP_STRUCT_ARRAY_HANDLE_2(SplinePointType, (*gSplineList)[i].numPoints, hand);
+			UNPACK_STRUCTS_HANDLE(SplinePointType, (*gSplineList)[i].numPoints, hand);
 			(*gSplineList)[i].pointList = (SplinePointType **)hand;
 		}
 	}
@@ -1076,7 +1076,7 @@ short					**xlateTableHand,*xlateTbl;
 		{
 			DetachResource(hand);
 			HLockHi(hand);
-			BYTESWAP_STRUCT_ARRAY_HANDLE_2(SplineItemType, (*gSplineList)[i].numItems, hand);
+			UNPACK_STRUCTS_HANDLE(SplineItemType, (*gSplineList)[i].numItems, hand);
 			(*gSplineList)[i].itemList = (SplineItemType **)hand;
 		}
 	}
@@ -1096,7 +1096,7 @@ short					**xlateTableHand,*xlateTbl;
 		gFenceList = (FenceDefType *)AllocPtr(sizeof(FenceDefType) * gNumFences);	// alloc new ptr for fence data
 		GAME_ASSERT(gFenceList);
 
-		BYTESWAP_STRUCT_ARRAY_HANDLE_2(File_FenceDefType, gNumFences, hand);
+		UNPACK_STRUCTS_HANDLE(File_FenceDefType, gNumFences, hand);
 		inData = (File_FenceDefType *)*hand;							// get ptr to input fence list
 		
 		for (i = 0; i < gNumFences; i++)								// copy data from rez to new list
@@ -1127,7 +1127,7 @@ short					**xlateTableHand,*xlateTbl;
 		{
 			DetachResource(hand);
 			HLockHi(hand);
-			BYTESWAP_STRUCT_ARRAY_HANDLE_2(FencePointType, gFenceList[i].numNubs, hand);
+			UNPACK_STRUCTS_HANDLE(FencePointType, gFenceList[i].numNubs, hand);
 			gFenceList[i].nubList = (FencePointType **)hand;
 		}
 	}

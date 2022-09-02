@@ -31,6 +31,6 @@ enum
 };
 
 // Note: the TGA header is little-endian, so we don't need to byteswap on LE systems.
-#define STRUCTFORMAT_TGAHeader "8B4H2B"
+#define STRUCTFORMAT_TGAHeader "<8B4H2B"
 
 OSErr ReadTGA(const FSSpec* spec, uint8_t** outPtr, TGAHeader* outHeader, bool forceARGB);
