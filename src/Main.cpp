@@ -15,8 +15,6 @@
 
 #if __APPLE__
 #include "killmacmouseacceleration.h"
-#include <libproc.h>
-#include <unistd.h>
 #endif
 
 extern "C"
@@ -37,25 +35,41 @@ extern "C"
 	int GameMain(void);
 }
 
-static fs::path FindGameData()
+static fs::path FindGameData(const char* executablePath)
 {
 	fs::path dataPath;
 
-#if __APPLE__
-	char pathbuf[PROC_PIDPATHINFO_MAXSIZE];
+	int attemptNum = 0;
 
-	pid_t pid = getpid();
-	int ret = proc_pidpath(pid, pathbuf, sizeof(pathbuf));
-	if (ret <= 0)
+#if !(__APPLE__)
+	attemptNum++;		// skip macOS special case #0
+#endif
+
+	if (!executablePath)
+		attemptNum = 2;
+
+tryAgain:
+	switch (attemptNum)
 	{
-		throw std::runtime_error(std::string(__func__) + ": proc_pidpath failed: " + std::string(strerror(errno)));
+		case 0:			// special case for macOS app bundles
+			dataPath = executablePath;
+			dataPath = dataPath.parent_path().parent_path() / "Resources";
+			break;
+
+		case 1:
+			dataPath = executablePath;
+			dataPath = dataPath.parent_path() / "Data";
+			break;
+
+		case 2:
+			dataPath = "Data";
+			break;
+
+		default:
+			throw std::runtime_error("Couldn't find the Data folder.");
 	}
 
-	dataPath = pathbuf;
-	dataPath = dataPath.parent_path().parent_path() / "Resources";
-#else
-	dataPath = "Data";
-#endif
+	attemptNum++;
 
 	dataPath = dataPath.lexically_normal();
 
@@ -68,7 +82,7 @@ static fs::path FindGameData()
 
 	if (resFileRefNum == -1)
 	{
-		throw std::runtime_error("Couldn't find the Data folder.");
+		goto tryAgain;
 	}
 
 	UseResFile(resFileRefNum);
@@ -118,7 +132,7 @@ static void ParseCommandLine(int argc, char** argv)
 	}
 }
 
-static void Boot()
+static void Boot(const char* executablePath)
 {
 	// Start our "machine"
 	Pomme::Init();
@@ -180,7 +194,7 @@ tryAgain:
 	}
 
 	// Find path to game data folder
-	fs::path dataPath = FindGameData();
+	fs::path dataPath = FindGameData(executablePath);
 
 #if !(NOJOYSTICK)
 	// Init joystick subsystem
@@ -214,11 +228,13 @@ int main(int argc, char** argv)
 	std::string		finalErrorMessage		= "";
 	bool			showFinalErrorMessage	= false;
 
+	const char* executablePath = argc > 0 ? argv[0] : NULL;
+
 	// Start the game
 	try
 	{
 		ParseCommandLine(argc, argv);
-		Boot();
+		Boot(executablePath);
 		returnCode = GameMain();
 	}
 	catch (Pomme::QuitRequest&)
