@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#if __APPLE__
+#if __APPLE__ && !OSXPPC
 #include "killmacmouseacceleration.h"
 #endif
 
@@ -324,7 +324,11 @@ void UpdateKeyMap(void)
 	SDL_PumpEvents();
 	int numkeys = 0;
 	const UInt8* keystate = SDL_GetKeyboardState(&numkeys);
+#if OSXPPC
+	uint32_t mouseButtons = 0;
+#else
 	uint32_t mouseButtons = SDL_GetMouseState(NULL, NULL);
+#endif
 
 	{
 		int minNumKeys = numkeys < SDLKEYSTATEBUF_SIZE ? numkeys : SDLKEYSTATEBUF_SIZE;
@@ -437,7 +441,9 @@ void EatMouseEvents(void)
 void CaptureMouse(Boolean doCapture)
 {
 	SDL_PumpEvents();	// Prevent SDL from thinking mouse buttons are stuck as we switch into relative mode
+#if !OSXPPC
 	SDL_SetRelativeMouseMode(doCapture ? SDL_TRUE : SDL_FALSE);
+#endif
 
 	if (doCapture)
 		SDL_ShowCursor(0);
@@ -445,7 +451,7 @@ void CaptureMouse(Boolean doCapture)
 	ClearMouseState();
 	EatMouseEvents();
 
-#if __APPLE__
+#if __APPLE__ && !OSXPPC
     if (doCapture)
         KillMacMouseAcceleration();
     else
@@ -495,6 +501,12 @@ void GetMouseDelta(float *dx, float *dy)
 	}
 
 		/* GET MOUSE MOVEMENT */
+
+#if OSXPPC
+	*dx = 0;
+	*dy = 0;
+	return;
+#endif
 
 	const float mouseSensitivity = 1600.0f * kMouseSensitivityTable[gGamePrefs.mouseSensitivityLevel];
 	int mdx, mdy;

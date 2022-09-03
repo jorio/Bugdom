@@ -3,7 +3,9 @@
 // This file is part of Bugdom. https://github.com/jorio/bugdom
 
 #include "game.h"
+#if !OSXPPC
 #include "killmacmouseacceleration.h"
+#endif
 #include "version.h"
 #include <stdio.h>
 
@@ -74,7 +76,7 @@ void DoSDLMaintenance(void)
 						QD3D_OnWindowResized(event.window.data1, event.window.data2);
 						break;
 
-#if __APPLE__
+#if __APPLE__ && !OSXPPC
 					case SDL_WINDOWEVENT_FOCUS_LOST:
 						// On Mac, always restore system mouse accel if cmd-tabbing away from the game
 						RestoreMacMouseAcceleration();

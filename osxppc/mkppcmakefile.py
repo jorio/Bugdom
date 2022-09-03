@@ -25,7 +25,8 @@ EXCLUDE_ROOTS = [
 ]
 
 EXCLUDE_FILES = [
-	"../extern/Pomme/src/SoundFormats/mp3.cpp"
+	"../extern/Pomme/src/SoundFormats/mp3.cpp",
+	"../src/System/KillMacMouseAcceleration.c",
 ]
 
 CONFIG = 'debug' if args.debug else 'release'

@@ -830,7 +830,9 @@ unsigned long	someLong;
 	GetDateTime ((unsigned long *)(&someLong));		// init random seed
 	SetMyRandomSeed(someLong);
 
+#if !OSXPPC
 	SDL_WarpMouseInWindow(gSDLWindow, gWindowWidth/2, gWindowHeight/2);		// prime cursor position
+#endif
 
 
 			/* DO INTRO */

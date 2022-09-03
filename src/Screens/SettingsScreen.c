@@ -82,6 +82,7 @@ static const SettingEntry gSettingsMenu[] =
 		.choices = {"No", "Yes"},
 	},
 
+#if !OSXPPC
 	{
 		.kind = kCloverRange,
 		.ptr = &gGamePrefs.mouseSensitivityLevel,
@@ -89,6 +90,7 @@ static const SettingEntry gSettingsMenu[] =
 		.nChoices = NUM_MOUSE_SENSITIVITY_LEVELS,
 		.choices = {"1","2","3","4","5","6","7","8"},
 	},
+#endif
 
 #if _DEBUG
 	{
