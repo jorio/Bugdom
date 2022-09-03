@@ -16,7 +16,14 @@
 
 static const char* GenerateKiddieModeSubtitle(void);
 static const char* GenerateDetailSubtitle(void);
+
+#if !__APPLE__
 static const char* GenerateMSAASubtitle(void);
+#endif
+
+#if OSXPPC
+static const char* GenerateFullscreenModeSubtitle(void);
+#endif
 
 /****************************/
 /*    CONSTANTS             */
@@ -41,7 +48,7 @@ enum
 	kButton,
 };
 
-#define MAX_CHOICES 8
+#define MAX_CHOICES 32
 
 _Static_assert(NUM_MOUSE_SENSITIVITY_LEVELS <= MAX_CHOICES, "too many mouse sensitivity levels");
 
@@ -110,7 +117,7 @@ static const SettingEntry gSettingsMenu[] =
 	}
 };
 
-static const SettingEntry gVideoMenu[] =
+static SettingEntry gVideoMenu[] =
 {
 	{
 		.kind = kCycler,
@@ -119,7 +126,20 @@ static const SettingEntry gVideoMenu[] =
 		.callback = SetFullscreenMode,
 		.nChoices = 2,
 		.choices = {"No", "Yes"},
+#if OSXPPC
+		.subtitle = GenerateFullscreenModeSubtitle,
+#endif
 	},
+
+#if OSXPPC
+	{
+		.kind = kCycler,
+		.ptr = &gGamePrefs.curatedDisplayModeID,
+		.label = "Fullscreen mode",
+		.nChoices = 1,
+		.choices = {"0x0"},
+	},
+#endif
 
 	{
 		.kind = kCycler,
@@ -202,12 +222,23 @@ static const char* GenerateDetailSubtitle(void)
 	return gGamePrefs.lowDetail ? "The \"ATI Rage II\" look" : NULL;
 }
 
+#if !(__APPLE__)
 static const char* GenerateMSAASubtitle(void)
 {
 	return gGamePrefs.antialiasingLevel != gAntialiasingLevelAppliedOnBoot
 		? "Will apply when you restart the game"
 		: NULL;
 }
+#endif
+
+#if OSXPPC
+static const char* GenerateFullscreenModeSubtitle(void)
+{
+	return gGamePrefs.fullscreen != gFullscreenModeAppliedOnBoot
+		? "Will apply when you restart the game"
+		: NULL;
+}
+#endif
 
 /****************** SETUP SETTINGS SCREEN **************************/
 
@@ -375,8 +406,35 @@ static void SettingsScreenDrawStuff(const QD3DSetupOutputType *setupInfo)
 	QD3D_DrawParticles(setupInfo);
 }
 
+#if OSXPPC
+static void FillCuratedDisplayModeOptions(void)
+{
+	static SettingEntry* displayModeEntry = &gVideoMenu[1];
+	static char modeNames[24][MAX_CHOICES];
+
+	Byte* curatedModeIDs = NULL;
+	int numCuratedModes = CurateDisplayModes(0, &curatedModeIDs);
+	if (numCuratedModes > MAX_CHOICES)
+		numCuratedModes = MAX_CHOICES;
+
+	displayModeEntry->nChoices = numCuratedModes;
+	for (int i = 0; i < numCuratedModes; i++)
+	{
+		SDL_DisplayMode mode = {0};
+		SDL_GetDisplayMode(0, curatedModeIDs[i], &mode);
+
+		snprintf(modeNames[i], sizeof(modeNames[i]), "%dx%d, %dHz", mode.w, mode.h, mode.refresh_rate);
+		displayModeEntry->choices[i] = modeNames[i];
+	}
+}
+#endif
+
 void DoSettingsScreen(void)
 {
+#if OSXPPC
+	FillCuratedDisplayModeOptions();
+#endif
+
 	SetupSettingsScreen("Settings", gSettingsMenu);
 	bool done = false;
 

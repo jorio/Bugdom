@@ -442,7 +442,7 @@ OSErr					err;
 			header.height = potHeight;
 		}
 	}
-#if NONPOT
+#if OSXPPC
 	else if (POTCeil32(header.width) != header.width || POTCeil32(header.height) != header.height)
 	{
 		printf("WARNING: Non-POT texture #%d\n", textureRezID);

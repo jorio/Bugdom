@@ -244,6 +244,7 @@ void InitPrefs(void)
 	gGamePrefs.showBottomBar		= true;
 	gGamePrefs.force4x3AspectRatio	= false;
 	gGamePrefs.antialiasingLevel	= 0;
+	gGamePrefs.curatedDisplayModeID	= 0;
 
 	LoadPrefs(&gGamePrefs);							// attempt to read from prefs file		
 }

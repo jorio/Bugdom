@@ -329,6 +329,7 @@ typedef struct
 	Boolean	showBottomBar;
 	Boolean	force4x3AspectRatio;
 	Byte	antialiasingLevel;
+	Byte	curatedDisplayModeID;
 }PrefsType;
 
 typedef struct

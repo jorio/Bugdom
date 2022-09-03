@@ -103,7 +103,7 @@ int curState = kPauseChoice_Resume;
 
 	GLuint textures[NUM_PAUSE_TEXTURES];
 	int loadFlags = kRendererTextureFlags_ClampBoth;
-#if NONPOT
+#if OSXPPC
 	loadFlags |= kRendererTextureFlags_ForcePOT;
 #endif
 	for (int i = 0; i < NUM_PAUSE_TEXTURES; i++)
@@ -127,7 +127,7 @@ int curState = kPauseChoice_Resume;
 	gPauseQuad->points[2] = (TQ3Point3D) { +xs, +ys, 0 };
 	gPauseQuad->points[3] = (TQ3Point3D) { -xs, +ys, 0 };
 
-#if NONPOT
+#if OSXPPC
 	gPauseQuad->vertexUVs[1].u = gPauseQuad->vertexUVs[2].u = 200.0f / POTCeil32(200);
 	gPauseQuad->vertexUVs[0].v = gPauseQuad->vertexUVs[1].v = 152.0f / POTCeil32(152);
 #endif

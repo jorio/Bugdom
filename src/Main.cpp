@@ -31,6 +31,7 @@ extern "C"
 #endif
 
 	int gAntialiasingLevelAppliedOnBoot = 0;
+	int gFullscreenModeAppliedOnBoot = 0;
 
 	int GameMain(void);
 }
@@ -153,7 +154,7 @@ static void Boot(const char* executablePath)
 
 tryAgain:
 	// Set up GL attributes
-#if !(__APPLE__ && __POWERPC__)
+#if !(OSXPPC)
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
 #endif
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
@@ -164,6 +165,7 @@ tryAgain:
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, gGamePrefs.antialiasingLevel);
 	}
 	gAntialiasingLevelAppliedOnBoot = gGamePrefs.antialiasingLevel;
+	gFullscreenModeAppliedOnBoot = gGamePrefs.fullscreen;
 
 	// Prepare window dimensions
 	int display = 0;

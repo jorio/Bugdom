@@ -220,6 +220,18 @@ void QD3D_OnWindowResized(int windowWidth, int windowHeight)
 
 void SetFullscreenMode(void)
 {
+#if OSXPPC
+	static bool didSwitchOnce = false;		// called at start of game, so allow switching once only
+
+	if (didSwitchOnce)
+	{
+		puts("This version of the game does not allow hot-switching between windowed/fullscreen modes.");
+		return;
+	}
+
+	didSwitchOnce = true;
+#endif
+
 	if (!gGamePrefs.fullscreen)
 	{
 		SDL_SetWindowFullscreen(gSDLWindow, 0);
@@ -237,7 +249,29 @@ void SetFullscreenMode(void)
 	}
 	else
 	{
+#if OSXPPC
+		Byte* curatedModeIDs = NULL;
+		int numCuratedModes = CurateDisplayModes(0, &curatedModeIDs);
+		SDL_DisplayMode mode = {0};
+
+		int sdlModeID = 0;
+		if (gGamePrefs.curatedDisplayModeID < numCuratedModes)
+		{
+			sdlModeID = curatedModeIDs[gGamePrefs.curatedDisplayModeID];
+		}
+
+		if (0 == SDL_GetDisplayMode(0, sdlModeID, &mode))
+		{
+			SDL_SetWindowDisplayMode(gSDLWindow, &mode);
+			SDL_SetWindowFullscreen(gSDLWindow, SDL_WINDOW_FULLSCREEN);
+		}
+		else
+		{
+			SDL_SetWindowFullscreen(gSDLWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
+		}
+#else
 		SDL_SetWindowFullscreen(gSDLWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
+#endif
 	}
 
 	// Window size might not be refreshed if we don't do this
@@ -253,5 +287,52 @@ void SetFullscreenMode(void)
 	// unless we flush SDL events immediately after entering fullscreen mode.
 	SDL_PumpEvents();
 	SDL_FlushEvents(0, 0xFFFFFFFF);
+}
+
+/*************** GET CURATED LIST OF DISPLAY MODES **************/
+//
+// Returns the number of curated display modes that were found.
+// Sets bestModeOut to an array of IDs of SDL display modes.
+// You can those IDs to SDL_GetDisplayMode().
+//
+
+int CurateDisplayModes(int display, Byte** curatedModesOut)
+{
+	static Byte curatedModes[256] = {0};
+	int numCuratedModes = 0;
+	SDL_DisplayMode lastMode = {0};
+
+	int numDisplayModes = SDL_GetNumDisplayModes(display);
+
+	for (int i = numDisplayModes-1; i >= 0; i--)	// walk the list backwards so we get the lowest-quality modes first
+	{
+		SDL_DisplayMode mode;
+
+		if (0 != SDL_GetDisplayMode(display, i, &mode))
+			continue;
+
+		if (mode.w != lastMode.w || mode.h != lastMode.h)
+		{
+			if (numCuratedModes >= 256)
+				break;
+			curatedModes[numCuratedModes] = i;
+			numCuratedModes++;
+		}
+		else
+		{
+			// the resolution is already known, but this mode probably has a better refresh rate or bit depth
+			curatedModes[numCuratedModes-1] = i;
+		}
+
+		lastMode = mode;
+	}
+
+	// pass result to caller
+	if (curatedModesOut)
+	{
+		*curatedModesOut = curatedModes;
+	}
+
+	return numCuratedModes;
 }
 

@@ -129,7 +129,7 @@ pomme_lib.add_source_tree("../extern/Pomme/src")
 
 game_lib = Lib("game")
 game_lib.add_flags(f"-I{SOURCE_DIR}/Headers")
-game_lib.add_flags("-DNONPOT -DNOJOYSTICK")
+game_lib.add_flags("-DNOJOYSTICK -DOSXPPC")
 game_lib.add_source_tree("../src")
 
 makefile = f"""# {PROGRAM_NAME} for Mac OS X PowerPC

@@ -167,6 +167,7 @@ extern	float						gTerrainItemDeleteWindow_Left;
 extern	float						gTerrainItemDeleteWindow_Near;
 extern	float						gTerrainItemDeleteWindow_Right;
 extern	int							gAntialiasingLevelAppliedOnBoot;
+extern	int							gFullscreenModeAppliedOnBoot;
 extern	int							gMaxItemsAllocatedInAPass;
 extern	int							gNitroParticleGroup;
 extern	int							gWindowHeight;
