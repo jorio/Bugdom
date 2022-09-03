@@ -44,7 +44,14 @@ enum
 	SUPERTILE_DETAIL_SEAMLESS = 3,
 
 	SUPERTILE_DETAIL_WORST = SUPERTILE_DETAIL_PROGRESSIVE,
+
+#if NONPOT
+	// No NPOT texture support on most PowerPC Macs (at least not on
+	// my Mac Mini G4, which apparently only supports OpenGL 1.3)
+	SUPERTILE_DETAIL_BEST = SUPERTILE_DETAIL_SHRUNK,
+#else
 	SUPERTILE_DETAIL_BEST = SUPERTILE_DETAIL_SEAMLESS,
+#endif
 };
 
 #define	OREOMAP_TILE_SIZE		32 						// pixel w/h of texture tile

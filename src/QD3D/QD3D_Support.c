@@ -422,6 +422,33 @@ OSErr					err;
 
 	int internalFormat = GL_RGB;
 
+	if (flags & kRendererTextureFlags_ForcePOT)
+	{
+		int potWidth = POTCeil32(header.width);
+		int potHeight = POTCeil32(header.height);
+		
+		if (potWidth != header.width || potHeight != header.height)
+		{
+			uint8_t* potPixelData = (uint8_t*) AllocPtr(potWidth * potHeight * 4);
+
+			for (int y = 0; y < header.height; y++)
+			{
+				memcpy(potPixelData + y*potWidth*4, pixelData + y*header.width*4, header.width*4);
+			}
+
+			DisposePtr((Ptr) pixelData);
+			pixelData = potPixelData;
+			header.width = potWidth;
+			header.height = potHeight;
+		}
+	}
+#if NONPOT
+	else if (POTCeil32(header.width) != header.width || POTCeil32(header.height) != header.height)
+	{
+		printf("WARNING: Non-POT texture #%d\n", textureRezID);
+	}
+#endif
+
 	if (flags & kRendererTextureFlags_SolidBlackIsAlpha)
 	{
 		for (int p = 0; p < 4 * header.width * header.height; p += 4)

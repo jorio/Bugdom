@@ -102,8 +102,12 @@ int curState = kPauseChoice_Resume;
 			/* PRELOAD TEXTURES */
 
 	GLuint textures[NUM_PAUSE_TEXTURES];
+	int loadFlags = kRendererTextureFlags_ClampBoth;
+#if NONPOT
+	loadFlags |= kRendererTextureFlags_ForcePOT;
+#endif
 	for (int i = 0; i < NUM_PAUSE_TEXTURES; i++)
-		textures[i] = QD3D_LoadTextureFile(1500+i, kRendererTextureFlags_ClampBoth);
+		textures[i] = QD3D_LoadTextureFile(1500+i, loadFlags);
 
 			/* CREATE MESH */
 
@@ -122,6 +126,11 @@ int curState = kPauseChoice_Resume;
 	gPauseQuad->points[1] = (TQ3Point3D) { +xs, -ys, 0 };
 	gPauseQuad->points[2] = (TQ3Point3D) { +xs, +ys, 0 };
 	gPauseQuad->points[3] = (TQ3Point3D) { -xs, +ys, 0 };
+
+#if NONPOT
+	gPauseQuad->vertexUVs[1].u = gPauseQuad->vertexUVs[2].u = 200.0f / POTCeil32(200);
+	gPauseQuad->vertexUVs[0].v = gPauseQuad->vertexUVs[1].v = 152.0f / POTCeil32(152);
+#endif
 
 			/*******************/
 			/* LET USER SELECT */

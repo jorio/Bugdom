@@ -922,7 +922,7 @@ static TQ3Vector3D	faceNormal[NUM_TRIS_IN_SUPERTILE];
 		int textureMaxRow = textureMinRow + SUPERTILE_SIZE;
 		int textureMaxCol = textureMinCol + SUPERTILE_SIZE;
 
-		if (!gGamePrefs.lowDetail)
+		if (gTerrainTextureDetail == SUPERTILE_DETAIL_SEAMLESS)
 		{
 			textureMinRow--;
 			textureMinCol--;
@@ -954,7 +954,7 @@ static TQ3Vector3D	faceNormal[NUM_TRIS_IN_SUPERTILE];
 					tile = gCeilingMap[row][col];			// ...or get tile from ceiling map
 				}
 
-				if (!gGamePrefs.lowDetail)
+				if (gTerrainTextureDetail == SUPERTILE_DETAIL_SEAMLESS)
 				{
 					DrawTileIntoMipmap(tile, row2+1, col2+1, gTempTextureBuffer);		// draw into mipmap
 				}

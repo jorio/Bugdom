@@ -66,6 +66,7 @@ typedef enum
 	kRendererTextureFlags_SolidBlackIsAlpha	= 1 << 4,
 	kRendererTextureFlags_GrayscaleIsAlpha	= 1 << 5,
 	kRendererTextureFlags_KeepOriginalAlpha	= 1 << 6,
+	kRendererTextureFlags_ForcePOT			= 1 << 7,
 } RendererTextureFlags;
 
 #define kQ3TexturingModeExt_OpacityModeMask		0x0000FFFF

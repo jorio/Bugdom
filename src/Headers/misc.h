@@ -22,3 +22,15 @@ u_short	RandomRange(unsigned short min, unsigned short max);
 extern	void RegulateSpeed(short fps);
 extern	void ShowSystemErr_NonFatal(long err);
 extern	void ApplyFrictionToDeltas(float f,TQ3Vector3D *d);
+
+static inline uint32_t POTCeil32(uint32_t v)
+{
+	v--;
+	v |= v >> 1;
+	v |= v >> 2;
+	v |= v >> 4;
+	v |= v >> 8;
+	v |= v >> 16;
+	v++;
+	return v;
+}
