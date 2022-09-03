@@ -499,7 +499,11 @@ OSErr					err;
 			header.width,
 			header.height,
 			GL_BGRA,
+#if __BIG_ENDIAN__
+			GL_UNSIGNED_INT_8_8_8_8_REV,
+#else
 			GL_UNSIGNED_INT_8_8_8_8,
+#endif
 			pixelData,
 			flags
 			);

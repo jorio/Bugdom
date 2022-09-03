@@ -421,9 +421,16 @@ char		path[256];
 
 		gSpriteMasks[i] = (uint32_t*) NewPtrClear(4 * header.width * header.height);
 
+
+#if __BIG_ENDIAN__
+		const uint32_t alphaMask = 0xFF000000;
+#else
+		const uint32_t alphaMask = 0x000000FF;
+#endif
+
 		for (int p = 0; p < header.width * header.height; p++)
 		{
-			gSpriteMasks[i][p] = gSprites[i][p]==0x000000FF? 0x00000000: 0xFFFFFFFF;
+			gSpriteMasks[i][p] = gSprites[i][p]==alphaMask? 0x00000000: 0xFFFFFFFF;
 		}
 	}
 }
@@ -671,18 +678,22 @@ static void DrawNitroGauge(int arcSpan)
 
 			t--;	// move value from [1;181] to [0;180] (zero is reserved for mask)
 			
+			uint32_t fillColor = 0;
+
 			if (t <= arcSpan)						// green (original: 0x0000,0xBDEF,0x294A)
 			{
-				outRow[x] = 0x00bd29FF; 			// (BGRA)
+				fillColor = 0xFF00bd29;
 			}
 			else if (wantMargin && t <= arcSpan+3)	// margin line (original: 0xffff,0xF7BD,0x0000)
 			{
-				outRow[x] = 0x00f7ffFF;				// (BGRA)
+				fillColor = 0xFFfff700;
 			}
 			else									// black
 			{
-				outRow[x] = 0x000000FF;
+				fillColor = 0xFF000000;
 			}
+
+			outRow[x] = UnpackU32BE(&fillColor);
 
 			x++;
 		}
@@ -1024,6 +1035,9 @@ void LoseHealth(float amount)
 
 static void FillInfobarRect(const Rect r, uint32_t fillColor)
 {
+	fillColor |= 0xFF000000; // alpha
+	fillColor = UnpackU32BE(&fillColor);
+
 	uint32_t* dst = GetInfobarTextureOffset(r.left, r.top);
 
 	for (int y = r.top; y < r.bottom; y++)
@@ -1054,7 +1068,7 @@ Rect	r;
 
 	if (r.right > r.left)
 	{
-		FillInfobarRect(r, 0x1800F7FF);		// (BGRA)
+		FillInfobarRect(r, 0xF70018);
 	}
 
 			/* EMPTY FILLER */
@@ -1064,7 +1078,7 @@ Rect	r;
 
 	if (r.right > r.left)
 	{
-		FillInfobarRect(r, 0x000000FF);		// (BGRA)
+		FillInfobarRect(r, 0x000000);
 	}
 
 			/* MARGIN LINE */
@@ -1074,7 +1088,7 @@ Rect	r;
 
 	if (r.right < (n-2))
 	{
-		FillInfobarRect(r, 0x00F7FFFF);		// (BGRA)
+		FillInfobarRect(r, 0xFFF700);
 	}
 }
 
@@ -1223,7 +1237,7 @@ int		w,x;
 			
 		/* FRAME */
 
-	FillInfobarRect(r, 0x000000FF);			// (BGRA)
+	FillInfobarRect(r, 0x000000);
 
 		/* METER */
 		
@@ -1234,7 +1248,7 @@ int		w,x;
 	r.right = r.left + w - 4; 	
 	if (w > 0)
 	{
-		FillInfobarRect(r, 0x0608ddff);		// (BGRA)
+		FillInfobarRect(r, 0xdd0806);
 	}
 		
 		/* EMPTY */
@@ -1243,7 +1257,7 @@ int		w,x;
 	{
 		r.left = r.right;
 		r.right = x-2;
-		FillInfobarRect(r, 0x000000FF);		// (BGRA)
+		FillInfobarRect(r, 0x000000);
 	}
 
 
@@ -1266,7 +1280,11 @@ void SubmitInfobarOverlay(void)
 				gInfobarTextureDirtyRect.right - gInfobarTextureDirtyRect.left,
 				gInfobarTextureDirtyRect.bottom - gInfobarTextureDirtyRect.top,
 				GL_BGRA,
+#if __BIG_ENDIAN__
+				GL_UNSIGNED_INT_8_8_8_8_REV,
+#else
 				GL_UNSIGNED_INT_8_8_8_8,
+#endif
 				GetInfobarTextureOffset(gInfobarTextureDirtyRect.left, gInfobarTextureDirtyRect.top),
 				INFOBAR_TEXTURE_WIDTH);
 
