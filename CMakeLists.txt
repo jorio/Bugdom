@@ -43,6 +43,10 @@ if(MSVC)
 	add_compile_definitions(UNICODE _UNICODE)
 
 	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${GAME_TARGET})
+elseif(APPLE)
+	# Let the game (and Pomme) find header files within SDL2.framework
+	set(CMAKE_XCODE_ATTRIBUTE_FRAMEWORK_SEARCH_PATHS extern)
+	add_compile_options("-F${CMAKE_SOURCE_DIR}/extern")  # for non-xcode IDEs
 endif()
 
 set(POMME_NO_VIDEO true)
