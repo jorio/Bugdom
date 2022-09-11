@@ -7,8 +7,8 @@ parser.add_argument("--exe", required=True)
 args = parser.parse_args()
 
 GAME = "Bugdom"
-EXE = args.exe #"Bugdom"
-VERSION = "1.1.3"
+EXE = args.exe
+VERSION = "1.3.2"
 DOMAIN = "io.jor.bugdom"
 COPYRIGHT = f"Bugdom version {VERSION}, © 1999 Pangea Software, Inc., © 2022 Iliyas Jorio"
 APPDIR = f"{EXE}.app"

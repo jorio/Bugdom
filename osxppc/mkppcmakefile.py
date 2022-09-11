@@ -3,7 +3,7 @@ import argparse, os, textwrap
 parser = argparse.ArgumentParser()
 parser.add_argument("--cc", default="/gcc/7.3.0/bin/gcc-7")
 parser.add_argument("--cxx", default="/gcc/7.3.0/bin/g++-7")
-parser.add_argument("--cpu", default="G4")
+parser.add_argument("--cpu", default="G3")
 parser.add_argument("--sdk", default="/Developer/SDKs/MacOSX10.4u.sdk")
 parser.add_argument("--debug", default=False, action='store_true')
 parser.add_argument("-o", default="Makefile")
@@ -14,7 +14,7 @@ SOURCE_DIR = "../src"
 INCLUDE_DIRS = [
 	"../extern/Pomme/src",
 	"../extern/Pomme/src/QD3D",
-	"../../panther_sdl2_builtforg4/include",
+	"sdl-2.0.3/include",
 ]
 
 EXCLUDE_ROOTS = [
@@ -49,7 +49,7 @@ for id in INCLUDE_DIRS:
 	CFLAGS += f"-I{id} "
 
 if args.debug:
-	CFLAGS += "-O0 -g "
+	CFLAGS += "-O0 -g -D_DEBUG "
 else:
 	CFLAGS += "-O3 "
 
@@ -135,7 +135,7 @@ game_lib.add_source_tree("../src")
 
 makefile = f"""# {PROGRAM_NAME} for Mac OS X PowerPC
 
-{PROGRAM_NAME}: {game_lib.lib_path} {pomme_lib.lib_path} libSDL2.{CPU}.a
+{PROGRAM_NAME}: {game_lib.lib_path} {pomme_lib.lib_path} libSDL2.a
 	{CXX} {LDFLAGS} $^ -o $@ \\
 		-static-libstdc++ -static-libgcc \\
 		-lm -liconv -Wl,-framework,OpenGL \\
@@ -154,6 +154,9 @@ app: {PROGRAM_NAME}.app
 {PROGRAM_NAME}.app: {PROGRAM_NAME}
 	rm -rf {PROGRAM_NAME}.app
 	python3 mkppcapp.py --exe {PROGRAM_NAME}
+
+run: {PROGRAM_NAME}
+	./{PROGRAM_NAME}
 
 #------------------------------------------------------------------------------
 # Game lib
