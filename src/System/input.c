@@ -186,6 +186,11 @@ TQ3Vector2D GetThumbStickVector(bool rightStick)
 	(void) rightStick;
 	return (TQ3Vector2D) {0,0};
 #else
+	if (!gSDLController)
+	{
+		return (TQ3Vector2D) { 0, 0 };
+	}
+
 	Sint16 dxRaw = SDL_GameControllerGetAxis(gSDLController, rightStick ? SDL_CONTROLLER_AXIS_RIGHTX : SDL_CONTROLLER_AXIS_LEFTX);
 	Sint16 dyRaw = SDL_GameControllerGetAxis(gSDLController, rightStick ? SDL_CONTROLLER_AXIS_RIGHTY : SDL_CONTROLLER_AXIS_LEFTY);
 
