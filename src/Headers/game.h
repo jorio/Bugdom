@@ -71,6 +71,8 @@ extern	Boolean						gDoCeiling;
 extern	Boolean						gDrawLensFlare;
 extern	Boolean						gEnteringName;
 extern	Boolean						gGameOverFlag;
+extern	Boolean						gIsInGame;
+extern	Boolean						gIsGamePaused;
 extern	Boolean						gLiquidCheat;
 extern	Boolean						gMuteMusicFlag;
 extern	Boolean						gPlayerCanMove;

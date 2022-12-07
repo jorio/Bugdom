@@ -57,6 +57,9 @@ static LevelType	gLevelTable[NUM_LEVELS] =
 	{ LEVEL_TYPE_ANTHILL,	1,	true },				// 9: ant king
 };
 
+Boolean		gIsInGame = false;
+Boolean		gIsGamePaused = false;
+
 u_short		gRealLevel = 0;
 u_short		gLevelType = 0;
 u_short		gAreaNum = 0;
@@ -341,6 +344,7 @@ static void PlayArea(void)
 float killDelay = KILL_DELAY;						// time to wait after I'm dead before fading out
 float fps;
 
+	gIsInGame = true;
 	CaptureMouse(true);
 	
 	UpdateInput();
@@ -393,7 +397,7 @@ float fps;
 
 			/* SEE IF PAUSE GAME */
 
-		if (GetNewKeyState(kKey_Pause))				// see if pause/abort
+		if (GetNewKeyState(kKey_Pause) || IsCmdQPressed())		// see if pause/abort
 		{
 			CaptureMouse(false);
 			DoPaused();
@@ -621,6 +625,8 @@ QD3DSetupInputType	viewDef;
 
 static void CleanupLevel(void)
 {
+	gIsInGame = false;
+
 	StopAllEffectChannels();
  	EmptySplineObjectList();
 	DeleteAllObjects();

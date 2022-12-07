@@ -380,6 +380,10 @@ void UpdateKeyMap(void)
 	}
 #endif
 
+	if ((!gIsInGame || gIsGamePaused) && IsCmdQPressed())
+	{
+		CleanQuit();
+	}
 }
 
 
@@ -426,6 +430,17 @@ Boolean GetSkipScreenInput(void)
 		|| FlushMouseButtonPress();
 }
 
+/******* DID USER PRESS CMD+Q (MAC ONLY) *******/
+
+Boolean IsCmdQPressed(void)
+{
+#if __APPLE__
+	return (GetKeyState_SDL(SDL_SCANCODE_LGUI) || GetKeyState_SDL(SDL_SCANCODE_RGUI))
+		&& GetNewKeyState_SDL(SDL_GetScancodeFromKey(SDLK_q));
+#else
+	return false;
+#endif
+}
 
 #pragma mark -
 

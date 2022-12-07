@@ -98,6 +98,8 @@ int curState = kPauseChoice_Resume;
 	SDL_ShowCursor(1);
 
 	gGammaFadeFactor = 1.0f;
+	
+	gIsGamePaused = true;
 
 			/* PRELOAD TEXTURES */
 
@@ -247,6 +249,8 @@ int curState = kPauseChoice_Resume;
 	while(FlushMouseButtonPress());							// wait for button up
 
 	ResetInputState();
+
+	gIsGamePaused = false;
 
 			/* FREE MESH/TEXTURES */
 
