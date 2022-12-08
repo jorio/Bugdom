@@ -22,7 +22,8 @@ static const char* GenerateMSAASubtitle(void);
 #endif
 
 #if OSXPPC
-static const char* GenerateFullscreenModeSubtitle(void);
+static const char* GeneratePPCFullscreenModeSubtitle(void);
+static const char* GeneratePPCDisplayModeSubtitle(void);
 #endif
 
 /****************************/
@@ -137,7 +138,7 @@ static SettingEntry gVideoMenu[] =
 		.nChoices = 2,
 		.choices = {"No", "Yes"},
 #if OSXPPC
-		.subtitle = GenerateFullscreenModeSubtitle,
+		.subtitle = GeneratePPCFullscreenModeSubtitle,
 #endif
 	},
 
@@ -148,6 +149,7 @@ static SettingEntry gVideoMenu[] =
 		.label = "Fullscreen mode",
 		.nChoices = 1,
 		.choices = {"0x0"},
+		.subtitle = GeneratePPCDisplayModeSubtitle,
 	},
 #endif
 
@@ -242,11 +244,32 @@ static const char* GenerateMSAASubtitle(void)
 #endif
 
 #if OSXPPC
-static const char* GenerateFullscreenModeSubtitle(void)
+static const char* GeneratePPCFullscreenModeSubtitle(void)
 {
 	return gGamePrefs.fullscreen != gFullscreenModeAppliedOnBoot
 		? "Will apply when you restart the game"
 		: NULL;
+}
+
+static const char* GeneratePPCDisplayModeSubtitle(void)
+{
+	static bool initialized = false;
+	static Byte currentDisplayMode = 0;
+
+	if (!initialized)
+	{
+		initialized = true;
+		currentDisplayMode = gGamePrefs.curatedDisplayModeID;
+	}
+
+	if (gGamePrefs.curatedDisplayModeID != currentDisplayMode)
+	{
+		return "Will apply when you restart the game";
+	}
+	else
+	{
+		return NULL;
+	}
 }
 #endif
 
