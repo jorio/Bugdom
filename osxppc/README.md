@@ -86,3 +86,34 @@ Bugdom on OSX/PPC is mostly identical to my port of the game for modern computer
     python3 mkppcapp.py --exe Bugdom_G3_release
     ```
     This will produce a double-clickable app.
+
+
+## Notes on making a 3-architecture “fat” binary that will run on x86_64, arm64, and PPC
+
+- Build the PPC executable (Bugdom_G3_release) per instructions above and move it to your modern Mac.
+
+- Build the full app bundle for x86_64 and arm64 on the modern Mac.
+
+- Set `LSMinimumSystemVersion` to `10.4` in Info.plist so the game will run on Tiger.
+
+- Optional: You can keep a separate OS version floor for the modern archs in Info.plist, e.g.:
+    ```xml
+    <key>LSMinimumSystemVersionByArchitecture</key>
+    <dict>
+        <key>x86_64</key>
+        <string>10.11</string>
+    </dict> 
+    ```
+
+- Create the fat binary:
+    ```
+    lipo -create -o FatBugdom Bugdom.app/Contents/MacOS/Bugdom Bugdom_G3_release
+    ```
+    You can check that all 3 archs are in the executable: `lipo -info FatBugdom`
+
+- Move FatBugdom to Bugdom.app/Contents/MacOS/Bugdom
+
+- Re-sign the executable, preserving runtime hardening for notarization:
+    ```
+    codesign --force --sign $APPLE_DEVTEAM --options runtime Bugdom.app
+    ```

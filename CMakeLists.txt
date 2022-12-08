@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 set(GAME_TARGET				"Bugdom")
-set(GAME_VERSION			"1.3.2")
+set(GAME_VERSION			"1.3.3")
 
 set(GAME_MAC_ICNS			"packaging/${GAME_TARGET}.icns")
 set(GAME_MAC_COPYRIGHT		"© 1999 Pangea Software, Inc.\n© 2022 Iliyas Jorio.")

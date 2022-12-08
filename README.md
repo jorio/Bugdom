@@ -51,6 +51,13 @@ Bugdom® is a registered trademark of Pangea Software, Inc.
 
 ## More Pangea stuff!
 
-Check out my ports of [Cro-Mag Rally](https://github.com/jorio/CroMagRally), [Nanosaur](https://github.com/jorio/Nanosaur), [Mighty Mike (Power Pete)](https://github.com/jorio/MightyMike) and [Otto Matic](https://github.com/jorio/OttoMatic).
+Check out my ports of other Pangea classics:
+- [Billy Frontier](https://github.com/jorio/BillyFrontier)
+- [Bugdom](https://github.com/jorio/Bugdom)
+- [Cro-Mag Rally](https://github.com/jorio/CroMagRally)
+- [Mighty Mike (Power Pete)](https://github.com/jorio/MightyMike)
+- [Nanosaur 1](https://github.com/jorio/Nanosaur)
+- [Nanosaur 2](https://github.com/jorio/Nanosaur2)
+- [Otto Matic](https://github.com/jorio/OttoMatic)
 
 All ports are provided free of charge! If you’d like to support the development of Pangea game ports, feel free to visit https://jorio.itch.io and name your own price for any of the games there. Much appreciated! 😊
