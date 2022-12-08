@@ -12,7 +12,7 @@ VERSION = "1.3.3"
 DOMAIN = "io.jor.bugdom"
 COPYRIGHT = f"Bugdom version {VERSION}, © 1999 Pangea Software, Inc., © 2022 Iliyas Jorio"
 APPDIR = f"{EXE}.app"
-ICNS = "game.icns"
+ICNS = "../packaging/Bugdom.icns"
 
 plist_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -27,7 +27,7 @@ plist_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 	<key>CFBundleVersion</key>
 	<string>{VERSION}</string>
 	<key>CFBundleIconFile</key>
-	<string>game.icns</string>
+	<string>Bugdom.icns</string>
 	<key>CFBundleIdentifier</key>
 	<string>{DOMAIN}</string>
 	<key>CFBundleInfoDictionaryVersion</key>
