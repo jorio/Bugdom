@@ -92,6 +92,14 @@ static const SettingEntry gSettingsMenu[] =
 	},
 #endif
 
+	{
+		.kind = kCycler,
+		.ptr = &gGamePrefs.dragonflyControl,
+		.label = "Dragonfly steering",
+		.nChoices = 4,
+		.choices = {"Normal", "Invert Y axis", "Invert X axis", "Invert X & Y"},
+	},
+
 #if _DEBUG
 	{
 		.kind = kCycler,

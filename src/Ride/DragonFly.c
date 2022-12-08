@@ -277,6 +277,22 @@ TQ3Matrix4x4	m;
 	mouseDX = ClampFloat(mouseDX, -maxTurnSpeed, maxTurnSpeed);
 	mouseDY = ClampFloat(mouseDY, -maxTurnSpeed, maxTurnSpeed);
 
+	switch (gGamePrefs.dragonflyControl)
+	{
+		case kDragonflySteering_Normal:
+			break;
+		case kDragonflySteering_InvertX:
+			mouseDX *= -1;
+			break;
+		case kDragonflySteering_InvertY:
+			mouseDY *= -1;
+			break;
+		case kDragonflySteering_InvertXY:
+			mouseDX *= -1;
+			mouseDY *= -1;
+			break;
+	}
+
 	bug->Rot.y -= mouseDX;
 	bug->Rot.x -= mouseDY;
 	

@@ -9,6 +9,14 @@
 #define NUM_MOUSE_SENSITIVITY_LEVELS		5
 #define DEFAULT_MOUSE_SENSITIVITY_LEVEL		(NUM_MOUSE_SENSITIVITY_LEVELS/2)
 
+enum
+{
+	kDragonflySteering_Normal,
+	kDragonflySteering_InvertY,
+	kDragonflySteering_InvertX,
+	kDragonflySteering_InvertXY,
+};
+
 
 			/* ASCII */
 			

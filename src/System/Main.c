@@ -247,7 +247,10 @@ void InitPrefs(void)
 	gGamePrefs.showBottomBar		= true;
 	gGamePrefs.force4x3AspectRatio	= false;
 	gGamePrefs.antialiasingLevel	= 0;
+	gGamePrefs.dragonflyControl		= 0;
+#if OSXPPC
 	gGamePrefs.curatedDisplayModeID	= 0;
+#endif
 
 	LoadPrefs(&gGamePrefs);							// attempt to read from prefs file		
 }
