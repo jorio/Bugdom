@@ -840,7 +840,7 @@ unsigned long	someLong;
 	SetMyRandomSeed(someLong);
 
 #if !OSXPPC
-	SDL_WarpMouseInWindow(gSDLWindow, gWindowWidth/2, gWindowHeight/2);		// prime cursor position
+	WarpMouseToCenter();							// prime cursor position
 #endif
 
 

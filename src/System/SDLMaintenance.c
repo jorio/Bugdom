@@ -72,10 +72,6 @@ void DoSDLMaintenance(void)
 						CleanQuit();
 						return;
 
-					case SDL_WINDOWEVENT_RESIZED:
-						QD3D_OnWindowResized(event.window.data1, event.window.data2);
-						break;
-
 #if __APPLE__ && !OSXPPC
 					case SDL_WINDOWEVENT_FOCUS_LOST:
 						// On Mac, always restore system mouse accel if cmd-tabbing away from the game
@@ -115,4 +111,9 @@ void DoSDLMaintenance(void)
 				break;
 		}
 	}
+
+	// Ensure the clipping pane gets resized properly after switching in or out of fullscreen mode
+	int width, height;
+	SDL_GL_GetDrawableSize(gSDLWindow, &width, &height);
+	QD3D_OnWindowResized(width, height);
 }

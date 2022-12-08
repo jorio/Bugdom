@@ -95,7 +95,9 @@ SDL_GameController* TryOpenController(bool showMessageOnFailure);
 void OnJoystickRemoved(SDL_JoystickID which);
 TQ3Vector2D GetThumbStickVector(bool rightStick);
 
+TQ3Point2D GetMousePosition(void);
 void InitAnalogCursor(void);
 void ShutdownAnalogCursor(void);
 bool MoveAnalogCursor(int* outMouseX, int* outMouseY);
 bool IsAnalogCursorClicked(void);
+void WarpMouseToCenter(void);

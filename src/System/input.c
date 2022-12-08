@@ -40,10 +40,7 @@ typedef struct KeyBinding
 
 static struct
 {
-	int mouseX;
-	int mouseY;
-	float thumbX;
-	float thumbY;
+	TQ3Point2D pos;
 	bool didMove;
 	bool steeredByThumbstick;
 } gAnalogCursor;
@@ -632,13 +629,27 @@ void OnJoystickRemoved(SDL_JoystickID which)
 
 /***************** ANALOG MOUSE CURSOR *****************/
 
+TQ3Point2D GetMousePosition(void)
+{
+	int windowX = 0;
+	int windowY = 0;
+	SDL_GetMouseState(&windowX, &windowY);
+
+	// On macOS, the mouse position is relative to the window's "point size" on Retina screens.
+	int windowW = 1;
+	int windowH = 1;
+	SDL_GetWindowSize(gSDLWindow, &windowW, &windowH);
+	float dpiScaleX = (float) gWindowWidth / (float) windowW;		// gWindowWidth is in actual pixels
+	float dpiScaleY = (float) gWindowHeight / (float) windowH;		// gWindowHeight is in actual pixels
+
+	return (TQ3Point2D) { windowX * dpiScaleX, windowY * dpiScaleY };
+}
+
 void InitAnalogCursor(void)
 {
 	memset(&gAnalogCursor, 0, sizeof(gAnalogCursor));
 
-	SDL_GetMouseState(&gAnalogCursor.mouseX, &gAnalogCursor.mouseY);
-	gAnalogCursor.thumbX = gAnalogCursor.mouseX;
-	gAnalogCursor.thumbY = gAnalogCursor.mouseY;
+	gAnalogCursor.pos = GetMousePosition();
 }
 
 void ShutdownAnalogCursor(void)
@@ -654,10 +665,8 @@ bool MoveAnalogCursor(int* outMouseX, int* outMouseY)
 
 	TQ3Vector2D thumbstick = GetThumbStickVector(false);
 
-	int oldMouseX = gAnalogCursor.mouseX;
-	int oldMouseY = gAnalogCursor.mouseY;
-	SDL_GetMouseState(&gAnalogCursor.mouseX, &gAnalogCursor.mouseY);
-	bool mouseMoved = oldMouseX != gAnalogCursor.mouseX || oldMouseY != gAnalogCursor.mouseY;
+	TQ3Point2D newMouse = GetMousePosition();
+	bool mouseMoved = gAnalogCursor.pos.x != newMouse.x || gAnalogCursor.pos.y != newMouse.y;
 
 	float speed = 300;
 	if (gWindowWidth > gWindowHeight)
@@ -669,34 +678,30 @@ bool MoveAnalogCursor(int* outMouseX, int* outMouseY)
 	{
 		gAnalogCursor.steeredByThumbstick = false;
 		gAnalogCursor.didMove = true;
-		gAnalogCursor.thumbX = gAnalogCursor.mouseX;
-		gAnalogCursor.thumbY = gAnalogCursor.mouseY;
+		gAnalogCursor.pos = newMouse;
 	}
 	else if (thumbstick.x != 0 && thumbstick.y != 0)
 	{
 		gAnalogCursor.steeredByThumbstick = true;
 		gAnalogCursor.didMove = true;
 
-		gAnalogCursor.thumbX += thumbstick.x * gFramesPerSecondFrac * speed;
-		gAnalogCursor.thumbY += thumbstick.y * gFramesPerSecondFrac * speed;
+		gAnalogCursor.pos.x += thumbstick.x * gFramesPerSecondFrac * speed;
+		gAnalogCursor.pos.y += thumbstick.y * gFramesPerSecondFrac * speed;
 
-		if (gAnalogCursor.thumbX < 0) gAnalogCursor.thumbX = 0;
-		if (gAnalogCursor.thumbY < 0) gAnalogCursor.thumbY = 0;
+		if (gAnalogCursor.pos.x < 0) gAnalogCursor.pos.x = 0;
+		if (gAnalogCursor.pos.y < 0) gAnalogCursor.pos.y = 0;
 
-		if (gAnalogCursor.thumbX > gWindowWidth-1) gAnalogCursor.thumbX = gWindowWidth-1;
-		if (gAnalogCursor.thumbY > gWindowHeight-1) gAnalogCursor.thumbY = gWindowHeight-1;
+		if (gAnalogCursor.pos.x > gWindowWidth-1) gAnalogCursor.pos.x = gWindowWidth-1;
+		if (gAnalogCursor.pos.y > gWindowHeight-1) gAnalogCursor.pos.y = gWindowHeight-1;
 
-		gAnalogCursor.mouseX = gAnalogCursor.thumbX;
-		gAnalogCursor.mouseY = gAnalogCursor.thumbY;
-
-		SDL_WarpMouseInWindow(gSDLWindow, gAnalogCursor.mouseX, gAnalogCursor.mouseY);
+		SDL_WarpMouseInWindow(gSDLWindow, (int) gAnalogCursor.pos.x, (int) gAnalogCursor.pos.y);
 	}
 
 	if (outMouseX)
-		*outMouseX = (int) gAnalogCursor.mouseX;
+		*outMouseX = (int) gAnalogCursor.pos.x;
 
 	if (outMouseY)
-		*outMouseY = (int) gAnalogCursor.mouseY;
+		*outMouseY = (int) gAnalogCursor.pos.y;
 
 	return gAnalogCursor.didMove;
 }
@@ -705,4 +710,15 @@ bool IsAnalogCursorClicked(void)
 {
 	return FlushMouseButtonPress()
 		|| (gAnalogCursor.steeredByThumbstick && GetNewKeyState(kKey_UI_PadConfirm));
+}
+
+void WarpMouseToCenter(void)
+{
+	// Can't use gWindowWidth/Height because that's the GL drawable size in physical pixels.
+	// Mouse cursor coords must be given in the "point" coordinate system on macOS.
+	int windowPointWidth = 1;
+	int windowPointHeight = 1;
+	SDL_GetWindowSize(gSDLWindow, &windowPointWidth, &windowPointHeight);		// get window size in "device points"
+
+	SDL_WarpMouseInWindow(gSDLWindow, windowPointWidth/2, windowPointHeight/2);
 }
