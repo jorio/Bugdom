@@ -102,7 +102,7 @@ struct SuperTileMemoryType
 	Byte				mode;									// free, used, etc.
 	Byte				hasLOD[MAX_LODS];						// flag set when LOD exists
 	Byte				hiccupTimer;							// timer to delay drawing to avoid hiccup of texture upload
-	TQ3Point3D			coord[MAX_LAYERS];						// world coords (y for floor & ceiling)
+	TQ3Point3D			coord[MAX_LAYERS];						// world coords of supertile center (y for floor & ceiling)
 	long				left,back;								// integer coords of back/left corner
 	uint32_t			glTextureName[MAX_LAYERS][MAX_LODS];	// OpenGL texture name for floor & ceiling at all LODs
 	uint16_t*			textureData[MAX_LAYERS][MAX_LODS];		// pixel data for floor & ceiling at all LODs

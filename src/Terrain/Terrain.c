@@ -1,6 +1,8 @@
 /****************************/
 /*     TERRAIN.C           */
 /* By Brian Greenstone      */
+/* (C)1999 Pangea Software  */
+/* (C)2023 Iliyas Jorio     */
 /****************************/
 
 /***************/
@@ -82,8 +84,6 @@ Boolean gSuperTileMemoryListExists = false;
 float	gTerrainItemDeleteWindow_Near,gTerrainItemDeleteWindow_Far,
 		gTerrainItemDeleteWindow_Left,gTerrainItemDeleteWindow_Right;
 
-float		gSuperTileRadius;			// normal x/z radius
-
 static int		gTextureSizePerLOD[MAX_LODS] = { 0, 0, 0 };
 
 static RenderModifiers gTerrainRenderMods;
@@ -151,8 +151,6 @@ TQ3Vector3D		gRecentTerrainNormal[2];							// from _Planar
 
 void InitTerrainManager(void)
 {
- 	gSuperTileRadius = sqrt(2) * (TERRAIN_SUPERTILE_UNIT_SIZE/2);
-
 	ClearScrollBuffer();
 	
 	
@@ -997,20 +995,9 @@ static TQ3Vector3D	faceNormal[NUM_TRIS_IN_SUPERTILE];
 					0);
 		}
 
-				/***********************/
-				/* CALC COORD & RADIUS */
-				/***********************/
 
-		superTilePtr->coord[layer].y = (miny+maxy)*.5f;	// This y coord is not used to translate since the terrain has no translation matrix
-												// Instead, this is used by the cone-of-vision routine for culling tests
 
-		height = (maxy-miny) * .5f;
-		if (height > gSuperTileRadius)
-			superTilePtr->radius[layer] = height;
-		else						
-			superTilePtr->radius[layer] = gSuperTileRadius;
-	
-	
+
 				/**********************/
 				/* UPDATE THE TRIMESH */
 				/**********************/
@@ -1024,6 +1011,18 @@ static TQ3Vector3D	faceNormal[NUM_TRIS_IN_SUPERTILE];
 		triMeshData->bBox.min.z = gWorkGrid[0][0].z;
 		triMeshData->bBox.max.z = triMeshData->bBox.min.z + TERRAIN_SUPERTILE_UNIT_SIZE;
 
+
+				/******************************************/
+				/* CALC COORD & RADIUS FOR CULLING SPHERE */
+				/******************************************/
+
+		// Calc center Y coord as average of top & bottom.
+		// This Y coord is not used to translate since the terrain has no translation matrix.
+		// Instead, this is used by the frustum culling routine.
+		superTilePtr->coord[layer].y = (miny + maxy) * .5f;
+		
+		// Calc radius of supertile bounding sphere
+		superTilePtr->radius[layer] = 0.5f * Q3Point3D_Distance(&triMeshData->bBox.min, &triMeshData->bBox.max);
 
 	}	// j (layer)
 									
