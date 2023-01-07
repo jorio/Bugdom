@@ -1040,79 +1040,88 @@ short					**xlateTableHand,*xlateTbl;
 	{
 		SplineDefType* spline = &(*gSplineList)[i];
 
+				/* HANDLE EMPTY SPLINES */
+				//
+				// Level 2's spline #16 has a single nub, 0 points, and 0 items.
+				// Skip the byteswapping, but do alloc an empty handle, which the game expects.
+				//
+
+		if (spline->numNubs < 2)		// Need two nubs to make a line
+		{
+#if _DEBUG
+			printf("WARNING: Spline #%ld is empty\n", i);
+#endif
+
+			GAME_ASSERT(spline->numPoints == 0);
+			GAME_ASSERT(spline->numItems == 0);
+
+			spline->nubList = (SplinePointType**) AllocHandle(0);
+			spline->pointList = (SplinePointType**) AllocHandle(0);
+			spline->itemList = (SplineItemType**) AllocHandle(0);
+
+			continue;
+		}
+		else
+		{
+				/* SPLINE HAS SOME NUBS SO IT CAN'T BE EMPTY */
+
+			GAME_ASSERT(spline->numPoints >= 2);
+			GAME_ASSERT(spline->numItems >= 1);
+		}
+
 
 				/* READ SPLINE NUB LIST */
 
-		if (spline->numNubs == 0)
-		{
-			// Level 2's spline #16 has 0 nubs.
-			// Skip the byteswapping, but do alloc an empty handle, which the game expects.
-#if _DEBUG
-			printf("WARNING: Spline #%ld has 0 nubs\n", i);
-#endif
-			spline->nubList = (SplinePointType**)AllocHandle(0);
-		}
-		else
-		{
-			hand = GetResource('SpNb', 1000 + i);
-			GAME_ASSERT(hand);
-			DetachResource(hand);
-			HLockHi(hand);
-			UNPACK_STRUCTS_HANDLE(SplinePointType, spline->numNubs, hand);
-			spline->nubList = (SplinePointType**)hand;
-		}
+		hand = GetResource('SpNb', 1000 + i);
+		GAME_ASSERT(hand);
+		DetachResource(hand);
+		HLockHi(hand);
+		UNPACK_STRUCTS_HANDLE(SplinePointType, spline->numNubs, hand);
+		spline->nubList = (SplinePointType**)hand;
+
+
+				/* REGENERATE POINTS FROM NUBS */
+
+		int* pointsPerSpan = AllocPtr(sizeof(int) * spline->numNubs);
+		int oldNumPoints = spline->numPoints;
+		int newNumPoints = GetSplinePointsPerSpan(spline->numNubs, *spline->nubList, pointsPerSpan);
+		GAME_ASSERT(abs(newNumPoints - oldNumPoints) < 2);
+
+		spline->pointList = BakeSpline(spline->numNubs, *spline->nubList, pointsPerSpan);
+		spline->numPoints = newNumPoints;
+
+		DisposePtr(pointsPerSpan);
+		pointsPerSpan = NULL;
 
 
 				/* READ SPLINE POINT LIST */
+				// (Consistency check with pre-baked values)
 
-		if (spline->numPoints == 0)
+		hand = GetResource('SpPt', 1000 + i);
+		GAME_ASSERT(hand);
+
+		UNPACK_STRUCTS_HANDLE(SplinePointType, oldNumPoints, hand);
+		SplinePointType* filePoints = *(SplinePointType**) hand;
+		SplinePointType* myPoints = *(SplinePointType**) spline->pointList;
+		for (int pp = 0; pp < (newNumPoints<oldNumPoints? newNumPoints: oldNumPoints); pp++)
 		{
-			// Level 2's spline #16 has 0 points.
-			// Skip the byteswapping, but do alloc an empty handle, which the game expects.
-#if _DEBUG
-			printf("WARNING: Spline #%ld has 0 points\n", i);
-#endif
-			spline->pointList = (SplinePointType**)AllocHandle(0);
+			float dx = fabsf(filePoints[pp].x - myPoints[pp].x);
+			float dz = fabsf(filePoints[pp].z - myPoints[pp].z);
+			GAME_ASSERT(fabsf(dx) < 1);
+			GAME_ASSERT(fabsf(dz) < 1);
 		}
-		else
-		{
-			hand = GetResource('SpPt', 1000 + i);
-			GAME_ASSERT(hand);
-			DetachResource(hand);
-			HLockHi(hand);
-			UNPACK_STRUCTS_HANDLE(SplinePointType, spline->numPoints, hand);
-			spline->pointList = (SplinePointType**)hand;
-		}
+
+		ReleaseResource(hand);
 
 		
 				/* READ SPLINE ITEM LIST */
 
-		if (spline->numItems == 0)
-		{
-			// Level 2's spline #16 has 0 items.
-			// Skip the byteswapping, but do alloc an empty handle, which the game expects.
-#if _DEBUG
-			printf("WARNING: Spline #%ld has 0 items\n", i);
-#endif
-			spline->itemList = (SplineItemType**)AllocHandle(0);
-		}
-		else
-		{
-			hand = GetResource('SpIt', 1000 + i);
-			GAME_ASSERT(hand);
-			DetachResource(hand);
-			HLockHi(hand);
-			UNPACK_STRUCTS_HANDLE(SplineItemType, spline->numItems, hand);
-			spline->itemList = (SplineItemType**)hand;
-
-			for (int ii = 0; ii < spline->numItems; ii++)
-			{
-				if ((*spline->itemList)[ii].type == 26)
-				{
-					printf("Honeycomb platform zigzag: %d\n", (*spline->itemList)[ii].parm[3] & (1 << 2));
-				}
-			}
-		}
+		hand = GetResource('SpIt', 1000 + i);
+		GAME_ASSERT(hand);
+		DetachResource(hand);
+		HLockHi(hand);
+		UNPACK_STRUCTS_HANDLE(SplineItemType, spline->numItems, hand);
+		spline->itemList = (SplineItemType**)hand;
 	}
 	
 	
