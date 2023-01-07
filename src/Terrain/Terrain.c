@@ -273,6 +273,7 @@ int	i;
 	{
 		for (i = 0; i < gNumSplines; i++)
 		{
+			DisposeHandle((Handle)(*gSplineList)[i].nubList);	// nuke nub list
 			DisposeHandle((Handle)(*gSplineList)[i].pointList);	// nuke point list
 			DisposeHandle((Handle)(*gSplineList)[i].itemList);	// nuke item list
 		}

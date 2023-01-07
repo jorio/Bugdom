@@ -1,7 +1,8 @@
 /****************************/
 /*      FILE ROUTINES       */
-/* (c)1997-99 Pangea Software  */
 /* By Brian Greenstone      */
+/* (c)1999 Pangea Software  */
+/* (c)2023 Iliyas Jorio     */
 /****************************/
 
 
@@ -1033,51 +1034,84 @@ short					**xlateTableHand,*xlateTbl;
 		gSplineList = nil;
 	}
 
-	
-			/* READ SPLINE POINT LIST */
-			
+
+				/* READ SPLINE NUBS, POINTS, AND ITEMS */
 	for (i = 0; i < gNumSplines; i++)
 	{
-		// Level 2's spline #16 has 0 points. Skip the byteswapping, but do alloc an empty handle, which the game expects.
-		if ((*gSplineList)[i].numPoints == 0)
+		SplineDefType* spline = &(*gSplineList)[i];
+
+
+				/* READ SPLINE NUB LIST */
+
+		if (spline->numNubs == 0)
 		{
+			// Level 2's spline #16 has 0 nubs.
+			// Skip the byteswapping, but do alloc an empty handle, which the game expects.
+#if _DEBUG
+			printf("WARNING: Spline #%ld has 0 nubs\n", i);
+#endif
+			spline->nubList = (SplinePointType**)AllocHandle(0);
+		}
+		else
+		{
+			hand = GetResource('SpNb', 1000 + i);
+			GAME_ASSERT(hand);
+			DetachResource(hand);
+			HLockHi(hand);
+			UNPACK_STRUCTS_HANDLE(SplinePointType, spline->numNubs, hand);
+			spline->nubList = (SplinePointType**)hand;
+		}
+
+
+				/* READ SPLINE POINT LIST */
+
+		if (spline->numPoints == 0)
+		{
+			// Level 2's spline #16 has 0 points.
+			// Skip the byteswapping, but do alloc an empty handle, which the game expects.
 #if _DEBUG
 			printf("WARNING: Spline #%ld has 0 points\n", i);
 #endif
-			(*gSplineList)[i].pointList = (SplinePointType**) AllocHandle(0);
-			continue;
+			spline->pointList = (SplinePointType**)AllocHandle(0);
 		}
-
-		hand = GetResource('SpPt',1000+i);
-		GAME_ASSERT(hand);
+		else
 		{
+			hand = GetResource('SpPt', 1000 + i);
+			GAME_ASSERT(hand);
 			DetachResource(hand);
 			HLockHi(hand);
-			UNPACK_STRUCTS_HANDLE(SplinePointType, (*gSplineList)[i].numPoints, hand);
-			(*gSplineList)[i].pointList = (SplinePointType **)hand;
+			UNPACK_STRUCTS_HANDLE(SplinePointType, spline->numPoints, hand);
+			spline->pointList = (SplinePointType**)hand;
 		}
-	}
 
+		
+				/* READ SPLINE ITEM LIST */
 
-			/* READ SPLINE ITEM LIST */
-			
-	for (i = 0; i < gNumSplines; i++)
-	{
-		// Level 2's spline #16 has 0 items. Skip the byteswapping, but do alloc an empty handle, which the game expects.
-		if ((*gSplineList)[i].numItems == 0)
+		if (spline->numItems == 0)
 		{
+			// Level 2's spline #16 has 0 items.
+			// Skip the byteswapping, but do alloc an empty handle, which the game expects.
+#if _DEBUG
 			printf("WARNING: Spline #%ld has 0 items\n", i);
-			(*gSplineList)[i].itemList = (SplineItemType**) AllocHandle(0);
-			continue;
+#endif
+			spline->itemList = (SplineItemType**)AllocHandle(0);
 		}
-
-		hand = GetResource('SpIt',1000+i);
-		GAME_ASSERT(hand);
+		else
 		{
+			hand = GetResource('SpIt', 1000 + i);
+			GAME_ASSERT(hand);
 			DetachResource(hand);
 			HLockHi(hand);
-			UNPACK_STRUCTS_HANDLE(SplineItemType, (*gSplineList)[i].numItems, hand);
-			(*gSplineList)[i].itemList = (SplineItemType **)hand;
+			UNPACK_STRUCTS_HANDLE(SplineItemType, spline->numItems, hand);
+			spline->itemList = (SplineItemType**)hand;
+
+			for (int ii = 0; ii < spline->numItems; ii++)
+			{
+				if ((*spline->itemList)[ii].type == 26)
+				{
+					printf("Honeycomb platform zigzag: %d\n", (*spline->itemList)[ii].parm[3] & (1 << 2));
+				}
+			}
 		}
 	}
 	

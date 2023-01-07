@@ -445,57 +445,57 @@ void DrawSplines(void)
 		const SplinePointType* nubs = *spline->nubList;
 		const int halfway = spline->numPoints / 2;
 
-
-
 		if (IsPositionOutOfRange(points[0].x, points[0].z)
 			&& IsPositionOutOfRange(points[halfway].x, points[halfway].z))
 		{
 			continue;
 		}
 
-		float liquidY = 0;
-		Boolean isAboveLiquid = FindLiquidY(points[halfway].x, points[halfway].z, &liquidY);
+		float flatY = 0;
+		Boolean flat = gRealLevel == 5 && FindLiquidY(points[halfway].x, points[halfway].z, &flatY);
+		flatY += 150;
 
-		if (isAboveLiquid)
+		glBegin(GL_LINE_STRIP);
+		for (int j = 0; j < spline->numPoints; j++)
 		{
-			glBegin(GL_LINE_STRIP);
-			for (int j = 0; j < spline->numPoints; j++)
-			{
-				glVertex3f(points[j].x, liquidY + 100, points[j].z);
-			}
-			glEnd();
-
-			glBegin(GL_LINES);
-			for (int nub = 0; nub < spline->numNubs; nub++)
-			{
-				glVertex3f(nubs[nub].x, liquidY + 150, nubs[nub].z);
-				glVertex3f(nubs[nub].x, liquidY + 50, nubs[nub].z);
-			}
-			glEnd();
+			float x = points[j].x;
+			float z = points[j].z;
+			float y = flat? flatY: GetTerrainHeightAtCoord(x, z, FLOOR) + 10;
+			glVertex3f(x, y + (j&1) * 5, z);
+			glVertex3f(x, y + (!(j&1)) * 5, z);
 		}
-		else
+		glEnd();
+
+		glBegin(GL_LINES);
+		for (int nub = 0; nub < spline->numNubs; nub++)
 		{
-			glBegin(GL_LINE_STRIP);
-			for (int j = 0; j < spline->numPoints; j++)
-			{
-				float x = points[j].x;
-				float z = points[j].z;
-				float y = GetTerrainHeightAtCoord(x, z, FLOOR) + 10;
-				glVertex3f(x, y, z);
-			}
-			glEnd();
+			float flagSize = nub == 0 ? 150 : 30;
+			float poleSize = flagSize;
 
-			glBegin(GL_LINES);
-			for (int nub = 0; nub < spline->numNubs; nub++)
+			float x = nubs[nub].x * MAP2UNIT_VALUE;
+			float z = nubs[nub].z * MAP2UNIT_VALUE;
+			float y1 = flat ? flatY : GetTerrainHeightAtCoord(x, z, FLOOR) + 17;
+			float y2 = y1 + poleSize;
+			glVertex3f(x, y1, z);
+			glVertex3f(x, y2, z);
+
+			if (nub < spline->numNubs - 1)
 			{
-				float x = nubs[nub].x * 5;
-				float z = nubs[nub].z * 5;
-				float y = GetTerrainHeightAtCoord(x, z, FLOOR) + 10;
-				glVertex3f(x, y+50, z);
-				glVertex3f(x, y-50, z);
+				TQ3Vector3D flagDir = { nubs[nub+1].x * MAP2UNIT_VALUE - x, 0, nubs[nub+1].z * MAP2UNIT_VALUE - z };
+				FastNormalizeVector(flagDir.x, flagDir.y, flagDir.z, &flagDir);
+				flagDir.x *= flagSize;
+				flagDir.z *= flagSize;
+
+				float y3 = y2 - flagSize * 0.25f;
+				float y4 = y2 - flagSize * 0.5f;
+
+				glVertex3f(x, y2, z);
+				glVertex3f(x + flagDir.x, y3, z + flagDir.z);
+				glVertex3f(x + flagDir.x, y3, z + flagDir.z);
+				glVertex3f(x, y4, z);
 			}
-			glEnd();
 		}
+		glEnd();
 	}
 }
 
