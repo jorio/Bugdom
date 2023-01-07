@@ -640,23 +640,22 @@ float	fps = gFramesPerSecondFrac;
 
 				/* DO ENEMY COLLISION */
 				
-	if (DoEnemyCollisionDetect(theNode,DEATH_ENEMY_COLLISION_CTYPES))
+	if (DoEnemyCollisionDetect(theNode, DEATH_ENEMY_COLLISION_CTYPES | CTYPE_LIQUID))
 		return;
 
 				/*********************/
 				/* SEE IF MAKE GHOST */
 				/*********************/
 
-	if (gLevelType == LEVEL_TYPE_ANTHILL)
+	if (gLevelType == LEVEL_TYPE_ANTHILL
+		&& !theNode->MadeGhost
+		&& !(theNode->StatusBits & STATUS_BIT_UNDERWATER))		// avoid endless respawn if underwater (ghosts also die in water)
 	{
-		if (!theNode->MadeGhost)
+		theNode->DeathTimer += fps;
+		if (theNode->DeathTimer > .5f)
 		{
-			theNode->DeathTimer += fps;
-			if (theNode->DeathTimer > .5f)
-			{
-				theNode->MadeGhost = true;
-				MakeGhostAnt(theNode,&gCoord);
-			}
+			theNode->MadeGhost = true;
+			MakeGhostAnt(theNode,&gCoord);
 		}
 	}
 
