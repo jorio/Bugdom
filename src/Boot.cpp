@@ -102,7 +102,7 @@ static void ParseCommandLine(int argc, char** argv)
 		std::string argument = argv[i];
 
 		if (argument == "--stats")
-			gShowDebugStats = true;
+			gDebugMode = 1;
 		else if (argument == "--no-vsync")
 			gCommandLine.vsync = 0;
 		else if (argument == "--vsync")

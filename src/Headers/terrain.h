@@ -170,10 +170,15 @@ void InitCurrentScrollSettings(void);
 
 extern 	void BuildTerrainItemList(void);
 extern 	void ScanForPlayfieldItems(long top, long bottom, long left, long right);
-extern 	Boolean TrackTerrainItem(ObjNode *theNode);
+
+Boolean IsPositionOutOfRange(float x, float z);
+Boolean IsPositionOutOfRange_Far(float x, float z, float range);
+
+Boolean TrackTerrainItem(ObjNode *theNode);
+Boolean TrackTerrainItem_Far(ObjNode* theNode, float range);
+
 void PrimeInitialTerrain(Boolean justReset);
 extern 	void FindMyStartCoordItem(void);
-Boolean TrackTerrainItem_Far(ObjNode *theNode, float range);
 void RotateOnTerrain(ObjNode *theNode, float yOffset);
 extern	void DoMyTerrainUpdate(void);
 

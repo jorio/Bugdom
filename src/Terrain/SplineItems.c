@@ -1,5 +1,7 @@
 /****************************/
 /*   	SPLINE ITEMS.C      */
+/* (C)1999 Pangea Software  */
+/* (C)2023 Iliyas Jorio     */
 /****************************/
 
 
@@ -414,6 +416,55 @@ float			numPointsInSpline;
 			theNode->SplinePlacement = .999f;
 			theNode->StatusBits ^= STATUS_BIT_REVERSESPLINE;	// toggle direction
 		}
+	}
+}
+
+
+/******************* DRAW SPLINES FOR DEBUGGING *********************/
+
+void DrawSplines(void)
+{
+	for (int i = 0; i < gNumSplines; i++)
+	{
+		const SplineDefType* spline = &(*gSplineList)[i];
+		const SplinePointType* points = *spline->pointList;
+		const int halfway = spline->numPoints / 2;
+
+		if (spline->numPoints == 0)
+		{
+			continue;
+		}
+
+		if (IsPositionOutOfRange(points[0].x, points[0].z)
+			&& IsPositionOutOfRange(points[halfway].x, points[halfway].z))
+		{
+			continue;
+		}
+
+		float liquidY = 0;
+		Boolean isAboveLiquid = FindLiquidY(points[halfway].x, points[halfway].z, &liquidY);
+
+		glBegin(GL_LINE_STRIP);
+
+		if (isAboveLiquid)
+		{
+			for (int j = 0; j < spline->numPoints; j++)
+			{
+				glVertex3f(points[j].x, liquidY + 100, points[j].z);
+			}
+		}
+		else
+		{
+			for (int j = 0; j < spline->numPoints; j++)
+			{
+				float x = points[j].x;
+				float z = points[j].z;
+				float y = GetTerrainHeightAtCoord(x, z, FLOOR) + 10;
+				glVertex3f(x, y, z);
+			}
+		}
+
+		glEnd();
 	}
 }
 

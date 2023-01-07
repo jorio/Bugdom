@@ -1488,12 +1488,23 @@ void DrawTerrain(const QD3DSetupOutputType *setupInfo)
 
 	Render_FlushQueue();												// flush before drawing 2D stuff
 
-	if (gShowDebug)
+	if (gDebugMode)
 	{
 		Render_ResetColor();
-		for (ObjNode* node = gFirstNodePtr; node; node = node->NextNode)
-			DrawCollisionBoxes(node);
-		DrawNormal();
+
+		switch (gDebugMode)
+		{
+			case 2:
+				for (ObjNode* node = gFirstNodePtr; node; node = node->NextNode)
+					DrawCollisionBoxes(node);
+				DrawNormal();
+				break;
+
+			case 3:
+				DrawSplines();
+				break;
+		}
+		
 	}
 
 		/* DRAW IN-GAME 2D ELEMENTS */

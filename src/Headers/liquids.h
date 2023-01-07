@@ -19,7 +19,7 @@ enum
 void InitLiquids(void);
 void DisposeLiquids(void);
 void UpdateLiquidAnimation(void);
-float FindLiquidY(float x, float z);
+Boolean FindLiquidY(float x, float z, float* y);
 
 
 Boolean AddHoneyPatch(TerrainItemEntryType *itemPtr, long  x, long z);

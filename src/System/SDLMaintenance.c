@@ -23,9 +23,19 @@ static void UpdateDebugStats(void)
 	if (ticksElapsed >= kDebugTextUpdateInterval)
 	{
 		float fps = 1000 * gDebugTextFrameAccumulator / (float)ticksElapsed;
+
+		const char* debugModeName = "???";
+		switch (gDebugMode)
+		{
+			case 1: debugModeName = "stats"; break;
+			case 2: debugModeName = "collisions"; break;
+			case 3: debugModeName = "splines"; break;
+		}
+
 		snprintf(
 				gDebugTextBuffer, sizeof(gDebugTextBuffer),
-				"fps: %d\ntris: %d\nmeshes: %d+%d\ntiles: %ld/%ld%s\n\nx: %d\nz: %d\n\n%s\n\n\n\n\n\n\n\n\n\n\n\nBugdom %s\n%s @ %dx%d",
+				"fps: %d\ntris: %d\nmeshes: %d+%d\ntiles: %ld/%ld%s\n\nx: %d\nz: %d\n\n%s\n\n\n\n\n\n\n\n\n\n\n"
+				"Debug mode %d (%s)\nBugdom %s\n%s @ %dx%d",
 				(int)roundf(fps),
 				gRenderStats.triangles,
 				gRenderStats.meshesPass1,
@@ -35,7 +45,9 @@ static void UpdateDebugStats(void)
 				gSuperTileMemoryListExists ? "" : " (no terrain)",
 				(int)gMyCoord.x,
 				(int)gMyCoord.z,
-				gLiquidCheat? "Liquid cheat ON": "",
+				gLiquidCheat ? "Liquid cheat ON" : "",
+				gDebugMode,
+				debugModeName,
 				PROJECT_VERSION,
 				glGetString(GL_RENDERER),
 				gWindowWidth,
@@ -50,7 +62,7 @@ static void UpdateDebugStats(void)
 
 void DoSDLMaintenance(void)
 {
-	if (gShowDebugStats)
+	if (gDebugMode)
 		UpdateDebugStats();
 
 	// Reset these on every new frame

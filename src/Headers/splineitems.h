@@ -18,18 +18,4 @@ Boolean RemoveFromSplineObjectList(ObjNode *theNode);
 void EmptySplineObjectList(void);
 void IncreaseSplineIndex(ObjNode *theNode, float speed);
 void IncreaseSplineIndexZigZag(ObjNode *theNode, float speed);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+void DrawSplines(void);

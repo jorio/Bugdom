@@ -66,8 +66,7 @@ u_short		gAreaNum = 0;
 u_short		gLevelTypeMask = 0;
 
 
-Boolean		gShowDebugStats = false;
-Boolean		gShowDebug = false;
+int			gDebugMode = 0;
 Boolean		gLiquidCheat = false;
 Boolean		gUseCyclorama;
 float		gCurrentYon;
@@ -738,12 +737,10 @@ static void CheckForCheats(void)
 
 		if (GetNewKeyState_SDL(SDL_SCANCODE_F8))
 		{
-			gShowDebugStats = !gShowDebugStats;
+			gDebugMode++;
+			gDebugMode %= 4;
 			QD3D_UpdateDebugTextMesh(NULL);
 		}
-
-		if (GetNewKeyState_SDL(SDL_SCANCODE_F9))
-			gShowDebug = !gShowDebug;
 	}
 }
 
