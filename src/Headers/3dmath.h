@@ -102,3 +102,14 @@ static inline float ClampFloat(float x, float lo, float hi)
 	if (x > hi) return hi;
 	return x;
 }
+
+static inline unsigned int PositiveModulo(int value, unsigned int m)
+{
+	int mod = value % (int)m;
+	if (mod < 0)
+	{
+		mod += m;
+	}
+	return mod;
+}
+

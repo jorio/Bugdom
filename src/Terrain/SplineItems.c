@@ -483,16 +483,25 @@ void DrawSplines(void)
 			{
 				TQ3Vector3D flagDir = { nubs[nub+1].x * MAP2UNIT_VALUE - x, 0, nubs[nub+1].z * MAP2UNIT_VALUE - z };
 				FastNormalizeVector(flagDir.x, flagDir.y, flagDir.z, &flagDir);
-				flagDir.x *= flagSize;
-				flagDir.z *= flagSize;
 
 				float y3 = y2 - flagSize * 0.25f;
 				float y4 = y2 - flagSize * 0.5f;
 
 				glVertex3f(x, y2, z);
-				glVertex3f(x + flagDir.x, y3, z + flagDir.z);
-				glVertex3f(x + flagDir.x, y3, z + flagDir.z);
+				glVertex3f(x + flagDir.x * flagSize, y3, z + flagDir.z * flagSize);
+				glVertex3f(x + flagDir.x * flagSize, y3, z + flagDir.z * flagSize);
 				glVertex3f(x, y4, z);
+
+				if (nub == 0)
+				{
+					for (int baton = 0; baton < i + 1; baton++)
+					{
+						float x2 = x + ((2 + baton) * 4) * flagDir.x;
+						float z2 = z + ((2 + baton) * 4) * flagDir.z;
+						glVertex3f(x2, y3-10, z2);
+						glVertex3f(x2, y3+10, z2);
+					}
+				}
 			}
 		}
 		glEnd();
@@ -704,16 +713,23 @@ int			numPoints;
 
 void PatchSplineLoop(SplineDefType* spline)
 {
+	int numNubs = spline->numNubs;
+	SplinePointType* nubList = *spline->nubList;
+
+	int numWrapNubs = 3;		// wrap around for this many nubs
+	GAME_ASSERT(numNubs > numWrapNubs);
+
 		/* FIND OUT HOW MANY POINTS TO GENERATE */
 
-	int* pointsPerSpan = (int*) AllocPtr(sizeof(int) * spline->numNubs);
-	int oldNumPoints = spline->numPoints;
-	int newNumPoints = GetSplinePointsPerSpan(spline->numNubs, *spline->nubList, pointsPerSpan);
+	int* pointsPerSpan_wrapping = (int*) AllocPtr(sizeof(int) * (numNubs + 2*numWrapNubs));
+	int* pointsPerSpan = &pointsPerSpan_wrapping[numWrapNubs];
+
+	int newNumPoints = GetSplinePointsPerSpan(numNubs, nubList, pointsPerSpan);
 
 		/* MERGE ENDPOINT NUBS SO SPLINE LOOPS SEAMLESSLY */
 
-	SplinePointType* firstNub = &(*spline->nubList)[0];
-	SplinePointType* lastNub = &(*spline->nubList)[spline->numNubs - 1];
+	SplinePointType* firstNub = &nubList[0];
+	SplinePointType* lastNub = &nubList[numNubs - 1];
 
 	float endpointDistance = CalcDistance(firstNub->x, firstNub->z, lastNub->x, lastNub->z);
 	GAME_ASSERT_MESSAGE(endpointDistance < 20, "spline endpoint nubs are too far apart for seamless looping");
@@ -722,24 +738,57 @@ void PatchSplineLoop(SplineDefType* spline)
 	*firstNub = mergedEndpoint;
 	*lastNub = mergedEndpoint;
 
+		/* MAKE SPLINE WRAP AROUND A BIT TO AVOID ANGULAR PINCH AT SEAM */
+
+	SplinePointType* nubList_wrapping = (SplinePointType*) AllocPtr(sizeof(SplinePointType) * (numNubs + 2 * numWrapNubs));
+	memcpy(&nubList_wrapping[numWrapNubs], nubList, sizeof(SplinePointType) * numNubs);
+
+	int wrapBeg = numWrapNubs - 1;
+	int wrapEnd = numWrapNubs + numNubs;
+	for (int i = 0; i < numWrapNubs; i++, wrapBeg--, wrapEnd++)
+	{
+		GAME_ASSERT(wrapBeg >= 0);
+		GAME_ASSERT(wrapEnd <= numNubs + 2 * numWrapNubs);
+
+		nubList_wrapping[wrapBeg] = nubList[PositiveModulo(-2-i, numNubs)];
+		nubList_wrapping[wrapEnd] = nubList[PositiveModulo(1+numNubs+i, numNubs)];
+
+		pointsPerSpan_wrapping[wrapBeg] = 0;
+		pointsPerSpan_wrapping[wrapEnd] = 0;
+	}
+
 		/* BAKE SPLINE AGAIN */
 
-	SplinePointType** newPointList = BakeSpline(spline->numNubs, *spline->nubList, pointsPerSpan);
+	SplinePointType** newPointList = BakeSpline(numNubs + 2*numWrapNubs, nubList_wrapping, pointsPerSpan_wrapping);
 
-	DisposePtr((Ptr) pointsPerSpan);
-	pointsPerSpan = NULL;
-
+#if _DEBUG
 		/* MAKE SURE NEW SPLINE HASN'T STRAYED TOO FAR FROM FILE VALUES */
-	
-	GAME_ASSERT(abs(newNumPoints - oldNumPoints) < 2);		// tolerate some wiggle room
 
-	for (int pp = 0; pp < (newNumPoints < oldNumPoints ? newNumPoints : oldNumPoints); pp++)
+	int oldNumPoints = spline->numPoints;
+	GAME_ASSERT(abs(newNumPoints - oldNumPoints) < 2);		// tolerate some wiggle room
+	GAME_ASSERT(newNumPoints <= oldNumPoints);
+
+	int currentSpan = 0;
+	int currentSpanPoints = 0;
+	for (int p = 0; p < newNumPoints; p++)
 	{
-		float dx = fabsf((*spline->pointList)[pp].x - (*newPointList)[pp].x);
-		float dz = fabsf((*spline->pointList)[pp].z - (*newPointList)[pp].z);
-		GAME_ASSERT(fabsf(dx) < 10);						// tolerate some wiggle room
-		GAME_ASSERT(fabsf(dz) < 10);
+		float dx = (*spline->pointList)[p].x - (*newPointList)[p].x;
+		float dz = (*spline->pointList)[p].z - (*newPointList)[p].z;
+		float drift = sqrtf(dx*dx + dz*dz);
+
+		if (currentSpan == 0 || currentSpan >= numNubs - 2)
+			GAME_ASSERT(drift < 40);	// tolerate some drift for loop point nubs (we've doctored those)
+		else
+			GAME_ASSERT(drift < 10);	// tolerate less drift for nubs further from the loop point
+
+		currentSpanPoints++;
+		if (currentSpanPoints >= pointsPerSpan[currentSpan])
+		{
+			currentSpan++;
+			currentSpanPoints = 0;
+		}
 	}
+#endif
 
 		/* COMMIT NEW BAKED SPLINE */
 
@@ -747,4 +796,10 @@ void PatchSplineLoop(SplineDefType* spline)
 
 	spline->pointList = newPointList;
 	spline->numPoints = newNumPoints;
+
+
+		/* CLEAN UP */
+
+	DisposePtr((Ptr) pointsPerSpan_wrapping);
+	DisposePtr((Ptr) nubList_wrapping);
 }
