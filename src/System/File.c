@@ -1069,7 +1069,6 @@ short					**xlateTableHand,*xlateTbl;
 			GAME_ASSERT(spline->numItems >= 1);
 		}
 
-
 				/* READ SPLINE NUB LIST */
 
 		hand = GetResource('SpNb', 1000 + i);
@@ -1079,40 +1078,14 @@ short					**xlateTableHand,*xlateTbl;
 		UNPACK_STRUCTS_HANDLE(SplinePointType, spline->numNubs, hand);
 		spline->nubList = (SplinePointType**)hand;
 
-
-				/* REGENERATE POINTS FROM NUBS */
-
-		int* pointsPerSpan = AllocPtr(sizeof(int) * spline->numNubs);
-		int oldNumPoints = spline->numPoints;
-		int newNumPoints = GetSplinePointsPerSpan(spline->numNubs, *spline->nubList, pointsPerSpan);
-		GAME_ASSERT(abs(newNumPoints - oldNumPoints) < 2);
-
-		spline->pointList = BakeSpline(spline->numNubs, *spline->nubList, pointsPerSpan);
-		spline->numPoints = newNumPoints;
-
-		DisposePtr(pointsPerSpan);
-		pointsPerSpan = NULL;
-
-
 				/* READ SPLINE POINT LIST */
-				// (Consistency check with pre-baked values)
 
 		hand = GetResource('SpPt', 1000 + i);
 		GAME_ASSERT(hand);
-
-		UNPACK_STRUCTS_HANDLE(SplinePointType, oldNumPoints, hand);
-		SplinePointType* filePoints = *(SplinePointType**) hand;
-		SplinePointType* myPoints = *(SplinePointType**) spline->pointList;
-		for (int pp = 0; pp < (newNumPoints<oldNumPoints? newNumPoints: oldNumPoints); pp++)
-		{
-			float dx = fabsf(filePoints[pp].x - myPoints[pp].x);
-			float dz = fabsf(filePoints[pp].z - myPoints[pp].z);
-			GAME_ASSERT(fabsf(dx) < 1);
-			GAME_ASSERT(fabsf(dz) < 1);
-		}
-
-		ReleaseResource(hand);
-
+		DetachResource(hand);
+		HLockHi(hand);
+		UNPACK_STRUCTS_HANDLE(SplinePointType, spline->numPoints, hand);
+		spline->pointList = (SplinePointType**)hand;
 		
 				/* READ SPLINE ITEM LIST */
 
@@ -1122,6 +1095,10 @@ short					**xlateTableHand,*xlateTbl;
 		HLockHi(hand);
 		UNPACK_STRUCTS_HANDLE(SplineItemType, spline->numItems, hand);
 		spline->itemList = (SplineItemType**)hand;
+
+				/* PATCH SPLINE TO MAKE IT LOOP SEAMLESSLY */
+
+		PatchSplineLoop(spline);
 	}
 	
 	

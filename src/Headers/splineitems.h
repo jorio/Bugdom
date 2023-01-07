@@ -18,5 +18,4 @@ float IncreaseSplineIndex(ObjNode *theNode, float speed);
 float IncreaseSplineIndexZigZag(ObjNode *theNode, float speed);
 void DrawSplines(void);
 
-int GetSplinePointsPerSpan(int numNubs, const SplinePointType* nubs, int* outPointsPerSpan);
-SplinePointType** BakeSpline(int numNubs, const SplinePointType* nubs, int* pointsPerSpan);
+void PatchSplineLoop(SplineDefType* spline);

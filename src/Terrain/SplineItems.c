@@ -511,7 +511,7 @@ void DrawSplines(void)
 // The timing of their movement depends on hardcoded point intervals!
 //
 
-int GetSplinePointsPerSpan(int numNubs, const SplinePointType* nubs, int* outPointsPerSpan)
+static int GetSplinePointsPerSpan(int numNubs, const SplinePointType* nubs, int* outPointsPerSpan)
 {
 	int total = 0;
 
@@ -547,7 +547,7 @@ int GetSplinePointsPerSpan(int numNubs, const SplinePointType* nubs, int* outPoi
 // The result closely matches the pre-baked spline points in Bugdom terrain files.
 //
 
-SplinePointType** BakeSpline(int numNubs, const SplinePointType *nubs, const int* pointsPerSpan)
+static SplinePointType** BakeSpline(int numNubs, const SplinePointType *nubs, const int* pointsPerSpan)
 {
 SplinePointType** pointsHandle;
 SplinePointType**space,*points;
@@ -694,4 +694,57 @@ int			numPoints;
 	Free2DArray((void**) space);
 
 	return pointsHandle;
+}
+
+
+/********************* MAKE SPLINE LOOP SEAMLESSLY *******************/
+//
+// This attempts to keep the interval between nubs as close as possible to the original spline.
+//
+
+void PatchSplineLoop(SplineDefType* spline)
+{
+		/* FIND OUT HOW MANY POINTS TO GENERATE */
+
+	int* pointsPerSpan = (int*) AllocPtr(sizeof(int) * spline->numNubs);
+	int oldNumPoints = spline->numPoints;
+	int newNumPoints = GetSplinePointsPerSpan(spline->numNubs, *spline->nubList, pointsPerSpan);
+
+		/* MERGE ENDPOINT NUBS SO SPLINE LOOPS SEAMLESSLY */
+
+	SplinePointType* firstNub = &(*spline->nubList)[0];
+	SplinePointType* lastNub = &(*spline->nubList)[spline->numNubs - 1];
+
+	float endpointDistance = CalcDistance(firstNub->x, firstNub->z, lastNub->x, lastNub->z);
+	GAME_ASSERT_MESSAGE(endpointDistance < 20, "spline endpoint nubs are too far apart for seamless looping");
+
+	SplinePointType mergedEndpoint = { (firstNub->x + lastNub->x) * 0.5f, (firstNub->z + lastNub->z) * 0.5f };
+	*firstNub = mergedEndpoint;
+	*lastNub = mergedEndpoint;
+
+		/* BAKE SPLINE AGAIN */
+
+	SplinePointType** newPointList = BakeSpline(spline->numNubs, *spline->nubList, pointsPerSpan);
+
+	DisposePtr((Ptr) pointsPerSpan);
+	pointsPerSpan = NULL;
+
+		/* MAKE SURE NEW SPLINE HASN'T STRAYED TOO FAR FROM FILE VALUES */
+	
+	GAME_ASSERT(abs(newNumPoints - oldNumPoints) < 2);		// tolerate some wiggle room
+
+	for (int pp = 0; pp < (newNumPoints < oldNumPoints ? newNumPoints : oldNumPoints); pp++)
+	{
+		float dx = fabsf((*spline->pointList)[pp].x - (*newPointList)[pp].x);
+		float dz = fabsf((*spline->pointList)[pp].z - (*newPointList)[pp].z);
+		GAME_ASSERT(fabsf(dx) < 10);						// tolerate some wiggle room
+		GAME_ASSERT(fabsf(dz) < 10);
+	}
+
+		/* COMMIT NEW BAKED SPLINE */
+
+	DisposeHandle((Handle) spline->pointList);				// replace old point list
+
+	spline->pointList = newPointList;
+	spline->numPoints = newNumPoints;
 }
