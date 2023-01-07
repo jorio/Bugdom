@@ -116,6 +116,9 @@ extern	Boolean AddEnemy_PondFish(TerrainItemEntryType *itemPtr, long x, long z);
 			
 Boolean PrimeEnemy_Slug(long splineNum, SplineItemType *itemPtr);
 
+void SetCrawlingEnemyJointTransforms(ObjNode* theNode, int splineIndexDelta,
+	float footOffset, float collisionBoxSize, float undulateScale, float* undulatePhase);
+
 		/* CATERPILLER */
 		
 Boolean PrimeEnemy_Caterpiller(long splineNum, SplineItemType *itemPtr);

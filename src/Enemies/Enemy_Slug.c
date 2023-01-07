@@ -1,7 +1,8 @@
 /****************************/
 /*   ENEMY: SLUG.C			*/
-/* (c)1998 Pangea Software  */
 /* By Brian Greenstone      */
+/* (c)1998 Pangea Software  */
+/* (c)2023 Iliyas Jorio     */
 /****************************/
 
 
@@ -17,7 +18,6 @@
 /****************************/
 
 static void MoveSlugOnSpline(ObjNode *theNode);
-static void SetSlugJointTransforms(ObjNode *theNode, long index);
 static void SetSlugCollisionInfo(ObjNode *theNode);
 
 
@@ -29,6 +29,7 @@ static void SetSlugCollisionInfo(ObjNode *theNode);
 #define	SLUG_DAMAGE		0.1f
 
 #define	SLUG_SCALE		3.0f
+#define SLUG_STRETCH	30
 
 enum
 {
@@ -36,8 +37,7 @@ enum
 	SLUG_ANIM_STILL
 };
 
-#define	FOOT_OFFSET			0.0f
-
+#define	SLUG_FOOT_OFFSET		0.0f
 #define	SLUG_COLLISIONBOX_SIZE	40.0f
 
 
@@ -50,13 +50,16 @@ enum
 
 Boolean PrimeEnemy_Slug(long splineNum, SplineItemType *itemPtr)
 {
+SplineDefType*	spline;
 ObjNode			*newObj;
 float			x,z,placement;
 
 			/* GET SPLINE INFO */
 
-	placement = itemPtr->placement;	
-	GetCoordOnSpline(&(*gSplineList)[splineNum], placement, &x, &z);
+	spline = &(*gSplineList)[splineNum];
+	placement = itemPtr->placement;
+	GetCoordOnSpline(spline, placement, &x, &z);
+
 
 
 				/* MAKE DEFAULT SKELETON ENEMY */
@@ -79,7 +82,7 @@ float			x,z,placement;
 			
 	newObj->StatusBits		|= STATUS_BIT_ONSPLINE;
 	newObj->SplinePlacement = placement;
-	newObj->Coord.y 		-= FOOT_OFFSET;			
+	newObj->Coord.y 		-= SLUG_FOOT_OFFSET;
 	newObj->SplineMoveCall 	= MoveSlugOnSpline;				// set move call
 	newObj->Health 			= SLUG_HEALTH;
 	newObj->Damage 			= SLUG_DAMAGE;
@@ -123,143 +126,110 @@ SkeletonDefType		*skeletonDef;
 static void MoveSlugOnSpline(ObjNode *theNode)
 {
 Boolean isVisible; 
-long	index;
 
 	isVisible = IsSplineItemVisible(theNode);					// update its visibility
 
 		/* MOVE ALONG THE SPLINE */
 
 	IncreaseSplineIndex(theNode, 90);
-	index = GetObjectCoordOnSpline(theNode, &theNode->Coord.x, &theNode->Coord.z);
 
+	GetObjectCoordOnSpline(theNode, &theNode->Coord.x, &theNode->Coord.z);
 
 			/***************************/
 			/* UPDATE STUFF IF VISIBLE */
 			/***************************/
-			
+
 	if (isVisible)
 	{
 			/* UPDATE SKELETON & COLLISION INFO */
-			
-		SetSlugJointTransforms(theNode, index);
-	}
-	else
-	{
+
+		SetCrawlingEnemyJointTransforms(theNode,
+			SLUG_STRETCH,
+			SLUG_FOOT_OFFSET, SLUG_COLLISIONBOX_SIZE,
+			SLUG_SCALE, &theNode->SpecialF[0]);
 	}
 }
 
 
-/********************* SET SLUG JOINT TRANSFORMS **********************/
+/****************** SET JOINT TRANSFORMS ON CRAWLING ENEMY ******************/
 //
-// INPUT: index = index into spline's point list of object's base coord.
+// Also used in Enemy_Caterpiller.c
 //
 
-static void SetSlugJointTransforms(ObjNode *theNode, long index)
+void SetCrawlingEnemyJointTransforms(
+	ObjNode* theNode,
+	int splineIndexDelta,
+	float footOffset,
+	float collisionBoxSize,
+	float undulateScale,
+	float* undulatePhase)
 {
-SkeletonObjDataType	*skeleton = theNode->Skeleton;
-long				jointNum;
-long				numPointsInSpline;
-SkeletonDefType		*skeletonDef;
-TQ3Matrix4x4		*jointMatrix;
-SplinePointType		*points;
-SplineDefType		*splinePtr;
-TQ3Matrix4x4		m,m2,m3;
-static const	TQ3Vector3D up = {0,1,0};
-float				scale;
-CollisionBoxType *boxPtr;
-
-	if (skeleton == nil)
+	if (!theNode->Skeleton)
 		return;
 
-	skeletonDef = skeleton->skeletonDefinition;
+	const TQ3Vector3D up = { 0,1,0 };
+	TQ3Matrix4x4 m, m2, m3;
 
-	splinePtr = &(*gSplineList)[theNode->SplineNum];			// point to the spline
-	numPointsInSpline = splinePtr->numPoints;					// get # points in the spline
-	points = *splinePtr->pointList;								// point to point list
+	CollisionBoxType* boxPtr = theNode->CollisionBoxes;
 
-	boxPtr = theNode->CollisionBoxes;
+	SplineDefType* spline = &(*gSplineList)[theNode->SplineNum];
+
+	const float splinePlacementDelta = (float)splineIndexDelta / spline->numPoints;
+
+	float splineWalk = theNode->SplinePlacement;
+	TQ3Point3D thisJointPos;		// world-space coords of current joint (start at my head)
+	TQ3Point3D nextJointPos;		// world-space coords of next joint, closer to my tail (for LookAt rotation calculation)
+
+			/* PRIME SPLINE WALK - COMPUTE POSITION OF HEAD JOINT */
+
+	GetCoordOnSpline(spline, splineWalk, &nextJointPos.x, &nextJointPos.z);
+	nextJointPos.y = GetTerrainHeightAtCoord(nextJointPos.x, nextJointPos.z, FLOOR) - footOffset;
 
 			/***************************************/
 			/* TRANSFORM EACH JOINT TO WORLD-SPACE */
 			/***************************************/
-		
-	scale = SLUG_SCALE;
-			
-	for (jointNum = 0; jointNum < skeletonDef->NumBones; jointNum++)		
+
+	for (int jointNum = 0; jointNum < theNode->Skeleton->skeletonDefinition->NumBones; jointNum++)
 	{
-		TQ3Point3D	coord,prevCoord;
-		
-				/* GET COORDS OF THIS SEGMENT */
-				
-		coord.x = points[index].x;
-		coord.z = points[index].z;
-		coord.y = GetTerrainHeightAtCoord(coord.x, coord.z, FLOOR) - FOOT_OFFSET;
+				/* WALK SPLINE TOWARDS MY TAIL */
 
+		thisJointPos = nextJointPos;			// previous iteration's next joint is now current joint
 
-			/* UPDATE THIS COINCIDING COLLISION BOX */
+		splineWalk -= splinePlacementDelta;		// walk backwards on spline, towards my tail
+		if (splineWalk < 0)
+			splineWalk += 1.0f;
 
-		boxPtr[jointNum].left 	= coord.x - SLUG_COLLISIONBOX_SIZE;
-		boxPtr[jointNum].right 	= coord.x + SLUG_COLLISIONBOX_SIZE;
-		boxPtr[jointNum].top 	= coord.y + SLUG_COLLISIONBOX_SIZE;
-		boxPtr[jointNum].bottom = coord.y - SLUG_COLLISIONBOX_SIZE;
-		boxPtr[jointNum].front 	= coord.z + SLUG_COLLISIONBOX_SIZE;
-		boxPtr[jointNum].back 	= coord.z - SLUG_COLLISIONBOX_SIZE;
-		
+				/* COMPUTE POSITION OF NEXT JOINT */
 
-			/* GET PREVIOUS SPLINE COORD FOR ROTATION CALCULATION */
-				
-		if (index >= 30)
-		{
-			prevCoord.x = points[index-30].x;
-			prevCoord.z = points[index-30].z;
-		}
-		else
-		{
-			prevCoord.x = points[numPointsInSpline-30].x;
-			prevCoord.z = points[numPointsInSpline-30].z;
-		}
-		prevCoord.y = GetTerrainHeightAtCoord(prevCoord.x, prevCoord.z, FLOOR) - FOOT_OFFSET;
+		GetCoordOnSpline(spline, splineWalk, &nextJointPos.x, &nextJointPos.z);
+		nextJointPos.y = GetTerrainHeightAtCoord(nextJointPos.x, nextJointPos.z, FLOOR) - footOffset;
 
+				/* UPDATE THIS COINCIDING COLLISION BOX */
+
+		boxPtr[jointNum].left 	= thisJointPos.x - collisionBoxSize;
+		boxPtr[jointNum].right 	= thisJointPos.x + collisionBoxSize;
+		boxPtr[jointNum].top 	= thisJointPos.y + collisionBoxSize;
+		boxPtr[jointNum].bottom = thisJointPos.y - collisionBoxSize;
+		boxPtr[jointNum].front 	= thisJointPos.z + collisionBoxSize;
+		boxPtr[jointNum].back 	= thisJointPos.z - collisionBoxSize;
 
 				/* TRANSFORM JOINT'S MATRIX TO WORLD COORDS */
-	
-		jointMatrix = &skeleton->jointTransformMatrix[jointNum];		// get ptr to joint's xform matrix which was set during regular animation functions
 
-		Q3Matrix4x4_SetScale(&m, scale, scale, scale);
-		SetLookAtMatrix(&m2, &up, &prevCoord, &coord);
+		// get joint's transform matrix which was set during skeletal animation
+		TQ3Matrix4x4* jointMatrix = &theNode->Skeleton->jointTransformMatrix[jointNum];
+
+		Q3Matrix4x4_SetScale(&m, undulateScale, undulateScale, undulateScale);
+		SetLookAtMatrix(&m2, &up, &nextJointPos, &thisJointPos);
 
 		MatrixMultiplyFast(&m, &m2, &m3);
 
-		Q3Matrix4x4_SetTranslate(&m, coord.x, coord.y, coord.z);
+		Q3Matrix4x4_SetTranslate(&m, thisJointPos.x, thisJointPos.y, thisJointPos.z);
 		MatrixMultiplyFast(&m3, &m, jointMatrix);
-				
 
-				/* INC INDEX FOR NEXT SEGMENT */
-				
-		index -= 30;
-		if (index < 0)
-			index += numPointsInSpline;
-			
-		theNode->SpecialF[0] -= gFramesPerSecondFrac * .8f;
-		scale += sin(theNode->SpecialF[0] + (float)jointNum*1.6f) * .3f;
-			
+				/* UNDULATE */
+
+		*undulatePhase -= gFramesPerSecondFrac * .8f;
+		undulateScale += sin(*undulatePhase + (float)jointNum*1.6f) * .3f;
 	}
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

@@ -24,7 +24,7 @@ static Boolean NilPrime(long splineNum, SplineItemType *itemPtr);
 /****************************/
 
 #define	MAX_SPLINE_OBJECTS		100
-
+#define MAX_PLACEMENT			(1.0f - EPS)		// 0 <= placement <= 0.999, in order to avoid buffer overruns when accessing spline point list
 
 
 /**********************/
@@ -174,19 +174,37 @@ static Boolean NilPrime(long splineNum, SplineItemType *itemPtr)
 }
 
 
+
 /*********************** GET COORD ON SPLINE **********************/
 
-void GetCoordOnSpline(SplineDefType *splinePtr, float placement, float *x, float *z)
+int GetCoordOnSpline(const SplineDefType* spline, float placement, float* x, float* z)
 {
-float			numPointsInSpline;
-SplinePointType	*points;
+	int numPoints = spline->numPoints;
 
-	GAME_ASSERT(splinePtr->numPoints > 0);
+	GAME_ASSERT(spline->numPoints > 0);
 
-	numPointsInSpline = splinePtr->numPoints;					// get # points in the spline
-	points = *splinePtr->pointList;								// point to point list
-	*x = points[(int)(numPointsInSpline * placement)].x;		// get coord
-	*z = points[(int)(numPointsInSpline * placement)].z;
+	// Clamp placement before accessing array to avoid overrun
+	placement = ClampFloat(placement, 0, MAX_PLACEMENT);
+
+	float scaledPlacement = placement * numPoints;
+
+	int index1 = (int)(scaledPlacement);
+	int index2 = (index1 < numPoints - 1) ? (index1 + 1) : (0);
+
+	GAME_ASSERT(index1 >= 0 && index1 <= numPoints);
+	GAME_ASSERT(index2 >= 0 && index2 <= numPoints);
+
+	const SplinePointType* point1 = &(*spline->pointList)[index1];
+	const SplinePointType* point2 = &(*spline->pointList)[index2];
+
+	// Fractional of progression from point1 to point2
+	float interpointFrac = scaledPlacement - (int)scaledPlacement;
+
+	// Lerp point1 -> point2
+	*x = point1->x * (1 - interpointFrac) + point2->x * interpointFrac;
+	*z = point1->z * (1 - interpointFrac) + point2->z * interpointFrac;
+
+	return index1;
 }
 
 
@@ -327,30 +345,9 @@ ObjNode	*theNode;
 //			long = index into point list that the coord was found
 //
 
-long GetObjectCoordOnSpline(ObjNode *theNode, float *x, float *z)
+int GetObjectCoordOnSpline(ObjNode* theNode, float* x, float* z)
 {
-float			numPointsInSpline,placement;
-SplinePointType	*points;
-SplineDefType	*splinePtr;
-long			i;
-
-	placement = theNode->SplinePlacement;						// get placement
-	if (placement < 0.0f)
-		placement = 0;
-	else
-	if (placement >= 1.0f)
-		placement = .999f;
-
-	splinePtr = &(*gSplineList)[theNode->SplineNum];			// point to the spline
-
-	numPointsInSpline = splinePtr->numPoints;					// get # points in the spline
-	points = *splinePtr->pointList;								// point to point list
-	
-	i = numPointsInSpline * placement;							// calc index
-	*x = points[i].x;											// get coord
-	*z = points[i].z;
-
-	return(i);
+	return GetCoordOnSpline(&(*gSplineList)[theNode->SplineNum], theNode->SplinePlacement, x, z);
 }
 
 
@@ -359,23 +356,30 @@ long			i;
 // Moves objects on spline at given speed
 //
 
-void IncreaseSplineIndex(ObjNode *theNode, float speed)
+float IncreaseSplineIndex(ObjNode *theNode, float speed)
 {
-SplineDefType	*splinePtr;
-float			numPointsInSpline;
+	SplineDefType* spline = &(*gSplineList)[theNode->SplineNum];
 
-	speed *= gFramesPerSecondFrac;
+	float placement = theNode->SplinePlacement;
 
-	splinePtr = &(*gSplineList)[theNode->SplineNum];			// point to the spline
-	numPointsInSpline = splinePtr->numPoints;					// get # points in the spline
+	placement += speed * gFramesPerSecondFrac / spline->numPoints;
 
-	theNode->SplinePlacement += speed / numPointsInSpline;
-	if (theNode->SplinePlacement > .999f)
+	if (placement > MAX_PLACEMENT)
 	{
-		theNode->SplinePlacement -= .999f;
-		if (theNode->SplinePlacement > .999f)			// see if it wrapped somehow
-			theNode->SplinePlacement = 0;
+		// Loop to start
+		placement -= 1.0f;
+		placement = ClampFloat(placement, 0, MAX_PLACEMENT);
 	}
+	else if (placement < 0)
+	{
+		// Loop to end
+		placement += 1.0f;
+		placement = ClampFloat(placement, 0, MAX_PLACEMENT);
+	}
+
+	theNode->SplinePlacement = placement;
+
+	return placement;
 }
 
 
@@ -384,7 +388,7 @@ float			numPointsInSpline;
 // Moves objects on spline at given speed, but zigzags
 //
 
-void IncreaseSplineIndexZigZag(ObjNode *theNode, float speed)
+float IncreaseSplineIndexZigZag(ObjNode *theNode, float speed)
 {
 SplineDefType	*splinePtr;
 float			numPointsInSpline;
@@ -395,7 +399,7 @@ float			numPointsInSpline;
 	numPointsInSpline = splinePtr->numPoints;					// get # points in the spline
 
 			/* GOING BACKWARD */
-			
+
 	if (theNode->StatusBits & STATUS_BIT_REVERSESPLINE)			// see if going backward
 	{
 		theNode->SplinePlacement -= speed / numPointsInSpline;
@@ -405,18 +409,22 @@ float			numPointsInSpline;
 			theNode->StatusBits ^= STATUS_BIT_REVERSESPLINE;	// toggle direction
 		}
 	}
-	
+
 		/* GOING FORWARD */
-		
+
 	else
 	{
 		theNode->SplinePlacement += speed / numPointsInSpline;
-		if (theNode->SplinePlacement >= .999f)
+		if (theNode->SplinePlacement >= MAX_PLACEMENT)
 		{
-			theNode->SplinePlacement = .999f;
+			theNode->SplinePlacement = MAX_PLACEMENT;
+			GAME_ASSERT(theNode->SplinePlacement >= 0);
+			GAME_ASSERT(theNode->SplinePlacement < 1);
 			theNode->StatusBits ^= STATUS_BIT_REVERSESPLINE;	// toggle direction
 		}
 	}
+
+	return theNode->SplinePlacement;
 }
 
 
@@ -427,13 +435,17 @@ void DrawSplines(void)
 	for (int i = 0; i < gNumSplines; i++)
 	{
 		const SplineDefType* spline = &(*gSplineList)[i];
-		const SplinePointType* points = *spline->pointList;
-		const int halfway = spline->numPoints / 2;
 
 		if (spline->numPoints == 0)
 		{
 			continue;
 		}
+
+		const SplinePointType* points = *spline->pointList;
+		const SplinePointType* nubs = *spline->nubList;
+		const int halfway = spline->numPoints / 2;
+
+
 
 		if (IsPositionOutOfRange(points[0].x, points[0].z)
 			&& IsPositionOutOfRange(points[halfway].x, points[halfway].z))
@@ -444,17 +456,26 @@ void DrawSplines(void)
 		float liquidY = 0;
 		Boolean isAboveLiquid = FindLiquidY(points[halfway].x, points[halfway].z, &liquidY);
 
-		glBegin(GL_LINE_STRIP);
-
 		if (isAboveLiquid)
 		{
+			glBegin(GL_LINE_STRIP);
 			for (int j = 0; j < spline->numPoints; j++)
 			{
 				glVertex3f(points[j].x, liquidY + 100, points[j].z);
 			}
+			glEnd();
+
+			glBegin(GL_LINES);
+			for (int nub = 0; nub < spline->numNubs; nub++)
+			{
+				glVertex3f(nubs[nub].x, liquidY + 150, nubs[nub].z);
+				glVertex3f(nubs[nub].x, liquidY + 50, nubs[nub].z);
+			}
+			glEnd();
 		}
 		else
 		{
+			glBegin(GL_LINE_STRIP);
 			for (int j = 0; j < spline->numPoints; j++)
 			{
 				float x = points[j].x;
@@ -462,9 +483,19 @@ void DrawSplines(void)
 				float y = GetTerrainHeightAtCoord(x, z, FLOOR) + 10;
 				glVertex3f(x, y, z);
 			}
-		}
+			glEnd();
 
-		glEnd();
+			glBegin(GL_LINES);
+			for (int nub = 0; nub < spline->numNubs; nub++)
+			{
+				float x = nubs[nub].x * 5;
+				float z = nubs[nub].z * 5;
+				float y = GetTerrainHeightAtCoord(x, z, FLOOR) + 10;
+				glVertex3f(x, y+50, z);
+				glVertex3f(x, y-50, z);
+			}
+			glEnd();
+		}
 	}
 }
 

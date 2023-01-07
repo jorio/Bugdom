@@ -325,6 +325,7 @@ Byte	mode = theNode->Mode;
 				theNode->Coord.y += theNode->Delta.y;			// move down
 				if (theNode->Coord.y <= y)						// see if hit ground
 				{
+					theNode->Speed = 0;							// reset speed to avoid hiccup when going back up
 					theNode->Coord.y = y;
 					theNode->Mode = FOOT_MODE_DOWN;
 					theNode->GroundTimer = .5f;
@@ -339,6 +340,7 @@ Byte	mode = theNode->Mode;
 				/*********************/
 				
 		case	FOOT_MODE_DOWN:
+				theNode->Speed = 0;								// reset speed to avoid hiccup when going back up
 				theNode->Delta.y = 0;
 				theNode->GroundTimer -= fps;							// see if time to go back up
 				if (theNode->GroundTimer <= 0.0f)
