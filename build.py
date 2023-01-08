@@ -27,13 +27,13 @@ game_ver            = "1.3.3"
 
 source_check        = "src/Enemies/Enemy_WorkerBee.c"  # some file that's likely to be from the game's source tree
 
-sdl_ver             = "2.26.1"
+sdl_ver             = "2.26.2"
 appimagetool_ver    = "13"
 
 lib_hashes = {  # sha-256
-    "SDL2-2.26.1.dmg":               "9447c8f7663775dd8ef2e6123d63681334af398b49dc363b037575d29c1618fb",
-    "SDL2-2.26.1.tar.gz":            "02537cc7ebd74071631038b237ec4bfbb3f4830ba019e569434da33f42373e04",
-    "SDL2-devel-2.26.1-VC.zip":      "256a8b46e4a278b7b2b649368bc38a400d943de5b3ef8c14e1b907725cd70072",
+    "SDL2-2.26.2.dmg":               "f56a95714c54d89b5d67e08a0362a5b53d4a8d405f7d63ec1bee0f57dc13c69c",
+    "SDL2-2.26.2.tar.gz":            "95d39bc3de037fbdfa722623737340648de4f180a601b0afad27645d150b99e0",
+    "SDL2-devel-2.26.2-VC.zip":      "8fcc6c2fbfabeddbf7872f994022aa40826ed82324e5a8671dfd4166c62c7e27",
     "appimagetool-x86_64.AppImage":  "df3baf5ca5facbecfc2f3fa6713c29ab9cefa8fd8c1eac5d283b79cab33e4acb", # appimagetool v13
     "appimagetool-aarch64.AppImage": "334e77beb67fc1e71856c29d5f3f324ca77b0fde7a840fdd14bd3b88c25c341f",
 }
