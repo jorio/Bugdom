@@ -24,9 +24,9 @@ The backtick key is just above Tab on a US keyboard layout.
 
 Also, you can pause the game then press `<` or `>` to adjust the camera to prepare cool screenshots.
 
-## During Pangea splash screen
+## During copyright screen
 
-**While the Pangea logo is shown after the game starts up**, you can trigger the following debug features:
+**While the copyright screen is shown after the game starts up**, you can trigger the following debug features:
 
 - Hold down F2 and press Space to show the Save and Load screens.
 

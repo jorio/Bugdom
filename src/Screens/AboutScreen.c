@@ -58,7 +58,7 @@ void DoAboutScreens(void)
 
 	MakeFadeEvent(true);
 
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 3; i++)
 	{
 #if NOJOYSTICK
 		// Skip gamepad slide
@@ -157,14 +157,6 @@ static void MakeAboutScreenObjects(int slideNumber)
 
 			MakeCreditPart(-XSPREAD,	y, "Musical Direction", "Mike Beckett", "Nuclear Kangaroo Music");
 			MakeCreditPart(XSPREAD,		y, "Enhanced Update", "Iliyas Jorio", "github.com/jorio");
-
-			tmd.coord.x = 0;
-			tmd.coord.y = -110;
-			tmd.scale *= .66f;
-			tmd.color = kDimmedColor;
-			TextMesh_Create(&tmd, "Copyright 1999 Pangea Software, Inc.");
-			tmd.coord.y -= LH * .66f;
-			TextMesh_Create(&tmd, "\"Bugdom\" is a registered trademark of Pangea Software, Inc.");
 
 			break;
 		}
@@ -269,41 +261,6 @@ static void MakeAboutScreenObjects(int slideNumber)
 #endif
 			break;
 		}
-
-		case 3:
-		{
-			TextMesh_Create(&tmd, "Info & Updates");
-
-			float y = tmd.coord.y - LH*4;
-
-			MakeCreditPart(0, y-LH*0, "The Makers of Bugdom:", "www.pangeasoft.net", "");
-			MakeCreditPart(0, y-LH*4, "Get Updates At:", "https://jorio.itch.io/bugdom", "");
-
-			char sdlVersionString[256];
-			SDL_version compiled;
-			SDL_version linked;
-			SDL_VERSION(&compiled);
-			SDL_GetVersion(&linked);
-			snprintf(sdlVersionString, sizeof(sdlVersionString), "C:%d.%d.%d, L:%d.%d.%d, %s",
-					 compiled.major, compiled.minor, compiled.patch,
-					 linked.major, linked.minor, linked.patch,
-					 SDL_GetPlatform());
-
-			tmd.scale = 0.2f;
-			tmd.coord.x = -100;
-			tmd.coord.y = -85;
-			tmd.color = kDimmedColor;
-			tmd.align = TEXTMESH_ALIGN_LEFT;
-#define MAKE_TECH_TEXT(key, caption) \
-            tmd.coord.y -= 10; tmd.coord.x = -80; TextMesh_Create(&tmd, key);	tmd.coord.x = -30; TextMesh_Create(&tmd, caption);
-
-			MAKE_TECH_TEXT("Game ver:",	PROJECT_VERSION);
-			MAKE_TECH_TEXT("Renderer:",	(const char*)glGetString(GL_RENDERER));
-			MAKE_TECH_TEXT("OpenGL:",	(const char*)glGetString(GL_VERSION));
-			MAKE_TECH_TEXT("SDL:",		sdlVersionString);
-#undef MAKE_TECH_TEXT
-			break;
-		}
 	}
 }
 
@@ -316,3 +273,79 @@ static void AboutScreenDrawStuff(const QD3DSetupOutputType *setupInfo)
 	QD3D_DrawParticles(setupInfo);
 }
 
+
+#pragma mark -
+
+/******************* LEGAL SPLASH SCREEN ********************/
+
+static void MakeLegalScreenObjects(void)
+{
+	const float LH = 13;
+
+	TextMeshDef tmd;
+	TextMesh_FillDef(&tmd);
+	tmd.align = TEXTMESH_ALIGN_CENTER;
+	tmd.slot = kAboutScreenObjNodeSlot;
+	tmd.coord.y = 66;
+	tmd.withShadow = false;
+	tmd.color = kNameColor;
+	tmd.scale = 0.3f;
+	//tmd.coord.y -= LH * 4;
+
+	TextMesh_Create(&tmd, "Bugdom " PROJECT_VERSION);
+
+	tmd.scale = 0.2f;
+	tmd.coord.y = LH/2;
+	TextMesh_Create(&tmd, "pangeasoft.net/bug");
+	tmd.coord.y -= LH;
+	TextMesh_Create(&tmd, "jorio.itch.io/bugdom");
+
+	tmd.coord.y = -66;
+	tmd.scale *= .66f;
+	tmd.color = kDimmedColor;
+	TextMesh_Create(&tmd, "Original game: \251 1999 Pangea Software, Inc.   Modern version: \251 2023 Iliyas Jorio.");
+	tmd.coord.y -= LH * .66f;
+	TextMesh_Create(&tmd, "\223Bugdom\224 is a registered trademark of Pangea Software, Inc.");
+}
+
+void DoLegalScreen(void)
+{
+	/*********/
+	/* SETUP */
+	/*********/
+
+	SetupUIStuff(kUIBackground_Black);
+
+	NukeObjectsInSlot(kAboutScreenObjNodeSlot);		// nuke text from previous slide
+	MakeLegalScreenObjects();
+
+	QD3D_CalcFramesPerSecond();
+	
+	MakeFadeEvent(true);
+	FlushMouseButtonPress();
+
+	/**************/
+	/* PROCESS IT */
+	/**************/
+
+	float timeout = 8.0f;
+
+	while (timeout > 0)
+	{
+		UpdateInput();
+		MoveObjects();
+		QD3D_MoveParticles();
+		QD3D_DrawScene(gGameViewInfoPtr, AboutScreenDrawStuff);
+		QD3D_CalcFramesPerSecond();
+		DoSDLMaintenance();
+
+		if (GetSkipScreenInput())
+			break;
+
+		timeout -= gFramesPerSecondFrac;
+	}
+
+	/* CLEANUP */
+
+	CleanupUIStuff();
+}

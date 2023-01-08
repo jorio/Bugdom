@@ -815,7 +815,6 @@ unsigned long	someLong;
 	TryOpenController(true);
 
 	ToolBoxInit();
-	SDL_ShowCursor(0);
 
 			/* INIT SOME OF MY STUFF */
 
@@ -836,17 +835,21 @@ unsigned long	someLong;
 	GetDateTime ((unsigned long *)(&someLong));		// init random seed
 	SetMyRandomSeed(someLong);
 
-#if !OSXPPC
-	WarpMouseToCenter();							// prime cursor position
-#endif
 
 
 			/* DO INTRO */
 
 	Pomme_FlushPtrTracking(false);
 
-	DoPangeaLogo();
+	DoLegalScreen();
+
+	SDL_ShowCursor(0);
+#if !OSXPPC
+	WarpMouseToCenter();							// prime cursor position
+#endif
+
 	CheckDebugShortcutKeysOnBoot();
+	DoPangeaLogo();
 
 
 		/* MAIN LOOP */

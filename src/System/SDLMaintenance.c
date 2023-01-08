@@ -35,7 +35,7 @@ static void UpdateDebugStats(void)
 		snprintf(
 				gDebugTextBuffer, sizeof(gDebugTextBuffer),
 				"fps: %d\ntris: %d\nmeshes: %d+%d\ntiles: %ld/%ld%s\n\nx: %d\nz: %d\n\n%s\n\n\n\n\n\n\n\n\n\n\n"
-				"Debug mode %d (%s)\nBugdom %s\n%s @ %dx%d",
+				"Debug mode %d (%s)\nBugdom %s\nOpenGL %s, %s @ %dx%d",
 				(int)roundf(fps),
 				gRenderStats.triangles,
 				gRenderStats.meshesPass1,
@@ -49,6 +49,7 @@ static void UpdateDebugStats(void)
 				gDebugMode,
 				debugModeName,
 				PROJECT_VERSION,
+				glGetString(GL_VERSION),
 				glGetString(GL_RENDERER),
 				gWindowWidth,
 				gWindowHeight
