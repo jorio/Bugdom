@@ -670,7 +670,7 @@ int mouseY = 0;
 
 			tmd.coord = (TQ3Point3D) {50,-100,0};
 			tmd.color = TQ3ColorRGBA_FromInt(0xe54c19ff);
-			TextMesh_Create(&tmd, "Don't save yet");
+			TextMesh_Create(&tmd, "Don\222t save yet");
 
 			captionsCreatedYet = true;
 		}

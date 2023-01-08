@@ -221,7 +221,7 @@ static const char* GenerateKiddieModeSubtitle(void)
 
 static const char* GenerateDetailSubtitle(void)
 {
-	return gGamePrefs.lowDetail ? "The \"ATI Rage II\" look" : NULL;
+	return gGamePrefs.lowDetail ? "The \223ATI Rage II\224 look" : NULL;
 }
 
 #if !(__APPLE__)

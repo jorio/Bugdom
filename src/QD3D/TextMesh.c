@@ -5,6 +5,8 @@
 #include "game.h"
 #include <stdio.h>
 
+#define MAX_CODEPOINTS 256
+
 typedef struct
 {
 	float x;
@@ -17,9 +19,8 @@ typedef struct
 } AtlasGlyph;
 
 static GLuint gFontTexture = 0;
-static int gNumGlyphs = 0;
 static float gLineHeight = 0;
-static AtlasGlyph* gAtlasGlyphs = NULL;
+static AtlasGlyph gAtlasGlyphs[MAX_CODEPOINTS];
 
 static const TextMeshDef gDefaultTextMeshDef =
 {
@@ -56,7 +57,7 @@ TQ3TriMeshData* TextMesh_SetMesh(const TextMeshDef* def, const char* text, TQ3Tr
 		spacing = def->letterSpacing;
 	}
 
-	GAME_ASSERT(gAtlasGlyphs);
+//	GAME_ASSERT(gAtlasGlyphs);
 	GAME_ASSERT(gFontTexture);
 
 	// Compute number of quads and line width
@@ -67,9 +68,7 @@ TQ3TriMeshData* TextMesh_SetMesh(const TextMeshDef* def, const char* text, TQ3Tr
 		if (*c == '\n')		// TODO: line widths for strings containing line breaks aren't supported yet
 			continue;
 
-		GAME_ASSERT(*c >= ' ');
-		GAME_ASSERT(*c <= '~');
-		const AtlasGlyph g = gAtlasGlyphs[*c - ' '];
+		const AtlasGlyph g = gAtlasGlyphs[(uint8_t) *c];
 		lineWidth += g.xadv + spacing;
 		if (*c != ' ')
 			numQuads++;
@@ -116,9 +115,7 @@ TQ3TriMeshData* TextMesh_SetMesh(const TextMeshDef* def, const char* text, TQ3Tr
 			continue;
 		}
 
-		GAME_ASSERT(*c >= ' ');
-		GAME_ASSERT(*c <= '~');
-		const AtlasGlyph g = gAtlasGlyphs[*c - ' '];
+		const AtlasGlyph g = gAtlasGlyphs[(uint8_t) *c];
 
 		if (*c == ' ')
 		{
@@ -177,36 +174,52 @@ static void ParseSFL(const char* data)
 {
 	int nArgs = 0;
 	int junk = 0;
+	int numGlyphs = 0;
 
-	SkipLine(&data);	// Skip font name
+	// Skip font name
+	SkipLine(&data);
 
+	// Get line height (first int is font size)
 	nArgs = sscanf(data, "%d %f", &junk, &gLineHeight);
 	GAME_ASSERT(nArgs == 2);
 	SkipLine(&data);
 
-	SkipLine(&data);	// Skip image filename
-
-	nArgs = sscanf(data, "%d", &gNumGlyphs);
-	GAME_ASSERT(nArgs == 1);
+	// Skip image filename
 	SkipLine(&data);
 
-	GAME_ASSERT_MESSAGE(!gAtlasGlyphs, "atlas glyphs were already loaded");
-	gAtlasGlyphs = (AtlasGlyph*) NewPtrClear(gNumGlyphs * sizeof(AtlasGlyph));
+	// Get glyph count
+	nArgs = sscanf(data, "%d", &numGlyphs);
+	GAME_ASSERT(nArgs == 1);
+	GAME_ASSERT(numGlyphs <= MAX_CODEPOINTS);
+	SkipLine(&data);
 
-	for (int i = 0; i < gNumGlyphs; i++)
+#if 0
+	GAME_ASSERT_MESSAGE(!gAtlasGlyphs, "atlas glyphs were already loaded");
+	gAtlasGlyphs = (AtlasGlyph*) NewPtrClear(numGlyphs * sizeof(AtlasGlyph));
+#endif
+
+	for (int i = 0; i < numGlyphs; i++)
 	{
+		int codepoint = 0;
+		AtlasGlyph g = {0};
+
 		nArgs = sscanf(
 				data,
 				"%d %f %f %f %f %f %f %f",
-				&junk,
-				&gAtlasGlyphs[i].x,
-				&gAtlasGlyphs[i].y,
-				&gAtlasGlyphs[i].w,
-				&gAtlasGlyphs[i].h,
-				&gAtlasGlyphs[i].xoff,
-				&gAtlasGlyphs[i].yoff,
-				&gAtlasGlyphs[i].xadv);
+				&codepoint,
+				&g.x,
+				&g.y,
+				&g.w,
+				&g.h,
+				&g.xoff,
+				&g.yoff,
+				&g.xadv);
+
 		GAME_ASSERT(nArgs == 8);
+		GAME_ASSERT(codepoint >= 0);
+		GAME_ASSERT(codepoint < MAX_CODEPOINTS);
+
+		gAtlasGlyphs[codepoint] = g;
 
 		SkipLine(&data);
 	}
@@ -239,11 +252,13 @@ void TextMesh_Init(void)
 
 void TextMesh_Shutdown(void)
 {
+#if 0
 	if (gAtlasGlyphs)
 	{
 		DisposePtr((Ptr) gAtlasGlyphs);
 		gAtlasGlyphs = NULL;
 	}
+#endif
 
 	if (gFontTexture)
 	{

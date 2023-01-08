@@ -321,7 +321,7 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 		snprintf(textBuffer, sizeof(textBuffer), "Level %d: %s", 1 + saveData.realLevel, kLevelNames[saveData.realLevel]);
 
 		tmd.coord.y	= y+70*gs;
-		tmd.scale	= .25f * gs;
+		tmd.scale	= .2f * gs;
 		TextMesh_Create(&tmd, textBuffer);
 
 		time_t timestamp = saveData.timestamp;
@@ -379,8 +379,6 @@ static void SetupFileScreen(void)
 	}
 	else
 	{
-		//TextMesh_Create(&tmd, "Save where?");
-
 		snprintf(textBuffer, sizeof(textBuffer), "Entering level %d. Save where?", gRealLevel+2);
 		tmd.scale	= .33f;
 		tmd.color = gTitleTextColor;
@@ -391,7 +389,7 @@ static void SetupFileScreen(void)
 		tmd.scale = .33f;
 		tmd.color = gDeleteColor;
 		tmd.align = TEXTMESH_ALIGN_RIGHT;
-		TextMesh_Create(&tmd, "Don't save");
+		TextMesh_Create(&tmd, "Don\222t save");
 
 		// Make floppy
 		gNewObjectDefinition.group 		= MODEL_GROUP_BONUS;
