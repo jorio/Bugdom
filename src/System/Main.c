@@ -66,7 +66,7 @@ u_short		gAreaNum = 0;
 u_short		gLevelTypeMask = 0;
 
 
-int			gDebugMode = 0;
+int			gDebugMode = DEBUG_MODE_OFF;
 Boolean		gLiquidCheat = false;
 Boolean		gUseCyclorama;
 float		gCurrentYon;
@@ -735,12 +735,6 @@ static void CheckForCheats(void)
 		if (GetKeyState_SDL(SDL_SCANCODE_F7))		// hurt player
 			PlayerGotHurt(NULL, 1/60.0f, 1.0f, false, true, 1/60.0f);
 
-		if (GetNewKeyState_SDL(SDL_SCANCODE_F8))
-		{
-			gDebugMode++;
-			gDebugMode %= 4;
-			QD3D_UpdateDebugTextMesh(NULL);
-		}
 	}
 }
 

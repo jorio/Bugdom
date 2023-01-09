@@ -879,7 +879,8 @@ static void BeginDepthPass(const MeshQueueEntry* entry)
 	DisableState(GL_FOG);
 
 	// Texture mapping
-	if ((mesh->texturingMode & kQ3TexturingModeExt_OpacityModeMask) != kQ3TexturingModeOff)
+	if (gDebugMode != DEBUG_MODE_NOTEXTURES &&
+			(mesh->texturingMode & kQ3TexturingModeExt_OpacityModeMask) != kQ3TexturingModeOff)
 	{
 		GAME_ASSERT(mesh->vertexUVs);
 
@@ -919,7 +920,8 @@ static void BeginShadingPass(const MeshQueueEntry* entry)
 	SetState(GL_FOG, gState.sceneHasFog && !(statusBits & STATUS_BIT_NOFOG));
 
 	// Texture mapping
-	if ((mesh->texturingMode & kQ3TexturingModeExt_OpacityModeMask) != kQ3TexturingModeOff)
+	if (gDebugMode != DEBUG_MODE_NOTEXTURES &&
+			(mesh->texturingMode & kQ3TexturingModeExt_OpacityModeMask) != kQ3TexturingModeOff)
 	{
 		EnableState(GL_TEXTURE_2D);
 		EnableClientState(GL_TEXTURE_COORD_ARRAY);

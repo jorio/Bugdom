@@ -335,7 +335,7 @@ Boolean				killed = false;
 			gDelta.x += gRecentTerrainNormal[FLOOR].x * (fps * acc);
 			gDelta.z += gRecentTerrainNormal[FLOOR].z * (fps * acc);		
 			
-			if (gDebugMode == 2)		//------------
+			if (gDebugMode == DEBUG_MODE_BOXES)		//------------
 				ShowNormal(&gCoord, &gRecentTerrainNormal[FLOOR]);
 		}
 	}

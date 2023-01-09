@@ -11,6 +11,7 @@ The backtick key is just above Tab on a US keyboard layout.
 
 | Key combo       | What it does                    |
 |-----------------|---------------------------------|
+| `F8`            | cycle debug modes               |
 | backtick + `F1` | win this level                  |
 | backtick + `F2` | get shield                      |
 | backtick + `F3` | full health                     |
@@ -18,8 +19,6 @@ The backtick key is just above Tab on a US keyboard layout.
 | backtick + `F5` | full inventory                  |
 | backtick + `F6` | toggle liquid invincibility     |
 | backtick + `F7` | hurt player                     |
-| backtick + `F8` | display debug statistics        |
-| backtick + `F9` | display bounding boxes          |
 | `Alt` + `Enter` | toggle fullscreen/windowed mode |
 
 Also, you can pause the game then press `<` or `>` to adjust the camera to prepare cool screenshots.

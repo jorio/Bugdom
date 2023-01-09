@@ -27,15 +27,15 @@ static void UpdateDebugStats(void)
 		const char* debugModeName = "???";
 		switch (gDebugMode)
 		{
-			case 1: debugModeName = "stats"; break;
-			case 2: debugModeName = "collisions"; break;
-			case 3: debugModeName = "splines"; break;
+			case 1: debugModeName = ""; break;
+			case 2: debugModeName = "show collisions"; break;
+			case 3: debugModeName = "show splines"; break;
 		}
 
 		snprintf(
 				gDebugTextBuffer, sizeof(gDebugTextBuffer),
-				"fps: %d\ntris: %d\nmeshes: %d+%d\ntiles: %ld/%ld%s\n\nx: %d\nz: %d\n\n%s\n\n\n\n\n\n\n\n\n\n\n"
-				"Debug mode %d (%s)\nBugdom %s\nOpenGL %s, %s @ %dx%d",
+				"fps: %d\ntris: %d\nmeshes: %d+%d\ntiles: %ld/%ld%s\n\nx: %d\nz: %d\n\n%s\n%s\n\n\n\n\n\n\n\n\n\n\n"
+				"Bugdom %s\nOpenGL %s, %s @ %dx%d",
 				(int)roundf(fps),
 				gRenderStats.triangles,
 				gRenderStats.meshesPass1,
@@ -45,9 +45,8 @@ static void UpdateDebugStats(void)
 				gSuperTileMemoryListExists ? "" : " (no terrain)",
 				(int)gMyCoord.x,
 				(int)gMyCoord.z,
-				gLiquidCheat ? "Liquid cheat ON" : "",
-				gDebugMode,
 				debugModeName,
+				gLiquidCheat ? "Liquid cheat ON" : "",
 				PROJECT_VERSION,
 				glGetString(GL_VERSION),
 				glGetString(GL_RENDERER),
@@ -63,8 +62,16 @@ static void UpdateDebugStats(void)
 
 void DoSDLMaintenance(void)
 {
-	if (gDebugMode)
-		UpdateDebugStats();
+	switch (gDebugMode)
+	{
+		case DEBUG_MODE_OFF:
+		case DEBUG_MODE_NOTEXTURES:
+		case DEBUG_MODE_WIREFRAME:
+			break;
+		default:
+			UpdateDebugStats();
+			break;
+	}
 
 	// Reset these on every new frame
 	gTypedAsciiKey = '\0';
@@ -129,4 +136,14 @@ void DoSDLMaintenance(void)
 	int width, height;
 	SDL_GL_GetDrawableSize(gSDLWindow, &width, &height);
 	QD3D_OnWindowResized(width, height);
+
+	if (GetNewKeyState_SDL(SDL_SCANCODE_F8))
+	{
+		gDebugMode++;
+		gDebugMode %= NUM_DEBUG_MODES;
+		gDebugTextLastUpdatedAt = 0;
+		QD3D_UpdateDebugTextMesh(NULL);
+
+		glPolygonMode(GL_FRONT_AND_BACK, gDebugMode == DEBUG_MODE_WIREFRAME? GL_LINE: GL_FILL);
+	}
 }
