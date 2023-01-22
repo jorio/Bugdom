@@ -171,6 +171,7 @@ extern	int							gDebugMode;
 extern	int							gFullscreenModeAppliedOnBoot;
 extern	int							gMaxItemsAllocatedInAPass;
 extern	int							gNitroParticleGroup;
+extern	int							gNumObjNodes;
 extern	int							gWindowHeight;
 extern	int							gWindowWidth;
 extern	int 						gCurrentSaveSlot;

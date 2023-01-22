@@ -236,14 +236,14 @@ struct ObjNode
 
 	struct	ObjNode	*ShadowNode;		// ptr to node's shadow (if any)
 
-	u_short			Slot;				// sort value
+	uint16_t		Slot;				// sort value
 	Byte			Genre;				// obj genre (skeleton, display_group, custom, event)
 	Byte			Type;				// obj type (If Genre=display_group: model# in group. If Genre is skel: skel#.)
 	Byte			Group;				// obj group (If Genre=display_group: index into gObjectGroupList.)
 	void			(*MoveCall)(struct ObjNode *);			// pointer to object's move routine
 	void			(*SplineMoveCall)(struct ObjNode *);	// pointer to object's spline move routine
 	void			(*CustomDrawFunction)(struct ObjNode *);// pointer to object's custom draw function
-	u_long			StatusBits;			// various status bits
+	uint32_t		StatusBits;			// various status bits
 	
 	TQ3Point3D		Coord;				// coord of object
 	TQ3Point3D		OldCoord;			// coord @ previous frame
@@ -256,8 +256,8 @@ struct ObjNode
 	TQ3Vector3D		Scale;				// scale of object
 	TQ3Point2D		TargetOff;			// target offsets
 
-	u_long			CType;				// collision type bits
-	u_long			CBits;				// collision attribute bits
+	uint32_t		CType;				// collision type bits
+	uint32_t		CBits;				// collision attribute bits
 	Byte			NumCollisionBoxes;
 	CollisionBoxType	*CollisionBoxes;// Ptr to array of collision rectangles
 	CollisionBoxType	*OldCollisionBoxes;
