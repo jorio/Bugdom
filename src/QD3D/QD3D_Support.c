@@ -410,13 +410,13 @@ OSErr					err;
 
 	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, path, &spec);
 
-			/* LOAD RAW ARGB DATA FROM TGA FILE */
+			/* LOAD RAW RGBA DATA FROM TGA FILE */
 
 	err = ReadTGA(&spec, &pixelData, &header, true);
 	GAME_ASSERT(err == noErr);
 
 	GAME_ASSERT(header.bpp == 32);
-	GAME_ASSERT(header.imageType == TGA_IMAGETYPE_CONVERTED_ARGB);
+	GAME_ASSERT(header.imageType == TGA_IMAGETYPE_CONVERTED_RGBA);
 
 			/* PRE-PROCESS IMAGE */
 
@@ -453,20 +453,22 @@ OSErr					err;
 	{
 		for (int p = 0; p < 4 * header.width * header.height; p += 4)
 		{
-			bool isBlack = !pixelData[p+1] && !pixelData[p+2] && !pixelData[p+3];
-			pixelData[p+0] = isBlack? 0x00: 0xFF;
+			bool isBlack = !pixelData[p+0] && !pixelData[p+1] && !pixelData[p+2];
+			pixelData[p+3] = isBlack? 0x00: 0xFF;
 		}
 
 		// Apply edge padding to avoid seams
-		TQ3Pixmap pm;
-		pm.image = pixelData;
-		pm.width = header.width;
-		pm.height = header.height;
-		pm.rowBytes = header.width * (header.bpp / 8);
-		pm.pixelSize = 0;
-		pm.pixelType = kQ3PixelTypeARGB32;
-		pm.bitOrder = kQ3EndianBig;
-		pm.byteOrder = kQ3EndianBig;
+		TQ3Pixmap pm =
+		{
+			.image		= pixelData,
+			.width		= header.width,
+			.height		= header.height,
+			.rowBytes	= header.width * (header.bpp / 8),
+			.pixelSize	= 0,
+			.pixelType	= kQ3PixelTypeRGBA32,
+			.bitOrder	= kQ3EndianBig,
+			.byteOrder	= kQ3EndianBig,
+		};
 		Q3Pixmap_ApplyEdgePadding(&pm);
 
 		internalFormat = GL_RGBA;
@@ -476,10 +478,10 @@ OSErr					err;
 		for (int p = 0; p < 4 * header.width * header.height; p += 4)
 		{
 			// put Blue into Alpha & leave map white
-			pixelData[p+0] = pixelData[p+3];	// put blue into alpha
+			pixelData[p+3] = pixelData[p+2];	// put blue into alpha
+			pixelData[p+0] = 255;
 			pixelData[p+1] = 255;
 			pixelData[p+2] = 255;
-			pixelData[p+3] = 255;
 		}
 		internalFormat = GL_RGBA;
 	}
@@ -498,15 +500,10 @@ OSErr					err;
 			internalFormat,
 			header.width,
 			header.height,
-			GL_BGRA,
-#if __BIG_ENDIAN__
-			GL_UNSIGNED_INT_8_8_8_8_REV,
-#else
-			GL_UNSIGNED_INT_8_8_8_8,
-#endif
+			GL_RGBA,
+			GL_UNSIGNED_BYTE,
 			pixelData,
-			flags
-			);
+			flags);
 
 			/* CLEAN UP */
 
