@@ -508,7 +508,7 @@ static int FileScreenMainLoop()
 						return -1;
 
 					default:
-						ShowSystemErr_NonFatal(pickID);
+						DoAlert("FileSelect: Unsupported pickID 0x%08x", pickID);
 				}
 			}
 		}

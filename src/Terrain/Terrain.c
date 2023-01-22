@@ -362,8 +362,7 @@ retryParseLODPref:
 		break;
 
 	default:
-		DoAlert("Unknown terrain texture detail pref!");
-		ShowSystemErr_NonFatal(gTerrainTextureDetail);
+		DoAlert("Unknown terrain texture detail pref! (%d)", gTerrainTextureDetail);
 
 		// Set a sane fallback value and try again
 		gTerrainTextureDetail = SUPERTILE_DETAIL_BEST;

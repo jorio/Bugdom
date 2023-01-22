@@ -219,8 +219,6 @@ long				count;
 		{
 			FSClose(refNum);			
 			FSpDelete(&file);												// file is corrupt, so delete
-//			DoAlert("LoadHighScores: FSRead failed!");
-//			ShowSystemErr(iErr);
 			return;
 		}
 		FSClose(refNum);			

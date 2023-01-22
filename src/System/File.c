@@ -410,7 +410,6 @@ short OpenGameFile(const char* filename)
 {
 OSErr		iErr;
 FSSpec		spec;
-Str255		s;
 short		refNum;
 
 				/* FIRST SEE IF WE CAN GET IT OFF OF DEFAULT VOLUME */
@@ -423,13 +422,7 @@ short		refNum;
 			return refNum;
 	}
 
-	if (iErr == fnfErr)
-		DoFatalAlert2("FILE NOT FOUND.", filename);
-	else
-	{
-		NumToStringC(iErr, s);
-		DoFatalAlert2(filename, s);
-	}
+	DoFatalAlert("Error %d when trying to open %s", iErr, filename);
 
 	return -1;
 }

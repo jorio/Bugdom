@@ -23,7 +23,7 @@
 do                                                                                           \
 {                                                                                            \
 	if ((n) * sizeof(type) != (unsigned long) GetHandleSize((Handle) (handle)))              \
-		DoFatalAlert2("byteswap handle: size mismatch", #n);                                 \
+		DoFatalAlert("byteswap handle: size mismatch (%d)", (int)n);                         \
 } while(0)
 
 #define UNPACK_STRUCTS_HANDLE(type, n, handle)                                               \

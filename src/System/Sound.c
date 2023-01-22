@@ -492,8 +492,7 @@ OSErr	iErr;
 	if (iErr)
 	{
 		FSClose(musicFileRefNum);								// close the file
-		DoAlert("PlaySong: SndStartFilePlay failed!");
-		ShowSystemErr(iErr);
+		DoAlert("PlaySong: SndStartFilePlay failed! (%d)", iErr);
 	}
 	gSongPlayingFlag = true;
 

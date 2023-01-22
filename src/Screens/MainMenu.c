@@ -209,7 +209,7 @@ getout:
 				OSErr err = LoadSavedGame(pickedFile);
 				if (err != noErr)
 				{
-					ShowSystemErr_NonFatal(err);
+					DoAlert("Couldn't restore game: error %d", err);
 					goto start_again;
 				}
 				break;
