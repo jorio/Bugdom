@@ -39,8 +39,8 @@ RenderStats						gRenderStats;
 int								gWindowWidth				= GAME_VIEW_WIDTH;
 int								gWindowHeight				= GAME_VIEW_HEIGHT;
 
-float	gFramesPerSecond = DEFAULT_FPS;				// this is used to maintain a constant timing velocity as frame rates differ
-float	gFramesPerSecondFrac = 1/DEFAULT_FPS;
+float	gFramesPerSecond = MIN_FPS;				// this is used to maintain a constant timing velocity as frame rates differ
+float	gFramesPerSecondFrac = 1.0f/MIN_FPS;
 
 
 
@@ -524,36 +524,68 @@ OSErr					err;
 
 /************** QD3D CALC FRAMES PER SECOND *****************/
 
-void	QD3D_CalcFramesPerSecond(void)
+void QD3D_CalcFramesPerSecond(void)
 {
-UnsignedWide	wide;
-unsigned long	now;
-static	unsigned long then = 0;
+	static uint64_t performanceFrequency = 0;
+	static uint64_t prevTime = 0;
+	uint64_t currTime;
 
-
-			/* DO REGULAR CALCULATION */
-			
-	Microseconds(&wide);
-	now = wide.lo;
-	if (then != 0)
+	if (performanceFrequency == 0)
 	{
-		gFramesPerSecond = 1000000.0f/(float)(now-then);
-		if (gFramesPerSecond < DEFAULT_FPS)			// (avoid divide by 0's later)
-			gFramesPerSecond = DEFAULT_FPS;
+		performanceFrequency = SDL_GetPerformanceFrequency();
+	}
 
-		if (gFramesPerSecond < 9.0f)					// this is the minimum we let it go
-			gFramesPerSecond = 9.0f;
-		
+	slow_down:
+	currTime = SDL_GetPerformanceCounter();
+	uint64_t deltaTime = currTime - prevTime;
+
+	if (deltaTime <= 0)
+	{
+		gFramesPerSecond = MIN_FPS;						// avoid divide by 0
 	}
 	else
-		gFramesPerSecond = DEFAULT_FPS;
-		
-	gFramesPerSecondFrac = 1.0f/gFramesPerSecond;	// calc fractional for multiplication
+	{
+		gFramesPerSecond = performanceFrequency / (float)(deltaTime);
 
-	then = now;										// remember time	
+		if (gFramesPerSecond > MAX_FPS)					// keep from cooking the GPU
+		{
+			if (gFramesPerSecond - MAX_FPS > 1000)		// try to sneak in some sleep if we have 1 ms to spare
+			{
+				SDL_Delay(1);
+			}
+			goto slow_down;
+		}
+
+		if (gFramesPerSecond < MIN_FPS)					// (avoid divide by 0's later)
+		{
+			gFramesPerSecond = MIN_FPS;
+		}
+	}
+
+	// In debug builds, speed up with KP_PLUS or LT on gamepad
+#if _DEBUG
+	if (GetKeyState_SDL(SDL_SCANCODE_KP_PLUS))
+#else
+	if (GetKeyState_SDL(SDL_SCANCODE_GRAVE) && GetKeyState_SDL(SDL_SCANCODE_KP_PLUS))
+#endif
+	{
+		gFramesPerSecond = MIN_FPS;
+	}
+#if _DEBUG
+	else if (gSDLController)
+	{
+		float analogSpeedUp = SDL_GameControllerGetAxis(gSDLController, SDL_CONTROLLER_AXIS_TRIGGERLEFT) / 32767.0f;
+		if (analogSpeedUp > .25f)
+		{
+			gFramesPerSecond = MIN_FPS;
+		}
+	}
+#endif
+
+	gFramesPerSecondFrac = 1.0f / gFramesPerSecond;		// calc fractional for multiplication
+
+	prevTime = currTime;								// reset for next time interval
 }
-
-
 
 #pragma mark -
 
