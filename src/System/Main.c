@@ -652,6 +652,7 @@ static void CleanupLevel(void)
 	gTheQueen = nil;
 	gHiveObj = nil;
 	gAntKingObj = nil;
+	gPlayerObj = nil;
 }
 
 
