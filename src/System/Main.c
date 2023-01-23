@@ -382,7 +382,7 @@ float fps;
 				
 		MoveObjects();
 		MoveSplineObjects();
-		QD3D_MoveParticles();
+		QD3D_MoveShards();
 		MoveParticleGroups();
 		UpdateCamera();
 	
@@ -596,9 +596,9 @@ QD3DSetupInputType	viewDef;
 
 			/* INIT OTHER MANAGERS */
 
-	CreateSuperTileMemoryList();	
-	
-	QD3D_InitParticles();	
+	CreateSuperTileMemoryList();
+
+	QD3D_InitShards();
 	InitParticleSystem();
 	InitItemsManager();
 
@@ -642,7 +642,7 @@ static void CleanupLevel(void)
 	DisposeLiquids();
 	DeleteAll3DMFGroups();
 	DisposeInfobarTexture();
-	QD3D_DisposeParticles();
+	QD3D_DisposeShards();
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
 	DisposeAllSoundBanks();
 	Pomme_FlushPtrTracking(true);

@@ -80,7 +80,7 @@ bail:
 	DeleteAllParticleGroups();
 	FreeAllSkeletonFiles(-1);
 	DeleteAll3DMFGroups();
-	QD3D_DisposeParticles();
+	QD3D_DisposeShards();
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);		
 	Pomme_FlushPtrTracking(true);
 }
@@ -103,8 +103,8 @@ Byte					letters[] = {TITLE_MObjType_B, TITLE_MObjType_U,
 									TITLE_MObjType_O, TITLE_MObjType_M};
 
 		/* INIT OTHER SYSTEMS */
-		
-	QD3D_InitParticles();
+
+	QD3D_InitShards();
 
 
 			/*************/
@@ -483,7 +483,7 @@ static Boolean TitleWaitAndDraw(float duration)
 		MoveObjects();
 		MoveTitleCamera();
 		MoveParticleGroups();
-		QD3D_MoveParticles();
+		QD3D_MoveShards();
 		QD3D_DrawScene(gGameViewInfoPtr,TitleDrawStuff);
 		QD3D_CalcFramesPerSecond();				
 		DoSDLMaintenance();
@@ -502,7 +502,7 @@ static Boolean TitleWaitAndDraw(float duration)
 static void TitleDrawStuff(const QD3DSetupOutputType *setupInfo)
 {
 	DrawObjects(setupInfo);
-	QD3D_DrawParticles(setupInfo);
+	QD3D_DrawShards(setupInfo);
 	DrawParticleGroup(setupInfo);
 }
 

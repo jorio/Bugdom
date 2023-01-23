@@ -1483,7 +1483,7 @@ void DrawTerrain(const QD3DSetupOutputType *setupInfo)
 		Render_FlushQueue();
 
 	DrawObjects(setupInfo);												// draw objNodes
-	QD3D_DrawParticles(setupInfo);										// draw "shard" particles
+	QD3D_DrawShards(setupInfo);											// draw "shard" particles
 	DrawParticleGroup(setupInfo);										// draw alpha-blended particle groups
 
 	Render_FlushQueue();												// flush before drawing 2D stuff

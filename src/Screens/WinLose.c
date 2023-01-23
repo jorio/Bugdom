@@ -531,7 +531,7 @@ float	fps;
 		MoveObjects();
 		MoveWinLoseCamera();
 		MoveParticleGroups();
-		QD3D_MoveParticles();
+		QD3D_MoveShards();
 		QD3D_DrawScene(gGameViewInfoPtr,WinLoseDrawStuff);
 		QD3D_CalcFramesPerSecond();	
 		DoSDLMaintenance();
@@ -565,7 +565,7 @@ float	fps;
 static void WinLoseDrawStuff(const QD3DSetupOutputType *setupInfo)
 {
 	DrawObjects(setupInfo);
-	QD3D_DrawParticles(setupInfo);
+	QD3D_DrawShards(setupInfo);
 	DrawParticleGroup(setupInfo);
 }
 

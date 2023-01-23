@@ -760,7 +760,7 @@ ObjNode	*bug,*p0,*p1,*p2,*p3;
 
 		/* EXPLODE THE CAGE */
 				
-	QD3D_ExplodeGeometry(cage, 700.0f, PARTICLE_MODE_BOUNCE|PARTICLE_MODE_NULLSHADER, 1, .6);
+	QD3D_ExplodeGeometry(cage, 700.0f, SHARD_MODE_BOUNCE | SHARD_MODE_NULLSHADER, 1, .6);
 	DeleteObject(cage);
 
 	return(true);

@@ -424,7 +424,7 @@ static void SetupFileScreen(void)
 
 static void PopFloppy(int fileNumber)
 {
-	QD3D_ExplodeGeometry(floppies[fileNumber], 200.0f, PARTICLE_MODE_UPTHRUST | PARTICLE_MODE_NULLSHADER, 1, 0.5f);
+	QD3D_ExplodeGeometry(floppies[fileNumber], 200.0f, SHARD_MODE_UPTHRUST | SHARD_MODE_NULLSHADER, 1, 0.5f);
 	PlayEffect_Parms3D(EFFECT_POP, &floppies[fileNumber]->Coord, kMiddleC - 6, 3.0);
 	floppies[fileNumber]->StatusBits |= STATUS_BIT_HIDDEN;
 
@@ -454,7 +454,7 @@ static void DeleteFileInSlot(int fileNumber)
 static void FileScreenDrawStuff(const QD3DSetupOutputType *setupInfo)
 {
 	DrawObjects(setupInfo);
-	QD3D_DrawParticles(setupInfo);
+	QD3D_DrawShards(setupInfo);
 }
 
 static int FileScreenMainLoop()
@@ -467,7 +467,7 @@ static int FileScreenMainLoop()
 	{
 		UpdateInput();
 		MoveObjects();
-		QD3D_MoveParticles();
+		QD3D_MoveShards();
 		QD3D_DrawScene(gGameViewInfoPtr, FileScreenDrawStuff);
 		QD3D_CalcFramesPerSecond();
 		DoSDLMaintenance();

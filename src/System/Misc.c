@@ -91,7 +91,7 @@ static Boolean beenHere = false;
 		DeleteAllObjects();
 		DeleteAll3DMFGroups();
 		FreeAllSkeletonFiles(-1);
-		QD3D_DisposeParticles();
+		QD3D_DisposeShards();
 
 		if (gGameViewInfoPtr != nil)                // see if nuke an existing draw context
 			QD3D_DisposeWindowSetup(&gGameViewInfoPtr);

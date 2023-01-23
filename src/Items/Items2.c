@@ -182,7 +182,7 @@ TQ3Vector3D		delta;
 
 	fc->TerrainItemPtr = nil;							// dont ever come back	
 	
-	QD3D_ExplodeGeometry(fc, 2000.0f, PARTICLE_MODE_BOUNCE, 1, .6);
+	QD3D_ExplodeGeometry(fc, 2000.0f, SHARD_MODE_BOUNCE, 1, .6);
 	DeleteObject(fc);
 	
 	

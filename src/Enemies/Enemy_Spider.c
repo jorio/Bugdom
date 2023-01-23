@@ -706,7 +706,7 @@ Boolean	gotout = false;
 			
 	if (gotout)
 	{
-		QD3D_ExplodeGeometry(theNode, 700.0f, PARTICLE_MODE_BOUNCE|PARTICLE_MODE_NULLSHADER, 1, .6);
+		QD3D_ExplodeGeometry(theNode, 700.0f, SHARD_MODE_BOUNCE | SHARD_MODE_NULLSHADER, 1, .6);
 		DeleteObject(theNode);
 	}
 

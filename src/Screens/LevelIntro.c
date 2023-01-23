@@ -200,7 +200,7 @@ void ShowLevelIntroScreen(void)
 	DeleteAllParticleGroups();
 	FreeAllSkeletonFiles(-1);
 	DeleteAll3DMFGroups();
-	QD3D_DisposeParticles();
+	QD3D_DisposeShards();
 	DisposeSoundBank(SOUNDBANK_MAIN);
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);		
 	Pomme_FlushPtrTracking(true);
@@ -219,8 +219,8 @@ TQ3Vector3D				fillDirection1 = { .6, -.9, -1 };			// key
 TQ3Vector3D				fillDirection2 = { -.7, -.2, -.9 };			// fill
 
 		/* INIT OTHER SYSTEMS */
-		
-	QD3D_InitParticles();
+
+	QD3D_InitShards();
 
 			/* LOAD SOUNDS */
 
@@ -1464,7 +1464,7 @@ static Boolean WaitAndDraw(float duration)
 		MoveObjects();
 		MoveIntroCamera();
 		MoveParticleGroups();
-		QD3D_MoveParticles();
+		QD3D_MoveShards();
 		QD3D_DrawScene(gGameViewInfoPtr,IntroDrawStuff);
 		QD3D_CalcFramesPerSecond();				
 		DoSDLMaintenance();
@@ -1483,7 +1483,7 @@ static Boolean WaitAndDraw(float duration)
 static void IntroDrawStuff(const QD3DSetupOutputType *setupInfo)
 {
 	DrawObjects(setupInfo);
-	QD3D_DrawParticles(setupInfo);
+	QD3D_DrawShards(setupInfo);
 	DrawParticleGroup(setupInfo);
 }
 

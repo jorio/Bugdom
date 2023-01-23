@@ -76,7 +76,7 @@ void DoAboutScreens(void)
 		{
 			UpdateInput();
 			MoveObjects();
-			QD3D_MoveParticles();
+			QD3D_MoveShards();
 			QD3D_DrawScene(gGameViewInfoPtr, AboutScreenDrawStuff);
 			QD3D_CalcFramesPerSecond();
 			DoSDLMaintenance();
@@ -270,7 +270,7 @@ static void MakeAboutScreenObjects(int slideNumber)
 static void AboutScreenDrawStuff(const QD3DSetupOutputType *setupInfo)
 {
 	DrawObjects(setupInfo);
-	QD3D_DrawParticles(setupInfo);
+	QD3D_DrawShards(setupInfo);
 }
 
 
@@ -334,7 +334,7 @@ void DoLegalScreen(void)
 	{
 		UpdateInput();
 		MoveObjects();
-		QD3D_MoveParticles();
+		QD3D_MoveShards();
 		QD3D_DrawScene(gGameViewInfoPtr, AboutScreenDrawStuff);
 		QD3D_CalcFramesPerSecond();
 		DoSDLMaintenance();

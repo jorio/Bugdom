@@ -426,7 +426,7 @@ static void MakeMSAAWarning(void)
 static void SettingsScreenDrawStuff(const QD3DSetupOutputType *setupInfo)
 {
 	DrawObjects(setupInfo);
-	QD3D_DrawParticles(setupInfo);
+	QD3D_DrawShards(setupInfo);
 }
 
 #if OSXPPC
@@ -465,7 +465,7 @@ void DoSettingsScreen(void)
 	{
 		UpdateInput();
 		MoveObjects();
-		QD3D_MoveParticles();
+		QD3D_MoveShards();
 		QD3D_DrawScene(gGameViewInfoPtr, SettingsScreenDrawStuff);
 		QD3D_CalcFramesPerSecond();
 		DoSDLMaintenance();
