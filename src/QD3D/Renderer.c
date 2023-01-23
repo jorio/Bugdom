@@ -530,11 +530,16 @@ void Render_StartFrame(void)
 
 	// Clear color & depth buffers.
 	SetFlag(glDepthMask, true);	// The depth mask must be re-enabled so we can clear the depth buffer.
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	GLbitfield clearWhat = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
+#if OSXPPC
+	// On PPC, bypass clear color in lawn levels (the cyc covers enough of the view)
+	if (gIsInGame && gLevelType == LEVEL_TYPE_LAWN && gCyclorama && gDebugMode != DEBUG_MODE_WIREFRAME)
+		clearWhat &= ~GL_COLOR_BUFFER_BIT;
+#endif
+	glClear(clearWhat);
 
 	GAME_ASSERT(gState.currentTransform == NULL);
-
-//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	GAME_ASSERT(!gFrameStarted);
 	gFrameStarted = true;
