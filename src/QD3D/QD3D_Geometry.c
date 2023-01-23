@@ -1,7 +1,8 @@
 /****************************/
 /*   	QD3D GEOMETRY.C	    */
-/* (c)1997-99 Pangea Software  */
 /* By Brian Greenstone      */
+/* (c)1997-99 Pangea Software  */
+/* (c)2023 Iliyas Jorio     */
 /****************************/
 
 
@@ -41,10 +42,10 @@ static const TQ3Matrix4x4 kIdentity4x4 =
 /*    VARIABLES      */
 /*********************/
 
-long				gNumShards = 0;
-ShardType			gShards[MAX_SHARDS];
+static ShardType			gShards[MAX_SHARDS];
+static RenderModifiers		kShardRenderMods;
+Pool						*gShardPool = NULL;
 
-static RenderModifiers kShardRenderMods;
 
 /*************** QD3D: CALC OBJECT BOUNDING BOX ************************/
 
@@ -146,12 +147,14 @@ void QD3D_CalcObjectBoundingSphere(int numMeshes, TQ3TriMeshData** meshList, TQ3
 
 void QD3D_InitShards(void)
 {
-	gNumShards = 0;
+	if (!gShardPool)
+		gShardPool = Pool_New(MAX_SHARDS);
+	else
+		Pool_Reset(gShardPool);
 
 	for (int i = 0; i < MAX_SHARDS; i++)
 	{
 		ShardType* shard = &gShards[i];
-		shard->isUsed = false;
 		shard->mesh = Q3TriMeshData_New(1, 3, kQ3TriMeshDataFeatureVertexUVs | kQ3TriMeshDataFeatureVertexNormals);
 		for (int v = 0; v < 3; v++)
 			shard->mesh->triangles[0].pointIndices[v] = v;
@@ -167,8 +170,6 @@ void QD3D_InitShards(void)
 
 void QD3D_DisposeShards(void)
 {
-	gNumShards = 0;
-
 	for (int i = 0; i < MAX_SHARDS; i++)
 	{
 		ShardType* shard = &gShards[i];
@@ -177,28 +178,10 @@ void QD3D_DisposeShards(void)
 			Q3TriMeshData_Dispose(shard->mesh);
 			shard->mesh = NULL;
 		}
-		shard->isUsed = false;
 	}
-}
 
-
-/********************* FIND FREE SHARD ***********************/
-//
-// OUTPUT: -1 == none free found
-//
-
-static inline long FindFreeShard(void)
-{
-long	i;
-
-	if (gNumShards >= MAX_SHARDS)
-		return(-1);
-
-	for (i = 0; i < MAX_SHARDS; i++)
-		if (gShards[i].isUsed == false)
-			return(i);
-
-	return(-1);
+	Pool_Free(gShardPool);
+	gShardPool = NULL;
 }
 
 
@@ -291,11 +274,12 @@ static void ExplodeTriMesh(
 	{
 				/* GET FREE SHARD INDEX */
 
-		long shardIndex = FindFreeShard();
-		if (shardIndex == -1)											// see if all out
+		int shardIndex = Pool_AllocateIndex(gShardPool);
+		if (shardIndex < 0)												// see if all out
 			break;
 
 		ShardType* shard = &gShards[shardIndex];
+
 		TQ3TriMeshData* sMesh = shard->mesh;
 
 		const uint16_t* ind = inMesh->triangles[t].pointIndices;		// get indices of 3 points
@@ -385,11 +369,6 @@ static void ExplodeTriMesh(
 
 		shard->decaySpeed = shardDecaySpeed;
 		shard->mode = shardMode;
-
-				/* SET VALID & INC COUNTER */
-
-		shard->isUsed = true;
-		gNumShards++;
 	}
 }
 
@@ -401,16 +380,18 @@ void QD3D_MoveShards(void)
 float	ty,y,fps,x,z;
 TQ3Matrix4x4	matrix,matrix2;
 
-	if (gNumShards == 0)										// quick check if any shards at all
+	if (!gShardPool || Pool_Empty(gShardPool))					// quick check if any shards at all
 		return;
 
 	fps = gFramesPerSecondFrac;
 	ty = -100.0f;												// pin point to "floor" if no terrain
 
-	for (int i = 0; i < MAX_SHARDS; i++)
+	int i = Pool_First(gShardPool);
+	while (i >= 0)
 	{
-		if (!gShards[i].isUsed)
-			continue;
+		GAME_ASSERT(Pool_IsUsed(gShardPool, i));
+
+		int nextIndex = Pool_Next(gShardPool, i);
 
 		ShardType* shard = &gShards[i];
 
@@ -457,9 +438,8 @@ TQ3Matrix4x4	matrix,matrix2;
 		{
 				/* DEACTIVATE THIS SHARD */
 	del:
-			shard->isUsed = false;
-			gNumShards--;
-			continue;
+			Pool_ReleaseIndex(gShardPool, i);
+			goto next;
 		}
 
 			/***************************/
@@ -475,11 +455,14 @@ TQ3Matrix4x4	matrix,matrix2;
 
 		Q3Matrix4x4_SetRotate_XYZ(&matrix, shard->rot.x, shard->rot.y, shard->rot.z);
 		MatrixMultiplyFast(&shard->matrix, &matrix, &matrix2);
-	
+
 					/* NOW TRANSLATE IT */
 
 		Q3Matrix4x4_SetTranslate(&matrix, shard->coord.x, shard->coord.y, shard->coord.z);
 		MatrixMultiplyFast(&matrix2,&matrix, &shard->matrix);
+
+next:
+		i = nextIndex;
 	}
 }
 
@@ -490,16 +473,13 @@ void QD3D_DrawShards(const QD3DSetupOutputType *setupInfo)
 {
 	(void) setupInfo;
 
-	if (gNumShards == 0)										// quick check if any shards at all
+	if (!gShardPool || Pool_Empty(gShardPool))		// quick check if any shards at all
 		return;
 
-	for (int i = 0; i < MAX_SHARDS; i++)
+	for (int i = Pool_First(gShardPool); i >= 0; i = Pool_Next(gShardPool, i))
 	{
 		ShardType* shard = &gShards[i];
-		if (shard->isUsed)
-		{
-			Render_SubmitMesh(shard->mesh, &shard->matrix, &kShardRenderMods, &shard->coord);
-		}
+		Render_SubmitMesh(shard->mesh, &shard->matrix, &kShardRenderMods, &shard->coord);
 	}
 }
 

@@ -32,8 +32,8 @@ static void DisposeObjNodeMemory(ObjNode* node);
 /*     VARIABLES      */
 /**********************/
 
-static Boolean gPooledObjNodesInUse[OBJ_BUDGET];
-static ObjNode gObjNodePool[OBJ_BUDGET];
+static ObjNode gObjNodeMemory[OBJ_BUDGET];
+Pool* gObjNodePool = NULL;
 static ObjNode gObjNodeTemplate;
 
 											// OBJECT LIST
@@ -76,8 +76,12 @@ void InitObjectManager(void)
 
 		/* INIT OBJECT POOL */
 
-	memset(gObjNodePool, 0, sizeof(gObjNodePool));
-	memset(gPooledObjNodesInUse, 0, sizeof(gPooledObjNodesInUse));
+	memset(gObjNodeMemory, 0, sizeof(gObjNodeMemory));
+
+	if (!gObjNodePool)
+		gObjNodePool = Pool_New(OBJ_BUDGET);
+	else
+		Pool_Reset(gObjNodePool);
 
 		/* MAKE OBJECT TEMPLATE */
 
@@ -114,20 +118,14 @@ ObjNode	*MakeNewObject(NewObjectDefinitionType *newObjDef)
 
 		/* TRY TO GET AN OBJECT FROM THE POOL */
 
-	for (int i = 0; i < OBJ_BUDGET; i++)
+	int pooledIndex = Pool_AllocateIndex(gObjNodePool);
+	if (pooledIndex >= 0)
 	{
-		if (!gPooledObjNodesInUse[i])
-		{
-			gPooledObjNodesInUse[i] = true;		// lock that one
-			newNodePtr = &gObjNodePool[i];		// point to pooled node
-			break;
-		}
+		newNodePtr = &gObjNodeMemory[pooledIndex];
 	}
-
-		/* POOL FULL, ALLOCATE NEW NODE ON HEAP */
-
-	if (newNodePtr == NULL)
+	else
 	{
+		// pool full, alloc new node on heap
 		newNodePtr = (ObjNode*) AllocPtr(sizeof(ObjNode));
 	}
 
@@ -753,13 +751,13 @@ static void DisposeObjNodeMemory(ObjNode* node)
 {
 	GAME_ASSERT(node != NULL);
 
-	ptrdiff_t poolIndex = node - gObjNodePool;
+	ptrdiff_t poolIndex = node - gObjNodeMemory;
 
 	if (poolIndex >= 0 && poolIndex < OBJ_BUDGET)
 	{
 		// node is pooled, put back into pool
-		GAME_ASSERT_MESSAGE(gPooledObjNodesInUse[poolIndex], "Pooled node freed twice");
-		gPooledObjNodesInUse[poolIndex] = false;
+		GAME_ASSERT_MESSAGE(Pool_IsUsed(gObjNodePool, poolIndex), "double-free on pooled node!");
+		Pool_ReleaseIndex(gObjNodePool, (int) poolIndex);
 	}
 	else
 	{

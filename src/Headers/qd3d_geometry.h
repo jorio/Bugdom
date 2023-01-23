@@ -16,7 +16,6 @@ enum
 
 typedef struct
 {
-	Boolean					isUsed;
 	TQ3Vector3D				rot,rotDelta;
 	TQ3Point3D				coord,coordDelta;
 	float					decaySpeed,scale;

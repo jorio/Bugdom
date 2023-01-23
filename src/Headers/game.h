@@ -16,6 +16,7 @@ extern "C"
 {
 #endif
 
+#include "pool.h"
 #include "globals.h"
 #include "renderer.h"
 #include "structs.h"
