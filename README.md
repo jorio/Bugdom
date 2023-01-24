@@ -5,7 +5,7 @@ This version, at https://github.com/jorio/bugdom, is approved by Pangea Software
 
 **Download the game for macOS, Windows and Linux here:** https://github.com/jorio/bugdom/releases
 
-![Bugdom Screenshot](docs/screenshot.png)
+![Bugdom Screenshot](docs/screenshot.webp)
 
 ## About this port
 

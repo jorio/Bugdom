@@ -233,7 +233,7 @@ class Project:
 
         if full:
             shutil.copytree("docs", f"{appdir}/Documentation")
-            os.remove(f"{appdir}/Documentation/screenshot.png")
+            os.remove(f"{appdir}/Documentation/screenshot.webp")
             for docfile in ["CHANGELOG.md", "CHEATS.md", "COMMANDLINE.md"]:
                 shutil.copy(docfile, F"{appdir}/Documentation")
 

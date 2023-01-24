@@ -1,5 +1,19 @@
 # Bugdom changelog
 
+- **1.3.3 (January 24, 2023)**
+    - Buttery-smooth movement of spline-bound enemies and platforms along their spline
+    - Fix frustum culling of sloped terrain supertiles (steep slopes no longer disappear suddenly when close to edge of screen)
+    - Fix jittery object stacking physics (Rollie now has firm footing on moving platforms at high framerates)
+    - New setting to invert X/Y axises to steer the dragonfly
+    - Level 9: Fix infinite respawn of ghost ants trapped in liquids
+    - Fix erratic flight altitude of FireAnts
+    - macOS: Retina support
+    - macOS: Don't quit the game on ⌘W (i.e. “jump forward” using WASD bindings) and prevent accidental quitting when hitting ⌘Q in-game
+    - Bump SDL to 2.26.2
+    - Minor stability and performance improvements
+    - FPS cap is now 500 when v-sync is off
+    - New build targets: Linux aarch64 (ARM64) and OS X 10.4 PowerPC! Special thanks to Rudy V. Pancaro for sponsoring the OS X/PowerPC build.
+
 - **1.3.2 (June 27, 2022)**
     - Seamless terrain texturing
     - Mouse-driven menus can now be navigated with a controller
