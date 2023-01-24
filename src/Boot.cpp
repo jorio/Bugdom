@@ -77,16 +77,11 @@ tryAgain:
 	// Set data spec -- Lets the game know where to find its asset files
 	gDataSpec = Pomme::Files::HostPathToFSSpec(dataPath / "Skeletons");
 
-	// Use application resource file
-	auto applicationSpec = Pomme::Files::HostPathToFSSpec(dataPath / "System" / "Application");
-	short resFileRefNum = FSpOpenResFile(&applicationSpec, fsRdPerm);
-
-	if (resFileRefNum == -1)
+	FSSpec dummySpec;
+	if (noErr != FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:DoodleBug.3dmf", &dummySpec))
 	{
 		goto tryAgain;
 	}
-
-	UseResFile(resFileRefNum);
 
 	return dataPath;
 }

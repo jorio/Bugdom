@@ -223,8 +223,6 @@ static const TQ3ColorRGBA	gLevelClearColorWithCyc[NUM_LEVEL_TYPES] =
 
 void ToolBoxInit(void)
 {
-	gMainAppRezFile = CurResFile();
-
 		/* FIRST VERIFY SYSTEM BEFORE GOING TOO FAR */
 				
 	VerifySystem();

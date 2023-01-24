@@ -198,7 +198,6 @@ extern	long						gTerrainUnitWidth;
 extern	short						gBestCheckPoint;
 extern	short						gCurrentGasParticleGroup;
 extern	short						gCurrentRopeJoint;
-extern	short						gMainAppRezFile;
 extern	short						gMoney;
 extern	short						gNumBlueClovers;
 extern	short						gNumCollisions;

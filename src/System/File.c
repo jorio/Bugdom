@@ -168,7 +168,6 @@ char		pathBuf[128];
 			/* CLOSE REZ FILE */
 			
 	CloseResFile(fRefNum);
-	UseResFile(gMainAppRezFile);
 
 
 	return(skeleton);
@@ -759,8 +758,6 @@ short	fRefNum;
 			/* CLOSE REZ FILE */
 			
 	CloseResFile(fRefNum);
-	UseResFile(gMainAppRezFile);
-
 
 
 				/***********************/

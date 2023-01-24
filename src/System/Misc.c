@@ -103,7 +103,6 @@ static Boolean beenHere = false;
 
 	StopAllEffectChannels();
 	KillSong();
-	UseResFile(gMainAppRezFile);
 
 	SDL_ShowCursor(1);
 	Pomme_FlushPtrTracking(false);
