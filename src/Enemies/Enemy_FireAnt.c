@@ -342,7 +342,10 @@ float		r,fps,y;
 		gDelta.y += 1000.0f*fps;
 		gCoord.y += gDelta.y*fps;				
 		if (gCoord.y >= y)
+		{
 			gCoord.y = y;
+			gDelta.y = 0;
+		}
 	}
 	else
 	if (gCoord.y > y)
@@ -350,7 +353,10 @@ float		r,fps,y;
 		gDelta.y -= 1000.0f*fps;				
 		gCoord.y += gDelta.y*fps;				
 		if (gCoord.y <= y)
+		{
 			gCoord.y = y;
+			gDelta.y = 0;
+		}
 	}
 	else
 		gDelta.y = 0;	
