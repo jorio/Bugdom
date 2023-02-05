@@ -33,7 +33,7 @@
   <supports>
     <control>keyboard</control>
     <control>gamepad</control>
-    <control>mouse</control>
+    <control>pointing</control>
   </supports>
 
   <launchable type="desktop-id">io.jor.bugdom.desktop</launchable>
