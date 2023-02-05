@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.jor.bugdom</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>CC-BY-NC-SA-4.0</project_license>
+  <name>Bugdom</name>
+  <summary>Save Bugdom from Thorax's evil Fire Ants</summary>
+  <summary xml:lang="fr">Libérez le Royaume des Petites Bêtes des maléfiques fourmis de feu</summary>
+  <developer_name>Pangea Software, Inc., Iliyas Jorio</developer_name>
+
+  <description>
+    <p>The Bugdom was once a peaceful place ruled by the Rollie Pollies and the Lady Bugs, but not long ago the Bugdom was overthrown by the clan of the Fire Ants. After recruiting other bugs to help fight for them, they captured all of the Lady Bugs and are holding them prisoner. The leader of the Fire Ants, the new king of the Bugdom, is King Thorax. Once he is defeated, the Bugdom will return to the peaceful place it used to be.</p>
+    <p xml:lang="fr">Le royaume des petites bêtes était jadis un endroit paisible régi par les coccinelles et les isopodes. Mais il y a peu, le royaume fut renversé par le clan des fourmis de feu. Après avoir rallié d’autres insectes à leur combat, ils kidnappèrent toutes les coccinelles et en firent leurs prisonnières. Le chef des fourmis de feu, le nouveau tyran du royaume des petites bêtes, c’est le Roi Thorax. Une fois Thorax battu, le royaume redeviendra paisible et juste.</p>
+
+    <p>You are Rollie McFly, the only remaining bug capable of saving the Lady Bugs and restoring peace to the Bugdom. Rollie has been hiding in the Lawn area of the Bugdom and will need to travel far to get to the Ant Hill where the battle with King Thorax must take place. There will be water to cross, bugs to ride, and plenty of enemy forces to defeat, but once the Fire Ants and King Thorax have been defeated, you will become the new ruler of the Bugdom and peace will be restored.</p>
+    <p xml:lang="fr">Vous êtes Rollie McFly, la dernière bestiole capable de secourir les coccinelles et de ramener la paix au royaume. Rollie s’est caché dans la Pelouse du royaume. Un long périple attend Rollie jusqu’à la Fourmillière, l’antre du Roi Thorax. Il y aura de l’eau à traverser, des insectes marins à chevaucher, et tout un tas de forces enemies à battre – mais une fois que le Roi Thorax et sa clique de fourmis de feu seront battus, vous serez le nouveau chef du royaume des petites bêtes et la paix sera revenue.</p>
+
+    <p>About this port: Bugdom was released in 1999 by Pangea Software. It was a pack-in game on Macs that came out around that time. This port aims to provide the best way to experience Bugdom today. This port was made and re-released under permission from Pangea Software, Inc.</p>
+    <p xml:lang="fr">À propos de ce portage : Bugdom fut initialement lancé en 1999 par Pangea Software. Ce jeu était fourni sur les Macs qui sortaient à cette époque. Ce portage a pour objectif d’offrir la meilleure façon de jouer à Bugdom aujourd’hui. Ce portage a été réalisé et rediffusé avec la permission de Pangea Software, Inc.</p>
+  </description>
+
+  <categories>
+    <category>Game</category>
+    <category>ActionGame</category>
+    <category>AdventureGame</category>
+  </categories>
+
+  <content_rating type="oars-1.1">
+    <content_attribute id="violence-cartoon">mild</content_attribute>
+    <content_attribute id="violence-fantasy">mild</content_attribute>
+  </content_rating>
+
+  <supports>
+    <control>keyboard</control>
+    <control>gamepad</control>
+    <control>mouse</control>
+  </supports>
+
+  <launchable type="desktop-id">io.jor.bugdom.desktop</launchable>
+  <provides>
+    <id>io.jor.bugdom.desktop</id>
+  </provides>
+
+  <screenshots>
+    <screenshot type="default">
+      <image>https://img.itch.zone/aW1hZ2UvMTU2ODI0Ny85MTcxNTcyLmpwZw==/original/s9pCeP.jpg</image>
+    </screenshot>
+    <screenshot>
+      <image>https://img.itch.zone/aW1hZ2UvMTU2ODI0Ny85MTcxNTc2LmpwZw==/original/FgvsSh.jpg</image>
+    </screenshot>
+    <screenshot>
+      <image>https://img.itch.zone/aW1hZ2UvMTU2ODI0Ny85MTc3ODMzLmpwZw==/original/S%2BM16d.jpg</image>
+    </screenshot>
+    <screenshot>
+      <image>https://img.itch.zone/aW1hZ2UvMTU2ODI0Ny85MTcxNjQ3LmpwZw==/original/hiviKg.jpg</image>
+    </screenshot>
+    <screenshot>
+      <image>https://img.itch.zone/aW1hZ2UvMTU2ODI0Ny85MTcxNTc5LmpwZw==/original/oi%2B%2BFh.jpg</image>
+    </screenshot>
+  </screenshots>
+  
+  <url type="homepage">https://jorio.itch.io/bugdom</url>
+  <url type="donation">https://ko-fi.com/jorio</url>
+  <url type="vcs-browser">https://github.com/jorio/Bugdom</url>
+  <url type="bugtracker">https://github.com/jorio/Bugdom/issues</url>
+
+  <releases>
+
+    <release version="1.3.3" date="2023-01-25">
+      <description>
+        <p>New in this release:</p>
+        <ul>
+          <li>Buttery-smooth movement of spline-bound enemies and platforms along their spline</li>
+          <li>Fix frustum culling of sloped terrain supertiles (steep slopes no longer disappear suddenly when close to edge of screen)</li>
+          <li>Fix jittery object stacking physics (Rollie now has firm footing on moving platforms at high framerates)</li>
+          <li>New setting to invert X/Y axises to steer the dragonfly</li>
+          <li>Level 9: Fix infinite respawn of ghost ants trapped in liquids</li>
+          <li>Fix erratic flight altitude of FireAnts</li>
+          <li>Minor stability and performance improvements</li>
+          <li>FPS cap is now 500 when v-sync is off</li>
+        </ul>
+      </description>
+    </release>
+
+    <release version="1.3.2" date="2022-06-27">
+      <description>
+        <p>New in this release:</p>
+        <ul>
+          <li>Seamless terrain texturing</li>
+          <li>Mouse-driven menus can now be navigated with a controller</li>
+          <li>Increase joystick deadzone to prevent Rollie from drifting continuously with a badly-calibrated controller</li>
+          <li>Smoother mouse control for waterbugs and dragonflies</li>
+          <li>Add option to constrain the viewport to a 4:3 aspect ratio</li>
+          <li>Default window dimensions adapt to screen size</li>
+          <li>To make cool screenshots, you can now swivel the camera with &lt; &gt; while the game is paused</li>
+          <li>To toggle fullscreen mode, use Alt+Enter instead of F11</li>
+          <li>Fix rare occurrences of garbled screens after fading out</li>
+          <li>Fix rare crash in between levels during a long game session</li>
+          <li>Fix minor fence collision bugs</li>
+          <li>Fix boss health bar sometimes showing incorrect value at start of level</li>
+        </ul>
+      </description>
+    </release>
+
+    <release version="1.3.1" date="2021-08-21">
+      <description>
+        <p>New in this release:</p>
+        <ul>
+          <li>Full rewrite of the 3D renderer, replacing legacy QuickDraw 3D code. The game should work better on systems that had trouble running the previous version.</li>
+          <li>Cosmetic touchups on 3DMF model textures. Some textures could use UV clamping, and some had incorrect alpha (spider teeth, etc.).</li>
+          <li>Extra settings: hide/show bottom bar, high/low level of detail.</li>
+          <li>Command-line options to control MSAA and screen resolution.</li>
+          <li>Minor gameplay &amp; presentation bugfixes.</li>
+        </ul>
+      </description>
+    </release>
+
+    <release version="1.3.0" date="2020-12-29">
+      <description>
+        <ul>
+          <li>Initial playable release</li>
+        </ul>
+      </description>
+    </release>
+
+  </releases>
+</component>

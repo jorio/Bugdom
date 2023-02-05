@@ -23,6 +23,7 @@ dist_dir = os.path.abspath("dist")
 
 game_name           = "Bugdom"  # no spaces
 game_name_human     = "Bugdom"  # spaces and other special characters allowed
+game_package        = "io.jor.bugdom"  # unique package identifier
 game_ver            = "1.3.3"
 
 source_check        = "src/Enemies/Enemy_WorkerBee.c"  # some file that's likely to be from the game's source tree
@@ -375,9 +376,9 @@ class LinuxProject(Project):
         assert appdir.endswith(".AppDir")
         rmtree_if_exists(appdir)
 
-        os.makedirs(F"{appdir}", exist_ok=True)
-        os.makedirs(F"{appdir}/usr/bin", exist_ok=True)
-        os.makedirs(F"{appdir}/usr/lib", exist_ok=True)
+        # Prepare directory tree before copying files
+        for d in ["", "usr/bin", "usr/lib", "usr/share/metainfo", "usr/share/applications"]:
+            os.makedirs(F"{appdir}/{d}", exist_ok=True)
 
         # Copy executable and assets
         shutil.copy(F"{self.dir_name}/{game_name}", F"{appdir}/usr/bin")  # executable
@@ -385,8 +386,10 @@ class LinuxProject(Project):
         self.copy_documentation(appdir, full=False)
 
         # Copy XDG stuff
-        shutil.copy(F"packaging/{game_name.lower()}.desktop", appdir)
-        shutil.copy(F"packaging/{game_name.lower()}-desktopicon.png", appdir)
+        shutil.copy(F"packaging/{game_package}.desktop", appdir)
+        shutil.copy(F"packaging/{game_package}.png", appdir)
+        shutil.copy(F"packaging/{game_package}.appdata.xml", F"{appdir}/usr/share/metainfo")
+        shutil.copy(F"packaging/{game_package}.desktop", F"{appdir}/usr/share/applications")  # must copy desktop file there as well, for validation
 
         # Copy AppImage kicker script
         shutil.copy(F"packaging/AppRun", appdir)
@@ -403,7 +406,7 @@ class LinuxProject(Project):
             os.chmod(appimagetool_path, 0o755)
 
             rm_if_exists(self.get_artifact_path())
-            call([appimagetool_path, "--no-appstream", appdir, self.get_artifact_path()])
+            call([appimagetool_path, appdir, self.get_artifact_path()])
 
 #----------------------------------------------------------------
 
