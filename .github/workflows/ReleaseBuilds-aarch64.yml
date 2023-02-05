@@ -34,7 +34,6 @@ jobs:
           arch: aarch64
 
           # Distro must be kept in sync with `runs-on` above.
-          # We can't use 18.04 because it ships with cmake 3.10 (too ancient).
           # See: https://github.com/uraimo/run-on-arch-action#supported-platforms
           distro: ubuntu20.04
 
