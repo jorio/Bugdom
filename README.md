@@ -19,6 +19,8 @@ This port aims to provide the best way to experience Bugdom today. It introduces
 
 The first release of this port used a custom fork of [Quesa](https://github.com/jwwalker/Quesa) for rendering. Bugdom has switched to a tailor-made renderer as of version 1.3.1.
 
+A port of the sequel is also available: [Bugdom 2](https://github.com/jorio/Bugdom2).
+
 ## Documentation
 
 - [BUILD.md](BUILD.md) — How to build on macOS, Windows or Linux.
@@ -53,7 +55,8 @@ Bugdom® is a registered trademark of Pangea Software, Inc.
 
 Check out my ports of other Pangea classics:
 - [Billy Frontier](https://github.com/jorio/BillyFrontier)
-- [Bugdom](https://github.com/jorio/Bugdom)
+- [Bugdom 1](https://github.com/jorio/Bugdom)
+- [Bugdom 2](https://github.com/jorio/Bugdom2)
 - [Cro-Mag Rally](https://github.com/jorio/CroMagRally)
 - [Mighty Mike (Power Pete)](https://github.com/jorio/MightyMike)
 - [Nanosaur 1](https://github.com/jorio/Nanosaur)
