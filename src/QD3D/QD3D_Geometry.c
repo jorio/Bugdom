@@ -243,8 +243,8 @@ void QD3D_MirrorMeshesZ(ObjNode* theNode)
 		// Invert triangle winding
 		for (int t = 0; t < mesh->numTriangles; t++)
 		{
-			uint16_t* triPoints = theNode->MeshList[meshID]->triangles[t].pointIndices;
-			uint16_t temp = triPoints[0];
+			uint32_t* triPoints = theNode->MeshList[meshID]->triangles[t].pointIndices;
+			uint32_t temp = triPoints[0];
 			triPoints[0] = triPoints[2];
 			triPoints[2] = temp;
 		}
@@ -282,7 +282,7 @@ static void ExplodeTriMesh(
 
 		TQ3TriMeshData* sMesh = shard->mesh;
 
-		const uint16_t* ind = inMesh->triangles[t].pointIndices;		// get indices of 3 points
+		const uint32_t* ind = inMesh->triangles[t].pointIndices;		// get indices of 3 points
 
 				/*********************/
 				/* INIT TRIMESH DATA */

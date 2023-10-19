@@ -847,7 +847,7 @@ static void SendGeometry(const MeshQueueEntry* entry)
 	}
 
 	// Draw the mesh
-	glDrawElements(GL_TRIANGLES, mesh->numTriangles*3, GL_UNSIGNED_SHORT, mesh->triangles);
+	glDrawElements(GL_TRIANGLES, mesh->numTriangles*3, GL_UNSIGNED_INT, mesh->triangles);
 	CHECK_GL_ERROR();
 
 	// Pass 2 to draw transparent meshes without face culling (see above for an explanation)
@@ -857,7 +857,7 @@ static void SendGeometry(const MeshQueueEntry* entry)
 		glCullFace(GL_BACK);	// pass 2: draw frontfaces (cull backfaces)
 
 		// Draw the mesh again
-		glDrawElements(GL_TRIANGLES, mesh->numTriangles * 3, GL_UNSIGNED_SHORT, mesh->triangles);
+		glDrawElements(GL_TRIANGLES, mesh->numTriangles * 3, GL_UNSIGNED_INT, mesh->triangles);
 		CHECK_GL_ERROR();
 	}
 }
