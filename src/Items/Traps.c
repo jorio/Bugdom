@@ -192,8 +192,6 @@ static const TQ3Point3D	pts[12] =
 TQ3Point3D	pts2[12];
 float		l,r,f,b;
 
-	theNode->Rot.y = CalcYAngleFromPointToPoint(theNode->Rot.y, theNode->OldCoord.x, theNode->OldCoord.z,
-												theNode->Coord.x, theNode->Coord.z);
 
 		/* TRANSFORM BOX POINTS */
 		
@@ -360,7 +358,7 @@ Byte	mode = theNode->Mode;
 			
 	if (isVisible)
 	{
-		if (mode != FOOT_MODE_DOWN)
+		if (theNode->Speed > 5)
 		{
 			theNode->Rot.y = CalcYAngleFromPointToPoint(theNode->Rot.y, theNode->OldCoord.x, theNode->OldCoord.z,	// calc y rot aim
 													theNode->Coord.x, theNode->Coord.z);
