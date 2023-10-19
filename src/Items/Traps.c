@@ -33,9 +33,15 @@ static void CalcFootCollisionBoxes(ObjNode *theNode);
 
 
 		/* FOOT STUFF */
-		
+
+#define	FOOT_APEX				950.0f
 #define	FOOT_SPLINE_SPEED		1.0f
+#define	FOOT_SPLINE_MAX_SPEED	(500.0f * FOOT_SPLINE_SPEED)
 #define	FOOT_SCALE				10.0f
+#define	FOOT_TIME_GOUP			1.0f
+#define	FOOT_TIME_GODOWN		0.75f
+#define	FOOT_TIME_DOWN			0.5f
+#define OLDFEET					0		// 1 = original framerate-dependent behavior
 
 enum
 {
@@ -93,7 +99,7 @@ Boolean		gBatExists;
 const TQ3Point3D gBatMouthOff = {0,-8,-20};
 ObjNode	*gCurrentEatingBat;
 
-#define	GroundTimer		SpecialF[0]
+#define	FootTimer		SpecialF[0]
 
 #define	GotPlayer		Flag[1]
 
@@ -155,12 +161,27 @@ float	x,z,placement;
 	newObj->Damage 	= .3;			
 	newObj->CType 	= CTYPE_MISC|CTYPE_HURTME|CTYPE_BLOCKCAMERA;
 	newObj->CBits 	= CBITS_TOUCHABLE;
-	
+
 	AllocateCollisionBoxMemory(newObj, 3);							// alloc 3 collision boxes
 	CalcFootCollisionBoxes(newObj);
-	
 
+#if !OLDFEET
+	newObj->Mode = MyRandomLong() % 3;
+	switch (newObj->Mode)
+	{
+		case FOOT_MODE_GOUP:
+			newObj->FootTimer = RandomFloat() * FOOT_TIME_GOUP / 2;
+			break;
+		case FOOT_MODE_GODOWN:
+			newObj->FootTimer = RandomFloat() * FOOT_TIME_GODOWN / 2;
+			break;
+		case FOOT_MODE_DOWN:
+			newObj->FootTimer = RandomFloat() * FOOT_TIME_DOWN / 2;
+			break;
+	}
+#else
 	newObj->Mode = MyRandomLong()&1;
+#endif
 
 
 			/* ADD SPLINE OBJECT TO SPLINE OBJECT LIST */
@@ -262,13 +283,83 @@ float		l,r,f,b;
 /*********************** MOVE FOOT ON SPLINE*****************************/
 
 static void MoveFootOnSpline(ObjNode *theNode)
-{	
-Boolean isVisible; 
+{
 float	fps = gFramesPerSecondFrac;
+
+	Boolean isVisible = IsSplineItemVisible(theNode);			// update its visibility
+
+	theNode->FootTimer += fps;									// tick mode timer
+
+#if !OLDFEET
+	GetObjectCoordOnSpline(theNode, &theNode->Coord.x, &theNode->Coord.z);
+	float floorY = GetTerrainHeightAtCoord(theNode->Coord.x, theNode->Coord.z, FLOOR);
+
+			/* UPDATE SPEED AND POSITION ON SPLINE */
+
+	if (theNode->Mode == FOOT_MODE_DOWN)
+	{
+		theNode->Speed = 0;
+	}
+	else
+	{
+		theNode->Speed = (theNode->Coord.y - floorY) * FOOT_SPLINE_SPEED;	// speed is based on height off ground
+		theNode->Speed = SDL_min(theNode->Speed, FOOT_SPLINE_MAX_SPEED);
+		IncreaseSplineIndex(theNode, theNode->Speed);
+	}
+
+			/* UPDATE ALTITUDE AND ANIM */
+
+	switch (theNode->Mode)
+	{
+		case FOOT_MODE_GOUP:
+		{
+			float t = theNode->FootTimer * (1.0f / FOOT_TIME_GOUP);
+			t = SDL_min(t, 1);
+			t = -0.5f * (cosf(PI * t) - 1);		// ease in/out sine
+			theNode->Coord.y = floorY + t * FOOT_APEX;
+
+			if (t >= 1.0f-EPS)
+			{
+				theNode->Mode = FOOT_MODE_GODOWN;
+				theNode->FootTimer = 0;
+				SetSkeletonAnim(theNode->Skeleton, FOOT_ANIM_DOWN);
+			}
+			break;
+		}
+
+		case FOOT_MODE_GODOWN:
+		{
+			float t = theNode->FootTimer * (1.0f / FOOT_TIME_GODOWN);
+			t = SDL_min(t, 1);
+			t = t*t;	// ease in quad
+			theNode->Coord.y = floorY + (1 - t) * FOOT_APEX;
+
+			if (t >= 1.0f-EPS)
+			{
+				theNode->Mode = FOOT_MODE_DOWN;
+				theNode->FootTimer = 0;
+				MorphToSkeletonAnim(theNode->Skeleton, FOOT_ANIM_FLAT, 6);
+				PlayEffect3D(EFFECT_FOOTSTEP, &theNode->Coord);
+			}
+
+			break;
+		}
+
+		case FOOT_MODE_DOWN:
+		{
+			theNode->Speed = 0;
+			if (theNode->FootTimer >= FOOT_TIME_DOWN)		// see if time to go back up
+			{
+				theNode->Mode = FOOT_MODE_GOUP;
+				theNode->FootTimer = 0;
+				SetSkeletonAnim(theNode->Skeleton, FOOT_ANIM_UP);
+			}
+			break;
+		}
+	}
+#else  // for stable results in measurements, set terrain yScale = 0
 float	y;
 Byte	mode = theNode->Mode;
-
-	isVisible = IsSplineItemVisible(theNode);					// update its visibility
 
 	switch(mode)
 	{
@@ -294,8 +385,10 @@ Byte	mode = theNode->Mode;
 				theNode->Coord.y += theNode->Delta.y;			// move down
 				if (theNode->Coord.y >= y)						// see if hit ground
 				{
+					printf("Spent %f secs in GOUP\n", theNode->FootTimer);
 					theNode->Coord.y = y;
 					theNode->Mode = FOOT_MODE_GODOWN;
+					theNode->FootTimer = 0;
 					SetSkeletonAnim(theNode->Skeleton, FOOT_ANIM_DOWN);
 				}				
 		
@@ -318,15 +411,21 @@ Byte	mode = theNode->Mode;
 				
 				
 					/* MOVE DOWN */
-				
+
+				float oldDelta = theNode->Delta.y;
 				theNode->Delta.y -= 100.0f * fps;				// gravity
+				if (oldDelta > 0 && theNode->Delta.y < 0)
+				{
+					printf("Spent %f secs in GODOWN reaching apex = %f\n", theNode->FootTimer, theNode->Coord.y - y);
+				}
 				theNode->Coord.y += theNode->Delta.y;			// move down
 				if (theNode->Coord.y <= y)						// see if hit ground
 				{
+					printf("Spent %f secs in GODOWN\n", theNode->FootTimer);
 					theNode->Speed = 0;							// reset speed to avoid hiccup when going back up
 					theNode->Coord.y = y;
 					theNode->Mode = FOOT_MODE_DOWN;
-					theNode->GroundTimer = .5f;
+					theNode->FootTimer = 0;
 					MorphToSkeletonAnim(theNode->Skeleton, FOOT_ANIM_FLAT, 6);
 					PlayEffect3D(EFFECT_FOOTSTEP, &theNode->Coord);
 
@@ -340,15 +439,16 @@ Byte	mode = theNode->Mode;
 		case	FOOT_MODE_DOWN:
 				theNode->Speed = 0;								// reset speed to avoid hiccup when going back up
 				theNode->Delta.y = 0;
-				theNode->GroundTimer -= fps;							// see if time to go back up
-				if (theNode->GroundTimer <= 0.0f)
+				if (theNode->FootTimer >= FOOT_TIME_DOWN)		// see if time to go back up
 				{
 					theNode->Mode = FOOT_MODE_GOUP;
+					theNode->FootTimer = 0;
 					SetSkeletonAnim(theNode->Skeleton, FOOT_ANIM_UP);					
 				}
 				break;
 		
 	}
+#endif // OLDFEET
 
 
 

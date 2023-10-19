@@ -10,7 +10,6 @@ int GetObjectCoordOnSpline(ObjNode* theNode, float* x, float* z);
 
 Boolean IsSplineItemVisible(ObjNode *theNode);
 void AddToSplineObjectList(ObjNode *theNode);
-void AddToSplineObjectList(ObjNode *theNode);
 void MoveSplineObjects(void);
 Boolean RemoveFromSplineObjectList(ObjNode *theNode);
 void EmptySplineObjectList(void);
