@@ -7,7 +7,7 @@
 // entire system. Restore it when your game is done with the mouse, otherwise
 // linear mouse movement will stick around until a reboot.
 //
-// Tested on macOS 11.5.2.
+// Tested on macOS 14.0.
 // Needs CoreFoundation and IOKit.
 //
 // Interesting reading:
@@ -27,100 +27,117 @@
 // - https://forums3.armagetronad.net/viewtopic.php?f=12&t=3364&start=15
 //   The people who found the basis for the current approach.
 
-#if !(__APPLE__)
+#if !(__APPLE__) || OSXPPC
 
-typedef char BogusTypedef;  // work around ISO C warning about empty translation unit
+void SetMacLinearMouse(int linear)
+{
+	// no-op on non-Apple systems
+	(void) linear;
+}
 
 #else
 
-#include "killmacmouseacceleration.h"
-
-#include <stdio.h>
+#include <SDL.h>
 #include <IOKit/hidsystem/IOHIDLib.h>
 #include <IOKit/hidsystem/IOHIDParameter.h>
 #include <IOKit/hidsystem/event_status_driver.h>
 
-static const int32_t	kNoAcceleration			= -0x10000;
-static int32_t			gAccelerationBackup		= 0;
+static const int64_t	kNoAcceleration			= -0x10000;
+static int64_t			gAccelerationBackup		= 0;
 static bool				gAccelerationTainted	= false;
 
-void KillMacMouseAcceleration(void)
+static void KillMacMouseAcceleration(void)
 {
 	if (gAccelerationTainted)
 	{
-		printf("%s: accel already tainted, bailing out.\n", __func__);
+		SDL_Log("%s: acceleration value already tainted\n", __func__);
 		return;
 	}
-	
+
 	io_connect_t handle = NXOpenEventStatus();
 
 	if (!handle)
 	{
-		printf("%s: NXOpenEventStatus failed!\n", __func__);
+		SDL_Log("%s: NXOpenEventStatus failed!\n", __func__);
 		return;
 	}
-	
-	kern_return_t ret;
-	
-	IOByteCount actualSize;
-	ret = IOHIDGetParameter(handle, CFSTR(kIOHIDMouseAccelerationType),
-							sizeof(gAccelerationBackup), &gAccelerationBackup, &actualSize);
-	
+
+	union
+	{
+		int64_t i64;
+		int32_t i32;
+	} value = { 0 };
+
+	IOByteCount valueSize;
+	kern_return_t ret = IOHIDGetParameter(handle, CFSTR(kIOHIDMouseAccelerationType), sizeof(value), &value, &valueSize);
+
 	if (ret != KERN_SUCCESS)
 	{
-		printf("%s: IOHIDGetParameter failed! Error %d.\n", __func__, (int)ret);
+		SDL_Log("%s: IOHIDGetParameter error %d\n", __func__, (int)ret);
 	}
-	else if (actualSize != sizeof(gAccelerationBackup))
+	else if (valueSize != 4 && valueSize != 8)
 	{
-		printf("%s: IOHIDGetParameter returned unexpected actualSize! (Got %d)\n", __func__, (int)actualSize);
+		SDL_Log("%s: IOHIDGetParameter returned unexpected size! (Got %d)\n", __func__, (int)valueSize);
 	}
 	else if (ret == KERN_SUCCESS)
 	{
+		gAccelerationBackup = valueSize == 4? value.i32: value.i64;
+
 		ret = IOHIDSetParameter(handle, CFSTR(kIOHIDMouseAccelerationType), &kNoAcceleration, sizeof(kNoAcceleration));
 		if (ret != KERN_SUCCESS)
 		{
-			printf("%s: IOHIDSetParameter failed! Error %d. (Current accel = %d)\n", __func__, (int)ret, gAccelerationBackup);
+			SDL_Log("%s: IOHIDSetParameter error %d (current acceleration = %d)\n", __func__, (int)ret, (int)gAccelerationBackup);
 		}
 		else
 		{
 			gAccelerationTainted = true;
-			printf("%s: success. Was %d, now %d.\n", __func__, gAccelerationBackup, kNoAcceleration);
+			SDL_Log("%s: was %d, now %d\n", __func__, (int)gAccelerationBackup, (int)kNoAcceleration);
 		}
 	}
-	
+
 	NXCloseEventStatus(handle);
 }
 
-void RestoreMacMouseAcceleration(void)
+static void RestoreMacMouseAcceleration(void)
 {
 	if (!gAccelerationTainted)
 	{
-		printf("%s: Acceleration value not tainted (%d).\n", __func__, gAccelerationBackup);
+		SDL_Log("%s: acceleration value not tainted (%d)\n", __func__, (int)gAccelerationBackup);
 		return;
 	}
-	
+
 	io_connect_t handle = NXOpenEventStatus();
 
 	if (!handle)
 	{
-		printf("%s: NXOpenEventStatus failed!\n", __func__);
+		SDL_Log("%s: NXOpenEventStatus failed!\n", __func__);
 		return;
 	}
-	
-	kern_return_t ret;
-	
-	ret = IOHIDSetParameter(handle, CFSTR(kIOHIDMouseAccelerationType), &gAccelerationBackup, sizeof(gAccelerationBackup));
+
+	kern_return_t ret = IOHIDSetParameter(handle, CFSTR(kIOHIDMouseAccelerationType), &gAccelerationBackup, sizeof(gAccelerationBackup));
 	if (ret != KERN_SUCCESS)
 	{
-		printf("%s: IOHIDSetParameter failed! Error %d.\n", __func__, (int)ret);
+		SDL_Log("%s: IOHIDSetParameter error %d\n", __func__, (int)ret);
 	}
 	else
 	{
 		gAccelerationTainted = false;
-		printf("%s: success. Restored %d.\n", __func__, gAccelerationBackup);
+		SDL_Log("%s: restored %d\n", __func__, (int)gAccelerationBackup);
 	}
-	
+
 	NXCloseEventStatus(handle);
+}
+
+void SetMacLinearMouse(int linear)
+{
+	if (linear)
+	{
+		KillMacMouseAcceleration();
+	}
+	else
+	{
+		RestoreMacMouseAcceleration();
+	}
 }
 
 #endif  // __APPLE__

@@ -101,3 +101,5 @@ void ShutdownAnalogCursor(void);
 bool MoveAnalogCursor(int* outMouseX, int* outMouseY);
 bool IsAnalogCursorClicked(void);
 void WarpMouseToCenter(void);
+
+void SetMacLinearMouse(int linear);

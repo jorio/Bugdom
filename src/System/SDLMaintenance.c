@@ -3,9 +3,6 @@
 // This file is part of Bugdom. https://github.com/jorio/bugdom
 
 #include "game.h"
-#if !OSXPPC
-#include "killmacmouseacceleration.h"
-#endif
 #include "version.h"
 #include <stdio.h>
 
@@ -102,18 +99,16 @@ void DoSDLMaintenance(void)
 						CleanQuit();
 						return;
 
-#if __APPLE__ && !OSXPPC
 					case SDL_WINDOWEVENT_FOCUS_LOST:
 						// On Mac, always restore system mouse accel if cmd-tabbing away from the game
-						RestoreMacMouseAcceleration();
+						SetMacLinearMouse(0);
 						break;
 						
 					case SDL_WINDOWEVENT_FOCUS_GAINED:
 						// On Mac, kill mouse accel when focus is regained only if the game has captured the mouse
 						if (SDL_GetRelativeMouseMode())
-							KillMacMouseAcceleration();
+							SetMacLinearMouse(1);
 						break;
-#endif
 				}
 				break;
 

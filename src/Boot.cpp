@@ -13,10 +13,6 @@
 #include "game.h"
 #include "version.h"
 
-#if __APPLE__ && !OSXPPC
-#include "killmacmouseacceleration.h"
-#endif
-
 extern "C"
 {
 	// bare minimum to satisfy externs in game code
@@ -263,11 +259,9 @@ int main(int argc, char** argv)
 	}
 #endif
 
-#if __APPLE__ && !OSXPPC
 	// Whether we failed or succeeded, always restore the user's mouse acceleration before exiting.
 	// (NOTE: in debug builds, we might not get here because we don't catch what GameMain throws.)
-	RestoreMacMouseAcceleration();
-#endif
+	SetMacLinearMouse(0);
 
 	Shutdown();
 
