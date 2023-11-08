@@ -271,6 +271,9 @@ if(APPLE)
 		# High-DPI support in Info.plist
 		COMMAND plutil -replace NSHighResolutionCapable -bool true ${BUNDLE_CONTENTS_DIR}/Info.plist
 
+		# Sonoma Game Mode support
+		COMMAND plutil -replace LSApplicationCategoryType -string "public.app-category.games" ${BUNDLE_CONTENTS_DIR}/Info.plist
+
 		# Make it honor mainmenu.nib (use -replace instead of -insert so it doesn't fail on subsequent builds)
 		COMMAND plutil -replace NSMainNibFile -string "mainmenu" ${BUNDLE_CONTENTS_DIR}/Info.plist
 	)
