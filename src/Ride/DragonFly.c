@@ -64,8 +64,6 @@ ObjNode *gCurrentDragonFly = nil;
 #define SparkTimer	SpecialF[0]
 #define	PGroupA		SpecialL[0]
 #define	PGroupB		SpecialL[1]
-#define	PGroupAMagic	SpecialL[2]
-#define	PGroupBMagic	SpecialL[3]
 
 /********************** ADD DRAGONFLY *************************/
 //
@@ -538,12 +536,10 @@ float	fps = gFramesPerSecondFrac;
 				/*********************/
 	
 				/* SEE IF MAKE NEW GROUP */
-				
-		if ((theNode->PGroupA == -1) || (!VerifyParticleGroupMagicNum(theNode->PGroupA, theNode->PGroupAMagic)))
+
+		if (!VerifyParticleGroup(theNode->PGroupA))
 		{
-			theNode->PGroupAMagic = MyRandomLong();							// generate a random magic num
-			
-			theNode->PGroupA = NewParticleGroup(theNode->PGroupAMagic,		// magic num
+			theNode->PGroupA = NewParticleGroup(
 												PARTICLE_TYPE_FALLINGSPARKS,// type
 												PARTICLE_FLAGS_HOT,			// flags
 												0,							// gravity
@@ -571,11 +567,9 @@ float	fps = gFramesPerSecondFrac;
 	
 				/* SEE IF MAKE NEW GROUP */
 				
-		if ((theNode->PGroupB == -1) || (!VerifyParticleGroupMagicNum(theNode->PGroupB, theNode->PGroupBMagic)))
+		if (!VerifyParticleGroup(theNode->PGroupB))
 		{
-			theNode->PGroupBMagic = MyRandomLong();									// generate a random magic num
-			
-			theNode->PGroupB = NewParticleGroup(theNode->PGroupBMagic,		// magic num
+			theNode->PGroupB = NewParticleGroup(
 												PARTICLE_TYPE_FALLINGSPARKS,// type
 												PARTICLE_FLAGS_HOT,			// flags
 												900,						// gravity
@@ -608,7 +602,6 @@ float	fps = gFramesPerSecondFrac;
 
 static void ExplodeFireball(ObjNode *theNode)
 {
-long			pg,i;
 TQ3Vector3D		delta;
 
 	
@@ -621,8 +614,8 @@ TQ3Vector3D		delta;
 			/*******************/
 
 			/* white sparks */
-				
-	pg = NewParticleGroup(	0,							// magic num
+
+	int32_t pg = NewParticleGroup(
 							PARTICLE_TYPE_FALLINGSPARKS,	// type
 							PARTICLE_FLAGS_BOUNCE|PARTICLE_FLAGS_HOT,		// flags
 							400,						// gravity
@@ -631,13 +624,16 @@ TQ3Vector3D		delta;
 							0,							// decay rate
 							.7,							// fade rate
 							PARTICLE_TEXTURE_BLUEFIRE);		// texture
-	
-	for (i = 0; i < 60; i++)
+
+	if (pg != -1)
 	{
-		delta.x = (RandomFloat()-.5f) * 1400.0f;
-		delta.y = (RandomFloat()-.5f) * 1400.0f;
-		delta.z = (RandomFloat()-.5f) * 1400.0f;
-		AddParticleToGroup(pg, &theNode->Coord, &delta, RandomFloat() + 1.0f, FULL_ALPHA);
+		for (int i = 0; i < 60; i++)
+		{
+			delta.x = (RandomFloat()-.5f) * 1400.0f;
+			delta.y = (RandomFloat()-.5f) * 1400.0f;
+			delta.z = (RandomFloat()-.5f) * 1400.0f;
+			AddParticleToGroup(pg, &theNode->Coord, &delta, RandomFloat() + 1.0f, FULL_ALPHA);
+		}
 	}
 
 	DeleteObject(theNode);

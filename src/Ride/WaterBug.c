@@ -42,8 +42,7 @@ static void MoveCaption(ObjNode *theNode);
 /**********************/
 
 ObjNode *gCurrentWaterBug = nil;				
-static short 	gWaterBugParticleGroup = -1;
-static u_long 	gWaterBugParticleMagicNum;
+static int32_t	gWaterBugParticleGroup = -1;
 static float	gWaterSprayRegulator = 0;
 
 #define OriginalRot	SpecialF[0]
@@ -468,12 +467,11 @@ static void SprayWater(ObjNode *bug)
 {			
 float	fps = gFramesPerSecondFrac;
 
-	if ((gWaterBugParticleGroup == -1) || (!VerifyParticleGroupMagicNum(gWaterBugParticleGroup, gWaterBugParticleMagicNum)))
+	if (!VerifyParticleGroup(gWaterBugParticleGroup))
 	{
 				/* START WATER PARTICLE GROUP */
 new_pgroup:		
-		gWaterBugParticleMagicNum = MyRandomLong();			// generate a random magic num
-		gWaterBugParticleGroup = NewParticleGroup(gWaterBugParticleMagicNum,// magic num
+		gWaterBugParticleGroup = NewParticleGroup(
 												PARTICLE_TYPE_FALLINGSPARKS,// type
 												0,							// flags
 												1400,						// gravity
@@ -482,8 +480,6 @@ new_pgroup:
 												-1.7,						// decay rate
 												1.0,						// fade rate
 												PARTICLE_TEXTURE_PATCHY);	// texture
-			
-	
 	}
 	
 				/* ADD PARTICLE TO GROUP */

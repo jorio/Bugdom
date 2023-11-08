@@ -45,7 +45,7 @@ static void StartNitroTrail(void);
 /*********************/
 
 static float	gNitroTimer,gNitroTrailTick;
-int				gNitroParticleGroup;
+int32_t			gNitroParticleGroup;
 
 TQ3Matrix4x4	gBallRotationMatrix;
 
@@ -432,7 +432,6 @@ static void StartNitroTrail(void)
 
 static void LeaveNitroTrail(void)
 {
-int				i;
 TQ3Matrix4x4	m;
 static const TQ3Vector3D up = {0,1,0};
 
@@ -452,7 +451,7 @@ static const TQ3Vector3D up = {0,1,0};
 	if (gNitroParticleGroup == -1)
 	{
 new_pgroup:	
-		gNitroParticleGroup = NewParticleGroup(0,							// magic num
+		gNitroParticleGroup = NewParticleGroup(
 												PARTICLE_TYPE_FALLINGSPARKS,	// type
 												0,		// flags
 												600,							// gravity
@@ -469,7 +468,7 @@ new_pgroup:
 
 			/* ADD PARTICLES TO GROUP */
 
-	for (i = 0; i < NITRO_RING_SIZE; i++)
+	for (int i = 0; i < NITRO_RING_SIZE; i++)
 	{
 		TQ3Vector3D	delta;
 		TQ3Point3D	pt;

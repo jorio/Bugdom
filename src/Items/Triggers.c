@@ -1149,11 +1149,11 @@ float	fps = gFramesPerSecondFrac;
 			theNode->ParticleTimer = 0;
 			
 						/* MAKE PARTICLE GROUP */
-						
-			if (theNode->ParticleGroup == -1)
+
+			if (!VerifyParticleGroup(theNode->ParticleGroup))
 			{
-				theNode->ParticleGroup = NewParticleGroup(0,							// magic num
-														PARTICLE_TYPE_GRAVITOIDS,	// type
+				theNode->ParticleGroup = NewParticleGroup(
+														PARTICLE_TYPE_GRAVITOIDS,		// type
 														0,								// flags
 														0,								// gravity
 														8000,							// magnetism
@@ -1162,9 +1162,9 @@ float	fps = gFramesPerSecondFrac;
 														0,								// fade rate
 														PARTICLE_TEXTURE_GREENRING);	// texture
 			}
-		
+
 				/* ADD PARTICLES TO GROUP */
-				
+
 			if (theNode->ParticleGroup != -1)
 			{			
 				int	i;

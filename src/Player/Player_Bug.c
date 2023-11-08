@@ -1469,7 +1469,7 @@ static void TorchPlayer(void)
 		if (gPlayerObj->ParticleGroup == -1)
 		{
 new_pgroup:		
-			gPlayerObj->ParticleGroup = NewParticleGroup(0,		// magic num
+			gPlayerObj->ParticleGroup = NewParticleGroup(
 														PARTICLE_TYPE_FALLINGSPARKS,// type
 														PARTICLE_FLAGS_HOT,			// flags
 														-100,						// gravity

@@ -106,7 +106,6 @@ ObjNode	*gCurrentEatingBat;
 #define	GotPlayer		Flag[1]
 
 #define	PTimer			SpecialF[0]
-#define	PGroupMagic		SpecialL[1]
 #define	WallRot			Flag[2]
 #define WallLength		SpecialL[0]
 
@@ -763,7 +762,6 @@ Byte	r;
 
 	newObj->TerrainItemPtr = itemPtr;			// keep ptr to item list
 
-	newObj->PGroupMagic = 0;
 	newObj->PTimer = 0;
 	
 	newObj->ValveID	= itemPtr->parm[0];			// get valve ID#
@@ -823,13 +821,11 @@ float	d;
 		theNode->PTimer = .06f;								// reset timer
 
 				/* SEE IF MAKE NEW GROUP */
-				
-		if ((theNode->ParticleGroup == -1) || (!VerifyParticleGroupMagicNum(theNode->ParticleGroup, theNode->PGroupMagic)))
+
+		if (!VerifyParticleGroup(theNode->ParticleGroup))
 		{
-new_pgroup:		
-			theNode->PGroupMagic = MyRandomLong();							// generate a random magic num
-			
-			theNode->ParticleGroup = NewParticleGroup(theNode->PGroupMagic,		// magic num
+new_pgroup:
+			theNode->ParticleGroup = NewParticleGroup(
 												PARTICLE_TYPE_FALLINGSPARKS,	// type
 												PARTICLE_FLAGS_HURTPLAYER|PARTICLE_FLAGS_HURTPLAYERBAD|PARTICLE_FLAGS_HOT,	// flags
 												-100,						// gravity

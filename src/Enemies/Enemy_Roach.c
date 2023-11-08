@@ -72,8 +72,7 @@ enum
 #define	RotDeltaY		SpecialF[2]
 #define	ButtTimer		SpecialF[3]
 
-short	gCurrentGasParticleGroup = -1;
-u_long	gCurrentGasParticleMagicNum = 0;
+int32_t		gCurrentGasParticleGroup = -1;
 
 
 /************************ ADD ROACH ENEMY *************************/
@@ -654,16 +653,14 @@ float fps = gFramesPerSecondFrac;
 
 static void ExplodeGas(ObjNode *theNode)
 {
-long			pg,i;
+int32_t			pg;
 TQ3Vector3D		delta;
 
 			/* SEE IF NEED TO CREATE NEW PARTICLE GROUP */
-						
-	if ((gCurrentGasParticleGroup == -1) || (!VerifyParticleGroupMagicNum(gCurrentGasParticleGroup, gCurrentGasParticleMagicNum)))
-	{
-		gCurrentGasParticleMagicNum = MyRandomLong();			// generate a random magic num
 
-		pg = NewParticleGroup(	gCurrentGasParticleMagicNum,	// magic num
+	if (!VerifyParticleGroup(gCurrentGasParticleGroup))
+	{
+		pg = NewParticleGroup(
 								PARTICLE_TYPE_FALLINGSPARKS,	// type
 								PARTICLE_FLAGS_HURTPLAYER|PARTICLE_FLAGS_HOT|PARTICLE_FLAGS_HURTENEMY,	// flags
 								500,							// gravity
@@ -682,7 +679,7 @@ TQ3Vector3D		delta;
 
 	if (pg != -1)
 	{
-		for (i = 0; i < 25; i++)
+		for (int i = 0; i < 25; i++)
 		{
 			delta.x = (RandomFloat()-.5f) * 800.0f;
 			delta.y = RandomFloat() * 600.0f;
@@ -693,20 +690,9 @@ TQ3Vector3D		delta;
 				break;
 			}
 		}
-	}		
+	}
 
 	PlayEffect_Parms3D(EFFECT_FIRECRACKER, &theNode->Coord, kMiddleC-10, .9);
 
 	DeleteObject(theNode);
-
 }
-
-
-
-
-
-
-
-
-
-

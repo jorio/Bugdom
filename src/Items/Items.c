@@ -710,11 +710,11 @@ int		i,n;
 			gAreaCompleted = true;
 	
 		n = 0;
-	
-		if (hive->ParticleGroup == -1)
+
+		if (!VerifyParticleGroup(hive->ParticleGroup))
 		{
-new_group:		
-			hive->ParticleGroup = NewParticleGroup(	0,							// magic num
+new_group:
+			hive->ParticleGroup = NewParticleGroup(
 													PARTICLE_TYPE_FALLINGSPARKS,	// type
 													0,							// flags
 													-1000,							// gravity
@@ -1188,10 +1188,10 @@ long	i;
 			
 			
 				/* MAKE PARTICLE GROUP */
-				
-			if (theNode->ParticleGroup == -1)
+
+			if (!VerifyParticleGroup(theNode->ParticleGroup))
 			{
-				theNode->ParticleGroup = NewParticleGroup(0,						// magic num
+				theNode->ParticleGroup = NewParticleGroup(
 														PARTICLE_TYPE_FALLINGSPARKS,// type
 														PARTICLE_FLAGS_BOUNCE,		// flags
 														700,						// gravity

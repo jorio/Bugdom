@@ -705,7 +705,6 @@ TQ3Matrix4x4	m,m2,m3;
 static void ShootStinger(ObjNode *bee)
 {
 ObjNode			*stinger;
-long			pg,i;
 TQ3Vector3D		delta;
 
 	stinger = bee->ChainNode;
@@ -734,8 +733,8 @@ TQ3Vector3D		delta;
 		/***************/
 		/* MAKE SPARKS */
 		/***************/
-				
-	pg = NewParticleGroup(	0,							// magic num
+
+	int32_t pg = NewParticleGroup(
 							PARTICLE_TYPE_FALLINGSPARKS,	// type
 							PARTICLE_FLAGS_BOUNCE,		// flags
 							500,						// gravity
@@ -747,7 +746,7 @@ TQ3Vector3D		delta;
 	
 	if (pg != -1)
 	{
-		for (i = 0; i < 15; i++)
+		for (int i = 0; i < 15; i++)
 		{
 			delta.x = (RandomFloat()-.5f) * 400.0f;
 			delta.y = (RandomFloat()-.5f) * 400.0f;

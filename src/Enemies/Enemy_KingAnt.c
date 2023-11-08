@@ -89,7 +89,6 @@ static float		gStaffCharge;
 #define	ButtTimer	SpecialF[1]
 #define	DeathTimer	SpecialF[1]
 #define	FireTimer	SpecialF[2]
-#define	FireParticleMagicNum	SpecialL[3]
 
 #define	SparkTimer	SpecialF[0]
 
@@ -513,11 +512,9 @@ static void UpdateKingAnt(ObjNode *theNode)
 			theNode->FireTimer += gFramesPerSecondFrac;
 			if (theNode->FireTimer > .01f)
 			{
-				if ((theNode->ParticleGroup == -1) || (!VerifyParticleGroupMagicNum(theNode->ParticleGroup, theNode->FireParticleMagicNum)))
+				if (!VerifyParticleGroup(theNode->ParticleGroup))
 				{
-					theNode->FireParticleMagicNum = MyRandomLong();			// generate a random magic num
-					
-					theNode->ParticleGroup = NewParticleGroup(	theNode->FireParticleMagicNum,	// magic num
+					theNode->ParticleGroup = NewParticleGroup(
 																	PARTICLE_TYPE_GRAVITOIDS,	// type
 																	PARTICLE_FLAGS_ROOF|PARTICLE_FLAGS_HOT,		// flags
 																	0,							// gravity
@@ -654,11 +651,10 @@ float	fps = gFramesPerSecondFrac;
 		theNode->FireTimer += fps;
 		if (theNode->FireTimer > .02f)
 		{
-			if ((theNode->ParticleGroup == -1) || (!VerifyParticleGroupMagicNum(theNode->ParticleGroup, theNode->FireParticleMagicNum)))
+			if (!VerifyParticleGroup(theNode->ParticleGroup))
 			{
-new_group:		
-				theNode->FireParticleMagicNum = MyRandomLong();						// generate a random magic num				
-				theNode->ParticleGroup = NewParticleGroup(theNode->FireParticleMagicNum,	// magic num
+new_group:
+				theNode->ParticleGroup = NewParticleGroup(
 														PARTICLE_TYPE_GRAVITOIDS,	// type
 														PARTICLE_FLAGS_ROOF|PARTICLE_FLAGS_HOT,		// flags
 														0,							// gravity
@@ -667,7 +663,6 @@ new_group:
 														.6,							// decay rate
 														0,							// fade rate
 														PARTICLE_TEXTURE_BLUEFIRE);	// texture
-
 			}
 
 			if (theNode->ParticleGroup != -1)
@@ -804,10 +799,10 @@ float	fps = gFramesPerSecondFrac;
 				/*********************/
 	
 				/* SEE IF MAKE NEW GROUP */
-				
-		if (theNode->PGroupA == -1)
+
+		if (!VerifyParticleGroup(theNode->PGroupA))
 		{
-			theNode->PGroupA = NewParticleGroup(0,							// magic num
+			theNode->PGroupA = NewParticleGroup(
 												PARTICLE_TYPE_FALLINGSPARKS,// type
 												PARTICLE_FLAGS_HOT,			// flags
 												0,							// gravity
@@ -837,7 +832,7 @@ float	fps = gFramesPerSecondFrac;
 				
 		if (theNode->PGroupB == -1)
 		{
-			theNode->PGroupB = NewParticleGroup(0,							// magic num
+			theNode->PGroupB = NewParticleGroup(
 												PARTICLE_TYPE_FALLINGSPARKS,// type
 												PARTICLE_FLAGS_HOT,			// flags
 												900,						// gravity
@@ -870,7 +865,6 @@ float	fps = gFramesPerSecondFrac;
 
 static void ExplodeStaffBullet(ObjNode *theNode)
 {
-long			pg,i;
 TQ3Vector3D		delta;
 
 			/*******************/
@@ -878,8 +872,8 @@ TQ3Vector3D		delta;
 			/*******************/
 
 			/* white sparks */
-				
-	pg = NewParticleGroup(	0,							// magic num
+
+	int32_t pg = NewParticleGroup(
 							PARTICLE_TYPE_FALLINGSPARKS,	// type
 							PARTICLE_FLAGS_BOUNCE|PARTICLE_FLAGS_HURTPLAYER|PARTICLE_FLAGS_ROOF|PARTICLE_FLAGS_HOT,	// flags
 							400,						// gravity
@@ -888,8 +882,8 @@ TQ3Vector3D		delta;
 							0,							// decay rate
 							.7,							// fade rate
 							PARTICLE_TEXTURE_BLUEFIRE);		// texture
-	
-	for (i = 0; i < 60; i++)
+
+	for (int i = 0; i < 60; i++)
 	{
 		delta.x = (RandomFloat()-.5f) * 1400.0f;
 		delta.y = (RandomFloat()-.5f) * 1400.0f;

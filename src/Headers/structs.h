@@ -298,7 +298,7 @@ struct ObjNode
 	short				SplineObjectIndex;		// index into gSplineObjectList of this ObjNode
 
 	short				EffectChannel;			// effect sound channel index (-1 = none)
-	short				ParticleGroup;
+	int32_t				ParticleGroup;
 };
 typedef struct ObjNode ObjNode;
 

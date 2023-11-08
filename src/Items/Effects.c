@@ -31,10 +31,11 @@ static void MoveRipple(ObjNode *theNode);
 #define	NUM_PARTICLE_TEXTURES	8
 
 _Static_assert(MAX_PARTICLES <= 255, "rewrite ParticleGroupType to support > 255 particles");
+_Static_assert(MAX_PARTICLE_GROUPS <= 255, "particle group IDs currently assume the group index will fit in 8 bits");
 
 typedef struct
 {
-	uint32_t		magicNum;
+	int32_t			magicNum;
 	Pool			*pool;
 	Byte			type;
 	uint8_t			flags;
@@ -52,6 +53,7 @@ typedef struct
 	TQ3TriMeshData	*mesh;
 }ParticleGroupType;
 
+static inline ParticleGroupType* GetValidParticleGroup(int32_t groupID);
 
 
 /*********************/
@@ -60,7 +62,8 @@ typedef struct
 
 static ParticleGroupType	gParticleGroups[MAX_PARTICLE_GROUPS];
 static bool					gParticleGroupsInitialized = false;
-Pool*				gParticleGroupPool = NULL;
+Pool*						gParticleGroupPool = NULL;
+static int32_t				gParticleGroupMagicAllocator = 0;
 
 static GLuint				gParticleTextureNames[NUM_PARTICLE_TEXTURES];
 static bool					gParticleTexturesLoaded = false;
@@ -189,7 +192,7 @@ void InitParticleSystem(void)
 		}
 
 		gParticleGroupPool = Pool_New(MAX_PARTICLE_GROUPS);
-
+		gParticleGroupMagicAllocator = 0;
 		gParticleGroupsInitialized = true;
 	}
 
@@ -262,10 +265,11 @@ void DeleteAllParticleGroups(void)
 // INPUT:	type 	=	group type to create
 //
 // OUTPUT:	group ID#
-//
+//			Bits 0-7: group number (8 bits)
+//			Bits 8-30: magic number (23 bits)
+//			Bit 31: reserved for negative values (illegal)
 
-int NewParticleGroup(
-		uint32_t magicNum,
+int32_t NewParticleGroup(
 		Byte type,
 		Byte flags,
 		float gravity,
@@ -281,12 +285,13 @@ int NewParticleGroup(
 			/* SCAN FOR A FREE GROUP */
 			/*************************/
 
-	int pgSlot = Pool_AllocateIndex(gParticleGroupPool);
+	int32_t pgNum = Pool_AllocateIndex(gParticleGroupPool);
 
-	if (pgSlot < 0)				// nothing free
+	if (pgNum < 0)				// nothing free
 		return -1;
 
-	ParticleGroupType* pg = &gParticleGroups[pgSlot];
+	ParticleGroupType* pg = &gParticleGroups[pgNum];
+
 
 			/* INITIALIZE THE GROUP */
 
@@ -297,7 +302,7 @@ int NewParticleGroup(
 	pg->baseScale = baseScale;
 	pg->decayRate = decayRate;
 	pg->fadeRate = fadeRate;
-	pg->magicNum = magicNum;
+	pg->magicNum = gParticleGroupMagicAllocator;
 	pg->particleTextureNum = particleTextureNum;
 
 			/* INIT THE GROUP'S TRIMESH STRUCTURE */
@@ -305,7 +310,21 @@ int NewParticleGroup(
 	pg->mesh->texturingMode = kQ3TexturingModeAlphaBlend;
 	pg->mesh->glTextureName = gParticleTextureNames[particleTextureNum];
 
-	return pgSlot;
+			/* MAKE ID */
+
+	int32_t pgID = pgNum | (pg->magicNum << 8);
+
+			/* BUMP MAGIC ALLOCATOR FOR NEXT PGROUP */
+
+	gParticleGroupMagicAllocator++;
+	if (gParticleGroupMagicAllocator == 0x7FFFFF)	// max value that fits in 23 bits
+	{
+		gParticleGroupMagicAllocator = 0;			// wrap around cleanly
+	}
+
+			/* DONE */
+
+	return pgID;
 }
 
 
@@ -314,25 +333,21 @@ int NewParticleGroup(
 // Returns true if particle group was invalid or is full.
 //
 
-bool AddParticleToGroup(int groupNum, TQ3Point3D *where, TQ3Vector3D *delta, float scale, float alpha)
+bool AddParticleToGroup(int32_t groupID, TQ3Point3D *where, TQ3Vector3D *delta, float scale, float alpha)
 {
-ParticleGroupType* pg;
-int p;
+	GAME_ASSERT(groupID >= 0);
 
-	GAME_ASSERT((groupNum >= 0) && (groupNum < MAX_PARTICLE_GROUPS));
+	ParticleGroupType* pg = GetValidParticleGroup(groupID);
 
-	pg = &gParticleGroups[groupNum];
-
-	if (!Pool_IsUsed(gParticleGroupPool, groupNum))
+	if (!pg)
 	{
-		return(true);
-//		DoAlert("AddParticleToGroup: this group is nil");
-//		DebugStr("debug me!");
+		return true;
 	}
+
 
 			/* SCAN FOR FREE SLOT */
 
-	p = Pool_AllocateIndex(pg->pool);
+	int p = Pool_AllocateIndex(pg->pool);
 
 			/* NO FREE SLOTS */
 
@@ -691,11 +706,34 @@ static const TQ3Vector3D up = {0,1,0};
 	}
 }
 
+/**************** GET ACTIVE PARTICLE GROUP FROM ID ******************/
+
+static inline ParticleGroupType* GetValidParticleGroup(int32_t groupID)
+{
+	if (groupID < 0)
+		return NULL;
+
+	int32_t group = groupID & 0xFF;
+	int32_t magic = groupID >> 8;
+
+	if (group >= MAX_PARTICLE_GROUPS)
+		return NULL;
+
+	if (!Pool_IsUsed(gParticleGroupPool, group))
+		return NULL;
+
+	if (gParticleGroups[group].magicNum != magic)
+		return NULL;
+
+	return &gParticleGroups[group];
+}
+
+
 /**************** VERIFY PARTICLE GROUP MAGIC NUM ******************/
 
-bool VerifyParticleGroupMagicNum(int group, uint32_t magicNum)
+bool VerifyParticleGroup(int32_t groupID)
 {
-	return Pool_IsUsed(gParticleGroupPool, group) && gParticleGroups[group].magicNum == magicNum;
+	return NULL != GetValidParticleGroup(groupID);
 }
 
 
@@ -742,17 +780,16 @@ bool ParticleHitObject(ObjNode *theNode, uint8_t inFlags)
 
 void MakeSplash(float x, float y, float z, float force, float volume)
 {
-long	pg,i,n;
 TQ3Vector3D	delta;
 TQ3Point3D	pt;
 
-	n = 30.0f * force;
+	int n = 30.0f * force;
 
 	pt.y = y;
 
 			/* white sparks */
-				
-	pg = NewParticleGroup(	0,							// magic num
+
+	int32_t pg = NewParticleGroup(
 							PARTICLE_TYPE_FALLINGSPARKS,// type
 							0,							// flags
 							800,						// gravity
@@ -761,23 +798,26 @@ TQ3Point3D	pt;
 							-.6,						// decay rate
 							.8,							// fade rate
 							PARTICLE_TEXTURE_PATCHY);	// texture
-	
-	for (i = 0; i < n; i++)
-	{
-		pt.x = x + (RandomFloat()-.5f) * 130.0f * force;
-		pt.z = z + (RandomFloat()-.5f) * 130.0f * force;
 
-		delta.x = (RandomFloat()-.5f) * 400.0f * force;
-		delta.y = 500.0f + RandomFloat() * 300.0f * force;
-		delta.z = (RandomFloat()-.5f) * 400.0f * force;
-		AddParticleToGroup(pg, &pt, &delta, RandomFloat() + 1.0f, FULL_ALPHA);
+	if (pg != -1)
+	{
+		for (int i = 0; i < n; i++)
+		{
+			pt.x = x + (RandomFloat()-.5f) * 130.0f * force;
+			pt.z = z + (RandomFloat()-.5f) * 130.0f * force;
+
+			delta.x = (RandomFloat()-.5f) * 400.0f * force;
+			delta.y = 500.0f + RandomFloat() * 300.0f * force;
+			delta.z = (RandomFloat()-.5f) * 400.0f * force;
+			AddParticleToGroup(pg, &pt, &delta, RandomFloat() + 1.0f, FULL_ALPHA);
+		}
 	}
 
 
 			/* PLAY SPLASH SOUND */
 
 	pt.x = x;
-	pt.z = z;			
+	pt.z = z;
 	PlayEffect_Parms3D(EFFECT_SPLASH, &pt, kMiddleC, volume);
 }
 

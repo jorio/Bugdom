@@ -47,7 +47,6 @@ short	i;
 		gNumEnemyOfKind[i] = 0;
 
 	gCurrentGasParticleGroup = -1;
-	gCurrentGasParticleMagicNum = 0;
 }
 
 

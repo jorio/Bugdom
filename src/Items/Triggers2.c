@@ -55,7 +55,6 @@ float	gCheckPointRot;
 #define	WaterTimer		SpecialF[1]
 #define	RefillTimer		SpecialF[2]
 #define	SpewWater		Flag[0]
-#define	FireParticleMagicNum	SpecialL[3]
 
 
 /************************* ADD CHECKPOINT *********************************/
@@ -179,7 +178,6 @@ ObjNode	*droplet;
 Boolean DoTrig_Checkpoint(ObjNode *theNode, ObjNode *whoNode, Byte sideBits)
 {
 short			num;
-long			pg,i;
 TQ3Vector3D		delta;
 
 	(void) whoNode;
@@ -199,7 +197,7 @@ TQ3Vector3D		delta;
 			/* POP THE BUBBLE */
 			/******************/
 
-	pg = NewParticleGroup(	0,							// magic num
+	int32_t pg = NewParticleGroup(
 							PARTICLE_TYPE_FALLINGSPARKS,	// type
 							PARTICLE_FLAGS_BOUNCE,		// flags
 							800,						// gravity
@@ -211,15 +209,15 @@ TQ3Vector3D		delta;
 	
 	if (pg != -1)
 	{
-		for (i = 0; i < 15; i++)
+		for (int i = 0; i < 15; i++)
 		{
 			delta.x = (RandomFloat()-.5f) * 500.0f;
 			delta.y = (RandomFloat()-.5f) * 500.0f;
 			delta.z = (RandomFloat()-.5f) * 500.0f;
 			AddParticleToGroup(pg, &theNode->Coord, &delta, RandomFloat() + 1.0f, FULL_ALPHA);
-		}			
-	}	
-	
+		}
+	}
+
 			/* PLAY SOUND */
 			
 	PlayEffect3D(EFFECT_CHECKPOINT, &theNode->Coord);
@@ -513,12 +511,10 @@ long	i;
 			
 				/* MAKE PARTICLE GROUP */
 				
-			if ((theNode->ParticleGroup == -1) || (!VerifyParticleGroupMagicNum(theNode->ParticleGroup, theNode->FireParticleMagicNum)))
+			if (!VerifyParticleGroup(theNode->ParticleGroup))
 			{
-new_group:			
-				theNode->FireParticleMagicNum = MyRandomLong();			// generate a random magic num
-					
-				theNode->ParticleGroup = NewParticleGroup(theNode->FireParticleMagicNum, // magic num
+new_group:
+				theNode->ParticleGroup = NewParticleGroup(
 														PARTICLE_TYPE_FALLINGSPARKS,// type
 														PARTICLE_FLAGS_BOUNCE|PARTICLE_FLAGS_EXTINGUISH,		// flags
 														300,						// gravity

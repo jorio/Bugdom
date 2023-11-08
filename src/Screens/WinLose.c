@@ -51,7 +51,7 @@ enum
 /*********************/
 
 static float gFireTimer = 0;
-static short	gFireGroup1,gFireGroup2;
+static int32_t	gFireGroup1,gFireGroup2;
 
 static ObjNode	*gThrone;
 
@@ -594,8 +594,6 @@ float		fps = gFramesPerSecondFrac;
 
 static void MoveLoseKing(ObjNode *theNode)
 {
-int	i;
-
 	theNode->FireTimer += gFramesPerSecondFrac;
 	if (theNode->FireTimer > .02f)
 	{
@@ -604,7 +602,7 @@ int	i;
 		if (theNode->ParticleGroup == -1)
 		{
 new_group:		
-			theNode->ParticleGroup = NewParticleGroup(0,	// magic num
+			theNode->ParticleGroup = NewParticleGroup(
 														PARTICLE_TYPE_FALLINGSPARKS,	// type
 														0,							// flags
 														-80,						// gravity
@@ -621,7 +619,7 @@ new_group:
 			TQ3Point3D  pt;
 			static const TQ3Point3D off = {0,100, -50};							// offset to top of head
 		
-			for (i = 0; i < 4; i++)
+			for (int i = 0; i < 4; i++)
 			{
 				FindCoordOnJoint(theNode, KINGANT_HEAD_LIMB, &off, &pt);			// get coord of head
 				pt.x += (RandomFloat()-.5f) * 40.0f;
@@ -644,7 +642,6 @@ new_group:
 
 static void UpdateLoseFire(void)
 {
-int	i;
 TQ3Vector3D	delta;
 TQ3Point3D  pt;
 
@@ -659,7 +656,7 @@ TQ3Point3D  pt;
 		if (gFireGroup1 == -1)
 		{
 new_group:		
-			gFireGroup1 = NewParticleGroup(0,	// magic num
+			gFireGroup1 = NewParticleGroup(
 											PARTICLE_TYPE_FALLINGSPARKS,	// type
 											0,							// flags
 											-80,						// gravity
@@ -672,8 +669,7 @@ new_group:
 
 		if (gFireGroup1 != -1)
 		{
-		
-			for (i = 0; i < 5; i++)
+			for (int i = 0; i < 5; i++)
 			{
 				pt.x = -500 + (RandomFloat()-.5f) * 50.0f;
 				pt.y = 110 + (RandomFloat()-.5f) * 20.0f;
@@ -695,7 +691,7 @@ new_group:
 		if (gFireGroup2 == -1)
 		{
 new_group2:		
-			gFireGroup2 = NewParticleGroup(0,	// magic num
+			gFireGroup2 = NewParticleGroup(
 											PARTICLE_TYPE_FALLINGSPARKS,	// type
 											0,							// flags
 											-80,						// gravity
@@ -708,8 +704,7 @@ new_group2:
 
 		if (gFireGroup2 != -1)
 		{
-		
-			for (i = 0; i < 5; i++)
+			for (int i = 0; i < 5; i++)
 			{
 				pt.x = 540 + (RandomFloat()-.5f) * 50.0f;
 				pt.y = 110 + (RandomFloat()-.5f) * 20.0f;

@@ -177,7 +177,6 @@ static void MoveFirecrackerAtNight(ObjNode *theNode)
 
 void ExplodeFirecracker(ObjNode *fc, Boolean makeShockwave)
 {
-long			pg,i;
 TQ3Vector3D		delta;
 
 	fc->TerrainItemPtr = nil;							// dont ever come back	
@@ -190,7 +189,7 @@ TQ3Vector3D		delta;
 		
 			/* white sparks */
 				
-	pg = NewParticleGroup(	0,							// magic num
+	int32_t pg = NewParticleGroup(
 							PARTICLE_TYPE_FALLINGSPARKS,	// type
 							PARTICLE_FLAGS_BOUNCE|PARTICLE_FLAGS_HOT,		// flags
 							400,						// gravity
@@ -202,7 +201,7 @@ TQ3Vector3D		delta;
 	
 	if (pg != -1)
 	{
-		for (i = 0; i < 40; i++)
+		for (int i = 0; i < 40; i++)
 		{
 			delta.x = (RandomFloat()-.5f) * 1200.0f;
 			delta.y = RandomFloat() * 1100.0f;
@@ -213,7 +212,7 @@ TQ3Vector3D		delta;
 	
 				/* fire sparks */
 				
-	pg = NewParticleGroup(	0,							// magic num
+	pg = NewParticleGroup(
 							PARTICLE_TYPE_FALLINGSPARKS,	// type
 							PARTICLE_FLAGS_BOUNCE|PARTICLE_FLAGS_HOT,		// flags
 							400,						// gravity
@@ -225,7 +224,7 @@ TQ3Vector3D		delta;
 	
 	if (pg != -1)
 	{
-		for (i = 0; i < 50; i++)
+		for (int i = 0; i < 50; i++)
 		{
 			delta.x = (RandomFloat()-.5f) * 1000.0f;
 			delta.y = RandomFloat() * 800.0f;
