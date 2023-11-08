@@ -1,7 +1,8 @@
 /****************************/
 /*   	TRAPS.C			    */
-/* (c)1999 Pangea Software  */
 /* By Brian Greenstone      */
+/* (c)1999 Pangea Software  */
+/* (c)2023 Iliyas Jorio     */
 /****************************/
 
 
@@ -72,6 +73,8 @@ enum
 #define	BOULDER_RADIUS		35.0f
 #define	BOULDER_SCALE		3.0f
 #define	BOULDER_DIST		1200.0f
+#define	BOULDER_MIN_DAMAGE	0.1f
+#define	BOULDER_MAX_DAMAGE	0.4f
 
 
 #define	THORN_SCALE			2.2f
@@ -1067,23 +1070,23 @@ float	oldX,oldZ,delta;
 		{	
 			gDelta.x += gRecentTerrainNormal[FLOOR].x * fps * 900.0f;
 			gDelta.z += gRecentTerrainNormal[FLOOR].z * fps * 900.0f;
-		}		
-		
-		delta = sqrt(gDelta.x * gDelta.x + gDelta.z * gDelta.z) * fps;
+		}
+
+		delta = sqrtf(gDelta.x * gDelta.x + gDelta.z * gDelta.z);
 		theNode->Coord = gCoord;
-		TurnObjectTowardTarget(theNode, nil, oldX, oldZ, delta * .5f, false);	
-		theNode->Rot.x += delta *.01f;
-		
-		
+		TurnObjectTowardTarget(theNode, nil, oldX, oldZ, delta * fps * .5f, false);
+		theNode->Rot.x += delta * fps * .01f;
+
+
 				/* DAMAGE IS BASED ON SPEED */
-		
-		theNode->Damage = (delta / fps) / 2700.0f;		
-		if (theNode->Damage > .4f)
-			theNode->Damage = .4f;
-		
+
+		theNode->Damage = delta * (1.0f / 2700.0f);
+		if (theNode->Damage > BOULDER_MAX_DAMAGE)
+			theNode->Damage = BOULDER_MAX_DAMAGE;
+
 				/* IF MOVING, NOT SOLID */
-			
-		if (delta > 10.0f)
+
+		if (theNode->Damage >= BOULDER_MIN_DAMAGE)						// moving fast enough to deal significant damage
 		{
 			theNode->CType |= CTYPE_HURTME|CTYPE_HURTENEMY;				// if moving, it hurts
 			theNode->CBits = CBITS_TOUCHABLE;
