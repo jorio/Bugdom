@@ -145,10 +145,10 @@ Byte					letters[] = {TITLE_MObjType_B, TITLE_MObjType_U,
 	LoadASkeleton(SKELETON_TYPE_FIREANT);
 	LoadASkeleton(SKELETON_TYPE_LADYBUG);
  
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:Title.3dmf", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Models:Title.3dmf", &spec);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_LEVELINTRO);	
 
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:Global_Models1.3dmf", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Models:Global_Models1.3dmf", &spec);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_GLOBAL1);	
 	
 

@@ -263,7 +263,7 @@ TQ3Vector3D				fillDirection2 = { -.7, -.2, -.9 };			// fill
 
 	InitParticleSystem();		// Must be once we have a valid GL context
 
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:LevelIntro.3dmf", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Models:LevelIntro.3dmf", &spec);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_LEVELINTRO);	
 
 	switch(gRealLevel)

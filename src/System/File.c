@@ -1153,9 +1153,9 @@ FSSpec	spec;
 
 			/* LOAD GLOBAL STUFF */
 
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:Global_Models1.3dmf", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Models:Global_Models1.3dmf", &spec);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_GLOBAL1);	
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:Global_Models2.3dmf", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Models:Global_Models2.3dmf", &spec);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_GLOBAL2);	
 
 	LoadSoundBank(SOUNDBANK_MAIN);
@@ -1176,17 +1176,17 @@ FSSpec	spec;
 				
 		case	LEVEL_TYPE_LAWN:
 				if (gAreaNum == 0)
-					FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":terrain:Training.ter", &spec);
+					FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Terrain:Training.ter", &spec);
 				else
-					FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":terrain:Lawn.ter", &spec);
+					FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Terrain:Lawn.ter", &spec);
 				
 				LoadPlayfield(&spec);
 
 				/* LOAD MODELS */
 						
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:Lawn_Models1.3dmf", &spec);
+				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Models:Lawn_Models1.3dmf", &spec);
 				LoadGrouped3DMF(&spec,MODEL_GROUP_LEVELSPECIFIC);	
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:Lawn_Models2.3dmf", &spec);
+				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Models:Lawn_Models2.3dmf", &spec);
 				LoadGrouped3DMF(&spec,MODEL_GROUP_LEVELSPECIFIC2);	
 				
 				
@@ -1207,12 +1207,12 @@ FSSpec	spec;
 				/*****************/
 				
 		case	LEVEL_TYPE_POND:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":terrain:Pond.ter", &spec);
+				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Terrain:Pond.ter", &spec);
 				LoadPlayfield(&spec);
 
 				/* LOAD MODELS */
 						
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:Pond_Models.3dmf", &spec);
+				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Models:Pond_Models.3dmf", &spec);
 				LoadGrouped3DMF(&spec,MODEL_GROUP_LEVELSPECIFIC);	
 				
 				
@@ -1237,14 +1237,14 @@ FSSpec	spec;
 				
 		case	LEVEL_TYPE_FOREST:
 				if (gAreaNum == 0)
-					FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":terrain:Beach.ter", &spec);
+					FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Terrain:Beach.ter", &spec);
 				else
-					FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":terrain:Flight.ter", &spec);
+					FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Terrain:Flight.ter", &spec);
 				LoadPlayfield(&spec);
 
 				/* LOAD MODELS */
 						
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:Forest_Models.3dmf", &spec);
+				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Models:Forest_Models.3dmf", &spec);
 				LoadGrouped3DMF(&spec,MODEL_GROUP_LEVELSPECIFIC);	
 				
 				
@@ -1272,14 +1272,14 @@ FSSpec	spec;
 		case	LEVEL_TYPE_HIVE:
 			
 				if (gAreaNum == 0)
-					FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":terrain:BeeHive.ter", &spec);
+					FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Terrain:BeeHive.ter", &spec);
 				else
-					FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":terrain:QueenBee.ter", &spec);
+					FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Terrain:QueenBee.ter", &spec);
 				LoadPlayfield(&spec);
 
 				/* LOAD MODELS */
 						
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:BeeHive_Models.3dmf", &spec);
+				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Models:BeeHive_Models.3dmf", &spec);
 				LoadGrouped3DMF(&spec,MODEL_GROUP_LEVELSPECIFIC);	
 				
 				
@@ -1303,12 +1303,12 @@ FSSpec	spec;
 				/*******************/
 				
 		case	LEVEL_TYPE_NIGHT:
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":terrain:Night.ter", &spec);
+				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Terrain:Night.ter", &spec);
 				LoadPlayfield(&spec);
 
 				/* LOAD MODELS */
 						
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:Night_Models.3dmf", &spec);
+				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Models:Night_Models.3dmf", &spec);
 				LoadGrouped3DMF(&spec,MODEL_GROUP_LEVELSPECIFIC);	
 				
 				
@@ -1334,14 +1334,14 @@ FSSpec	spec;
 				
 		case	LEVEL_TYPE_ANTHILL:
 				if (gAreaNum == 0)
-					FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":terrain:AntHill.ter", &spec);
+					FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Terrain:AntHill.ter", &spec);
 				else
-					FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":terrain:AntKing.ter", &spec);
+					FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Terrain:AntKing.ter", &spec);
 				LoadPlayfield(&spec);
 
 				/* LOAD MODELS */
 						
-				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:AntHill_Models.3dmf", &spec);
+				FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Models:AntHill_Models.3dmf", &spec);
 				LoadGrouped3DMF(&spec,MODEL_GROUP_LEVELSPECIFIC);	
 				
 				

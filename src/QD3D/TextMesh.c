@@ -231,7 +231,7 @@ void TextMesh_Init(void)
 
 	gFontTexture = QD3D_LoadTextureFile(3000, kRendererTextureFlags_GrayscaleIsAlpha);
 
-	short refNum = OpenGameFile(":images:textures:3000.sfl");
+	short refNum = OpenGameFile(":Images:Textures:3000.sfl");
 
 	// Get number of bytes until EOF
 	long eof = 0;

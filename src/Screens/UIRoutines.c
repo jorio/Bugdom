@@ -93,10 +93,10 @@ void SetupUIStuff(int backgroundType)
 	/* LOAD ART */
 	/************/
 
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:BonusScreen.3dmf", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Models:BonusScreen.3dmf", &spec);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_BONUS);
 
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:Lawn_Models2.3dmf", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Models:Lawn_Models2.3dmf", &spec);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_LEVELSPECIFIC2);
 
 	LoadASkeleton(SKELETON_TYPE_SPIDER);  // for back button

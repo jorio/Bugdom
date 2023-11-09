@@ -97,61 +97,61 @@ static short				gCurrentSong = -1;
 
 static const char* kSoundBankNames[NUM_SOUNDBANKS] =
 {
-	[SOUNDBANK_MAIN]	= "main",
-	[SOUNDBANK_LAWN]	= "lawn",
-	[SOUNDBANK_POND]	= "pond",
-	[SOUNDBANK_HIVE]	= "hive",
-	[SOUNDBANK_NIGHT]	= "night",
-	[SOUNDBANK_FOREST]	= "forest",
-	[SOUNDBANK_ANTHILL]	= "anthill",
-	[SOUNDBANK_BONUS]	= "bonus",
+	[SOUNDBANK_MAIN]	= "Main",
+	[SOUNDBANK_LAWN]	= "Lawn",
+	[SOUNDBANK_POND]	= "Pond",
+	[SOUNDBANK_HIVE]	= "Hive",
+	[SOUNDBANK_NIGHT]	= "Night",
+	[SOUNDBANK_FOREST]	= "Forest",
+	[SOUNDBANK_ANTHILL]	= "AntHill",
+	[SOUNDBANK_BONUS]	= "Bonus",
 };
 
 static const EffectDef	kEffectsTable[] =
 {
-	[EFFECT_SELECT]			= {SOUNDBANK_MAIN,		"select",        800, kSoundFlag_Unique },
-	[EFFECT_JUMP]			= {SOUNDBANK_MAIN,		"jump",         1400, 0	},
-	[EFFECT_THROWSPEAR]		= {SOUNDBANK_MAIN,		"throwspear",   1300, 0	},
-	[EFFECT_HITDIRT]		= {SOUNDBANK_MAIN,		"hitdirt",       900, 0	},
-	[EFFECT_POP]			= {SOUNDBANK_MAIN,		"pop",           800, 0	},
-	[EFFECT_GETPOW]			= {SOUNDBANK_MAIN,		"getpow",        500, 0	},
-	[EFFECT_BUZZ]			= {SOUNDBANK_MAIN,		"flybuzz",        50, 0	},
-	[EFFECT_OUCH]			= {SOUNDBANK_MAIN,		"gethit",        900, 0	},
-	[EFFECT_KICK]			= {SOUNDBANK_MAIN,		"kick",          700, 0	},
-	[EFFECT_POUND]			= {SOUNDBANK_MAIN,		"pound",         900, kSoundFlag_Unique },
-	[EFFECT_SPEEDBOOST]		= {SOUNDBANK_MAIN,		"speedboost",    800, kSoundFlag_Unique },
-	[EFFECT_MORPH]			= {SOUNDBANK_MAIN,		"morph",         600, kSoundFlag_Unique },
-	[EFFECT_FIRECRACKER]	= {SOUNDBANK_MAIN,		"firecracker",  2500, kSoundFlag_Unique | kSoundFlag_NoInterp },
-	[EFFECT_SHIELD]			= {SOUNDBANK_MAIN,		"shield",       2000, 0	},
-	[EFFECT_SPLASH]			= {SOUNDBANK_MAIN,		"splash",        900, 0	},
-	[EFFECT_BUDDYLAUNCH]	= {SOUNDBANK_MAIN,		"buddylaunch",   300, kSoundFlag_NoInterp },
-	[EFFECT_RESCUE]			= {SOUNDBANK_MAIN,		"ladybugrescue", 500, kSoundFlag_Unique },
-	[EFFECT_CHECKPOINT]		= {SOUNDBANK_MAIN,		"checkpoint",   1000, 0	},
-	[EFFECT_KABLAM]			= {SOUNDBANK_MAIN,		"kablam",       2000, 0	},
-	[EFFECT_BOATENGINE]		= {SOUNDBANK_POND,		"boatengine",   2400, 0	},
-	[EFFECT_WATERBUG]		= {SOUNDBANK_POND,		"waterbug",      400, 0	},
-	[EFFECT_FOOTSTEP]		= {SOUNDBANK_FOREST,	"footstep",     4000, 0 },
-	[EFFECT_HELICOPTER]		= {SOUNDBANK_FOREST,	"helicopter",    800, 0	},
-	[EFFECT_PLASMABURST]	= {SOUNDBANK_FOREST,	"plasmaburst",  3500, 0	},
-	[EFFECT_PLASMAEXPLODE]	= {SOUNDBANK_FOREST,	"explosion",    4500, 0	},
-	[EFFECT_FIRECRACKLE]	= {SOUNDBANK_FOREST,	"firecrackle",  8000, 0	},
-	[EFFECT_SLURP]			= {SOUNDBANK_POND,		"slurp",         500, 0	},
-	[EFFECT_ROCKSLAM]		= {SOUNDBANK_NIGHT,		"rockslam",     1000, 0	},
-	[EFFECT_VALVEOPEN]		= {SOUNDBANK_ANTHILL,	"valveopen",    1000, 0	},
-	[EFFECT_WATERLEAK]		= {SOUNDBANK_ANTHILL,	"waterleak",    1000, 0	},
-	[EFFECT_KINGSHOOT]		= {SOUNDBANK_ANTHILL,	"shoot",        7000, 0	},
-	[EFFECT_KINGEXPLODE]	= {SOUNDBANK_ANTHILL,	"explosion",    8000, 0	},
-	[EFFECT_KINGCRACKLE]	= {SOUNDBANK_ANTHILL,	"firecrackle",  2000, 0	},
-	[EFFECT_SIZZLE]			= {SOUNDBANK_ANTHILL,	"sizzle",       2000, 0	},
-	[EFFECT_KINGLAUGH]		= {SOUNDBANK_ANTHILL,	"laugh",        2000, kSoundFlag_Unique | kSoundFlag_DontInterrupt },
-	[EFFECT_PIPECLANG]		= {SOUNDBANK_ANTHILL,	"pipeclang",    2000, kSoundFlag_Unique | kSoundFlag_DontInterrupt },
-	[EFFECT_OPENLAWNDOOR]	= {SOUNDBANK_LAWN,		"dooropen",     1500, 0	},
-	[EFFECT_OPENNIGHTDOOR]	= {SOUNDBANK_NIGHT,		"dooropen",     1500, 0	},
-	[EFFECT_STINGERSHOOT]	= {SOUNDBANK_HIVE,		"stingershoot", 1300, kSoundFlag_Unique },
-	[EFFECT_PUMP]			= {SOUNDBANK_HIVE,		"pump",          600, 0	},
-	[EFFECT_PLUNGER]		= {SOUNDBANK_HIVE,		"plunger",       600, 0	},
-	[EFFECT_BONUSBELL]		= {SOUNDBANK_BONUS,		"bell",         1000, 0	},
-	[EFFECT_BONUSCLICK]		= {SOUNDBANK_BONUS,		"click",        1000, kSoundFlag_Unique },
+	[EFFECT_SELECT]			= {SOUNDBANK_MAIN,		"Select",        800, kSoundFlag_Unique },
+	[EFFECT_JUMP]			= {SOUNDBANK_MAIN,		"Jump",         1400, 0	},
+	[EFFECT_THROWSPEAR]		= {SOUNDBANK_MAIN,		"ThrowSpear",   1300, 0	},
+	[EFFECT_HITDIRT]		= {SOUNDBANK_MAIN,		"HitDirt",       900, 0	},
+	[EFFECT_POP]			= {SOUNDBANK_MAIN,		"Pop",           800, 0	},
+	[EFFECT_GETPOW]			= {SOUNDBANK_MAIN,		"GetPOW",        500, 0	},
+	[EFFECT_BUZZ]			= {SOUNDBANK_MAIN,		"FlyBuzz",        50, 0	},
+	[EFFECT_OUCH]			= {SOUNDBANK_MAIN,		"GetHit",        900, 0	},
+	[EFFECT_KICK]			= {SOUNDBANK_MAIN,		"Kick",          700, 0	},
+	[EFFECT_POUND]			= {SOUNDBANK_MAIN,		"Pound",         900, kSoundFlag_Unique },
+	[EFFECT_SPEEDBOOST]		= {SOUNDBANK_MAIN,		"SpeedBoost",    800, kSoundFlag_Unique },
+	[EFFECT_MORPH]			= {SOUNDBANK_MAIN,		"Morph",         600, kSoundFlag_Unique },
+	[EFFECT_FIRECRACKER]	= {SOUNDBANK_MAIN,		"Firecracker",  2500, kSoundFlag_Unique | kSoundFlag_NoInterp },
+	[EFFECT_SHIELD]			= {SOUNDBANK_MAIN,		"Shield",       2000, 0	},
+	[EFFECT_SPLASH]			= {SOUNDBANK_MAIN,		"Splash",        900, 0	},
+	[EFFECT_BUDDYLAUNCH]	= {SOUNDBANK_MAIN,		"BuddyLaunch",   300, kSoundFlag_NoInterp },
+	[EFFECT_RESCUE]			= {SOUNDBANK_MAIN,		"LadyBugRescue", 500, kSoundFlag_Unique },
+	[EFFECT_CHECKPOINT]		= {SOUNDBANK_MAIN,		"Checkpoint",   1000, 0	},
+	[EFFECT_KABLAM]			= {SOUNDBANK_MAIN,		"Kablam",       2000, 0	},
+	[EFFECT_BOATENGINE]		= {SOUNDBANK_POND,		"BoatEngine",   2400, 0	},
+	[EFFECT_WATERBUG]		= {SOUNDBANK_POND,		"Waterbug",      400, 0	},
+	[EFFECT_FOOTSTEP]		= {SOUNDBANK_FOREST,	"Footstep",     4000, 0 },
+	[EFFECT_HELICOPTER]		= {SOUNDBANK_FOREST,	"Helicopter",    800, 0	},
+	[EFFECT_PLASMABURST]	= {SOUNDBANK_FOREST,	"Plasmaburst",  3500, 0	},
+	[EFFECT_PLASMAEXPLODE]	= {SOUNDBANK_FOREST,	"Explosion",    4500, 0	},
+	[EFFECT_FIRECRACKLE]	= {SOUNDBANK_FOREST,	"FireCrackle",  8000, 0	},
+	[EFFECT_SLURP]			= {SOUNDBANK_POND,		"Slurp",         500, 0	},
+	[EFFECT_ROCKSLAM]		= {SOUNDBANK_NIGHT,		"RockSlam",     1000, 0	},
+	[EFFECT_VALVEOPEN]		= {SOUNDBANK_ANTHILL,	"ValveOpen",    1000, 0	},
+	[EFFECT_WATERLEAK]		= {SOUNDBANK_ANTHILL,	"WaterLeak",    1000, 0	},
+	[EFFECT_KINGSHOOT]		= {SOUNDBANK_ANTHILL,	"Shoot",        7000, 0	},
+	[EFFECT_KINGEXPLODE]	= {SOUNDBANK_ANTHILL,	"Explosion",    8000, 0	},
+	[EFFECT_KINGCRACKLE]	= {SOUNDBANK_ANTHILL,	"FireCrackle",  2000, 0	},
+	[EFFECT_SIZZLE]			= {SOUNDBANK_ANTHILL,	"Sizzle",       2000, 0	},
+	[EFFECT_KINGLAUGH]		= {SOUNDBANK_ANTHILL,	"Laugh",        2000, kSoundFlag_Unique | kSoundFlag_DontInterrupt },
+	[EFFECT_PIPECLANG]		= {SOUNDBANK_ANTHILL,	"PipeClang",    2000, kSoundFlag_Unique | kSoundFlag_DontInterrupt },
+	[EFFECT_OPENLAWNDOOR]	= {SOUNDBANK_LAWN,		"DoorOpen",     1500, 0	},
+	[EFFECT_OPENNIGHTDOOR]	= {SOUNDBANK_NIGHT,		"DoorOpen",     1500, 0	},
+	[EFFECT_STINGERSHOOT]	= {SOUNDBANK_HIVE,		"StingerShoot", 1300, kSoundFlag_Unique },
+	[EFFECT_PUMP]			= {SOUNDBANK_HIVE,		"Pump",          600, 0	},
+	[EFFECT_PLUNGER]		= {SOUNDBANK_HIVE,		"Plunger",       600, 0	},
+	[EFFECT_BONUSBELL]		= {SOUNDBANK_BONUS,		"Bell",         1000, 0	},
+	[EFFECT_BONUSCLICK]		= {SOUNDBANK_BONUS,		"Click",        1000, kSoundFlag_Unique },
 };
 
 
@@ -206,7 +206,7 @@ OSErr err;
 		return;
 	}
 
-	snprintf(path, sizeof(path), ":audio:%s.sounds:%s.aiff", kSoundBankNames[effectDef->bank], effectDef->filename);
+	snprintf(path, sizeof(path), ":Audio:%s.sounds:%s.aiff", kSoundBankNames[effectDef->bank], effectDef->filename);
 
 	err = FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, path, &spec);
 	if (err != noErr)
@@ -434,19 +434,19 @@ OSErr	iErr;
 	const char* path = NULL;
 	switch(songNum)
 	{
-		case	SONG_MENU:			path = ":audio:menusong.aiff";		break;
-		case	SONG_GARDEN:		path = ":audio:lawnsong.aiff";		break;
-		case	SONG_GARDEN_OLD:	path = ":audio:lawnsongold.aiff";	break;
-		case	SONG_PANGEA:		path = ":audio:song_pangea.aiff";	break;
-		case	SONG_HIGHSCORES:	path = ":audio:highscores.aiff";	break;
-		case	SONG_NIGHT:			path = ":audio:night.aiff";			break;
-		case	SONG_FOREST:		path = ":audio:forest.aiff";		break;
-		case	SONG_POND:			path = ":audio:pondsong.aiff";		break;
-		case	SONG_ANTHILL:		path = ":audio:anthillsong.aiff";	break;
-		case	SONG_HIVE:			path = ":audio:hivelevel.aiff";		break;
-		case	SONG_WIN:			path = ":audio:winsong.aiff";		break;
-		case	SONG_LOSE:			path = ":audio:losesong.aiff";		break;
-		case	SONG_BONUS:			path = ":audio:bonussong.aiff";		break;
+		case	SONG_MENU:			path = ":Audio:MenuSong.aiff";		break;
+		case	SONG_GARDEN:		path = ":Audio:LawnSong.aiff";		break;
+		case	SONG_GARDEN_OLD:	path = ":Audio:LawnSongOld.aiff";	break;
+		case	SONG_PANGEA:		path = ":Audio:Song_Pangea.aiff";	break;
+		case	SONG_HIGHSCORES:	path = ":Audio:HighScores.aiff";	break;
+		case	SONG_NIGHT:			path = ":Audio:Night.aiff";			break;
+		case	SONG_FOREST:		path = ":Audio:Forest.aiff";		break;
+		case	SONG_POND:			path = ":Audio:PondSong.aiff";		break;
+		case	SONG_ANTHILL:		path = ":Audio:AntHillSong.aiff";	break;
+		case	SONG_HIVE:			path = ":Audio:HiveLevel.aiff";		break;
+		case	SONG_WIN:			path = ":Audio:WinSong.aiff";		break;
+		case	SONG_LOSE:			path = ":Audio:LoseSong.aiff";		break;
+		case	SONG_BONUS:			path = ":Audio:BonusSong.aiff";		break;
 		default:
 			DoAlert("PlaySong: unknown song #");
 			return;

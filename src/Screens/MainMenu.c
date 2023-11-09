@@ -275,7 +275,7 @@ ObjNode					*newObj;
 			/************/
 			
 	LoadASkeleton(SKELETON_TYPE_SPIDER);
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:MainMenu.3dmf", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Models:MainMenu.3dmf", &spec);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_MENU);	
 
 

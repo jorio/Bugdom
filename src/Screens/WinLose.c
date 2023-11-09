@@ -169,7 +169,7 @@ static const TQ3Point2D po[4] =
 	LoadASkeleton(SKELETON_TYPE_ME);
 	LoadASkeleton(SKELETON_TYPE_KINGANT);
 			
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:WinLose.3dmf", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Models:WinLose.3dmf", &spec);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_MENU);	
 
 
@@ -401,7 +401,7 @@ static const TQ3Point2D po[4] =
 	LoadASkeleton(SKELETON_TYPE_ME);
 	LoadASkeleton(SKELETON_TYPE_KINGANT);
 			
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:WinLose.3dmf", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Models:WinLose.3dmf", &spec);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_MENU);	
 
 
