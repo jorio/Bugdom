@@ -106,6 +106,8 @@ void InitPlayerAtStartOfLevel(void)
 
 void ResetPlayer(void)
 {
+	gCurrentEatingFish = NULL;
+
 		/* RETURN PLAYER TO STANDING MODE */
 		
 	if (gPlayerMode == PLAYER_MODE_BALL)				// see if turn into bug
