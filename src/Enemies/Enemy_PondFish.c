@@ -306,11 +306,10 @@ static void  MovePondFish_JumpAttack(ObjNode *theNode)
 				
 			dx = playerPt.x - mouthPt.x;
 			dz = playerPt.z - mouthPt.z;
+			gDelta.x = dx*15;
+			gDelta.z = dz*15;
+		}
 
-			gDelta.x = dx*(gFramesPerSecond*.5f);
-			gDelta.z = dz*(gFramesPerSecond*.5f);
-		}		
-		
 		
 			/* DO GRAVITY & SEE IF SPLASHDOWN */
 					
