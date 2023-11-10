@@ -339,6 +339,7 @@ TQ3Vector3D				fillDirection2 = { -.7, -.2, -.9 };			// fill
 				break;
 
 		case	LEVEL_TYPE_NIGHT:
+		case	LEVEL_TYPE_ANTHILL:
 				gNewObjectDefinition.type 		= LINTRO_MObjType_NightBackground;	
 				break;
 
