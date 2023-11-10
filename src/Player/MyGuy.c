@@ -209,6 +209,7 @@ u_char		sides;
 			/******************************/
 			
 	gPlayerObj->StatusBits &= ~STATUS_BIT_UNDERWATER;			// assume not in water volume
+	gPlayerObj->StatusBits &= ~STATUS_BIT_INVISCOUSTRAP;		// assume not in viscous volume
 	gPlayerObj->MPlatform = nil;								// assume not on MPlatform
 
 	for (i=0; i < gNumCollisions; i++)						
@@ -316,7 +317,7 @@ u_char		sides;
 			
 			if (ctype & CTYPE_VISCOUS)
 			{
-				ApplyFrictionToDeltas(120, &gDelta);
+				gPlayerObj->StatusBits |= STATUS_BIT_INVISCOUSTRAP;
 			}
 	}
 
