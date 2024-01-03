@@ -22,7 +22,7 @@ If you want to build the game **manually** instead, the rest of this document de
     git clone --recurse-submodules https://github.com/jorio/Bugdom
     cd Bugdom
     ```
-1. Download [SDL2-2.26.2.dmg](https://libsdl.org/release/SDL2-2.26.2.dmg), open it, and copy **SDL2.framework** to the **extern** folder
+1. Download [SDL2-2.28.5.dmg](https://libsdl.org/release/SDL2-2.28.5.dmg), open it, and copy **SDL2.framework** to the **extern** folder
 1. Prep the Xcode project:
     ```
     cmake -G Xcode -S . -B build
@@ -43,7 +43,7 @@ If you want to build the game **manually** instead, the rest of this document de
     git clone --recurse-submodules https://github.com/jorio/Bugdom
     cd Bugdom
     ```
-1. Download [SDL2-devel-2.26.2-VC.zip](https://libsdl.org/release/SDL2-devel-2.26.2-VC.zip), extract it, and copy **SDL2-2.26.2** to the **extern** folder
+1. Download [SDL2-devel-2.28.5-VC.zip](https://libsdl.org/release/SDL2-devel-2.28.5-VC.zip), extract it, and copy **SDL2-2.28.5** to the **extern** folder
 1. Prep the Visual Studio solution:
     ```
     cmake -G "Visual Studio 17 2022" -A x64 -S . -B build
