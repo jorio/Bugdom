@@ -7,9 +7,8 @@ jobs:
     runs-on: ubuntu-20.04  # Use oldest available Ubuntu for maximum glibc compatibility
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
+      - uses: actions/checkout@v4
+        with: {submodules: 'recursive'}
       - name: Get build dependencies for SDL from APT  # cf. https://github.com/libsdl-org/SDL/blob/main/docs/README-linux.md
         run: |
           sudo apt update
@@ -22,26 +21,27 @@ jobs:
       - run: python3 build.py --configure
       - run: python3 build.py --build
       - run: python3 build.py --package
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: linux-build
           path: dist/
+          compression-level: 0
 
   build-windows:
     runs-on: windows-2022
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
+      - uses: actions/checkout@v4
+        with: {submodules: 'recursive'}
       - run: python3 build.py --dependencies
       - run: python3 build.py --configure -G 'Visual Studio 17 2022'
       - run: python3 build.py --build
       - run: python3 build.py --package
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: windows-build
           path: dist/
+          compression-level: 0
 
   build-macos:
     runs-on: macos-11
@@ -49,13 +49,12 @@ jobs:
     env:
       CODE_SIGN_IDENTITY: ${{ secrets.APPLE_CODE_SIGN_IDENTITY }}
     steps:
-      - uses: apple-actions/import-codesign-certs@v1
+      - uses: apple-actions/import-codesign-certs@v2
         with:
           p12-file-base64: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_P12_BASE64 }}
           p12-password: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
+      - uses: actions/checkout@v4
+        with: {submodules: 'recursive'}
       - name: Get artifact name
         run: |
           ARTIFACT_NAME="$(python3 build.py --print-artifact-name)"
@@ -71,7 +70,8 @@ jobs:
           xcrun notarytool submit "dist/$ARTIFACT_NAME" --keychain-profile GameNotarizationProfile --wait
       - name: Staple
         run: xcrun stapler staple "dist/$ARTIFACT_NAME"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: mac-build
           path: dist/
+          compression-level: 0

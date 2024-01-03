@@ -25,8 +25,7 @@ jobs:
           sudo apt update
           sudo apt install libsdl2-dev
 
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
+      - uses: actions/checkout@v4
+        with: {submodules: 'recursive'}
           
       - run: ${{matrix.platform.prefix}} python3 build.py --dependencies --configure --build ${{matrix.platform.extraflags}}

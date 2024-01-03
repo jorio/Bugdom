@@ -8,9 +8,8 @@ jobs:
     timeout-minutes: 100  # this job may take up to an hour
 
     steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
+      - uses: actions/checkout@v4
+        with: {submodules: 'recursive'}
 
       # Create shared directory ON HOST. (If it's done within qemu, it'll be created with root permissions)
       - name: Create artifacts directory shared with docker
