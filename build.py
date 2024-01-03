@@ -24,7 +24,7 @@ dist_dir = os.path.abspath("dist")
 game_name           = "Bugdom"  # no spaces
 game_name_human     = "Bugdom"  # spaces and other special characters allowed
 game_package        = "io.jor.bugdom"  # unique package identifier
-game_ver            = "1.3.3"
+game_ver            = "1.3.4"
 
 source_check        = "src/Enemies/Enemy_WorkerBee.c"  # some file that's likely to be from the game's source tree
 

@@ -1,5 +1,18 @@
 # Bugdom changelog
 
+- **1.3.4 (January 3, 2024)**
+    - Fixed framerate-dependent inconsistencies that were apparent at high framerates (100+ fps), including:
+        - level 3: fish speed (after eating Rollie)
+        - level 4: feet speed
+        - level 5: fire effect on beehive
+        - level 7: player speed when trapped in a ball of honey
+        - level 8: tumbling boulder damage condition
+    - More fitting cyclorama color in level 9 and 10 intros
+    - macOS: Sonoma Game Mode support
+    - macOS: Fix linear mouse acceleration mode that didn't always work
+    - Windows: Fix rare bug if AppData\\Local contains a file with a bad name encoding
+    - Bump SDL to 2.28.5
+
 - **1.3.3 (January 24, 2023)**
     - Buttery-smooth movement of spline-bound enemies and platforms along their spline
     - Fix frustum culling of sloped terrain supertiles (steep slopes no longer disappear suddenly when close to edge of screen)

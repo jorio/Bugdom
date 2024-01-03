@@ -303,7 +303,7 @@ static void MakeLegalScreenObjects(void)
 	tmd.coord.y = -66;
 	tmd.scale *= .66f;
 	tmd.color = kDimmedColor;
-	TextMesh_Create(&tmd, "Original game: \251 1999 Pangea Software, Inc.   Modern version: \251 2023 Iliyas Jorio.");
+	TextMesh_Create(&tmd, "Original game: \251 1999 Pangea Software, Inc.   Modern version: \251 2024 Iliyas Jorio.");
 	tmd.coord.y -= LH * .66f;
 	TextMesh_Create(&tmd, "\223Bugdom\224 is a registered trademark of Pangea Software, Inc.");
 }

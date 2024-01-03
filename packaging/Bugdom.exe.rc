@@ -26,7 +26,7 @@ BEGIN
             VALUE "FileDescription",    "Bugdom"
             VALUE "FileVersion",        PROJECT_VERSION
             VALUE "InternalName",       "Bugdom"
-            VALUE "LegalCopyright",     "(C) 1999 Pangea Software, Inc. (C) 2023 Iliyas Jorio."
+            VALUE "LegalCopyright",     "(C) 1999 Pangea Software, Inc. (C) 2024 Iliyas Jorio."
             VALUE "OriginalFilename",   "Bugdom.exe"
             VALUE "ProductName",        "Bugdom"
             VALUE "ProductVersion",     PROJECT_VERSION

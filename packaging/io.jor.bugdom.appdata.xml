@@ -66,6 +66,16 @@
 
   <releases>
 
+    <release version="1.3.4" date="2024-01-03">
+      <description>
+        <p>New in this release:</p>
+        <ul>
+          <li>Fix framerate-dependent behavior in game physics</li>
+          <li>More fitting dark cyclorama in level 9 and 10 intros</li>
+        </ul>
+      </description>
+    </release>
+
     <release version="1.3.3" date="2023-01-25">
       <description>
         <p>New in this release:</p>
