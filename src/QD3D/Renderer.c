@@ -408,34 +408,34 @@ void Render_UpdateTexture(
 		const GLvoid* pixels,
 		int rowBytesInInput)
 {
+	GLint pUnpackRowLength = 0;
+
 	Render_BindTexture(textureName);
 
 	// Set unpack row length (if valid rowbytes input given)
-    if (rowBytesInInput > 0) {
-        glTexSubImage2DUnpackRow(
-                GL_TEXTURE_2D,
-                0,
-                x,
-                y,
-                width,
-                height,
-                bufferFormat,
-                bufferType,
-                pixels,
-                rowBytesInInput);
-    } else {
-        glTexSubImage2D(
-                GL_TEXTURE_2D,
-                0,
-                x,
-                y,
-                width,
-                height,
-                bufferFormat,
-                bufferType,
-                pixels);
-    }
-    CHECK_GL_ERROR();
+	if (rowBytesInInput > 0)
+	{
+		glGetIntegerv(GL_UNPACK_ROW_LENGTH, &pUnpackRowLength);
+		glPixelStorei(GL_UNPACK_ROW_LENGTH, rowBytesInInput);
+	}
+
+	glTexSubImage2D(
+			GL_TEXTURE_2D,
+			0,
+			x,
+			y,
+			width,
+			height,
+			bufferFormat,
+			bufferType,
+			pixels);
+	CHECK_GL_ERROR();
+
+	// Restore unpack row length
+	if (rowBytesInInput > 0)
+	{
+		glPixelStorei(GL_UNPACK_ROW_LENGTH, pUnpackRowLength);
+	}
 }
 
 void Render_Load3DMFTextures(TQ3MetaFile* metaFile, GLuint* outTextureNames, bool forceClampUVs)

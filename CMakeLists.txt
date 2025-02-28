@@ -224,7 +224,7 @@ if(VITA)
     SDL2_image SDL2_mixer SDL2 SDL
     m mathneon
     vita2d
-    #vitaGL # we'll build locally instead
+    vitaGL
     vitashark
     SceAppMgr_stub SceKernelDmacMgr_stub
     SceShaccCgExt SceShaccCg_stub taihen_stub
@@ -235,10 +235,6 @@ if(VITA)
     SceCtrl_stub
     SceHid_stub SceMotion_stub SceTouch_stub
     )
-
-target_include_directories(${GAME_TARGET} PUBLIC "extern/vitaGL/source")
-target_link_directories(${GAME_TARGET} PUBLIC "extern/vitaGL")
-target_link_libraries(${GAME_TARGET} vitaGL)
 endif()
 
 #------------------------------------------------------------------------------

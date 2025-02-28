@@ -2,7 +2,3 @@
 	path = extern/Pomme
 	url = https://github.com/ywnico/Pomme-vita
 	branch = main
-[submodule "extern/vitaGL"]
-	path = extern/vitaGL
-	url = https://github.com/ywnico/vitaGL
-	branch = ywnico_bugdom

@@ -2,17 +2,12 @@
 These instructions apply to Linux. I haven't tried other operating systems.
 
 1. Install the Vita toolchain
-1. Clone the repo **recursively**:
+2. Clone the repo **recursively**:
     ```
     git clone --recurse-submodules https://github.com/ywnico/bugdom-vita
     ```
-1. Build vitaGL:
-    ```
-    cd extern/vitaGL
-    make
-    cd ../..
-    ```
-1. Build Bugdom:
+3. Rebuild the vitaGL package in VitaSDK with `NO_DEBUG=1 CIRCULAR_VERTEX_POOL=2`
+4. Build Bugdom:
     ```
     mkdir build
     cd build
@@ -22,9 +17,6 @@ These instructions apply to Linux. I haven't tried other operating systems.
 
 ## Notes
 
-- This repository depends on ywnico's forks of Pomme (https://github.com/ywnico/Pomme-vita) and VitaGL (the `ywnico_bugdom` branch of https://github.com/ywnico/vitaGL).
+- This repository depends on ywnico's fork of Pomme (https://github.com/ywnico/Pomme-vita).
 - The Pomme fork includes:
     - Updated data directory for Vita.
-- The vitaGL fork includes:
-    - An additional function, `glTexSubImage2DUnpackRow`, to simulate the OpenGL calls `glPixelStorei(GL_UNPACK_ROW_LENGTH, some_row_length); glTexSubImage2D(...);` for for unpacking subtextures.
-    - Implementation of `GL_UNSIGNED_INT_8_8_8_8`, `GL_UNSIGNED_INT_8_8_8_8_REV`, and `GL_UNSIGNED_INT_1_5_5_5_REV`.
