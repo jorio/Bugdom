@@ -1,7 +1,8 @@
 /****************************/
 /*   	EFFECTS.C		    */
-/* (c)1997-99 Pangea Software  */
 /* By Brian Greenstone      */
+/* (c)1997-99 Pangea Software  */
+/* (c)2023 Iliyas Jorio     */
 /****************************/
 
 
@@ -30,12 +31,12 @@ static void MoveRipple(ObjNode *theNode);
 #define	NUM_PARTICLE_TEXTURES	8
 
 _Static_assert(MAX_PARTICLES <= 255, "rewrite ParticleGroupType to support > 255 particles");
+_Static_assert(MAX_PARTICLE_GROUPS <= 255, "particle group IDs currently assume the group index will fit in 8 bits");
 
 typedef struct
 {
-	uint32_t		magicNum;
-	bool			isGroupActive;
-	bool			isUsed[MAX_PARTICLES];
+	int32_t			magicNum;
+	Pool			*pool;
 	Byte			type;
 	uint8_t			flags;
 	Byte			particleTextureNum;
@@ -52,6 +53,7 @@ typedef struct
 	TQ3TriMeshData	*mesh;
 }ParticleGroupType;
 
+static inline ParticleGroupType* GetValidParticleGroup(int32_t groupID);
 
 
 /*********************/
@@ -60,6 +62,8 @@ typedef struct
 
 static ParticleGroupType	gParticleGroups[MAX_PARTICLE_GROUPS];
 static bool					gParticleGroupsInitialized = false;
+Pool*						gParticleGroupPool = NULL;
+static int32_t				gParticleGroupMagicAllocator = 0;
 
 static GLuint				gParticleTextureNames[NUM_PARTICLE_TEXTURES];
 static bool					gParticleTexturesLoaded = false;
@@ -139,6 +143,8 @@ static void InitParticleGroup(ParticleGroupType* pg)
 
 	memset(pg, 0, sizeof(ParticleGroupType));
 
+	pg->pool = Pool_New(MAX_PARTICLES);
+
 			/* INIT THE GROUP'S TRIMESH STRUCTURE */
 
 	pg->mesh = Q3TriMeshData_New(MAX_PARTICLES*2, MAX_PARTICLES*4, kQ3TriMeshDataFeatureVertexUVs | kQ3TriMeshDataFeatureVertexColors);
@@ -184,6 +190,9 @@ void InitParticleSystem(void)
 		{
 			InitParticleGroup(&gParticleGroups[i]);
 		}
+
+		gParticleGroupPool = Pool_New(MAX_PARTICLE_GROUPS);
+		gParticleGroupMagicAllocator = 0;
 		gParticleGroupsInitialized = true;
 	}
 
@@ -219,15 +228,22 @@ void DeleteAllParticleGroups(void)
 	{
 		for (int i = 0; i < MAX_PARTICLE_GROUPS; i++)
 		{
-			gParticleGroups[i].isGroupActive = false;
-
 			// Free mesh memory
 			if (gParticleGroups[i].mesh)
 			{
 				Q3TriMeshData_Dispose(gParticleGroups[i].mesh);
 				gParticleGroups[i].mesh = nil;
 			}
+
+			// Free particle pool
+			Pool_Free(gParticleGroups[i].pool);
+			gParticleGroups[i].pool = NULL;
 		}
+
+		// Free particle group pool
+		Pool_Free(gParticleGroupPool);
+		gParticleGroupPool = NULL;
+
 		gParticleGroupsInitialized = false;
 	}
 
@@ -249,10 +265,11 @@ void DeleteAllParticleGroups(void)
 // INPUT:	type 	=	group type to create
 //
 // OUTPUT:	group ID#
-//
+//			Bits 0-7: group number (8 bits)
+//			Bits 8-30: magic number (23 bits)
+//			Bit 31: reserved for negative values (illegal)
 
-int NewParticleGroup(
-		uint32_t magicNum,
+int32_t NewParticleGroup(
 		Byte type,
 		Byte flags,
 		float gravity,
@@ -262,42 +279,30 @@ int NewParticleGroup(
 		float fadeRate,
 		Byte particleTextureNum)
 {
-int						pgSlot = 0;
-ParticleGroupType		*pg = NULL;
-
 	GAME_ASSERT(gParticleGroupsInitialized);
 
 			/*************************/
 			/* SCAN FOR A FREE GROUP */
 			/*************************/
 
-	for (pgSlot = 0; pgSlot < MAX_PARTICLE_GROUPS; pgSlot++)
-	{
-		if (!gParticleGroups[pgSlot].isGroupActive)
-			goto got_it;
-	}
+	int32_t pgNum = Pool_AllocateIndex(gParticleGroupPool);
 
-			/* NOTHING FREE */
+	if (pgNum < 0)				// nothing free
+		return -1;
 
-//	DoFatalAlert("NewParticleGroup: no free groups!");
-	return -1;
+	ParticleGroupType* pg = &gParticleGroups[pgNum];
 
-got_it:
-	pg = &gParticleGroups[pgSlot];
 
 			/* INITIALIZE THE GROUP */
 
-	pg->isGroupActive = true;									// mark group as active
-	pg->type = type;										// set type
-	memset(pg->isUsed, 0, sizeof(pg->isUsed));				// mark all unused
-
+	pg->type = type;
 	pg->flags = flags;
 	pg->gravity = gravity;
 	pg->magnetism = magnetism;
 	pg->baseScale = baseScale;
 	pg->decayRate = decayRate;
 	pg->fadeRate = fadeRate;
-	pg->magicNum = magicNum;
+	pg->magicNum = gParticleGroupMagicAllocator;
 	pg->particleTextureNum = particleTextureNum;
 
 			/* INIT THE GROUP'S TRIMESH STRUCTURE */
@@ -305,7 +310,21 @@ got_it:
 	pg->mesh->texturingMode = kQ3TexturingModeAlphaBlend;
 	pg->mesh->glTextureName = gParticleTextureNames[particleTextureNum];
 
-	return pgSlot;
+			/* MAKE ID */
+
+	int32_t pgID = pgNum | (pg->magicNum << 8);
+
+			/* BUMP MAGIC ALLOCATOR FOR NEXT PGROUP */
+
+	gParticleGroupMagicAllocator++;
+	if (gParticleGroupMagicAllocator == 0x7FFFFF)	// max value that fits in 23 bits
+	{
+		gParticleGroupMagicAllocator = 0;			// wrap around cleanly
+	}
+
+			/* DONE */
+
+	return pgID;
 }
 
 
@@ -314,43 +333,33 @@ got_it:
 // Returns true if particle group was invalid or is full.
 //
 
-bool AddParticleToGroup(int groupNum, TQ3Point3D *where, TQ3Vector3D *delta, float scale, float alpha)
+bool AddParticleToGroup(int32_t groupID, TQ3Point3D *where, TQ3Vector3D *delta, float scale, float alpha)
 {
-ParticleGroupType* pg;
-int p;
+	GAME_ASSERT(groupID >= 0);
 
-	GAME_ASSERT((groupNum >= 0) && (groupNum < MAX_PARTICLE_GROUPS));
+	ParticleGroupType* pg = GetValidParticleGroup(groupID);
 
-	pg = &gParticleGroups[groupNum];
-
-	if (!pg->isGroupActive)
+	if (!pg)
 	{
-		return(true);
-//		DoAlert("AddParticleToGroup: this group is nil");
-//		DebugStr("debug me!");
+		return true;
 	}
 
 
 			/* SCAN FOR FREE SLOT */
 
-	for (p = 0; p < MAX_PARTICLES; p++)
-	{
-		if (!pg->isUsed[p])
-			goto got_it;
-	}
+	int p = Pool_AllocateIndex(pg->pool);
 
 			/* NO FREE SLOTS */
 
-	return(true);
-
+	if (p < 0)
+		return true;
 
 			/* INIT PARAMETERS */
-got_it:
+
 	pg->alpha[p] = alpha;
 	pg->scale[p] = scale;
 	pg->coord[p] = *where;
 	pg->delta[p] = *delta;
-	pg->isUsed[p] = true;
 
 	return(false);
 }
@@ -360,7 +369,6 @@ got_it:
 
 void MoveParticleGroups(void)
 {
-ParticleGroupType* pg;
 Byte		flags;
 float		fps = gFramesPerSecondFrac;
 float		y,baseScale,oneOverBaseScaleSquared,gravity;
@@ -368,11 +376,17 @@ float		decayRate,magnetism,fadeRate;
 TQ3Point3D	*coord;
 TQ3Vector3D	*delta;
 
-	for (int i = 0; i < MAX_PARTICLE_GROUPS; i++)
+	if (!gParticleGroupsInitialized)
+		return;
+
+	int g = Pool_First(gParticleGroupPool);
+	while (g >= 0)
 	{
-		pg = &gParticleGroups[i];
-		if (!pg->isGroupActive)
-			continue;
+		GAME_ASSERT(Pool_IsUsed(gParticleGroupPool, g));
+
+		ParticleGroupType* pg = &gParticleGroups[g];
+
+		int nextGroupIndex = Pool_Next(gParticleGroupPool, g);
 
 		baseScale 	= pg->baseScale;					// get base scale
 		oneOverBaseScaleSquared = 1.0f/(baseScale*baseScale);
@@ -383,10 +397,11 @@ TQ3Vector3D	*delta;
 		flags 		= pg->flags;
 
 		int n = 0;										// init counter
-		for (int p = 0; p < MAX_PARTICLES; p++)
+		int p = Pool_First(pg->pool);
+		while (p >= 0)
 		{
-			if (!pg->isUsed[p])							// make sure this particle is used
-				continue;
+			GAME_ASSERT(Pool_IsUsed(pg->pool, p));
+			int nextParticleIndex = Pool_Next(pg->pool, p);
 
 			n++;										// inc counter
 			delta = &pg->delta[p];						// get ptr to deltas
@@ -395,8 +410,6 @@ TQ3Vector3D	*delta;
 							/* ADD GRAVITY */
 
 			delta->y -= gravity * fps;									// add gravity
-
-
 
 			switch (pg->type)
 			{
@@ -415,43 +428,40 @@ TQ3Vector3D	*delta;
 							//
 
 				case	PARTICLE_TYPE_GRAVITOIDS:
-						for (int j = MAX_PARTICLES-1; j >= 0; j--)
+						for (int q = Pool_Last(pg->pool); q >= 0; q = Pool_Prev(pg->pool, q))
 						{
-							float		dist,temp,x,z;
+							GAME_ASSERT(Pool_IsUsed(pg->pool, q));
+
+							float		dist;
+							float		x,z;
 							TQ3Vector3D	v;
 
-							if (p==j)									// dont check against self
-								continue;
-							if (!pg->isUsed[j])							// make sure this particle is used
+							if (p == q)									// don't check against self
 								continue;
 
-							x = pg->coord[j].x;
-							y = pg->coord[j].y;
-							z = pg->coord[j].z;
+							x = pg->coord[q].x;
+							y = pg->coord[q].y;
+							z = pg->coord[q].z;
 
 									/* calc 1/(dist2) */
 
-							if (i < j)									// see if calc or get from buffer
+							if (p < q)									// see if calc or get from buffer
 							{
-								temp = coord->x - x;					// dx squared
-								dist = temp*temp;
-								temp = coord->y - y;					// dy squared
-								dist += temp*temp;
-								temp = coord->z - z;					// dz squared
-								dist += temp*temp;
-
-								dist = sqrtf(dist);						// 1/dist2
+								float dx = coord->x - x;
+								float dy = coord->y - y;
+								float dz = coord->z - z;
+								dist = sqrtf(dx*dx + dy*dy + dz*dz);
 								if (dist != 0.0f)
 									dist = 1.0f / (dist*dist);
 
 								if (dist > oneOverBaseScaleSquared)		// adjust if closer than radius
 									dist = oneOverBaseScaleSquared;
 
-								gGravitoidDistBuffer[i][j] = dist;		// remember it
+								gGravitoidDistBuffer[p][q] = dist;		// remember it
 							}
 							else
 							{
-								dist = gGravitoidDistBuffer[j][i];		// use from buffer
+								dist = gGravitoidDistBuffer[q][p];		// use from buffer
 							}
 
 										/* calc vector to particle */
@@ -557,23 +567,37 @@ TQ3Vector3D	*delta;
 
 			pg->scale[p] -= decayRate * fps;			// shrink it
 			if (pg->scale[p] <= 0.0f)					// see if gone
-				pg->isUsed[p] = false;
+				goto deleteParticle;
 
 					/* DO FADE */
 
 			pg->alpha[p] -= fadeRate * fps;				// fade it
 			if (pg->alpha[p] <= 0.0f)					// see if gone
-				pg->isUsed[p] = false;
+				goto deleteParticle;
 
 
+			goto nextParticle;
+
+					/* IF GONE RELEASE INDEX */
+
+deleteParticle:
+			Pool_ReleaseIndex(pg->pool, p);
+
+
+nextParticle:
+			p = nextParticleIndex;
 		}
+
 
 				/* SEE IF GROUP WAS EMPTY, THEN DELETE */
 
 		if (n == 0)
 		{
-			pg->isGroupActive = false;
+			Pool_ReleaseIndex(gParticleGroupPool, g);
 		}
+
+
+		g = nextGroupIndex;
 	}
 }
 
@@ -582,29 +606,27 @@ TQ3Vector3D	*delta;
 
 void DrawParticleGroup(const QD3DSetupOutputType *setupInfo)
 {
-ParticleGroupType *pg;
 float			baseScale;
 TQ3TriMeshData	*tm;
-TQ3Point3D		v[4],*camCoords,*coord;
+TQ3Point3D		v[4],*coord;
 TQ3Matrix4x4	m;
 static const TQ3Vector3D up = {0,1,0};
 
 
 	(void) setupInfo;
 
+	if (!gParticleGroupsInitialized)
+		return;
 
-				/* SETUP ENVIRONTMENT */
+	const TQ3Point3D* camCoords = &gGameViewInfoPtr->currentCameraCoords;
 
-
-	camCoords = &gGameViewInfoPtr->currentCameraCoords;	
-
-	for (int g = 0; g < MAX_PARTICLE_GROUPS; g++)
+	for (int g = Pool_First(gParticleGroupPool); g >= 0; g = Pool_Next(gParticleGroupPool, g))
 	{
+		GAME_ASSERT(Pool_IsUsed(gParticleGroupPool, g));
+
 		float	minX,minY,minZ,maxX,maxY,maxZ;
 
-		pg = &gParticleGroups[g];
-		if (!pg->isGroupActive)
-			continue;
+		ParticleGroupType* pg = &gParticleGroups[g];
 
 		tm = pg->mesh;									// get pointer to trimesh data
 		baseScale = pg->baseScale;						// get base scale
@@ -613,14 +635,13 @@ static const TQ3Vector3D up = {0,1,0};
 					/* ADD ALL PARTICLES TO TRIMESH */
 					/********************************/
 
-		minX = minY = minZ = 100000000;					// init bbox
+		minX = minY = minZ = 1e9f;						// init bbox
 		maxX = maxY = maxZ = -minX;
 
-		int n = 0;
-		for (int p = 0; p < MAX_PARTICLES; p++)
+		int numParticlesDrawn = 0;
+		for (int p = Pool_First(pg->pool); p >= 0; p = Pool_Next(pg->pool, p))
 		{
-			if (!pg->isUsed[p])							// make sure this particle is used
-				continue;
+			GAME_ASSERT(Pool_IsUsed(pg->pool, p));
 
 					/* TRANSFORM PARTICLE POSITION */
 
@@ -640,37 +661,38 @@ static const TQ3Vector3D up = {0,1,0};
 			v[2] = (TQ3Point3D) { -S,-S, 0 };
 			v[3] = (TQ3Point3D) { -S, S, 0 };
 
-			Q3Point3D_To3DTransformArray(&v[0], &m, &tm->points[n*4], 4);
+			Q3Point3D_To3DTransformArray(&v[0], &m, &tm->points[numParticlesDrawn * 4], 4);
 
 					/* UPDATE BBOX */
 
 			for (int i = 0; i < 4; i++)
 			{
-				if (tm->points[n*4+i].x < minX) minX = tm->points[n*4+i].x;
-				if (tm->points[n*4+i].x > maxX) maxX = tm->points[n*4+i].x;
-				if (tm->points[n*4+i].y < minY) minY = tm->points[n*4+i].y;
-				if (tm->points[n*4+i].y > maxY) maxY = tm->points[n*4+i].y;
-				if (tm->points[n*4+i].z < minZ) minZ = tm->points[n*4+i].z;
-				if (tm->points[n*4+i].z > maxZ) maxZ = tm->points[n*4+i].z;
+				const TQ3Point3D* pt = &tm->points[numParticlesDrawn * 4 + i];
+				if (pt->x < minX) minX = pt->x;
+				if (pt->x > maxX) maxX = pt->x;
+				if (pt->y < minY) minY = pt->y;
+				if (pt->y > maxY) maxY = pt->y;
+				if (pt->z < minZ) minZ = pt->z;
+				if (pt->z > maxZ) maxZ = pt->z;
 			}
 
 					/* UPDATE FACE TRANSPARENCY */
 
-			tm->vertexColors[n*4+0].a = pg->alpha[p];
-			tm->vertexColors[n*4+1].a = pg->alpha[p];
-			tm->vertexColors[n*4+2].a = pg->alpha[p];
-			tm->vertexColors[n*4+3].a = pg->alpha[p];
+			tm->vertexColors[numParticlesDrawn * 4 + 0].a = pg->alpha[p];
+			tm->vertexColors[numParticlesDrawn * 4 + 1].a = pg->alpha[p];
+			tm->vertexColors[numParticlesDrawn * 4 + 2].a = pg->alpha[p];
+			tm->vertexColors[numParticlesDrawn * 4 + 3].a = pg->alpha[p];
 
-			n++;										// inc particle count
+			numParticlesDrawn++;										// inc particle count
 		}
 
-		if (n == 0)										// if no particles, then skip
+		if (numParticlesDrawn == 0)										// if no particles, then skip
 			continue;
 
 				/* UPDATE FINAL VALUES */
 
-		tm->numTriangles = n*2;
-		tm->numPoints = n*4;
+		tm->numTriangles = numParticlesDrawn * 2;
+		tm->numPoints = numParticlesDrawn * 4;
 		tm->bBox.min.x = minX;
 		tm->bBox.min.y = minY;
 		tm->bBox.min.z = minZ;
@@ -684,11 +706,34 @@ static const TQ3Vector3D up = {0,1,0};
 	}
 }
 
+/**************** GET ACTIVE PARTICLE GROUP FROM ID ******************/
+
+static inline ParticleGroupType* GetValidParticleGroup(int32_t groupID)
+{
+	if (groupID < 0)
+		return NULL;
+
+	int32_t group = groupID & 0xFF;
+	int32_t magic = groupID >> 8;
+
+	if (group >= MAX_PARTICLE_GROUPS)
+		return NULL;
+
+	if (!Pool_IsUsed(gParticleGroupPool, group))
+		return NULL;
+
+	if (gParticleGroups[group].magicNum != magic)
+		return NULL;
+
+	return &gParticleGroups[group];
+}
+
+
 /**************** VERIFY PARTICLE GROUP MAGIC NUM ******************/
 
-bool VerifyParticleGroupMagicNum(int group, uint32_t magicNum)
+bool VerifyParticleGroup(int32_t groupID)
 {
-	return gParticleGroups[group].isGroupActive && gParticleGroups[group].magicNum == magicNum;
+	return NULL != GetValidParticleGroup(groupID);
 }
 
 
@@ -699,28 +744,23 @@ bool VerifyParticleGroupMagicNum(int group, uint32_t magicNum)
 
 bool ParticleHitObject(ObjNode *theNode, uint8_t inFlags)
 {
-TQ3Point3D	*coord;
-
-	for (int i = 0; i < MAX_PARTICLE_GROUPS; i++)
+	for (int g = Pool_First(gParticleGroupPool); g >= 0; g = Pool_Next(gParticleGroupPool, g))
 	{
-		if (!gParticleGroups[i].isGroupActive)							// see if group active
-			continue;
-			
-		if (inFlags &&												// see if check flags
-			!(inFlags & gParticleGroups[i].flags))
-		{
-			continue;
-		}
+		GAME_ASSERT(Pool_IsUsed(gParticleGroupPool, g));
 
-		for (int p = 0; p < MAX_PARTICLES; p++)
+		const ParticleGroupType* pg = &gParticleGroups[g];
+
+		if (inFlags && !(inFlags & pg->flags))				// see if check flags
+			continue;
+
+		for (int p = Pool_First(pg->pool); p >= 0; p = Pool_Next(pg->pool, p))
 		{
-			if (!gParticleGroups[i].isUsed[p])						// make sure this particle is used
+			GAME_ASSERT(Pool_IsUsed(pg->pool, p));
+
+			if (pg->alpha[p] < .4f)							// if particle is too decayed, then skip
 				continue;
 
-			if (gParticleGroups[i].alpha[p] < .4f)					// if particle is too decayed, then skip
-				continue;			 
-
-			coord = &gParticleGroups[i].coord[p];					// get ptr to coords
+			const TQ3Point3D* coord = &pg->coord[p];		// get ptr to coords
 			if (DoSimpleBoxCollisionAgainstObject(coord->y+40.0f,coord->y-40.0f,
 												coord->x-40.0f, coord->x+40.0f,
 												coord->z+40.0f, coord->z-40.0f,
@@ -730,6 +770,7 @@ TQ3Point3D	*coord;
 			}
 		}
 	}
+
 	return(false);
 }
 
@@ -739,17 +780,16 @@ TQ3Point3D	*coord;
 
 void MakeSplash(float x, float y, float z, float force, float volume)
 {
-long	pg,i,n;
 TQ3Vector3D	delta;
 TQ3Point3D	pt;
 
-	n = 30.0f * force;
+	int n = 30.0f * force;
 
 	pt.y = y;
 
 			/* white sparks */
-				
-	pg = NewParticleGroup(	0,							// magic num
+
+	int32_t pg = NewParticleGroup(
 							PARTICLE_TYPE_FALLINGSPARKS,// type
 							0,							// flags
 							800,						// gravity
@@ -758,32 +798,26 @@ TQ3Point3D	pt;
 							-.6,						// decay rate
 							.8,							// fade rate
 							PARTICLE_TEXTURE_PATCHY);	// texture
-	
-	for (i = 0; i < n; i++)
-	{
-		pt.x = x + (RandomFloat()-.5f) * 130.0f * force;
-		pt.z = z + (RandomFloat()-.5f) * 130.0f * force;
 
-		delta.x = (RandomFloat()-.5f) * 400.0f * force;
-		delta.y = 500.0f + RandomFloat() * 300.0f * force;
-		delta.z = (RandomFloat()-.5f) * 400.0f * force;
-		AddParticleToGroup(pg, &pt, &delta, RandomFloat() + 1.0f, FULL_ALPHA);
+	if (pg != -1)
+	{
+		for (int i = 0; i < n; i++)
+		{
+			pt.x = x + (RandomFloat()-.5f) * 130.0f * force;
+			pt.z = z + (RandomFloat()-.5f) * 130.0f * force;
+
+			delta.x = (RandomFloat()-.5f) * 400.0f * force;
+			delta.y = 500.0f + RandomFloat() * 300.0f * force;
+			delta.z = (RandomFloat()-.5f) * 400.0f * force;
+			AddParticleToGroup(pg, &pt, &delta, RandomFloat() + 1.0f, FULL_ALPHA);
+		}
 	}
 
 
 			/* PLAY SPLASH SOUND */
 
 	pt.x = x;
-	pt.z = z;			
+	pt.z = z;
 	PlayEffect_Parms3D(EFFECT_SPLASH, &pt, kMiddleC, volume);
 }
-
-
-
-
-
-
-
-
-
 

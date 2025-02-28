@@ -44,7 +44,14 @@ enum
 	SUPERTILE_DETAIL_SEAMLESS = 3,
 
 	SUPERTILE_DETAIL_WORST = SUPERTILE_DETAIL_PROGRESSIVE,
+
+#if OSXPPC
+	// No NPOT texture support on most PowerPC Macs (at least not on
+	// my Mac Mini G4, which apparently only supports OpenGL 1.3)
+	SUPERTILE_DETAIL_BEST = SUPERTILE_DETAIL_SHRUNK,
+#else
 	SUPERTILE_DETAIL_BEST = SUPERTILE_DETAIL_SEAMLESS,
+#endif
 };
 
 #define	OREOMAP_TILE_SIZE		32 						// pixel w/h of texture tile
@@ -95,7 +102,7 @@ struct SuperTileMemoryType
 	Byte				mode;									// free, used, etc.
 	Byte				hasLOD[MAX_LODS];						// flag set when LOD exists
 	Byte				hiccupTimer;							// timer to delay drawing to avoid hiccup of texture upload
-	TQ3Point3D			coord[MAX_LAYERS];						// world coords (y for floor & ceiling)
+	TQ3Point3D			coord[MAX_LAYERS];						// world coords of supertile center (y for floor & ceiling)
 	long				left,back;								// integer coords of back/left corner
 	uint32_t			glTextureName[MAX_LAYERS][MAX_LODS];	// OpenGL texture name for floor & ceiling at all LODs
 	uint16_t*			textureData[MAX_LAYERS][MAX_LODS];		// pixel data for floor & ceiling at all LODs
@@ -163,10 +170,15 @@ void InitCurrentScrollSettings(void);
 
 extern 	void BuildTerrainItemList(void);
 extern 	void ScanForPlayfieldItems(long top, long bottom, long left, long right);
-extern 	Boolean TrackTerrainItem(ObjNode *theNode);
+
+Boolean IsPositionOutOfRange(float x, float z);
+Boolean IsPositionOutOfRange_Far(float x, float z, float range);
+
+Boolean TrackTerrainItem(ObjNode *theNode);
+Boolean TrackTerrainItem_Far(ObjNode* theNode, float range);
+
 void PrimeInitialTerrain(Boolean justReset);
 extern 	void FindMyStartCoordItem(void);
-Boolean TrackTerrainItem_Far(ObjNode *theNode, float range);
 void RotateOnTerrain(ObjNode *theNode, float yOffset);
 extern	void DoMyTerrainUpdate(void);
 

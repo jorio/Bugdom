@@ -16,12 +16,6 @@
 #include <vitasdk.h>
 #include <vitaGL.h>
 
-#if __APPLE__
-#include "killmacmouseacceleration.h"
-#include <libproc.h>
-#include <unistd.h>
-#endif
-
 // increase heap size
 int _newlib_heap_size_user = 128 * 1024 * 1024;
 
@@ -39,45 +33,57 @@ extern "C"
 #endif
 
 	int gAntialiasingLevelAppliedOnBoot = 0;
+	int gFullscreenModeAppliedOnBoot = 0;
 
 	int GameMain(void);
 }
 
-static fs::path FindGameData()
+static fs::path FindGameData(const char* executablePath)
 {
 	fs::path dataPath;
 
-#if __APPLE__
-	char pathbuf[PROC_PIDPATHINFO_MAXSIZE];
+	int attemptNum = 0;
 
-	pid_t pid = getpid();
-	int ret = proc_pidpath(pid, pathbuf, sizeof(pathbuf));
-	if (ret <= 0)
+#if !(__APPLE__)
+	attemptNum++;		// skip macOS special case #0
+#endif
+
+	if (!executablePath)
+		attemptNum = 2;
+
+tryAgain:
+	switch (attemptNum)
 	{
-		throw std::runtime_error(std::string(__func__) + ": proc_pidpath failed: " + std::string(strerror(errno)));
+		case 0:			// special case for macOS app bundles
+			dataPath = executablePath;
+			dataPath = dataPath.parent_path().parent_path() / "Resources";
+			break;
+
+		case 1:
+			dataPath = executablePath;
+			dataPath = dataPath.parent_path() / "Data";
+			break;
+
+		case 2:
+			dataPath = "Data";
+			break;
+
+		default:
+			throw std::runtime_error("Couldn't find the Data folder.");
 	}
 
-	dataPath = pathbuf;
-	dataPath = dataPath.parent_path().parent_path() / "Resources";
-#else
-	dataPath = "Data";
-#endif
+	attemptNum++;
 
 	dataPath = dataPath.lexically_normal();
 
 	// Set data spec -- Lets the game know where to find its asset files
 	gDataSpec = Pomme::Files::HostPathToFSSpec(dataPath / "Skeletons");
 
-	// Use application resource file
-	auto applicationSpec = Pomme::Files::HostPathToFSSpec(dataPath / "System" / "Application");
-	short resFileRefNum = FSpOpenResFile(&applicationSpec, fsRdPerm);
-
-	if (resFileRefNum == -1)
+	FSSpec dummySpec;
+	if (noErr != FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Skeletons:DoodleBug.3dmf", &dummySpec))
 	{
-		throw std::runtime_error("Couldn't find the Data folder.");
+		goto tryAgain;
 	}
-
-	UseResFile(resFileRefNum);
 
 	return dataPath;
 }
@@ -93,7 +99,7 @@ static void ParseCommandLine(int argc, char** argv)
 		std::string argument = argv[i];
 
 		if (argument == "--stats")
-			gShowDebugStats = true;
+			gDebugMode = DEBUG_MODE_STATS;
 		else if (argument == "--no-vsync")
 			gCommandLine.vsync = 0;
 		else if (argument == "--vsync")
@@ -124,8 +130,10 @@ static void ParseCommandLine(int argc, char** argv)
 	}
 }
 
-static void Boot()
+static void Boot(const char* executablePath)
 {
+	SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
+
 	// Start our "machine"
 	Pomme::Init();
 
@@ -143,22 +151,31 @@ static void Boot()
 
 tryAgain:
 	// Set up GL attributes
-	/*SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+	/*
+#if !(OSXPPC)
+	//SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+#endif
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 	if (gGamePrefs.antialiasingLevel)
 	{
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, gGamePrefs.antialiasingLevel);
-	}*/
+	}
+	*/
 	gAntialiasingLevelAppliedOnBoot = gGamePrefs.antialiasingLevel;
+	gFullscreenModeAppliedOnBoot = gGamePrefs.fullscreen;
 
 	// Prepare window dimensions
 	//int display = 0;
 	float screenFillRatio = 2.0f / 3.0f;
 
 	/*SDL_Rect displayBounds = { .x = 0, .y = 0, .w = GAME_VIEW_WIDTH, .h = GAME_VIEW_HEIGHT };
+#if SDL_VERSION_ATLEAST(2,0,5)
 	SDL_GetDisplayUsableBounds(display, &displayBounds);
+#else
+	SDL_GetDisplayBounds(display, &displayBounds);
+#endif
 	TQ3Vector2D fitted = FitRectKeepAR(GAME_VIEW_WIDTH, GAME_VIEW_HEIGHT, displayBounds.w, displayBounds.h);
 	int initialWidth  = (int) (fitted.x * screenFillRatio);
 	int initialHeight = (int) (fitted.y * screenFillRatio);
@@ -171,7 +188,7 @@ tryAgain:
 			initialWidth,
 			initialHeight,
             SDL_WINDOW_FULLSCREEN | SDL_WINDOW_SHOWN);
-			//SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN | SDL_WINDOW_SHOWN);*/
+	//SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);*/
 
     int vita_height = 544;
     int vita_width = 960;
@@ -196,8 +213,9 @@ tryAgain:
 	}*/
 
 	// Find path to game data folder
-	fs::path dataPath = FindGameData();
+	fs::path dataPath = FindGameData(executablePath);
 
+#if !(NOJOYSTICK)
 	// Init joystick subsystem
 	{
 		SDL_Init(SDL_INIT_JOYSTICK);
@@ -207,6 +225,7 @@ tryAgain:
 			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING, "Bugdom", "Couldn't load gamecontrollerdb.txt!", gSDLWindow);
 		}
 	}
+#endif
 }
 
 static void Shutdown()
@@ -228,11 +247,13 @@ int bugdom_main(unsigned int argc, void* argv)
 	std::string		finalErrorMessage		= "";
 	bool			showFinalErrorMessage	= false;
 
+	const char* executablePath = argc > 0 ? ((char**) argv)[0] : NULL;
+
 	// Start the game
 	try
 	{
 		ParseCommandLine(argc, (char**) argv);
-		Boot();
+		Boot(executablePath);
 		returnCode = GameMain();
 	}
 	catch (Pomme::QuitRequest&)
@@ -256,11 +277,9 @@ int bugdom_main(unsigned int argc, void* argv)
 	}
 #endif
 
-#if __APPLE__
 	// Whether we failed or succeeded, always restore the user's mouse acceleration before exiting.
 	// (NOTE: in debug builds, we might not get here because we don't catch what GameMain throws.)
-	RestoreMacMouseAcceleration();
-#endif
+	SetMacLinearMouse(0);
 
 	Shutdown();
 

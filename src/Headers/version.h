@@ -1,0 +1,8 @@
+#pragma once
+
+#define PROJECT_VERSION "1.3.4"
+#define PROJECT_VERSION_MAJOR 1
+#define PROJECT_VERSION_MINOR 3
+#define PROJECT_VERSION_PATCH 4
+
+#define VITA_LONGVERSION "1.3.2-vita.2"

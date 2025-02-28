@@ -4,7 +4,8 @@
 
 #pragma once
 
-#define	DEFAULT_FPS			4
+#define	MIN_FPS				9
+#define	MAX_FPS				500
 
 #define	MAX_FILL_LIGHTS		4
 

@@ -16,8 +16,16 @@
 
 static const char* GenerateKiddieModeSubtitle(void);
 static const char* GenerateDetailSubtitle(void);
+
+#if !__APPLE__
 static const char* GenerateMSAASubtitle(void);
 static void MoveGrass(ObjNode *theNode);
+#endif
+
+#if OSXPPC
+static const char* GeneratePPCFullscreenModeSubtitle(void);
+static const char* GeneratePPCDisplayModeSubtitle(void);
+#endif
 
 /****************************/
 /*    CONSTANTS             */
@@ -42,7 +50,7 @@ enum
 	kButton,
 };
 
-#define MAX_CHOICES 8
+#define MAX_CHOICES 32
 
 _Static_assert(NUM_MOUSE_SENSITIVITY_LEVELS <= MAX_CHOICES, "too many mouse sensitivity levels");
 
@@ -77,12 +85,22 @@ static const SettingEntry gSettingsMenu[] =
 	},
 
     /*
+#if !OSXPPC
 	{
 		.kind = kCloverRange,
 		.ptr = &gGamePrefs.mouseSensitivityLevel,
 		.label = "Mouse sensitivity",
 		.nChoices = NUM_MOUSE_SENSITIVITY_LEVELS,
 		.choices = {"1","2","3","4","5","6","7","8"},
+	},
+#endif
+
+	{
+		.kind = kCycler,
+		.ptr = &gGamePrefs.dragonflyControl,
+		.label = "Dragonfly steering",
+		.nChoices = 4,
+		.choices = {"Normal", "Invert Y axis", "Invert X axis", "Invert X & Y"},
 	},
     */
 
@@ -135,7 +153,7 @@ static const SettingEntry gSettingsMenu[] =
 	}
 };
 
-static const SettingEntry gVideoMenu[] =
+static SettingEntry gVideoMenu[] =
 {
 	/*
     {
@@ -145,8 +163,22 @@ static const SettingEntry gVideoMenu[] =
 		.callback = SetFullscreenMode,
 		.nChoices = 2,
 		.choices = {"No", "Yes"},
+#if OSXPPC
+		.subtitle = GeneratePPCFullscreenModeSubtitle,
+#endif
 	},
     */
+
+#if OSXPPC
+	{
+		.kind = kCycler,
+		.ptr = &gGamePrefs.curatedDisplayModeID,
+		.label = "Fullscreen mode",
+		.nChoices = 1,
+		.choices = {"0x0"},
+		.subtitle = GeneratePPCDisplayModeSubtitle,
+	},
+#endif
 
 	{
 		.kind = kCycler,
@@ -203,16 +235,6 @@ ObjNode* grassBladeObjs[10];
 
 /***********************************************/
 
-static unsigned int PositiveModulo(int value, unsigned int m)
-{
-	int mod = value % (int)m;
-	if (mod < 0)
-	{
-		mod += m;
-	}
-	return mod;
-}
-
 static void SettingEntry_Cycle(const SettingEntry* entry, int delta)
 {
 	unsigned int value = (unsigned int)*entry->ptr;
@@ -232,20 +254,52 @@ static const char* GenerateKiddieModeSubtitle(void)
 
 static const char* GenerateDetailSubtitle(void)
 {
-    if (gGamePrefs.detailLevel == DETAIL_LEVEL_LOW) 
-        return "The \"ATI Rage II\" look";
+    if (gGamePrefs.detailLevel == DETAIL_LEVEL_LOW)
+        return "The \223ATI Rage II\224 look";
     else if (gGamePrefs.detailLevel == DETAIL_LEVEL_TERRAIN_LOW)
         return "The middle ground";
     else
         return NULL;
 }
 
+#if !(__APPLE__)
 static const char* GenerateMSAASubtitle(void)
 {
 	return gGamePrefs.antialiasingLevel != gAntialiasingLevelAppliedOnBoot
 		? "Will apply when you restart the game"
 		: NULL;
 }
+#endif
+
+#if OSXPPC
+static const char* GeneratePPCFullscreenModeSubtitle(void)
+{
+	return gGamePrefs.fullscreen != gFullscreenModeAppliedOnBoot
+		? "Will apply when you restart the game"
+		: NULL;
+}
+
+static const char* GeneratePPCDisplayModeSubtitle(void)
+{
+	static bool initialized = false;
+	static Byte currentDisplayMode = 0;
+
+	if (!initialized)
+	{
+		initialized = true;
+		currentDisplayMode = gGamePrefs.curatedDisplayModeID;
+	}
+
+	if (gGamePrefs.curatedDisplayModeID != currentDisplayMode)
+	{
+		return "Will apply when you restart the game";
+	}
+	else
+	{
+		return NULL;
+	}
+}
+#endif
 
 /****************** SETUP SETTINGS SCREEN **************************/
 
@@ -438,11 +492,38 @@ static void MakeMSAAWarning(void)
 static void SettingsScreenDrawStuff(const QD3DSetupOutputType *setupInfo)
 {
 	DrawObjects(setupInfo);
-	QD3D_DrawParticles(setupInfo);
+	QD3D_DrawShards(setupInfo);
 }
+
+#if OSXPPC
+static void FillCuratedDisplayModeOptions(void)
+{
+	static SettingEntry* displayModeEntry = &gVideoMenu[1];
+	static char modeNames[24][MAX_CHOICES];
+
+	Byte* curatedModeIDs = NULL;
+	int numCuratedModes = CurateDisplayModes(0, &curatedModeIDs);
+	if (numCuratedModes > MAX_CHOICES)
+		numCuratedModes = MAX_CHOICES;
+
+	displayModeEntry->nChoices = numCuratedModes;
+	for (int i = 0; i < numCuratedModes; i++)
+	{
+		SDL_DisplayMode mode = {0};
+		SDL_GetDisplayMode(0, curatedModeIDs[i], &mode);
+
+		snprintf(modeNames[i], sizeof(modeNames[i]), "%dx%d, %dHz", mode.w, mode.h, mode.refresh_rate);
+		displayModeEntry->choices[i] = modeNames[i];
+	}
+}
+#endif
 
 void DoSettingsScreen(void)
 {
+#if OSXPPC
+	FillCuratedDisplayModeOptions();
+#endif
+
 	SetupSettingsScreen("Settings", gSettingsMenu);
 	bool done = false;
 
@@ -450,7 +531,7 @@ void DoSettingsScreen(void)
 	{
 		UpdateInput();
 		MoveObjects();
-		QD3D_MoveParticles();
+		QD3D_MoveShards();
 		QD3D_DrawScene(gGameViewInfoPtr, SettingsScreenDrawStuff);
 		QD3D_CalcFramesPerSecond();
 		DoSDLMaintenance();

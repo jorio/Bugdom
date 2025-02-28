@@ -98,12 +98,18 @@ int curState = kPauseChoice_Resume;
 	SDL_ShowCursor(1);
 
 	gGammaFadeFactor = 1.0f;
+	
+	gIsGamePaused = true;
 
 			/* PRELOAD TEXTURES */
 
 	GLuint textures[NUM_PAUSE_TEXTURES];
+	int loadFlags = kRendererTextureFlags_ClampBoth;
+#if OSXPPC
+	loadFlags |= kRendererTextureFlags_ForcePOT;
+#endif
 	for (int i = 0; i < NUM_PAUSE_TEXTURES; i++)
-		textures[i] = QD3D_LoadTextureFile(1500+i, kRendererTextureFlags_ClampBoth);
+		textures[i] = QD3D_LoadTextureFile(1500+i, loadFlags);
 
 			/* CREATE MESH */
 
@@ -123,14 +129,17 @@ int curState = kPauseChoice_Resume;
 	gPauseQuad->points[2] = (TQ3Point3D) { +xs, +ys, 0 };
 	gPauseQuad->points[3] = (TQ3Point3D) { -xs, +ys, 0 };
 
+#if OSXPPC
+	gPauseQuad->vertexUVs[1].u = gPauseQuad->vertexUVs[2].u = 200.0f / POTCeil32(200);
+	gPauseQuad->vertexUVs[0].v = gPauseQuad->vertexUVs[1].v = 152.0f / POTCeil32(152);
+#endif
+
 			/*******************/
 			/* LET USER SELECT */
 			/*******************/
 
 
-	int prevRawMouseX = -1;
-	int prevRawMouseY = -1;
-	SDL_GetMouseState(&prevRawMouseX, &prevRawMouseY);
+	TQ3Point2D prevMousePos = GetMousePosition();
 
 	bool ignoreThumbstick = true;
 
@@ -150,15 +159,14 @@ int curState = kPauseChoice_Resume;
 
 		if (gPauseQuad->diffuseColor.a >= 0.9f)
 		{
-			int rawMouseX, rawMouseY;
-			SDL_GetMouseState(&rawMouseX, &rawMouseY);
-			bool mouseMoved = prevRawMouseX != rawMouseX || prevRawMouseY != rawMouseY;
+			TQ3Point2D newMousePos = GetMousePosition();
+			bool mouseMoved = prevMousePos.x != newMousePos.x || prevMousePos.y != newMousePos.y;
 
 			int newState = curState;
 
 			if (mouseMoved)
 			{
-				TQ3Point3D mouse = {rawMouseX, rawMouseY, 0};
+				TQ3Point3D mouse = {newMousePos.x, newMousePos.y, 0};
 				Q3Point3D_Transform(&mouse, &gWindowToFrustumCorrectAspect, &mouse);
 
 				if      (mouse.x < -xs) newState = kPauseChoice_Null;
@@ -169,8 +177,7 @@ int curState = kPauseChoice_Resume;
 				else if (mouse.y > ys*-.81f) newState = kPauseChoice_Quit;
 				else newState = kPauseChoice_Null;
 
-				prevRawMouseX = rawMouseX;
-				prevRawMouseY = rawMouseY;
+				prevMousePos = newMousePos;
 			}
 
 			if (!mouseMoved || newState == kPauseChoice_Null)
@@ -238,6 +245,8 @@ int curState = kPauseChoice_Resume;
 	while(FlushMouseButtonPress());							// wait for button up
 
 	ResetInputState();
+
+	gIsGamePaused = false;
 
 			/* FREE MESH/TEXTURES */
 
@@ -322,7 +331,7 @@ Boolean			fo = false;
 
 			/* LOAD ART */
 			
-	err = FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:Pangea.3dmf", &spec);		// load other models
+	err = FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Models:Pangea.3dmf", &spec);		// load other models
 	GAME_ASSERT(err == noErr);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_TITLE);	
 

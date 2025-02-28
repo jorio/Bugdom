@@ -71,7 +71,7 @@ bool DoLevelSelect(void)
 	{
 		UpdateInput();
 		MoveObjects();
-		QD3D_MoveParticles();
+		QD3D_MoveShards();
 		QD3D_DrawScene(gGameViewInfoPtr, LevelSelectDrawStuff);
 		QD3D_CalcFramesPerSecond();
 		DoSDLMaintenance();
@@ -175,7 +175,7 @@ static void MakeLevelSelectObjects(void)
 static void LevelSelectDrawStuff(const QD3DSetupOutputType *setupInfo)
 {
 	DrawObjects(setupInfo);
-	QD3D_DrawParticles(setupInfo);
+	QD3D_DrawShards(setupInfo);
 }
 
 /******************* Selection motion ********************/

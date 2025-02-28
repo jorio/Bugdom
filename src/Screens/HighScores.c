@@ -178,7 +178,7 @@ QD3DSetupInputType		viewDef;
 		/* LOAD MODELS */
 		/***************/
 		
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:HighScores.3dmf", &file);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Models:HighScores.3dmf", &file);
 	LoadGrouped3DMF(&file, MODEL_GROUP_HIGHSCORES);
 
 	
@@ -219,8 +219,6 @@ long				count;
 		{
 			FSClose(refNum);			
 			FSpDelete(&file);												// file is corrupt, so delete
-//			DoAlert("LoadHighScores: FSRead failed!");
-//			ShowSystemErr(iErr);
 			return;
 		}
 		FSClose(refNum);			

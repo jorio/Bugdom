@@ -138,6 +138,11 @@ static	void(*myMoveTable[])(ObjNode *) =
 
 	if (TrackTerrainItem(theNode))						// just check to see if it's gone
 	{
+		if (theNode == gCurrentEatingFish)				// yikes, don't let player deref a stale object
+		{
+			gCurrentEatingFish = NULL;
+			KillPlayer(false);
+		}
 		DeleteEnemy(theNode);
 		return;
 	}
@@ -145,7 +150,16 @@ static	void(*myMoveTable[])(ObjNode *) =
 	GetObjectInfo(theNode);
 	
 	theNode->AttackTimer -= gFramesPerSecondFrac;		// dec this timer
-	
+
+
+			/* GIVE UP CHASE MODE IF PLAYER EATEN BY ANOTHER FISH */
+
+	if (gCurrentEatingFish && theNode != gCurrentEatingFish)
+	{
+		theNode->Mode = PONDFISH_MODE_WAIT;
+	}
+
+
 	myMoveTable[theNode->Skeleton->AnimNum](theNode);
 }
 
@@ -174,9 +188,10 @@ float	dist,r,aim;
 		}
 
 
-			/* SEE IF PLAYER IS IN THE WATER AND IS CLOSE */
-			
-		if (gPlayerObj->StatusBits & STATUS_BIT_UNDERWATER)
+			/* START CHASING IF PLAYER IS STILL IN WATER, NOT BEING EATEN, AND CLOSE */
+
+		if (gPlayerObj->StatusBits & STATUS_BIT_UNDERWATER
+			&& !gCurrentEatingFish)										// make sure not already being eaten
 		{
 			dist = CalcQuickDistance(gMyCoord.x, gMyCoord.z, gCoord.x, gCoord.z);
 			if (dist < PONDFISH_CHASE_DIST)
@@ -210,9 +225,10 @@ float	dist,r,aim;
 		}
 
 
-			/* SEE IF PLAYER IS STILL IN THE WATER AND IS CLOSE */
-			
-		if (gPlayerObj->StatusBits & STATUS_BIT_UNDERWATER)
+			/* ATTACK IF PLAYER IS STILL IN WATER, NOT BEING EATEN, AND CLOSE */
+
+		if (gPlayerObj->StatusBits & STATUS_BIT_UNDERWATER
+			&& !gCurrentEatingFish)									// make sure not already being eaten
 		{
 			dist = CalcQuickDistance(gMyCoord.x, gMyCoord.z, gCoord.x, gCoord.z);
 			if (dist > PONDFISH_CHASE_DIST)
@@ -221,19 +237,15 @@ float	dist,r,aim;
 			}
 					/* ALSO SEE IF CLOSE ENOUGH TO ATTACK */
 			else
-			if (dist < PONDFISH_ATTACK_DIST)
+			if (dist < PONDFISH_ATTACK_DIST
+				&& aim < .8f							// aiming at player
+				&& theNode->AttackTimer < 0)
 			{
-				if (aim < .8f)							// see if aiming at player
-				{
-					if (theNode->AttackTimer < 0.0f)
-					{
-						theNode->TweakJumps = true;
+				theNode->TweakJumps = true;
 attack:					
-						MorphToSkeletonAnim(theNode->Skeleton, PONDFISH_ANIM_JUMPATTACK, 6.0);
-						theNode->JumpNow = false;
-						theNode->IsJumping = false;
-					}
-				}
+				MorphToSkeletonAnim(theNode->Skeleton, PONDFISH_ANIM_JUMPATTACK, 6.0);
+				theNode->JumpNow = false;
+				theNode->IsJumping = false;
 			}
 		}
 	}
@@ -294,11 +306,10 @@ static void  MovePondFish_JumpAttack(ObjNode *theNode)
 				
 			dx = playerPt.x - mouthPt.x;
 			dz = playerPt.z - mouthPt.z;
+			gDelta.x = dx*15;
+			gDelta.z = dz*15;
+		}
 
-			gDelta.x = dx*(gFramesPerSecond*.5f);
-			gDelta.z = dz*(gFramesPerSecond*.5f);
-		}		
-		
 		
 			/* DO GRAVITY & SEE IF SPLASHDOWN */
 					
@@ -394,6 +405,9 @@ TQ3Point3D	pt;
 	if (gPlayerMode == PLAYER_MODE_BALL)					// can only eat the bug, not the ball
 		return;
 
+	if (gCurrentEatingFish)									// bug already eaten by someone else
+		return;
+
 	
 			/* GET COORD OF MOUTH */
 			
@@ -432,20 +446,4 @@ static void PondFish_ContinueEatingPlayer(ObjNode *fish)
 		KillPlayer(false);	
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

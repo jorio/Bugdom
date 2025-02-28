@@ -87,16 +87,16 @@ void SetupUIStuff(int backgroundType)
 	QD3D_SetupWindow(&viewDef, &gGameViewInfoPtr);
 
 
-	QD3D_InitParticles();
+	QD3D_InitShards();
 
 	/************/
 	/* LOAD ART */
 	/************/
 
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:BonusScreen.3dmf", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Models:BonusScreen.3dmf", &spec);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_BONUS);
 
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:Lawn_Models2.3dmf", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Models:Lawn_Models2.3dmf", &spec);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_LEVELSPECIFIC2);
 
 	LoadASkeleton(SKELETON_TYPE_SPIDER);  // for back button
@@ -131,7 +131,7 @@ void CleanupUIStuff()
 	DeleteAllObjects();
 	FreeAllSkeletonFiles(-1);
 	DeleteAll3DMFGroups();
-	QD3D_DisposeParticles();
+	QD3D_DisposeShards();
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
 	DisposeSoundBank(SOUNDBANK_BONUS);
 	DisposeSoundBank(SOUNDBANK_MAIN);
@@ -222,7 +222,7 @@ void NukeObjectsInSlot(u_short objNodeSlotID)
 		ObjNode* nextNode = node->NextNode;
 		if (node->Slot == objNodeSlotID)
 		{
-			//QD3D_ExplodeGeometry(node, 200.0f, PARTICLE_MODE_UPTHRUST | PARTICLE_MODE_NULLSHADER, 1, 0.5f);
+			//QD3D_ExplodeGeometry(node, 200.0f, SHARD_MODE_UPTHRUST | SHARD_MODE_NULLSHADER, 1, 0.5f);
 			DeleteObject(node);
 		}
 		node = nextNode;

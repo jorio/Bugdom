@@ -806,6 +806,15 @@ int		j;
 	}
 
 
+			/* BAIL JUST IN CASE ENEMY REFERENCE WENT INVALID */
+
+	if (!enemy || enemy->CType == INVALID_NODE_FLAG)
+	{
+		KillPlayer(false);
+		return;
+	}
+
+
 	s = PLAYER_BUG_SCALE / enemy->Scale.x;			// compensate for enemy's scale
 	Q3Matrix4x4_SetScale(&m, s,s,s);
 	FindJointFullMatrix(enemy,j,&m2);						// get matrix
@@ -1469,7 +1478,7 @@ static void TorchPlayer(void)
 		if (gPlayerObj->ParticleGroup == -1)
 		{
 new_pgroup:		
-			gPlayerObj->ParticleGroup = NewParticleGroup(0,		// magic num
+			gPlayerObj->ParticleGroup = NewParticleGroup(
 														PARTICLE_TYPE_FALLINGSPARKS,// type
 														PARTICLE_FLAGS_HOT,			// flags
 														-100,						// gravity

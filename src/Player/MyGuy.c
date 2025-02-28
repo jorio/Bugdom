@@ -50,8 +50,7 @@ long		gMyStartX,gMyStartZ;
 TQ3Point3D	gMyCoord = {0,0,0};
 ObjNode		*gPlayerObj,*gMyBuddy;
 float		gShieldTimer = 0,gShieldRingTick = 0;
-short		gShieldParticleGroupA,gShieldParticleGroupB;
-u_long		gShieldMagicA, gShieldMagicB;
+int32_t		gShieldParticleGroupA,gShieldParticleGroupB;
 short		gShieldChannel = -1;
 float		gShieldRot = 0;
 
@@ -107,6 +106,8 @@ void InitPlayerAtStartOfLevel(void)
 
 void ResetPlayer(void)
 {
+	gCurrentEatingFish = NULL;
+
 		/* RETURN PLAYER TO STANDING MODE */
 		
 	if (gPlayerMode == PLAYER_MODE_BALL)				// see if turn into bug
@@ -208,6 +209,7 @@ u_char		sides;
 			/******************************/
 			
 	gPlayerObj->StatusBits &= ~STATUS_BIT_UNDERWATER;			// assume not in water volume
+	gPlayerObj->StatusBits &= ~STATUS_BIT_INVISCOUSTRAP;		// assume not in viscous volume
 	gPlayerObj->MPlatform = nil;								// assume not on MPlatform
 
 	for (i=0; i < gNumCollisions; i++)						
@@ -315,7 +317,7 @@ u_char		sides;
 			
 			if (ctype & CTYPE_VISCOUS)
 			{
-				ApplyFrictionToDeltas(120, &gDelta);
+				gPlayerObj->StatusBits |= STATUS_BIT_INVISCOUSTRAP;
 			}
 	}
 
@@ -788,15 +790,14 @@ explode:
 
 static void SplatterBuddy(ObjNode *theNode)
 {
-long			pg,i;
 TQ3Vector3D		delta;
 TQ3Point3D		coord;
 
 	DeleteObject(theNode);
 	
 				/* MAKE PARTICLE EXPLOSION */
-				
-	pg = NewParticleGroup(	0,							// magic num
+
+	int32_t pg = NewParticleGroup(
 							PARTICLE_TYPE_FALLINGSPARKS,	// type
 							PARTICLE_FLAGS_BOUNCE|PARTICLE_FLAGS_HOT,		// flags
 							550,						// gravity
@@ -808,7 +809,7 @@ TQ3Point3D		coord;
 	
 	if (pg != -1)
 	{
-		for (i = 0; i < 100; i++)
+		for (int i = 0; i < 100; i++)
 		{
 			delta.x = (RandomFloat()-.5f) * 800.0f;
 			delta.y = (RandomFloat()-.4f) * 800.0f;
@@ -887,12 +888,10 @@ float		r;
 
 				/* DO PARTICLE GROUP A */
 				
-		if ((gShieldParticleGroupA == -1) || (!VerifyParticleGroupMagicNum(gShieldParticleGroupA, gShieldMagicA)))
+		if (!VerifyParticleGroup(gShieldParticleGroupA))
 		{
-new_groupa:		
-			gShieldMagicA = MyRandomLong();			// generate a random magic num
-
-			gShieldParticleGroupA = NewParticleGroup(gShieldMagicA,					// magic num
+new_groupa:
+			gShieldParticleGroupA = NewParticleGroup(
 													PARTICLE_TYPE_FALLINGSPARKS,	// type
 													0,								// flags
 													0,								// gravity
@@ -917,11 +916,10 @@ new_groupa:
 		{
 					/* DO PARTICLE GROUP B */
 					
-			if ((gShieldParticleGroupB == -1) || (!VerifyParticleGroupMagicNum(gShieldParticleGroupB, gShieldMagicB)))
+			if (!VerifyParticleGroup(gShieldParticleGroupB))
 			{
-	new_groupb:		
-				gShieldMagicB = MyRandomLong();											// generate a random magic num
-				gShieldParticleGroupB = NewParticleGroup(gShieldMagicB,					// magic num
+new_groupb:
+				gShieldParticleGroupB = NewParticleGroup(
 														PARTICLE_TYPE_FALLINGSPARKS,	// type
 														0,								// flags
 														0,								// gravity

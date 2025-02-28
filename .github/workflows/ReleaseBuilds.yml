@@ -4,40 +4,44 @@ on: [workflow_dispatch]
 
 jobs:
   build-linux-appimage:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04  # Use oldest available Ubuntu for maximum glibc compatibility
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v2  # Checks out repository under $GITHUB_WORKSPACE so the job can access it
-        with:
-          submodules: 'recursive'
+      - uses: actions/checkout@v4
+        with: {submodules: 'recursive'}
       - name: Get build dependencies for SDL from APT  # cf. https://github.com/libsdl-org/SDL/blob/main/docs/README-linux.md
         run: |
           sudo apt update
-          sudo apt install libasound2-dev libpulse-dev libaudio-dev libjack-dev libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxinerama-dev libxxf86vm-dev libxss-dev libgl1-mesa-dev libdbus-1-dev libudev-dev libgles2-mesa-dev libegl1-mesa-dev libibus-1.0-dev fcitx-libs-dev libsamplerate0-dev libsndio-dev libwayland-dev libxkbcommon-dev libdrm-dev libgbm-dev
+          sudo apt install -y libasound2-dev libpulse-dev \
+            libaudio-dev libjack-dev libsndio-dev libsamplerate0-dev libx11-dev libxext-dev \
+            libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libwayland-dev \
+            libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
+            libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev fcitx-libs-dev
       - run: python3 build.py --dependencies
       - run: python3 build.py --configure
       - run: python3 build.py --build
       - run: python3 build.py --package
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: linux-build
           path: dist/
+          compression-level: 0
 
   build-windows:
     runs-on: windows-2022
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: 'recursive'
+      - uses: actions/checkout@v4
+        with: {submodules: 'recursive'}
       - run: python3 build.py --dependencies
       - run: python3 build.py --configure -G 'Visual Studio 17 2022'
       - run: python3 build.py --build
       - run: python3 build.py --package
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: windows-build
           path: dist/
+          compression-level: 0
 
   build-macos:
     runs-on: macos-11
@@ -45,27 +49,29 @@ jobs:
     env:
       CODE_SIGN_IDENTITY: ${{ secrets.APPLE_CODE_SIGN_IDENTITY }}
     steps:
-      - uses: apple-actions/import-codesign-certs@v1
+      - uses: apple-actions/import-codesign-certs@v2
         with:
           p12-file-base64: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_P12_BASE64 }}
           p12-password: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}
-      - name: Install gon for notarization
+      - uses: actions/checkout@v4
+        with: {submodules: 'recursive'}
+      - name: Get artifact name
         run: |
-          brew tap mitchellh/gon
-          brew install mitchellh/gon/gon
-      - uses: actions/checkout@v2
-        with:
-          submodules: 'recursive'
+          ARTIFACT_NAME="$(python3 build.py --print-artifact-name)"
+          echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
+          echo Artifact name = $ARTIFACT_NAME
       - run: python3 build.py --dependencies
       - run: python3 build.py --configure
       - run: python3 build.py --build
       - run: python3 build.py --package
       - name: Notarize
-        run: gon packaging/gon-config.json
-        env:
-          AC_USERNAME: ${{ secrets.APPLE_NOTARIZATION_USERNAME }}
-          AC_PASSWORD: ${{ secrets.APPLE_NOTARIZATION_PASSWORD }}
-      - uses: actions/upload-artifact@v2
+        run: |
+          xcrun notarytool store-credentials GameNotarizationProfile --apple-id ${{ secrets.APPLE_NOTARIZATION_USERNAME }} --password ${{ secrets.APPLE_NOTARIZATION_PASSWORD }} --team-id ${{ secrets.APPLE_DEVELOPMENT_TEAM }}
+          xcrun notarytool submit "dist/$ARTIFACT_NAME" --keychain-profile GameNotarizationProfile --wait
+      - name: Staple
+        run: xcrun stapler staple "dist/$ARTIFACT_NAME"
+      - uses: actions/upload-artifact@v4
         with:
           name: mac-build
           path: dist/
+          compression-level: 0

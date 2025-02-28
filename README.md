@@ -2,7 +2,7 @@
 
 This is a port of Pangea Software's **Bugdom** to PlayStation Vita, based on the [modern version of Bugdom](https://github.com/jorio/bugdom) written by Iliyas Jorio. For more information on the history of Bugdom and [@jorio](https://github.com/jorio)'s rewrite, see https://github.com/jorio/bugdom.
 
-![Bugdom Screenshot](docs/screenshot.png)
+![Bugdom Screenshot](docs/screenshot.webp)
 
 ## Installation
 
@@ -56,6 +56,8 @@ Games are saved to `ux0:data/Bugdom/`. There are only 3 save slots, but you can 
 - Controller navigation has been added to all menus and most cheat codes
 - Settings have been added to allow reversing camera and flight controls
 - A third level of detail has been added between high and low.
+
+A port of the sequel is also available: [Bugdom 2](https://github.com/jorio/Bugdom2).
 
 ## Documentation
 

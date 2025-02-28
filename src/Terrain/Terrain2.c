@@ -269,8 +269,7 @@ long			realX,realZ;
 			type = itemPtr->type;								// get item #
 			if (type > MAX_ITEM_NUM)							// error check!
 			{
-				DoAlert("Illegal Map Item Type!");
-				ShowSystemErr(type);
+				DoAlert("Illegal Map Item Type! (%d)", type);
 			}
 
 			realX = itemPtr->x * MAP2UNIT_VALUE;				// calc & pass 3-space coords
@@ -308,6 +307,33 @@ static Boolean NilAdd(TerrainItemEntryType *itemPtr,long x, long z)
 	return(false);
 }
 
+/***************** IS POSITION OUT OF RANGE ******************/
+//
+// Returns true if position is out of range
+//
+
+Boolean IsPositionOutOfRange(float x, float z)
+{
+	return x < gTerrainItemDeleteWindow_Left
+		|| x > gTerrainItemDeleteWindow_Right
+		|| z < gTerrainItemDeleteWindow_Far
+		|| z > gTerrainItemDeleteWindow_Near;
+}
+
+/***************** IS POSITION OUT OF RANGE ******************/
+//
+// Returns true if position is out of range
+//
+// INPUT: range = INTEGER range to add to delete window
+//
+
+Boolean IsPositionOutOfRange_Far(float x, float z, float range)
+{
+	return x < gTerrainItemDeleteWindow_Left - range
+		|| x > gTerrainItemDeleteWindow_Right + range
+		|| z < gTerrainItemDeleteWindow_Far + range
+		|| z > gTerrainItemDeleteWindow_Near - range;
+}
 
 /***************** TRACK TERRAIN ITEM ******************/
 //
@@ -316,21 +342,7 @@ static Boolean NilAdd(TerrainItemEntryType *itemPtr,long x, long z)
 
 Boolean TrackTerrainItem(ObjNode *theNode)
 {
-float	x,z;
-
-	x = theNode->Coord.x;
-	if (x < gTerrainItemDeleteWindow_Left)
-		return(true);
-	if (x > gTerrainItemDeleteWindow_Right)
-		return(true);
-
-	z = theNode->Coord.z;
-	if (z < gTerrainItemDeleteWindow_Far)
-		return(true);
-	if (z > gTerrainItemDeleteWindow_Near)
-		return(true);
-
-	return(false);
+	return IsPositionOutOfRange(theNode->Coord.x, theNode->Coord.z);
 }
 
 /***************** TRACK TERRAIN ITEM FAR ******************/
@@ -342,21 +354,7 @@ float	x,z;
 
 Boolean TrackTerrainItem_Far(ObjNode *theNode, float range)
 {
-float	x,z;
-
-	x = (theNode->Coord.x);
-	if (x < (gTerrainItemDeleteWindow_Left-range))
-		return(true);
-	if (x > (gTerrainItemDeleteWindow_Right+range))
-		return(true);
-
-	z = (theNode->Coord.z);
-	if (z < (gTerrainItemDeleteWindow_Far + range))
-		return(true);
-	if (z > (gTerrainItemDeleteWindow_Near - range))
-		return(true);
-
-	return(false);
+	return IsPositionOutOfRange_Far(theNode->Coord.x, theNode->Coord.z, range);
 }
 
 /*************************** ROTATE ON TERRAIN ***************************/

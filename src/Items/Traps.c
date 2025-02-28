@@ -1,7 +1,8 @@
 /****************************/
 /*   	TRAPS.C			    */
-/* (c)1999 Pangea Software  */
 /* By Brian Greenstone      */
+/* (c)1999 Pangea Software  */
+/* (c)2023 Iliyas Jorio     */
 /****************************/
 
 
@@ -33,9 +34,14 @@ static void CalcFootCollisionBoxes(ObjNode *theNode);
 
 
 		/* FOOT STUFF */
-		
+
+#define	FOOT_APEX				950.0f
 #define	FOOT_SPLINE_SPEED		1.0f
+#define	FOOT_SPLINE_MAX_SPEED	(500.0f * FOOT_SPLINE_SPEED)
 #define	FOOT_SCALE				10.0f
+#define	FOOT_TIME_GOUP			1.0f
+#define	FOOT_TIME_GODOWN		0.75f
+#define	FOOT_TIME_DOWN			0.5f
 
 enum
 {
@@ -67,6 +73,8 @@ enum
 #define	BOULDER_RADIUS		35.0f
 #define	BOULDER_SCALE		3.0f
 #define	BOULDER_DIST		1200.0f
+#define	BOULDER_MIN_DAMAGE	0.1f
+#define	BOULDER_MAX_DAMAGE	0.4f
 
 
 #define	THORN_SCALE			2.2f
@@ -93,12 +101,11 @@ Boolean		gBatExists;
 const TQ3Point3D gBatMouthOff = {0,-8,-20};
 ObjNode	*gCurrentEatingBat;
 
-#define	GroundTimer		SpecialF[0]
+#define	FootTimer		SpecialF[0]
 
 #define	GotPlayer		Flag[1]
 
 #define	PTimer			SpecialF[0]
-#define	PGroupMagic		SpecialL[1]
 #define	WallRot			Flag[2]
 #define WallLength		SpecialL[0]
 
@@ -155,12 +162,23 @@ float	x,z,placement;
 	newObj->Damage 	= .3;			
 	newObj->CType 	= CTYPE_MISC|CTYPE_HURTME|CTYPE_BLOCKCAMERA;
 	newObj->CBits 	= CBITS_TOUCHABLE;
-	
+
 	AllocateCollisionBoxMemory(newObj, 3);							// alloc 3 collision boxes
 	CalcFootCollisionBoxes(newObj);
-	
 
-	newObj->Mode = MyRandomLong()&1;
+	newObj->Mode = MyRandomLong() % 3;
+	switch (newObj->Mode)
+	{
+		case FOOT_MODE_GOUP:
+			newObj->FootTimer = RandomFloat() * FOOT_TIME_GOUP / 2;
+			break;
+		case FOOT_MODE_GODOWN:
+			newObj->FootTimer = RandomFloat() * FOOT_TIME_GODOWN / 2;
+			break;
+		case FOOT_MODE_DOWN:
+			newObj->FootTimer = RandomFloat() * FOOT_TIME_DOWN / 2;
+			break;
+	}
 
 
 			/* ADD SPLINE OBJECT TO SPLINE OBJECT LIST */
@@ -192,8 +210,6 @@ static const TQ3Point3D	pts[12] =
 TQ3Point3D	pts2[12];
 float		l,r,f,b;
 
-	theNode->Rot.y = CalcYAngleFromPointToPoint(theNode->Rot.y, theNode->OldCoord.x, theNode->OldCoord.z,
-												theNode->Coord.x, theNode->Coord.z);
 
 		/* TRANSFORM BOX POINTS */
 		
@@ -264,92 +280,79 @@ float		l,r,f,b;
 /*********************** MOVE FOOT ON SPLINE*****************************/
 
 static void MoveFootOnSpline(ObjNode *theNode)
-{	
-Boolean isVisible; 
+{
 float	fps = gFramesPerSecondFrac;
-float	y;
-Byte	mode = theNode->Mode;
 
-	isVisible = IsSplineItemVisible(theNode);					// update its visibility
+	Boolean isVisible = IsSplineItemVisible(theNode);			// update its visibility
 
-	switch(mode)
+	theNode->FootTimer += fps;									// tick mode timer
+
+	GetObjectCoordOnSpline(theNode, &theNode->Coord.x, &theNode->Coord.z);
+	float floorY = GetTerrainHeightAtCoord(theNode->Coord.x, theNode->Coord.z, FLOOR);
+
+			/* UPDATE SPEED AND POSITION ON SPLINE */
+
+	if (theNode->Mode == FOOT_MODE_DOWN)
 	{
-				/********************/
-				/* FOOT IS GOING UP */
-				/********************/
-				
-		case	FOOT_MODE_GOUP:
-		
-					/* MOVE ALONG THE SPLINE */
-
-				IncreaseSplineIndex(theNode, theNode->Speed);
-
-				GetObjectCoordOnSpline(theNode, &theNode->Coord.x, &theNode->Coord.z);
-				y = GetTerrainHeightAtCoord(theNode->Coord.x, theNode->Coord.z, FLOOR);		
-				theNode->Speed = (theNode->Coord.y - y) * FOOT_SPLINE_SPEED;	// speed is based on height off ground
-
-
-					/* MOVE UP */
-					
-				y += 500.0f;									// offset for max y
-				theNode->Delta.y += 100.0f * fps;				// gravity
-				theNode->Coord.y += theNode->Delta.y;			// move down
-				if (theNode->Coord.y >= y)						// see if hit ground
-				{
-					theNode->Coord.y = y;
-					theNode->Mode = FOOT_MODE_GODOWN;
-					SetSkeletonAnim(theNode->Skeleton, FOOT_ANIM_DOWN);
-				}				
-		
-				break;
-
-
-				/**********************/
-				/* FOOT IS GOING DOWN */
-				/**********************/
-				
-		case	FOOT_MODE_GODOWN:
-		
-					/* MOVE ALONG THE SPLINE */
-
-				IncreaseSplineIndex(theNode, theNode->Speed);
-
-				GetObjectCoordOnSpline(theNode, &theNode->Coord.x, &theNode->Coord.z);
-				y = GetTerrainHeightAtCoord(theNode->Coord.x, theNode->Coord.z, FLOOR);		
-				theNode->Speed = (theNode->Coord.y - y) * FOOT_SPLINE_SPEED;	// speed is based on height off ground
-				
-				
-					/* MOVE DOWN */
-				
-				theNode->Delta.y -= 100.0f * fps;				// gravity
-				theNode->Coord.y += theNode->Delta.y;			// move down
-				if (theNode->Coord.y <= y)						// see if hit ground
-				{
-					theNode->Coord.y = y;
-					theNode->Mode = FOOT_MODE_DOWN;
-					theNode->GroundTimer = .5f;
-					MorphToSkeletonAnim(theNode->Skeleton, FOOT_ANIM_FLAT, 6);
-					PlayEffect3D(EFFECT_FOOTSTEP, &theNode->Coord);
-
-				}				
-				break;
-
-				/*********************/
-				/* FOOT IS ON GROUND */
-				/*********************/
-				
-		case	FOOT_MODE_DOWN:
-				theNode->Delta.y = 0;
-				theNode->GroundTimer -= fps;							// see if time to go back up
-				if (theNode->GroundTimer <= 0.0f)
-				{
-					theNode->Mode = FOOT_MODE_GOUP;
-					SetSkeletonAnim(theNode->Skeleton, FOOT_ANIM_UP);					
-				}
-				break;
-		
+		theNode->Speed = 0;
+	}
+	else
+	{
+		theNode->Speed = (theNode->Coord.y - floorY) * FOOT_SPLINE_SPEED;	// speed is based on height off ground
+		theNode->Speed = SDL_min(theNode->Speed, FOOT_SPLINE_MAX_SPEED);
+		IncreaseSplineIndex(theNode, theNode->Speed);
 	}
 
+			/* UPDATE ALTITUDE AND ANIM */
+
+	switch (theNode->Mode)
+	{
+		case FOOT_MODE_GOUP:
+		{
+			float t = theNode->FootTimer * (1.0f / FOOT_TIME_GOUP);
+			t = SDL_min(t, 1);
+			t = -0.5f * (cosf(PI * t) - 1);		// ease in/out sine
+			theNode->Coord.y = floorY + t * FOOT_APEX;
+
+			if (t >= 1.0f-EPS)
+			{
+				theNode->Mode = FOOT_MODE_GODOWN;
+				theNode->FootTimer = 0;
+				SetSkeletonAnim(theNode->Skeleton, FOOT_ANIM_DOWN);
+			}
+			break;
+		}
+
+		case FOOT_MODE_GODOWN:
+		{
+			float t = theNode->FootTimer * (1.0f / FOOT_TIME_GODOWN);
+			t = SDL_min(t, 1);
+			t = t*t;	// ease in quad
+			theNode->Coord.y = floorY + (1 - t) * FOOT_APEX;
+
+			if (t >= 1.0f-EPS)
+			{
+				theNode->Mode = FOOT_MODE_DOWN;
+				theNode->FootTimer = 0;
+				MorphToSkeletonAnim(theNode->Skeleton, FOOT_ANIM_FLAT, 6);
+				PlayEffect3D(EFFECT_FOOTSTEP, &theNode->Coord);
+			}
+
+			break;
+		}
+
+		case FOOT_MODE_DOWN:
+		{
+			theNode->Speed = 0;
+			if (theNode->FootTimer >= FOOT_TIME_DOWN)		// see if time to go back up
+			{
+				theNode->Mode = FOOT_MODE_GOUP;
+				theNode->FootTimer = 0;
+				SetSkeletonAnim(theNode->Skeleton, FOOT_ANIM_UP);
+			}
+			break;
+		}
+	}
 
 
 			/***************************/
@@ -358,7 +361,7 @@ Byte	mode = theNode->Mode;
 			
 	if (isVisible)
 	{
-		if (mode != FOOT_MODE_DOWN)
+		if (theNode->Speed > 5)
 		{
 			theNode->Rot.y = CalcYAngleFromPointToPoint(theNode->Rot.y, theNode->OldCoord.x, theNode->OldCoord.z,	// calc y rot aim
 													theNode->Coord.x, theNode->Coord.z);
@@ -759,7 +762,6 @@ Byte	r;
 
 	newObj->TerrainItemPtr = itemPtr;			// keep ptr to item list
 
-	newObj->PGroupMagic = 0;
 	newObj->PTimer = 0;
 	
 	newObj->ValveID	= itemPtr->parm[0];			// get valve ID#
@@ -819,13 +821,11 @@ float	d;
 		theNode->PTimer = .06f;								// reset timer
 
 				/* SEE IF MAKE NEW GROUP */
-				
-		if ((theNode->ParticleGroup == -1) || (!VerifyParticleGroupMagicNum(theNode->ParticleGroup, theNode->PGroupMagic)))
+
+		if (!VerifyParticleGroup(theNode->ParticleGroup))
 		{
-new_pgroup:		
-			theNode->PGroupMagic = MyRandomLong();							// generate a random magic num
-			
-			theNode->ParticleGroup = NewParticleGroup(theNode->PGroupMagic,		// magic num
+new_pgroup:
+			theNode->ParticleGroup = NewParticleGroup(
 												PARTICLE_TYPE_FALLINGSPARKS,	// type
 												PARTICLE_FLAGS_HURTPLAYER|PARTICLE_FLAGS_HURTPLAYERBAD|PARTICLE_FLAGS_HOT,	// flags
 												-100,						// gravity
@@ -1066,23 +1066,23 @@ float	oldX,oldZ,delta;
 		{	
 			gDelta.x += gRecentTerrainNormal[FLOOR].x * fps * 900.0f;
 			gDelta.z += gRecentTerrainNormal[FLOOR].z * fps * 900.0f;
-		}		
-		
-		delta = sqrt(gDelta.x * gDelta.x + gDelta.z * gDelta.z) * fps;
+		}
+
+		delta = sqrtf(gDelta.x * gDelta.x + gDelta.z * gDelta.z);
 		theNode->Coord = gCoord;
-		TurnObjectTowardTarget(theNode, nil, oldX, oldZ, delta * .5f, false);	
-		theNode->Rot.x += delta *.01f;
-		
-		
+		TurnObjectTowardTarget(theNode, nil, oldX, oldZ, delta * fps * .5f, false);
+		theNode->Rot.x += delta * fps * .01f;
+
+
 				/* DAMAGE IS BASED ON SPEED */
-		
-		theNode->Damage = (delta / fps) / 2700.0f;		
-		if (theNode->Damage > .4f)
-			theNode->Damage = .4f;
-		
+
+		theNode->Damage = delta * (1.0f / 2700.0f);
+		if (theNode->Damage > BOULDER_MAX_DAMAGE)
+			theNode->Damage = BOULDER_MAX_DAMAGE;
+
 				/* IF MOVING, NOT SOLID */
-			
-		if (delta > 10.0f)
+
+		if (theNode->Damage >= BOULDER_MIN_DAMAGE)						// moving fast enough to deal significant damage
 		{
 			theNode->CType |= CTYPE_HURTME|CTYPE_HURTENEMY;				// if moving, it hurts
 			theNode->CBits = CBITS_TOUCHABLE;

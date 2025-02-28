@@ -6,6 +6,7 @@ void DoPaused(void);
 void ShowLevelIntroScreen(void);
 void DoSettingsScreen(void);
 void DoAboutScreens(void);
+void DoLegalScreen(void);
 void DoPangeaLogo(void);
 void DoWinScreen(void);
 void DoLoseScreen(void);

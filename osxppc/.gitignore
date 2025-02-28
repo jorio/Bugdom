@@ -1,0 +1,8 @@
+obj
+Data
+Bugdom*.app
+Bugdom*_G*_*
+Makefile
+sdl-2.0.3
+libSDL2.a
+

@@ -215,12 +215,9 @@ void UpdateLiquidAnimation(void)
 
 /***************** FIND LIQUID Y **********************/
 
-float FindLiquidY(float x, float z)
+Boolean FindLiquidY(float x, float z, float* y)
 {
-ObjNode *thisNodePtr;
-float		y;
-
-	thisNodePtr = gFirstNodePtr;
+	ObjNode* thisNodePtr = gFirstNodePtr;
 	do
 	{
 		if (thisNodePtr->CType & CTYPE_LIQUID)
@@ -236,9 +233,12 @@ float		y;
 				if (z < thisNodePtr->CollisionBoxes[0].back)
 					goto next;
 
-				y = thisNodePtr->CollisionBoxes[0].top;
-				y += gLiquidCollisionTopOffset[thisNodePtr->Kind];
-				return(y);
+				if (y)
+				{
+					*y = thisNodePtr->CollisionBoxes[0].top;
+					*y += gLiquidCollisionTopOffset[thisNodePtr->Kind];
+				}
+				return true;
 			}
 		}		
 next:					
@@ -246,7 +246,7 @@ next:
 	}
 	while (thisNodePtr != nil);
 
-	return(0);
+	return false;
 }
 
 

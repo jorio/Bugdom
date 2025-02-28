@@ -38,8 +38,8 @@ RenderStats						gRenderStats;
 int								gWindowWidth				= GAME_VIEW_WIDTH;
 int								gWindowHeight				= GAME_VIEW_HEIGHT;
 
-float	gFramesPerSecond = DEFAULT_FPS;				// this is used to maintain a constant timing velocity as frame rates differ
-float	gFramesPerSecondFrac = 1/DEFAULT_FPS;
+float	gFramesPerSecond = MIN_FPS;				// this is used to maintain a constant timing velocity as frame rates differ
+float	gFramesPerSecondFrac = 1.0f/MIN_FPS;
 
 
 
@@ -410,36 +410,65 @@ OSErr					err;
 
 	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, path, &spec);
 
-			/* LOAD RAW ARGB DATA FROM TGA FILE */
+			/* LOAD RAW RGBA DATA FROM TGA FILE */
 
 	err = ReadTGA(&spec, &pixelData, &header, true);
 	GAME_ASSERT(err == noErr);
 
 	GAME_ASSERT(header.bpp == 32);
-	GAME_ASSERT(header.imageType == TGA_IMAGETYPE_CONVERTED_ARGB);
+	GAME_ASSERT(header.imageType == TGA_IMAGETYPE_CONVERTED_RGBA);
 
 			/* PRE-PROCESS IMAGE */
 
 	int internalFormat = GL_RGB;
 
+	if (flags & kRendererTextureFlags_ForcePOT)
+	{
+		int potWidth = POTCeil32(header.width);
+		int potHeight = POTCeil32(header.height);
+		
+		if (potWidth != header.width || potHeight != header.height)
+		{
+			uint8_t* potPixelData = (uint8_t*) AllocPtr(potWidth * potHeight * 4);
+
+			for (int y = 0; y < header.height; y++)
+			{
+				memcpy(potPixelData + y*potWidth*4, pixelData + y*header.width*4, header.width*4);
+			}
+
+			DisposePtr((Ptr) pixelData);
+			pixelData = potPixelData;
+			header.width = potWidth;
+			header.height = potHeight;
+		}
+	}
+#if OSXPPC
+	else if (POTCeil32(header.width) != header.width || POTCeil32(header.height) != header.height)
+	{
+		printf("WARNING: Non-POT texture #%d\n", textureRezID);
+	}
+#endif
+
 	if (flags & kRendererTextureFlags_SolidBlackIsAlpha)
 	{
 		for (int p = 0; p < 4 * header.width * header.height; p += 4)
 		{
-			bool isBlack = !pixelData[p+1] && !pixelData[p+2] && !pixelData[p+3];
-			pixelData[p+0] = isBlack? 0x00: 0xFF;
+			bool isBlack = !pixelData[p+0] && !pixelData[p+1] && !pixelData[p+2];
+			pixelData[p+3] = isBlack? 0x00: 0xFF;
 		}
 
 		// Apply edge padding to avoid seams
-		TQ3Pixmap pm;
-		pm.image = pixelData;
-		pm.width = header.width;
-		pm.height = header.height;
-		pm.rowBytes = header.width * (header.bpp / 8);
-		pm.pixelSize = 0;
-		pm.pixelType = kQ3PixelTypeARGB32;
-		pm.bitOrder = kQ3EndianBig;
-		pm.byteOrder = kQ3EndianBig;
+		TQ3Pixmap pm =
+		{
+			.image		= pixelData,
+			.width		= header.width,
+			.height		= header.height,
+			.rowBytes	= header.width * (header.bpp / 8),
+			.pixelSize	= 0,
+			.pixelType	= kQ3PixelTypeRGBA32,
+			.bitOrder	= kQ3EndianBig,
+			.byteOrder	= kQ3EndianBig,
+		};
 		Q3Pixmap_ApplyEdgePadding(&pm);
 
 		internalFormat = GL_RGBA;
@@ -449,10 +478,10 @@ OSErr					err;
 		for (int p = 0; p < 4 * header.width * header.height; p += 4)
 		{
 			// put Blue into Alpha & leave map white
-			pixelData[p+0] = pixelData[p+3];	// put blue into alpha
+			pixelData[p+3] = pixelData[p+2];	// put blue into alpha
+			pixelData[p+0] = 255;
 			pixelData[p+1] = 255;
 			pixelData[p+2] = 255;
-			pixelData[p+3] = 255;
 		}
 		internalFormat = GL_RGBA;
 	}
@@ -471,11 +500,10 @@ OSErr					err;
 			internalFormat,
 			header.width,
 			header.height,
-			GL_BGRA,
-			GL_UNSIGNED_INT_8_8_8_8,
+			GL_RGBA,
+			GL_UNSIGNED_BYTE,
 			pixelData,
-			flags
-			);
+			flags);
 
 			/* CLEAN UP */
 
@@ -493,36 +521,68 @@ OSErr					err;
 
 /************** QD3D CALC FRAMES PER SECOND *****************/
 
-void	QD3D_CalcFramesPerSecond(void)
+void QD3D_CalcFramesPerSecond(void)
 {
-UnsignedWide	wide;
-unsigned long	now;
-static	unsigned long then = 0;
+	static uint64_t performanceFrequency = 0;
+	static uint64_t prevTime = 0;
+	uint64_t currTime;
 
-
-			/* DO REGULAR CALCULATION */
-			
-	Microseconds(&wide);
-	now = wide.lo;
-	if (then != 0)
+	if (performanceFrequency == 0)
 	{
-		gFramesPerSecond = 1000000.0f/(float)(now-then);
-		if (gFramesPerSecond < DEFAULT_FPS)			// (avoid divide by 0's later)
-			gFramesPerSecond = DEFAULT_FPS;
+		performanceFrequency = SDL_GetPerformanceFrequency();
+	}
 
-		if (gFramesPerSecond < 9.0f)					// this is the minimum we let it go
-			gFramesPerSecond = 9.0f;
-		
+	slow_down:
+	currTime = SDL_GetPerformanceCounter();
+	uint64_t deltaTime = currTime - prevTime;
+
+	if (deltaTime <= 0)
+	{
+		gFramesPerSecond = MIN_FPS;						// avoid divide by 0
 	}
 	else
-		gFramesPerSecond = DEFAULT_FPS;
-		
-	gFramesPerSecondFrac = 1.0f/gFramesPerSecond;	// calc fractional for multiplication
+	{
+		gFramesPerSecond = performanceFrequency / (float)(deltaTime);
 
-	then = now;										// remember time	
+		if (gFramesPerSecond > MAX_FPS)					// keep from cooking the GPU
+		{
+			if (gFramesPerSecond - MAX_FPS > 1000)		// try to sneak in some sleep if we have 1 ms to spare
+			{
+				SDL_Delay(1);
+			}
+			goto slow_down;
+		}
+
+		if (gFramesPerSecond < MIN_FPS)					// (avoid divide by 0's later)
+		{
+			gFramesPerSecond = MIN_FPS;
+		}
+	}
+
+	// In debug builds, speed up with KP_PLUS or LT on gamepad
+#if _DEBUG
+	if (GetKeyState_SDL(SDL_SCANCODE_KP_PLUS))
+#else
+	if (GetKeyState_SDL(SDL_SCANCODE_GRAVE) && GetKeyState_SDL(SDL_SCANCODE_KP_PLUS))
+#endif
+	{
+		gFramesPerSecond = MIN_FPS;
+	}
+#if _DEBUG
+	else if (gSDLController)
+	{
+		float analogSpeedUp = SDL_GameControllerGetAxis(gSDLController, SDL_CONTROLLER_AXIS_TRIGGERLEFT) / 32767.0f;
+		if (analogSpeedUp > .25f)
+		{
+			gFramesPerSecond = MIN_FPS;
+		}
+	}
+#endif
+
+	gFramesPerSecondFrac = 1.0f / gFramesPerSecond;		// calc fractional for multiplication
+
+	prevTime = currTime;								// reset for next time interval
 }
-
-
 
 #pragma mark -
 

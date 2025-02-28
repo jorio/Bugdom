@@ -296,15 +296,14 @@ float			cameraX, cameraZ;
 	for (int f = 0; f < gNumFences; f++)
 	{
 		type = gFenceList[f].type;							// get type
-		
+
 			/* VERIFY THAT THIS FENCE TYPE EXISTS ON THIS LEVEL */
-			
+
 		if (!gFenceOnThisLevel[gLevelType][type])
 		{
-			DoAlert("DrawFences: illegal fence type for this level!");
-			ShowSystemErr(gFenceList[f].type);
-		}	
-	
+			DoAlert("DrawFences: illegal fence type for this level! (%d)", gFenceList[f].type);
+		}
+
 			/* SEE IF THIS FENCE IS VISIBLE AT ALL */
 			
 		numNubs = gFenceList[f].numNubs;

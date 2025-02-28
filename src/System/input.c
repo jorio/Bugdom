@@ -14,10 +14,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#if __APPLE__
-#include "killmacmouseacceleration.h"
-#endif
-
 
 /**********************/
 /*     PROTOTYPES     */
@@ -40,10 +36,7 @@ typedef struct KeyBinding
 
 static struct
 {
-	int mouseX;
-	int mouseY;
-	float thumbX;
-	float thumbY;
+	TQ3Point2D pos;
 	bool didMove;
 	bool steeredByThumbstick;
 } gAnalogCursor;
@@ -183,6 +176,16 @@ static inline void UpdateKeyState(KeyState* state, bool downNow)
 
 TQ3Vector2D GetThumbStickVector(bool rightStick)
 {
+#if NOJOYSTICK
+	// no-op
+	(void) rightStick;
+	return (TQ3Vector2D) {0,0};
+#else
+	if (!gSDLController)
+	{
+		return (TQ3Vector2D) { 0, 0 };
+	}
+
 	Sint16 dxRaw = SDL_GameControllerGetAxis(gSDLController, rightStick ? SDL_CONTROLLER_AXIS_RIGHTX : SDL_CONTROLLER_AXIS_LEFTX);
 	Sint16 dyRaw = SDL_GameControllerGetAxis(gSDLController, rightStick ? SDL_CONTROLLER_AXIS_RIGHTY : SDL_CONTROLLER_AXIS_LEFTY);
 
@@ -219,13 +222,13 @@ TQ3Vector2D GetThumbStickVector(bool rightStick)
 
 		return (TQ3Vector2D) { cosf(angle) * magnitude, sinf(angle) * magnitude };
 	}
+#endif	// NOJOYSTICK
 }
 
 /********************** UPDATE INPUT ******************************/
 
 void UpdateInput(void)
 {
-
 	SDL_PumpEvents();
 
 		/* CHECK FOR NEW MOUSE BUTTONS */
@@ -327,7 +330,11 @@ void UpdateKeyMap(void)
 	SDL_PumpEvents();
 	int numkeys = 0;
 	const UInt8* keystate = SDL_GetKeyboardState(&numkeys);
+#if OSXPPC
+	uint32_t mouseButtons = 0;
+#else
 	uint32_t mouseButtons = SDL_GetMouseState(NULL, NULL);
+#endif
 
 	{
 		int minNumKeys = numkeys < SDLKEYSTATEBUF_SIZE ? numkeys : SDLKEYSTATEBUF_SIZE;
@@ -363,6 +370,7 @@ void UpdateKeyMap(void)
 		/* WHILE WE'RE HERE LET'S DO SOME SPECIAL KEY CHECKS */
 		/*****************************************************/
 
+#if !(OSXPPC)	// broken on Tiger
 	if (GetNewKeyState_SDL(SDL_SCANCODE_RETURN)
 		&& (GetKeyState_SDL(SDL_SCANCODE_LALT) || GetKeyState_SDL(SDL_SCANCODE_RALT)))
 	{
@@ -371,7 +379,12 @@ void UpdateKeyMap(void)
 
 		ResetInputState();
 	}
+#endif
 
+	if ((!gIsInGame || gIsGamePaused) && IsCmdQPressed())
+	{
+		CleanQuit();
+	}
 }
 
 
@@ -426,6 +439,17 @@ Boolean GetCheatKeysInput(void)
 	return (GetKeyState(kKey_ZoomIn) && GetKeyState(kKey_ZoomOut));
 }
 
+/******* DID USER PRESS CMD+Q (MAC ONLY) *******/
+
+Boolean IsCmdQPressed(void)
+{
+#if __APPLE__
+	return (GetKeyState_SDL(SDL_SCANCODE_LGUI) || GetKeyState_SDL(SDL_SCANCODE_RGUI))
+		&& GetNewKeyState_SDL(SDL_GetScancodeFromKey(SDLK_q));
+#else
+	return false;
+#endif
+}
 
 #pragma mark -
 
@@ -446,7 +470,9 @@ void EatMouseEvents(void)
 void CaptureMouse(Boolean doCapture)
 {
 	SDL_PumpEvents();	// Prevent SDL from thinking mouse buttons are stuck as we switch into relative mode
+#if !OSXPPC
 	SDL_SetRelativeMouseMode(doCapture ? SDL_TRUE : SDL_FALSE);
+#endif
 
 	if (doCapture)
 		SDL_ShowCursor(0);
@@ -454,12 +480,7 @@ void CaptureMouse(Boolean doCapture)
 	ClearMouseState();
 	EatMouseEvents();
 
-#if __APPLE__
-    if (doCapture)
-        KillMacMouseAcceleration();
-    else
-        RestoreMacMouseAcceleration();
-#endif
+	SetMacLinearMouse(doCapture);
 }
 
 /***************** GET MOUSE DELTA *****************/
@@ -505,6 +526,12 @@ void GetMouseDelta(float *dx, float *dy)
 
 		/* GET MOUSE MOVEMENT */
 
+#if OSXPPC
+	*dx = 0;
+	*dy = 0;
+	return;
+#endif
+
 	const float mouseSensitivity = 1600.0f * kMouseSensitivityTable[gGamePrefs.mouseSensitivityLevel];
 	int mdx, mdy;
 	MouseSmoothing_GetDelta(&mdx, &mdy);
@@ -529,9 +556,13 @@ void GetMouseDelta(float *dx, float *dy)
 	*dy = gFramesPerSecondFrac * mdy * mouseSensitivity;
 }
 
-
 SDL_GameController* TryOpenController(bool showMessage)
 {
+#if NOJOYSTICK
+	// no-op
+	(void) showMessage;
+	return NULL;
+#else
 	if (gSDLController)
 	{
 		printf("Already have a valid controller.\n");
@@ -574,10 +605,15 @@ SDL_GameController* TryOpenController(bool showMessage)
 	printf("Opened joystick %d as controller: %s\n", gSDLJoystickInstanceID, SDL_GameControllerName(gSDLController));
 
 	return gSDLController;
+#endif	// NOJOYSTICK
 }
 
 void OnJoystickRemoved(SDL_JoystickID which)
 {
+#if NOJOYSTICK
+	// no-op
+	(void) which;
+#else
 	if (NULL == gSDLController)		// don't care, I didn't open any controller
 		return;
 
@@ -593,19 +629,34 @@ void OnJoystickRemoved(SDL_JoystickID which)
 
 	// Try to open another joystick if any is connected.
 	TryOpenController(false);
+#endif	// NOJOYSTICK
 }
 
 #pragma mark -
 
 /***************** ANALOG MOUSE CURSOR *****************/
 
+TQ3Point2D GetMousePosition(void)
+{
+	int windowX = 0;
+	int windowY = 0;
+	SDL_GetMouseState(&windowX, &windowY);
+
+	// On macOS, the mouse position is relative to the window's "point size" on Retina screens.
+	int windowW = 1;
+	int windowH = 1;
+	SDL_GetWindowSize(gSDLWindow, &windowW, &windowH);
+	float dpiScaleX = (float) gWindowWidth / (float) windowW;		// gWindowWidth is in actual pixels
+	float dpiScaleY = (float) gWindowHeight / (float) windowH;		// gWindowHeight is in actual pixels
+
+	return (TQ3Point2D) { windowX * dpiScaleX, windowY * dpiScaleY };
+}
+
 void InitAnalogCursor(void)
 {
 	memset(&gAnalogCursor, 0, sizeof(gAnalogCursor));
 
-	SDL_GetMouseState(&gAnalogCursor.mouseX, &gAnalogCursor.mouseY);
-	gAnalogCursor.thumbX = gAnalogCursor.mouseX;
-	gAnalogCursor.thumbY = gAnalogCursor.mouseY;
+	gAnalogCursor.pos = GetMousePosition();
 }
 
 void ShutdownAnalogCursor(void)
@@ -621,10 +672,8 @@ bool MoveAnalogCursor(int* outMouseX, int* outMouseY)
 
 	TQ3Vector2D thumbstick = GetThumbStickVector(false);
 
-	int oldMouseX = gAnalogCursor.mouseX;
-	int oldMouseY = gAnalogCursor.mouseY;
-	SDL_GetMouseState(&gAnalogCursor.mouseX, &gAnalogCursor.mouseY);
-	bool mouseMoved = oldMouseX != gAnalogCursor.mouseX || oldMouseY != gAnalogCursor.mouseY;
+	TQ3Point2D newMouse = GetMousePosition();
+	bool mouseMoved = gAnalogCursor.pos.x != newMouse.x || gAnalogCursor.pos.y != newMouse.y;
 
 	float speed = 300;
 	if (gWindowWidth > gWindowHeight)
@@ -636,34 +685,30 @@ bool MoveAnalogCursor(int* outMouseX, int* outMouseY)
 	{
 		gAnalogCursor.steeredByThumbstick = false;
 		gAnalogCursor.didMove = true;
-		gAnalogCursor.thumbX = gAnalogCursor.mouseX;
-		gAnalogCursor.thumbY = gAnalogCursor.mouseY;
+		gAnalogCursor.pos = newMouse;
 	}
 	else if (thumbstick.x != 0 && thumbstick.y != 0)
 	{
 		gAnalogCursor.steeredByThumbstick = true;
 		gAnalogCursor.didMove = true;
 
-		gAnalogCursor.thumbX += thumbstick.x * gFramesPerSecondFrac * speed;
-		gAnalogCursor.thumbY += thumbstick.y * gFramesPerSecondFrac * speed;
+		gAnalogCursor.pos.x += thumbstick.x * gFramesPerSecondFrac * speed;
+		gAnalogCursor.pos.y += thumbstick.y * gFramesPerSecondFrac * speed;
 
-		if (gAnalogCursor.thumbX < 0) gAnalogCursor.thumbX = 0;
-		if (gAnalogCursor.thumbY < 0) gAnalogCursor.thumbY = 0;
+		if (gAnalogCursor.pos.x < 0) gAnalogCursor.pos.x = 0;
+		if (gAnalogCursor.pos.y < 0) gAnalogCursor.pos.y = 0;
 
-		if (gAnalogCursor.thumbX > gWindowWidth-1) gAnalogCursor.thumbX = gWindowWidth-1;
-		if (gAnalogCursor.thumbY > gWindowHeight-1) gAnalogCursor.thumbY = gWindowHeight-1;
+		if (gAnalogCursor.pos.x > gWindowWidth-1) gAnalogCursor.pos.x = gWindowWidth-1;
+		if (gAnalogCursor.pos.y > gWindowHeight-1) gAnalogCursor.pos.y = gWindowHeight-1;
 
-		gAnalogCursor.mouseX = gAnalogCursor.thumbX;
-		gAnalogCursor.mouseY = gAnalogCursor.thumbY;
-
-		SDL_WarpMouseInWindow(gSDLWindow, gAnalogCursor.mouseX, gAnalogCursor.mouseY);
+		SDL_WarpMouseInWindow(gSDLWindow, (int) gAnalogCursor.pos.x, (int) gAnalogCursor.pos.y);
 	}
 
 	if (outMouseX)
-		*outMouseX = (int) gAnalogCursor.mouseX;
+		*outMouseX = (int) gAnalogCursor.pos.x;
 
 	if (outMouseY)
-		*outMouseY = (int) gAnalogCursor.mouseY;
+		*outMouseY = (int) gAnalogCursor.pos.y;
 
 	return gAnalogCursor.didMove;
 }
@@ -672,4 +717,15 @@ bool IsAnalogCursorClicked(void)
 {
 	return FlushMouseButtonPress()
 		|| (gAnalogCursor.steeredByThumbstick && GetNewKeyState(kKey_UI_PadConfirm));
+}
+
+void WarpMouseToCenter(void)
+{
+	// Can't use gWindowWidth/Height because that's the GL drawable size in physical pixels.
+	// Mouse cursor coords must be given in the "point" coordinate system on macOS.
+	int windowPointWidth = 1;
+	int windowPointHeight = 1;
+	SDL_GetWindowSize(gSDLWindow, &windowPointWidth, &windowPointHeight);		// get window size in "device points"
+
+	SDL_WarpMouseInWindow(gSDLWindow, windowPointWidth/2, windowPointHeight/2);
 }

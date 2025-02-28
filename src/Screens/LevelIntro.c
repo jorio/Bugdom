@@ -200,7 +200,7 @@ void ShowLevelIntroScreen(void)
 	DeleteAllParticleGroups();
 	FreeAllSkeletonFiles(-1);
 	DeleteAll3DMFGroups();
-	QD3D_DisposeParticles();
+	QD3D_DisposeShards();
 	DisposeSoundBank(SOUNDBANK_MAIN);
 	QD3D_DisposeWindowSetup(&gGameViewInfoPtr);		
 	Pomme_FlushPtrTracking(true);
@@ -219,8 +219,8 @@ TQ3Vector3D				fillDirection1 = { .6, -.9, -1 };			// key
 TQ3Vector3D				fillDirection2 = { -.7, -.2, -.9 };			// fill
 
 		/* INIT OTHER SYSTEMS */
-		
-	QD3D_InitParticles();
+
+	QD3D_InitShards();
 
 			/* LOAD SOUNDS */
 
@@ -263,7 +263,7 @@ TQ3Vector3D				fillDirection2 = { -.7, -.2, -.9 };			// fill
 
 	InitParticleSystem();		// Must be once we have a valid GL context
 
-	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":models:LevelIntro.3dmf", &spec);
+	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, ":Models:LevelIntro.3dmf", &spec);
 	LoadGrouped3DMF(&spec,MODEL_GROUP_LEVELINTRO);	
 
 	switch(gRealLevel)
@@ -339,6 +339,7 @@ TQ3Vector3D				fillDirection2 = { -.7, -.2, -.9 };			// fill
 				break;
 
 		case	LEVEL_TYPE_NIGHT:
+		case	LEVEL_TYPE_ANTHILL:
 				gNewObjectDefinition.type 		= LINTRO_MObjType_NightBackground;	
 				break;
 
@@ -627,7 +628,6 @@ static void MoveIntroBoxerfly(ObjNode *theNode)
 {
 float fps = gFramesPerSecondFrac;
 ObjNode	*newObj;
-long	pg, i;
 TQ3Vector3D delta;
 
 	GetObjectInfo(theNode);
@@ -671,7 +671,7 @@ TQ3Vector3D delta;
 					
 						/* MAKE EXPLOSION */
 						
-					pg = NewParticleGroup(	0,							// magic num
+					int32_t pg = NewParticleGroup(
 											PARTICLE_TYPE_FALLINGSPARKS,	// type
 											0,							// flags
 											500,						// gravity
@@ -683,7 +683,7 @@ TQ3Vector3D delta;
 					
 					if (pg != -1)
 					{
-						for (i = 0; i < 70; i++)
+						for (int i = 0; i < 70; i++)
 						{
 							delta.x = (RandomFloat()-.5f) * 1200.0f;
 							delta.y = RandomFloat() * 1100.0f;
@@ -1464,7 +1464,7 @@ static Boolean WaitAndDraw(float duration)
 		MoveObjects();
 		MoveIntroCamera();
 		MoveParticleGroups();
-		QD3D_MoveParticles();
+		QD3D_MoveShards();
 		QD3D_DrawScene(gGameViewInfoPtr,IntroDrawStuff);
 		QD3D_CalcFramesPerSecond();				
 		DoSDLMaintenance();
@@ -1483,7 +1483,7 @@ static Boolean WaitAndDraw(float duration)
 static void IntroDrawStuff(const QD3DSetupOutputType *setupInfo)
 {
 	DrawObjects(setupInfo);
-	QD3D_DrawParticles(setupInfo);
+	QD3D_DrawShards(setupInfo);
 	DrawParticleGroup(setupInfo);
 }
 

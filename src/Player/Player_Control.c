@@ -25,6 +25,8 @@
 
 #define	MAX_PLAYER_SWIM_SPEED	250.0f
 
+#define	VISCOUS_SPEED_MULTIPLIER 0.17f
+
 #define	KEY_THRUST				3500.0f
 
 static const TQ3Vector2D	gZeroAccel = {0,0};
@@ -72,6 +74,8 @@ Boolean				killed = false;
 				
 	if (gPlayerObj->StatusBits & STATUS_BIT_UNDERWATER)				// if in water, then max speed is fixed
 		maxSpeed = MAX_PLAYER_SWIM_SPEED;
+	else if (gPlayerObj->StatusBits & STATUS_BIT_INVISCOUSTRAP)
+		maxSpeed = gPlayerMaxSpeed * VISCOUS_SPEED_MULTIPLIER;
 	else
 		maxSpeed = gPlayerMaxSpeed;
 		
@@ -335,7 +339,7 @@ Boolean				killed = false;
 			gDelta.x += gRecentTerrainNormal[FLOOR].x * (fps * acc);
 			gDelta.z += gRecentTerrainNormal[FLOOR].z * (fps * acc);		
 			
-			if (gShowDebug)		//------------
+			if (gDebugMode == DEBUG_MODE_BOXES)		//------------
 				ShowNormal(&gCoord, &gRecentTerrainNormal[FLOOR]);
 		}
 	}

@@ -1,7 +1,0 @@
-{
-    "notarize": [{
-        "path": "./dist/Bugdom-1.3.2-mac.dmg",
-        "bundle_id": "io.jor.bugdom",
-        "staple": true
-    }]
-}

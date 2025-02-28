@@ -521,7 +521,6 @@ Boolean	killed = false;
 
 Boolean KnockQueenBeeOnButt(ObjNode *enemy, float dx, float dz, float damage)
 {
-long			pg,i;
 TQ3Vector3D		delta;
 
 	if (enemy->Skeleton->AnimNum == QUEENBEE_ANIM_ONBUTT)		// see if already in butt mode
@@ -552,7 +551,7 @@ TQ3Vector3D		delta;
 
 			/* white sparks */
 				
-	pg = NewParticleGroup(	0,							// magic num
+	int32_t pg = NewParticleGroup(
 							PARTICLE_TYPE_FALLINGSPARKS,	// type
 							PARTICLE_FLAGS_BOUNCE,		// flags
 							500,						// gravity
@@ -561,15 +560,15 @@ TQ3Vector3D		delta;
 							.9,							// decay rate
 							0,							// fade rate
 							PARTICLE_TEXTURE_YELLOWBALL);	// texture
-	
-	for (i = 0; i < 35; i++)
+
+	for (int i = 0; i < 35; i++)
 	{
 		delta.x = (RandomFloat()-.5f) * 1000.0f;
 		delta.y = (RandomFloat()-.5f) * 1000.0f;
 		delta.z = (RandomFloat()-.5f) * 1000.0f;
 		AddParticleToGroup(pg, &enemy->Coord, &delta, RandomFloat() + 1.0f, FULL_ALPHA);
 	}
-		
+
 
 
 		/* HURT & SEE IF KILLED */
@@ -592,7 +591,6 @@ TQ3Vector3D		delta;
 
 Boolean KillQueenBee(ObjNode *theNode)
 {	
-long			pg,i;
 TQ3Vector3D		delta;
 
 		/* STOP BUZZ */
@@ -614,7 +612,7 @@ TQ3Vector3D		delta;
 
 			/* white sparks */
 				
-	pg = NewParticleGroup(	0,							// magic num
+	int32_t pg = NewParticleGroup(
 							PARTICLE_TYPE_FALLINGSPARKS,	// type
 							PARTICLE_FLAGS_BOUNCE,		// flags
 							400,						// gravity
@@ -623,15 +621,18 @@ TQ3Vector3D		delta;
 							.8,							// decay rate
 							0,							// fade rate
 							PARTICLE_TEXTURE_YELLOWBALL);	// texture
-	
-	for (i = 0; i < 60; i++)
+
+	if (pg != -1)
 	{
-		delta.x = (RandomFloat()-.5f) * 1400.0f;
-		delta.y = (RandomFloat()-.5f) * 1400.0f;
-		delta.z = (RandomFloat()-.5f) * 1400.0f;
-		AddParticleToGroup(pg, &theNode->Coord, &delta, RandomFloat() + 1.0f, FULL_ALPHA);
+		for (int i = 0; i < 60; i++)
+		{
+			delta.x = (RandomFloat()-.5f) * 1400.0f;
+			delta.y = (RandomFloat()-.5f) * 1400.0f;
+			delta.z = (RandomFloat()-.5f) * 1400.0f;
+			AddParticleToGroup(pg, &theNode->Coord, &delta, RandomFloat() + 1.0f, FULL_ALPHA);
+		}
 	}
-		
+
 	theNode->DeathTimer = 4;
 	
 	return(false);

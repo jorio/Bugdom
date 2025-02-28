@@ -277,12 +277,12 @@ Byte HandleCollisions(ObjNode *theNode, unsigned long	cType)
 Byte		totalSides;
 short		i;
 float		originalX,originalY,originalZ;
-long		offset,maxOffsetX,maxOffsetZ,maxOffsetY;
-long		offXSign,offZSign,offYSign;
+float		offset,maxOffsetX,maxOffsetZ,maxOffsetY;
+float		offXSign,offZSign,offYSign;
 Byte		base,target;
-ObjNode		*targetObj;
-CollisionBoxType *baseBoxPtr;
-CollisionBoxType *boxList;
+ObjNode		*targetObj = nil;
+const CollisionBoxType *baseBoxPtr = nil;
+const CollisionBoxType *boxList = nil;
 short		numSolidHits, numPasses = 0;
 Boolean		hitImpenetrable = false;
 short		oldNumCollisions;
@@ -412,7 +412,14 @@ again:
 
 			if (gCollisionList[i].sides & SIDE_BITS_BOTTOM)					// SEE IF HIT BOTTOM
 			{
-				offset = (targetBox.top - baseBoxPtr->bottom)+1;			// see how far over it went
+				offset = (targetBox.top - baseBoxPtr->bottom);				// see how far over it went
+
+				// In order to prevent falling through the object, push our collision box upward
+				// by some epsilon distance so the boxes aren't perfectly flush.
+				// The epsilon distance must not be too large, because that would cause too much
+				// vertical jitter that our downward momentum won't be able to cancel out.
+				offset += gFramesPerSecondFrac;
+
 				if (offset > maxOffsetY)
 				{
 					maxOffsetY = offset;

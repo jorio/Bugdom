@@ -17,6 +17,7 @@
 /****************************/
 
 static void FlushObjectDeleteQueue(int queueID);
+static void DisposeObjNodeMemory(ObjNode* node);
 
 
 /****************************/
@@ -24,25 +25,30 @@ static void FlushObjectDeleteQueue(int queueID);
 /****************************/
 
 #define	OBJ_DEL_Q_SIZE	100
+#define	OBJ_BUDGET		500
 
 
 /**********************/
 /*     VARIABLES      */
 /**********************/
 
+static ObjNode gObjNodeMemory[OBJ_BUDGET];
+Pool* gObjNodePool = NULL;
+static ObjNode gObjNodeTemplate;
+
 											// OBJECT LIST
 ObjNode		*gFirstNodePtr = nil;
-					
+
 ObjNode		*gCurrentNode,*gMostRecentlyAddedNode,*gNextNode;
-			
-										
+int			gNumObjNodes = 0;
+
 NewObjectDefinitionType	gNewObjectDefinition;
 
 TQ3Point3D	gCoord;
 TQ3Vector3D	gDelta;
 
-// Source port change: We now have a double-buffered deletion queue, so objects
-// that get queued for deletion during frame N will be deleted at the end of frame N+1.
+// Double-buffered deletion queue: objects that get queued for deletion during
+// frame N will be deleted at the end of frame N+1.
 // This gives live objects a full frame to clean up references to dead objects.
 static int			gNumObjsInDeleteQueue[2];
 static ObjNode*		gObjectDeleteQueue[2][OBJ_DEL_Q_SIZE];
@@ -62,15 +68,40 @@ float		gAutoFadeStartDist;
 
 void InitObjectManager(void)
 {
+		/* INIT LINKED LIST */
 
-				/* INIT LINKED LIST */
-
-															
 	gCurrentNode = nil;
-	
-					/* CLEAR ENTIRE OBJECT LIST */
-		
 	gFirstNodePtr = nil;									// no node yet
+	gNumObjNodes = 0;
+
+		/* INIT OBJECT POOL */
+
+	memset(gObjNodeMemory, 0, sizeof(gObjNodeMemory));
+
+	if (!gObjNodePool)
+		gObjNodePool = Pool_New(OBJ_BUDGET);
+	else
+		Pool_Reset(gObjNodePool);
+
+		/* MAKE OBJECT TEMPLATE */
+
+	gObjNodeTemplate = (ObjNode)
+	{
+		.CType					= 0,						// must init ctype to something (INVALID_NODE_FLAG might be set from last delete)
+		.Scale					= {1,1,1},
+		.BoundingSphere			= {.origin={0,0,0}, .radius=40, .isEmpty=kQ3False},
+		.EffectChannel			= -1,						// no effect channel yet
+		.ParticleGroup			= -1,						// no particle group
+		.SplineObjectIndex		= -1,						// no index yet
+		.StatusBits				= STATUS_BIT_DETACHED,		// not attached to linked list yet
+	};
+
+	Render_SetDefaultModifiers(&gObjNodeTemplate.RenderModifiers);
+
+		/* INIT NEW OBJ DEF */
+
+	memset(&gNewObjectDefinition, 0, sizeof(NewObjectDefinitionType));
+	gNewObjectDefinition.scale = 1;
 }
 
 
@@ -83,18 +114,34 @@ void InitObjectManager(void)
 
 ObjNode	*MakeNewObject(NewObjectDefinitionType *newObjDef)
 {
-ObjNode	*newNodePtr;
+	ObjNode	*newNodePtr = NULL;
 
-				/* MAKE SURE SCALE != 0 */
+		/* TRY TO GET AN OBJECT FROM THE POOL */
+
+	int pooledIndex = Pool_AllocateIndex(gObjNodePool);
+	if (pooledIndex >= 0)
+	{
+		newNodePtr = &gObjNodeMemory[pooledIndex];
+	}
+	else
+	{
+		// pool full, alloc new node on heap
+		newNodePtr = (ObjNode*) AllocPtr(sizeof(ObjNode));
+	}
+
+		/* MAKE SURE WE GOT ONE */
+
+	GAME_ASSERT(newNodePtr);
+
+		/* MAKE SURE SCALE != 0 */
 
 	float scale = newObjDef->scale;
 	if (scale == 0.0f)
 		scale = 0.0001f;
 
-				/* INITIALIZE NEW NODE */
-	
-	newNodePtr = (ObjNode*) NewPtrClear(sizeof(ObjNode));	// source port change: use NewPtrClear so all fields start at 0
-	GAME_ASSERT(newNodePtr);
+		/* INITIALIZE NEW NODE */
+
+	*newNodePtr = gObjNodeTemplate;
 
 	newNodePtr->Slot		= newObjDef->slot;
 	newNodePtr->Type		= newObjDef->type;
@@ -116,29 +163,21 @@ ObjNode	*newNodePtr;
 	newNodePtr->Rot.y		= newObjDef->rot;
 	newNodePtr->Rot.z		= 0;
 
-	newNodePtr->BoundingSphere.radius = 40;				// set default bounding sphere at offset 0,0,0
-
-	newNodePtr->EffectChannel = -1;						// no streaming sound effect
-	newNodePtr->ParticleGroup = -1;						// no particle group
-	newNodePtr->SplineObjectIndex = -1;					// no index yet
-
-	Render_SetDefaultModifiers(&newNodePtr->RenderModifiers);
-	newNodePtr->RenderModifiers.statusBits = 0;
-	newNodePtr->RenderModifiers.diffuseColor = (TQ3ColorRGBA) { 1,1,1,1 };	// default diffuse color is opaque white
-
 	if (newObjDef->flags & STATUS_BIT_ONSPLINE)
 		newNodePtr->SplineMoveCall = newObjDef->moveCall;	// save spline move routine
 	else
 		newNodePtr->MoveCall = newObjDef->moveCall;			// save move routine
 
 				/* INSERT NODE INTO LINKED LIST */
-				
+
 	newNodePtr->StatusBits |= STATUS_BIT_DETACHED;		// its not attached to linked list yet
 	AttachObject(newNodePtr);
 
 				/* CLEANUP */
-				
+
 	gMostRecentlyAddedNode = newNodePtr;					// remember this
+	gNumObjNodes++;
+
 	return(newNodePtr);
 }
 
@@ -590,7 +629,7 @@ void DeleteObject(ObjNode	*theNode)
 	{
 		// We're out of room in the delete queue. Just delete the node immediately,
 		// but that might cause the game to become unstable (unless we're here from DeleteAllNodes).
-		DisposePtr((Ptr) theNode);
+		DisposeObjNodeMemory(theNode);
 	}
 	else
 	{
@@ -705,6 +744,31 @@ out:
 }
 
 
+
+/***************** DISPOSE OBJECT MEMORY ****************/
+
+static void DisposeObjNodeMemory(ObjNode* node)
+{
+	GAME_ASSERT(node != NULL);
+
+	ptrdiff_t poolIndex = node - gObjNodeMemory;
+
+	if (poolIndex >= 0 && poolIndex < OBJ_BUDGET)
+	{
+		// node is pooled, put back into pool
+		GAME_ASSERT_MESSAGE(Pool_IsUsed(gObjNodePool, poolIndex), "double-free on pooled node!");
+		Pool_ReleaseIndex(gObjNodePool, (int) poolIndex);
+	}
+	else
+	{
+		// node was allocated on heap
+		DisposePtr((Ptr) node);
+	}
+
+	gNumObjNodes--;
+}
+
+
 /***************** FLUSH OBJECT DELETE QUEUE ****************/
 
 static void FlushObjectDeleteQueue(int qid)
@@ -712,7 +776,12 @@ static void FlushObjectDeleteQueue(int qid)
 	int num = gNumObjsInDeleteQueue[qid];
 
 	for (int i = 0; i < num; i++)
-		DisposePtr((Ptr) gObjectDeleteQueue[qid][i]);
+	{
+		if (gObjectDeleteQueue[qid][i])
+		{
+			DisposeObjNodeMemory(gObjectDeleteQueue[qid][i]);
+		}
+	}
 
 	gNumObjsInDeleteQueue[qid] = 0;
 }

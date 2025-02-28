@@ -401,7 +401,7 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 		snprintf(textBuffer, sizeof(textBuffer), "Level %d: %s", 1 + saveData.realLevel, kLevelNames[saveData.realLevel]);
 
 		tmd.coord.y	= y+70*gs;
-		tmd.scale	= .25f * gs;
+		tmd.scale	= .2f * gs;
 		TextMesh_Create(&tmd, textBuffer);
 
 		time_t timestamp = saveData.timestamp;
@@ -463,8 +463,6 @@ static void SetupFileScreen(void)
 	}
 	else
 	{
-		//TextMesh_Create(&tmd, "Save where?");
-
 		snprintf(textBuffer, sizeof(textBuffer), "Entering level %d. Save where?", gRealLevel+2);
 		tmd.scale	= .33f;
 		tmd.color = gTitleTextColor;
@@ -476,7 +474,7 @@ static void SetupFileScreen(void)
 		tmd.color = gDeleteColor;
 		tmd.align = TEXTMESH_ALIGN_RIGHT;
 		tmd.moveCall = MoveDontSave;
-		TextMesh_Create(&tmd, "Don't save");
+		TextMesh_Create(&tmd, "Don\222t save");
 
 		// Make floppy
 		gNewObjectDefinition.group 		= MODEL_GROUP_BONUS;
@@ -511,7 +509,7 @@ static void SetupFileScreen(void)
 
 static void PopFloppy(int fileNumber)
 {
-	QD3D_ExplodeGeometry(floppies[fileNumber], 200.0f, PARTICLE_MODE_UPTHRUST | PARTICLE_MODE_NULLSHADER, 1, 0.5f);
+	QD3D_ExplodeGeometry(floppies[fileNumber], 200.0f, SHARD_MODE_UPTHRUST | SHARD_MODE_NULLSHADER, 1, 0.5f);
 	PlayEffect_Parms3D(EFFECT_POP, &floppies[fileNumber]->Coord, kMiddleC - 6, 3.0);
 	floppies[fileNumber]->StatusBits |= STATUS_BIT_HIDDEN;
 
@@ -543,7 +541,7 @@ static void DeleteFileInSlot(int fileNumber)
 static void FileScreenDrawStuff(const QD3DSetupOutputType *setupInfo)
 {
 	DrawObjects(setupInfo);
-	QD3D_DrawParticles(setupInfo);
+	QD3D_DrawShards(setupInfo);
 }
 
 static int FileScreenMainLoop()
@@ -556,7 +554,7 @@ static int FileScreenMainLoop()
 	{
 		UpdateInput();
 		MoveObjects();
-		QD3D_MoveParticles();
+		QD3D_MoveShards();
 		QD3D_DrawScene(gGameViewInfoPtr, FileScreenDrawStuff);
 		QD3D_CalcFramesPerSecond();
 		DoSDLMaintenance();
@@ -661,7 +659,7 @@ static int FileScreenMainLoop()
 						return -1;
 
 					default:
-						ShowSystemErr_NonFatal(pickID);
+						DoAlert("FileSelect: Unsupported pickID 0x%08x", pickID);
 				}
 			}
 		}

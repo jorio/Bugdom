@@ -518,7 +518,6 @@ Boolean KillFlyingBee(ObjNode *theNode, float dx, float dy, float dz)
 	(void) dy;
 	(void) dz;
 
-long			pg,i;
 TQ3Vector3D		delta;
 
 	
@@ -544,7 +543,7 @@ TQ3Vector3D		delta;
 
 			/* white sparks */
 				
-	pg = NewParticleGroup(	0,							// magic num
+	int32_t pg = NewParticleGroup(
 							PARTICLE_TYPE_FALLINGSPARKS,	// type
 							PARTICLE_FLAGS_BOUNCE,		// flags
 							400,						// gravity
@@ -554,7 +553,7 @@ TQ3Vector3D		delta;
 							0,							// fade rate
 							PARTICLE_TEXTURE_YELLOWBALL);	// texture
 	
-	for (i = 0; i < 60; i++)
+	for (int i = 0; i < 60; i++)
 	{
 		delta.x = (RandomFloat()-.5f) * 1400.0f;
 		delta.y = (RandomFloat()-.5f) * 1400.0f;

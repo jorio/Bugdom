@@ -1,7 +1,8 @@
 /****************************/
 /*      MISC ROUTINES       */
-/* (c)1996-99 Pangea Software  */
 /* By Brian Greenstone      */
+/* (c)1996-99 Pangea Software  */
+/* (c)2023 Iliyas Jorio     */
 /****************************/
 
 
@@ -11,6 +12,7 @@
 
 #include "game.h"
 #include <stdio.h>
+#include <stdarg.h>
 
 
 /****************************/
@@ -29,36 +31,13 @@ long	gPrefsFolderDirID;
 
 
 
-unsigned long seed0 = 0, seed1 = 0, seed2 = 0;
+static uint32_t seed0 = 0x2a80ce30, seed1 = 0, seed2 = 0;
 
 
 /**********************/
 /*     PROTOTYPES     */
 /**********************/
 
-
-/****************** DO SYSTEM ERROR ***************/
-
-void ShowSystemErr(long err)
-{
-Str255		numStr;
-	printf("BUGDOM FATAL ERROR #%ld\n", err);
-	NumToStringC(err, numStr);
-	DoAlert (numStr);
-	CleanQuit();
-}
-
-/****************** DO SYSTEM ERROR : NONFATAL ***************/
-//
-// nonfatal
-//
-void ShowSystemErr_NonFatal(long err)
-{
-Str255		numStr;
-	printf("BUGDOM NON-FATAL ERROR #%ld\n", err);
-	NumToStringC(err, numStr);
-	DoAlert (numStr);
-}
 
 /*********************** VITA LOG *******************/
 void InitLogVita()
@@ -77,58 +56,47 @@ void LogVita(const char* s)
 
 /*********************** DO ALERT *******************/
 
-void DoAlert(const char* s)
+void DoAlert(const char* format, ...)
 {
 	if (gSDLWindow)
 		SDL_SetWindowFullscreen(gSDLWindow, 0);
-	printf("BUGDOM ALERT: %s\n", s);
-	/*SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", s, gSDLWindow);*/
-    LogVita(s);
+	char message[1024];
+	va_list args;
+	va_start(args, format);
+	vsnprintf(message, sizeof(message), format, args);
+	va_end(args);
+
+	printf("BUGDOM ALERT: %s\n", message);
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", message, gSDLWindow);
+	/*SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", message, gSDLWindow);*/
+    LogVita(message);
 }
 
 
 /*********************** DO FATAL ALERT *******************/
 
-void DoFatalAlert(const char* s)
+void DoFatalAlert(const char* format, ...)
 {
 	if (gSDLWindow)
 		SDL_SetWindowFullscreen(gSDLWindow, 0);
-	printf("BUGDOM FATAL ALERT: %s\n", s);
-	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", s, gSDLWindow);
-	CleanQuit();
-}
 
-/*********************** DO FATAL ALERT 2 *******************/
+	char message[1024];
+	va_list args;
+	va_start(args, format);
+	vsnprintf(message, sizeof(message), format, args);
+	va_end(args);
 
-void DoFatalAlert2(const char* s1, const char* s2)
-{
-	if (gSDLWindow)
-		SDL_SetWindowFullscreen(gSDLWindow, 0);
-	printf("BUGDOM FATAL ALERT: %s - %s\n", s1, s2);
-	static char alertbuf[1024];
-	snprintf(alertbuf, 1024, "%s\n%s", s1, s2);
-	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", alertbuf, gSDLWindow);
+	printf("BUGDOM FATAL ALERT: %s\n", message);
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", message, gSDLWindow);
 	ExitToShell();
 }
 
-/*********************** DO ASSERT *******************/
-
-void DoAssert(const char* msg, const char* file, int line)
-{
-	if (gSDLWindow)
-		SDL_SetWindowFullscreen(gSDLWindow, 0);
-	printf("BUGDOM ASSERTION FAILED: %s - %s:%d\n", msg, file, line);
-	static char alertbuf[1024];
-	snprintf(alertbuf, 1024, "%s\n%s:%d", msg, file, line);
-	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom: Assertion Failed!", alertbuf, gSDLWindow);
-	ExitToShell();
-}
 
 /************ CLEAN QUIT ***************/
 
 void CleanQuit(void)
 {
-Boolean beenHere = false;
+static Boolean beenHere = false;
 
 	if (!beenHere)
 	{
@@ -139,7 +107,7 @@ Boolean beenHere = false;
 		DeleteAllObjects();
 		DeleteAll3DMFGroups();
 		FreeAllSkeletonFiles(-1);
-		QD3D_DisposeParticles();
+		QD3D_DisposeShards();
 
 		if (gGameViewInfoPtr != nil)                // see if nuke an existing draw context
 			QD3D_DisposeWindowSetup(&gGameViewInfoPtr);
@@ -151,25 +119,12 @@ Boolean beenHere = false;
 
 	StopAllEffectChannels();
 	KillSong();
-	UseResFile(gMainAppRezFile);
 
 	SDL_ShowCursor(1);
 	Pomme_FlushPtrTracking(false);
 	Render_EndScene();
 	Render_DeleteContext();
 	ExitToShell();
-}
-
-/********************** WAIT **********************/
-
-void Wait(u_long ticks)
-{
-u_long	start;
-	
-	start = TickCount();
-
-	while (TickCount()-start < ticks); 
-
 }
 
 
@@ -185,30 +140,11 @@ u_long	start;
 //		without the 0xffff at the end.
 //
 
-unsigned long MyRandomLong(void)
+uint32_t MyRandomLong(void)
 {
   return seed2 ^= (((seed1 ^= (seed2>>5)*1568397607UL)>>7)+
                    (seed0 = (seed0+1)*3141592621UL))*2435386481UL;
 }
-
-
-/************************* RANDOM RANGE *************************/
-//
-// THE RANGE *IS* INCLUSIVE OF MIN AND MAX
-//
-
-u_short	RandomRange(unsigned short min, unsigned short max)
-{
-u_short		qdRdm;											// treat return value as 0-65536
-u_long		range, t;
-
-	qdRdm = MyRandomLong();
-	range = max+1 - min;
-	t = (qdRdm * range)>>16;	 							// now 0 <= t <= range
-	
-	return( t+min );
-}
-
 
 
 /************** RANDOM FLOAT ********************/
@@ -234,41 +170,14 @@ float	f;
 
 /**************** SET MY RANDOM SEED *******************/
 
-void SetMyRandomSeed(unsigned long seed)
+void SetMyRandomSeed(uint32_t seed)
 {
 	seed0 = seed;
 	seed1 = 0;
-	seed2 = 0;	
-	
+	seed2 = 0;
 }
-
-/**************** INIT MY RANDOM SEED *******************/
-
-void InitMyRandomSeed(void)
-{
-	seed0 = 0x2a80ce30;
-	seed1 = 0;
-	seed2 = 0;	
-}
-
 
 #pragma mark -
-
-/****************** ALLOC HANDLE ********************/
-
-Handle	AllocHandle(long size)
-{
-	return NewHandleClear(size);
-}
-
-
-/****************** ALLOC PTR ********************/
-
-Ptr	AllocPtr(long size)
-{
-	return NewPtrClear(size);
-}
-
 
 /****************** 2D ARRAY ********************/
 
@@ -324,19 +233,6 @@ OSErr	iErr;
 			/* CHECK PREFERENCES FOLDER */
 			
 	InitPrefsFolder(false);
-}
-
-
-/******************** REGULATE SPEED ***************/
-
-void RegulateSpeed(short fps)
-{
-UInt32		n;
-static UInt32 oldTick = 0;
-	
-	n = 60 / fps;
-	while ((TickCount() - oldTick) < n);			// wait for n ticks
-	oldTick = TickCount();							// remember current time
 }
 
 

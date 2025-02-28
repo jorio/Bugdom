@@ -31,6 +31,17 @@ enum
 	NUM_LEVELS
 };
 
+enum
+{
+	DEBUG_MODE_OFF,
+	DEBUG_MODE_STATS,
+	DEBUG_MODE_BOXES,
+	DEBUG_MODE_SPLINES,
+	DEBUG_MODE_WIREFRAME,
+	DEBUG_MODE_NOTEXTURES,
+	NUM_DEBUG_MODES
+};
+
   
 //=================================================
 

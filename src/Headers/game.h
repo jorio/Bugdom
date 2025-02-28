@@ -17,6 +17,7 @@ extern "C"
 {
 #endif
 
+#include "pool.h"
 #include "globals.h"
 #include "renderer.h"
 #include "structs.h"
@@ -72,6 +73,8 @@ extern	Boolean						gDoCeiling;
 extern	Boolean						gDrawLensFlare;
 extern	Boolean						gEnteringName;
 extern	Boolean						gGameOverFlag;
+extern	Boolean						gIsInGame;
+extern	Boolean						gIsGamePaused;
 extern	Boolean						gLiquidCheat;
 extern	Boolean						gMuteMusicFlag;
 extern	Boolean						gPlayerCanMove;
@@ -79,8 +82,6 @@ extern	Boolean						gPlayerGotKilledFlag;
 extern	Boolean						gPlayerKnockOnButt;
 extern	Boolean						gPlayerUsingKeyControl;
 extern	Boolean						gRestoringSavedGame;
-extern	Boolean						gShowDebugStats;
-extern	Boolean						gShowDebug;
 extern	Boolean						gSongPlayingFlag;
 extern	Boolean						gSuperTileMemoryListExists;
 extern	Boolean						gTorchPlayer;
@@ -168,12 +169,16 @@ extern	float						gTerrainItemDeleteWindow_Left;
 extern	float						gTerrainItemDeleteWindow_Near;
 extern	float						gTerrainItemDeleteWindow_Right;
 extern	int							gAntialiasingLevelAppliedOnBoot;
+extern	int							gDebugMode;
+extern	int							gFullscreenModeAppliedOnBoot;
 extern	int							gMaxItemsAllocatedInAPass;
-extern	int							gNitroParticleGroup;
+extern	int							gNumObjNodes;
 extern	int							gWindowHeight;
 extern	int							gWindowWidth;
 extern	int 						gCurrentSaveSlot;
+extern	int32_t						gCurrentGasParticleGroup;
 extern	int32_t						gHoveredPick;
+extern	int32_t						gNitroParticleGroup;
 extern	int32_t						gTerrainScrollBuffer[MAX_SUPERTILES_DEEP][MAX_SUPERTILES_WIDE];
 extern	long						gCurrentSuperTileCol;
 extern	long						gCurrentSuperTileRow;
@@ -193,9 +198,7 @@ extern	long						gTerrainTileWidth;
 extern	long						gTerrainUnitDepth;
 extern	long						gTerrainUnitWidth;
 extern	short						gBestCheckPoint;
-extern	short						gCurrentGasParticleGroup;
 extern	short						gCurrentRopeJoint;
-extern	short						gMainAppRezFile;
 extern	short						gMoney;
 extern	short						gNumBlueClovers;
 extern	short						gNumCollisions;
@@ -209,7 +212,6 @@ extern	short						gNumObjectsInGroupList[MAX_3DMF_GROUPS];
 extern	short						gNumTerrainItems;
 extern	short						gPrefsFolderVRefNum;
 extern	u_long						gAutoFadeStatusBits;
-extern	u_long						gCurrentGasParticleMagicNum;
 extern	u_long						gInfobarUpdateBits;
 extern	u_short						**gCeilingMap;
 extern	u_short						**gFloorMap;
@@ -224,6 +226,3 @@ extern	unsigned long 				gScore;
 #ifdef __cplusplus
 };
 #endif
-
-#define GAME_ASSERT(condition) do { if (!(condition)) DoAssert(#condition, __func__, __LINE__); } while(0)
-#define GAME_ASSERT_MESSAGE(condition, message) do { if (!(condition)) DoAssert(message, __func__, __LINE__); } while(0)

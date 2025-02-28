@@ -1,7 +1,8 @@
 /****************************/
 /*   ENEMY: CATERPILLER.C			*/
-/* (c)1998 Pangea Software  */
 /* By Brian Greenstone      */
+/* (c)1998 Pangea Software  */
+/* (c)2023 Iliyas Jorio     */
 /****************************/
 
 
@@ -17,7 +18,6 @@
 /****************************/
 
 static void MoveCaterpillerOnSpline(ObjNode *theNode);
-static void SetCaterpillerJointTransforms(ObjNode *theNode, long index);
 static void SetCaterpillerCollisionInfo(ObjNode *theNode);
 
 
@@ -28,6 +28,7 @@ static void SetCaterpillerCollisionInfo(ObjNode *theNode);
 #define	CATERPILLER_HEALTH		1.0f		
 #define	CATERPILLER_DAMAGE		0.2f
 
+#define	CATERPILLER_STRETCH		40
 #define	CATERPILLER_SCALE		3.0f
 #define	CATERPILLER_SPEED		45.0f
 
@@ -124,14 +125,13 @@ SkeletonDefType		*skeletonDef;
 static void MoveCaterpillerOnSpline(ObjNode *theNode)
 {
 Boolean isVisible; 
-long	index;
 
 	isVisible = IsSplineItemVisible(theNode);					// update its visibility
 
 		/* MOVE ALONG THE SPLINE */
 
 	IncreaseSplineIndex(theNode, CATERPILLER_SPEED);
-	index = GetObjectCoordOnSpline(theNode, &theNode->Coord.x, &theNode->Coord.z);
+	GetObjectCoordOnSpline(theNode, &theNode->Coord.x, &theNode->Coord.z);
 
 
 			/***************************/
@@ -143,125 +143,10 @@ long	index;
 	
 			/* UPDATE SKELETON & COLLISION INFO */
 			
-		SetCaterpillerJointTransforms(theNode, index);
-	}
-	else
-	{
+		SetCrawlingEnemyJointTransforms(theNode,
+			CATERPILLER_STRETCH,
+			CATERPILLER_FOOT_OFFSET, CATERPILLER_COLLISIONBOX_SIZE,
+			CATERPILLER_SCALE, &theNode->SpecialF[0]);
 	}
 }
-
-
-/********************* SET CATERPILLER JOINT TRANSFORMS **********************/
-//
-// INPUT: index = index into spline's point list of object's base coord.
-//
-
-static void SetCaterpillerJointTransforms(ObjNode *theNode, long index)
-{
-SkeletonObjDataType	*skeleton = theNode->Skeleton;
-long				jointNum;
-long				numPointsInSpline;
-SkeletonDefType		*skeletonDef;
-TQ3Matrix4x4		*jointMatrix;
-SplinePointType		*points;
-SplineDefType		*splinePtr;
-TQ3Matrix4x4		m,m2,m3;
-static const	TQ3Vector3D up = {0,1,0};
-float				scale;
-CollisionBoxType *boxPtr;
-
-	if (skeleton == nil)
-		return;
-
-	skeletonDef = skeleton->skeletonDefinition;
-
-	splinePtr = &(*gSplineList)[theNode->SplineNum];			// point to the spline
-	numPointsInSpline = splinePtr->numPoints;					// get # points in the spline
-	points = *splinePtr->pointList;								// point to point list
-
-	boxPtr = theNode->CollisionBoxes;
-
-			/***************************************/
-			/* TRANSFORM EACH JOINT TO WORLD-SPACE */
-			/***************************************/
-		
-	scale = CATERPILLER_SCALE;
-			
-	for (jointNum = 0; jointNum < skeletonDef->NumBones; jointNum++)		
-	{
-		TQ3Point3D	coord,prevCoord;
-		
-				/* GET COORDS OF THIS SEGMENT */
-				
-		coord.x = points[index].x;
-		coord.z = points[index].z;
-		coord.y = GetTerrainHeightAtCoord(coord.x, coord.z, FLOOR) + CATERPILLER_FOOT_OFFSET;
-
-
-			/* UPDATE THIS COINCIDING COLLISION BOX */
-
-		boxPtr[jointNum].left 	= coord.x - CATERPILLER_COLLISIONBOX_SIZE;
-		boxPtr[jointNum].right 	= coord.x + CATERPILLER_COLLISIONBOX_SIZE;
-		boxPtr[jointNum].top 	= coord.y + CATERPILLER_COLLISIONBOX_SIZE;
-		boxPtr[jointNum].bottom = coord.y - CATERPILLER_COLLISIONBOX_SIZE;
-		boxPtr[jointNum].front 	= coord.z + CATERPILLER_COLLISIONBOX_SIZE;
-		boxPtr[jointNum].back 	= coord.z - CATERPILLER_COLLISIONBOX_SIZE;
-		
-
-			/* GET PREVIOUS SPLINE COORD FOR ROTATION CALCULATION */
-				
-		if (index >= 30)
-		{
-			prevCoord.x = points[index-30].x;
-			prevCoord.z = points[index-30].z;
-		}
-		else
-		{
-			prevCoord.x = points[numPointsInSpline-30].x;
-			prevCoord.z = points[numPointsInSpline-30].z;
-		}
-		prevCoord.y = GetTerrainHeightAtCoord(prevCoord.x, prevCoord.z, FLOOR) + CATERPILLER_FOOT_OFFSET;
-
-	
-				/* TRANSFORM JOINT'S MATRIX TO WORLD COORDS */
-	
-		jointMatrix = &skeleton->jointTransformMatrix[jointNum];		// get ptr to joint's xform matrix which was set during regular animation functions
-
-		Q3Matrix4x4_SetScale(&m, scale, scale, scale);
-		SetLookAtMatrix(&m2, &up, &prevCoord, &coord);
-
-		MatrixMultiplyFast(&m, &m2, &m3);
-
-		Q3Matrix4x4_SetTranslate(&m, coord.x, coord.y, coord.z);
-		MatrixMultiplyFast(&m3, &m, jointMatrix);
-				
-
-				/* INC INDEX FOR NEXT SEGMENT */
-				
-		index -= 40;
-		if (index < 0)
-			index += numPointsInSpline;
-			
-		theNode->SpecialF[0] -= gFramesPerSecondFrac * .8f;
-		scale += sin(theNode->SpecialF[0] + (float)jointNum*1.6f) * .2f;
-			
-	}
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

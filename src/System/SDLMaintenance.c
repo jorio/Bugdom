@@ -3,13 +3,12 @@
 // This file is part of Bugdom. https://github.com/jorio/bugdom
 
 #include "game.h"
-#include "killmacmouseacceleration.h"
 #include "version.h"
 #include <stdio.h>
 
 char						gTypedAsciiKey = '\0';
 
-static const uint32_t	kDebugTextUpdateInterval = 50;
+static const uint32_t	kDebugTextUpdateInterval = 0;//50;
 static uint32_t			gDebugTextFrameAccumulator = 0;
 static uint32_t			gDebugTextLastUpdatedAt = 0;
 static char				gDebugTextBuffer[1024];
@@ -20,10 +19,24 @@ static void UpdateDebugStats(void)
 	uint32_t ticksElapsed = ticksNow - gDebugTextLastUpdatedAt;
 	if (ticksElapsed >= kDebugTextUpdateInterval)
 	{
-		float fps = 1000 * gDebugTextFrameAccumulator / (float)ticksElapsed;
+		float fps;
+		if (kDebugTextUpdateInterval == 0)
+			fps = gFramesPerSecond;
+		else
+			fps = 1000.0f * gDebugTextFrameAccumulator / (float)ticksElapsed;
+
+		const char* debugModeName = "???";
+		switch (gDebugMode)
+		{
+			case 1: debugModeName = ""; break;
+			case 2: debugModeName = "show collisions"; break;
+			case 3: debugModeName = "show splines"; break;
+		}
+
 		snprintf(
 				gDebugTextBuffer, sizeof(gDebugTextBuffer),
-				"fps: %d\ntris: %d\nmeshes: %d+%d\ntiles: %ld/%ld%s\n\nx: %d\nz: %d\n\n%s\n\n\n\n\n\n\n\n\n\n\n\nBugdom %s\n%s @ %dx%d",
+				"fps: %d\ntris: %d\nmeshes: %d+%d\ntiles: %ld/%ld%s\nnodes: %d\nheap: %dK, %dp\n\nx: %d\nz: %d\ny: %.3f %s%s\n%s\n%s\n\n\n\n\n\n\n\n\n"
+				"Bugdom %s\nOpenGL %s, %s @ %dx%d",
 				(int)roundf(fps),
 				gRenderStats.triangles,
 				gRenderStats.meshesPass1,
@@ -31,10 +44,18 @@ static void UpdateDebugStats(void)
 				gSupertileBudget - gNumFreeSupertiles,
 				gSupertileBudget,
 				gSuperTileMemoryListExists ? "" : " (no terrain)",
-				(int)gMyCoord.x,
-				(int)gMyCoord.z,
-				gLiquidCheat? "Liquid cheat ON": "",
+				gNumObjNodes,
+				(int)(Pomme_GetHeapSize() / 1024),
+				(int)Pomme_GetNumAllocs(),
+				(int)(gPlayerObj? gPlayerObj->Coord.x: 0),
+				(int)(gPlayerObj? gPlayerObj->Coord.z: 0),
+				gPlayerObj? gPlayerObj->Coord.y: 0,
+				(gPlayerObj && gPlayerObj->StatusBits & STATUS_BIT_ONGROUND)? "G" : "",
+				(gPlayerObj && gPlayerObj->MPlatform)? "M" : "",
+				debugModeName,
+				gLiquidCheat ? "Liquid cheat ON" : "",
 				PROJECT_VERSION,
+				glGetString(GL_VERSION),
 				glGetString(GL_RENDERER),
 				gWindowWidth,
 				gWindowHeight
@@ -48,8 +69,16 @@ static void UpdateDebugStats(void)
 
 void DoSDLMaintenance(void)
 {
-	if (gShowDebugStats)
-		UpdateDebugStats();
+	switch (gDebugMode)
+	{
+		case DEBUG_MODE_OFF:
+		case DEBUG_MODE_NOTEXTURES:
+		case DEBUG_MODE_WIREFRAME:
+			break;
+		default:
+			UpdateDebugStats();
+			break;
+	}
 
 	// Reset these on every new frame
 	gTypedAsciiKey = '\0';
@@ -70,22 +99,16 @@ void DoSDLMaintenance(void)
 						CleanQuit();
 						return;
 
-					case SDL_WINDOWEVENT_RESIZED:
-						QD3D_OnWindowResized(event.window.data1, event.window.data2);
-						break;
-
-#if __APPLE__
 					case SDL_WINDOWEVENT_FOCUS_LOST:
 						// On Mac, always restore system mouse accel if cmd-tabbing away from the game
-						RestoreMacMouseAcceleration();
+						SetMacLinearMouse(0);
 						break;
 						
 					case SDL_WINDOWEVENT_FOCUS_GAINED:
 						// On Mac, kill mouse accel when focus is regained only if the game has captured the mouse
 						if (SDL_GetRelativeMouseMode())
-							KillMacMouseAcceleration();
+							SetMacLinearMouse(1);
 						break;
-#endif
 				}
 				break;
 
@@ -112,5 +135,20 @@ void DoSDLMaintenance(void)
 				OnJoystickRemoved(event.jdevice.which);
 				break;
 		}
+	}
+
+	// Ensure the clipping pane gets resized properly after switching in or out of fullscreen mode
+	int width, height;
+	SDL_GL_GetDrawableSize(gSDLWindow, &width, &height);
+	QD3D_OnWindowResized(width, height);
+
+	if (GetNewKeyState_SDL(SDL_SCANCODE_F8))
+	{
+		gDebugMode++;
+		gDebugMode %= NUM_DEBUG_MODES;
+		gDebugTextLastUpdatedAt = 0;
+		QD3D_UpdateDebugTextMesh(NULL);
+
+		glPolygonMode(GL_FRONT_AND_BACK, gDebugMode == DEBUG_MODE_WIREFRAME? GL_LINE: GL_FILL);
 	}
 }

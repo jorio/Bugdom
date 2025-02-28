@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.16)
 
 set(GAME_TARGET				"Bugdom")
-set(GAME_VERSION			"1.3.2")
+set(GAME_VERSION			"1.3.4")
+
 set(GAME_MAC_ICNS			"packaging/${GAME_TARGET}.icns")
-set(GAME_MAC_COPYRIGHT		"© 1999 Pangea Software, Inc.\n© 2022 Iliyas Jorio.")
+set(GAME_MAC_COPYRIGHT		"© 1999 Pangea Software, Inc.\n© 2024 Iliyas Jorio.")
 set(GAME_MAC_BUNDLE_ID		"io.jor.bugdom")
+set(GAME_MAC_BUNDLE_NAME	"Bugdom")
 
 set(CMAKE_MODULE_PATH		"${CMAKE_SOURCE_DIR}/cmake")
 
@@ -71,11 +73,18 @@ if(MSVC)
 	add_compile_definitions(UNICODE _UNICODE)
 
 	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${GAME_TARGET})
+elseif(APPLE)
+	# Let the game (and Pomme) find header files within SDL2.framework
+	set(CMAKE_XCODE_ATTRIBUTE_FRAMEWORK_SEARCH_PATHS extern)
+	add_compile_options("-F${CMAKE_SOURCE_DIR}/extern")  # for non-xcode IDEs
 endif()
 
 set(POMME_NO_VIDEO true)
 set(POMME_NO_INPUT true)
 set(POMME_NO_GRAPHICS true)
+set(POMME_NO_MP3 true)
+
+add_compile_definitions(POMME_CASE_SENSITIVE_FSSPEC=1)
 
 #------------------------------------------------------------------------------
 # DEPENDENCIES
@@ -156,6 +165,7 @@ target_include_directories(${GAME_TARGET} PRIVATE
 	${GAME_SRCDIR}/Headers
 )
 
+
 #------------------------------------------------------------------------------
 # COMPILER/LINKER OPTIONS
 #------------------------------------------------------------------------------
@@ -163,6 +173,9 @@ target_include_directories(${GAME_TARGET} PRIVATE
 add_compile_definitions(
 	"$<$<CONFIG:DEBUG>:_DEBUG>"
 )
+
+target_compile_definitions(${GAME_TARGET} PRIVATE
+	GL_SILENCE_DEPRECATION)
 
 if(NOT MSVC)
 	target_compile_options(${GAME_TARGET} PRIVATE
@@ -176,12 +189,14 @@ if(NOT MSVC)
 		-Wstrict-aliasing=2
 	)
 
-	# Build with sanitizers -- When using a debugger, you should export LSAN_OPTIONS=detect_leaks=0
-	if (SANITIZE)
+	# Sanitizers in debug mode (Linux only)
+	# When using a debugger, you should export LSAN_OPTIONS=detect_leaks=0
+	if(SANITIZE)
 		list(INSERT GAME_LIBRARIES 0 asan ubsan)
 		target_compile_options(${GAME_TARGET} PRIVATE
 			-fsanitize=alignment
 			-fsanitize=address
+			-fsanitize=leak
 			-fsanitize=undefined
 			-fno-omit-frame-pointer
 		)
@@ -200,6 +215,7 @@ else()
 		/EHs	# synchronous exceptions; also, extern "C" functions may throw exceptions
 		/W4
 		/wd4068 # ignore unrecognized pragmas
+		/wd4100 # unreferenced formal parameters
 		/wd4201 # nonstandard extension (nameless struct)
 		/wd4244 # conversion from double to float
 		/wd4305 # truncation from double to float
@@ -264,7 +280,7 @@ set_target_properties(${GAME_TARGET} PROPERTIES
 	MACOSX_BUNDLE_EXECUTABLE_NAME		${GAME_TARGET}			# CFBundleExecutable - executable name inside the bundle
 	MACOSX_BUNDLE_SHORT_VERSION_STRING	${PROJECT_VERSION}		# CFBundleShortVersionString
 	MACOSX_BUNDLE_COPYRIGHT				${GAME_MAC_COPYRIGHT}	# NSHumanReadableCopyright (supersedes CFBundleGetInfoString (MACOSX_BUNDLE_INFO_STRING))
-	MACOSX_BUNDLE_BUNDLE_NAME			${GAME_TARGET}			# CFBundleName - user-visible (where??) short name for the bundle, up to 15 characters
+	MACOSX_BUNDLE_BUNDLE_NAME			${GAME_MAC_BUNDLE_NAME}	# CFBundleName - user-visible short name for the bundle, up to 15 characters
 	MACOSX_BUNDLE_GUI_IDENTIFIER		${GAME_MAC_BUNDLE_ID}	# CFBundleIdentifier - unique bundle ID in reverse-DNS format
 
 	# Bundle ID required for code signing - must match CFBundleIdentifier otherwise xcode will complain
@@ -276,6 +292,7 @@ set_target_properties(${GAME_TARGET} PROPERTIES
 	XCODE_EMBED_FRAMEWORKS							"${SDL2_LIBRARIES}"
 	XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY		"YES"		# frameworks must be signed by the same developer as the binary
 	XCODE_EMBED_FRAMEWORKS_REMOVE_HEADERS_ON_COPY	"YES"		# not strictly necessary, but that's cleaner
+	XCODE_ATTRIBUTE_COPY_PHASE_STRIP[variant=Debug]	"NO"		# avoid "skipping copy phase strip" warning while working on Debug config
 	XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME			"YES"		# required for notarization to pass
 )
 
@@ -300,7 +317,6 @@ if(APPLE)
 
 	# Copy stuff to app bundle contents
 	set_source_files_properties(${GAME_MAC_ICNS} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
-	#set_source_files_properties(${SDL2_LIBRARIES} PROPERTIES MACOSX_PACKAGE_LOCATION "Frameworks")
 
 	set(BUNDLE_CONTENTS_DIR "$<TARGET_FILE_DIR:${PROJECT_NAME}>/..")
 	set(APP_PARENT_DIR "${BUNDLE_CONTENTS_DIR}/../..")
@@ -308,9 +324,16 @@ if(APPLE)
 	add_custom_command(TARGET ${GAME_TARGET} POST_BUILD
 		# Copy assets to app bundle
 		COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Data ${BUNDLE_CONTENTS_DIR}/Resources
+		COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/packaging/mainmenu.nib ${BUNDLE_CONTENTS_DIR}/Resources/mainmenu.nib
 
 		# High-DPI support in Info.plist
-#		plutil -replace NSHighResolutionCapable -bool true ${BUNDLE_CONTENTS_DIR}/Info.plist
+		COMMAND plutil -replace NSHighResolutionCapable -bool true ${BUNDLE_CONTENTS_DIR}/Info.plist
+
+		# Sonoma Game Mode support
+		COMMAND plutil -replace LSApplicationCategoryType -string "public.app-category.games" ${BUNDLE_CONTENTS_DIR}/Info.plist
+
+		# Make it honor mainmenu.nib (use -replace instead of -insert so it doesn't fail on subsequent builds)
+		COMMAND plutil -replace NSMainNibFile -string "mainmenu" ${BUNDLE_CONTENTS_DIR}/Info.plist
 	)
 else()
 	set(APP_PARENT_DIR "$<TARGET_FILE_DIR:${GAME_TARGET}>")

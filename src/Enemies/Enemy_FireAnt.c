@@ -75,7 +75,6 @@ enum
 #define BreathRegulator	SpecialF[3]				// timer for fire spewing regulation
 
 #define	ButtTimer			SpecialF[0]			// timer for on butt
-#define FireParticleMagicNum SpecialL[2]
 #define FireTimer 			SpecialF[1]
 
 
@@ -342,7 +341,10 @@ float		r,fps,y;
 		gDelta.y += 1000.0f*fps;
 		gCoord.y += gDelta.y*fps;				
 		if (gCoord.y >= y)
+		{
 			gCoord.y = y;
+			gDelta.y = 0;
+		}
 	}
 	else
 	if (gCoord.y > y)
@@ -350,7 +352,10 @@ float		r,fps,y;
 		gDelta.y -= 1000.0f*fps;				
 		gCoord.y += gDelta.y*fps;				
 		if (gCoord.y <= y)
+		{
 			gCoord.y = y;
+			gDelta.y = 0;
+		}
 	}
 	else
 		gDelta.y = 0;	
@@ -603,7 +608,7 @@ Boolean isVisible;
 
 Boolean BallHitFireAnt(ObjNode *me, ObjNode *enemy)
 {
-long			pg,i;
+int32_t			pg;
 TQ3Vector3D		delta;
 Boolean	killed = false;
 
@@ -617,7 +622,7 @@ Boolean	killed = false;
 
 				/* white sparks */
 					
-		pg = NewParticleGroup(	0,							// magic num
+		pg = NewParticleGroup(
 								PARTICLE_TYPE_FALLINGSPARKS,	// type
 								PARTICLE_FLAGS_BOUNCE|PARTICLE_FLAGS_HOT,		// flags
 								500,						// gravity
@@ -629,7 +634,7 @@ Boolean	killed = false;
 		
 		if (pg != -1)
 		{
-			for (i = 0; i < 50; i++)
+			for (int i = 0; i < 50; i++)
 			{
 				delta.x = (RandomFloat()-.5f) * 1000.0f;
 				delta.y = (RandomFloat()-.5f) * 1000.0f;
@@ -640,7 +645,7 @@ Boolean	killed = false;
 		
 					/* fire sparks */
 					
-		pg = NewParticleGroup(	0,							// magic num
+		pg = NewParticleGroup(
 								PARTICLE_TYPE_FALLINGSPARKS,	// type
 								PARTICLE_FLAGS_BOUNCE|PARTICLE_FLAGS_HOT,		// flags
 								500,						// gravity
@@ -652,7 +657,7 @@ Boolean	killed = false;
 		
 		if (pg != -1)
 		{
-			for (i = 0; i < 50; i++)
+			for (int i = 0; i < 50; i++)
 			{
 				delta.x = (RandomFloat()-.5f) * 500.0f;
 				delta.y = (RandomFloat()-.4f) * 500.0f;
@@ -759,11 +764,9 @@ static void UpdateFireAnt(ObjNode *theNode, Boolean updateFlame)
 	{
 		if (!(theNode->StatusBits & STATUS_BIT_ISCULLED))		// only update fire if is not culled
 		{
-			if ((theNode->ParticleGroup == -1) || (!VerifyParticleGroupMagicNum(theNode->ParticleGroup, theNode->FireParticleMagicNum)))
+			if (!VerifyParticleGroup(theNode->ParticleGroup))
 			{
-				theNode->FireParticleMagicNum = MyRandomLong();			// generate a random magic num
-				
-				theNode->ParticleGroup = NewParticleGroup(	theNode->FireParticleMagicNum,	// magic num
+				theNode->ParticleGroup = NewParticleGroup(
 																PARTICLE_TYPE_GRAVITOIDS,	// type
 																PARTICLE_FLAGS_HOT,			// flags
 																0,							// gravity
@@ -772,7 +775,6 @@ static void UpdateFireAnt(ObjNode *theNode, Boolean updateFlame)
 																1.0,						// decay rate
 																0,							// fade rate
 																PARTICLE_TEXTURE_FIRE);		// texture
-
 			}
 
 			if (theNode->ParticleGroup != -1)
@@ -855,10 +857,10 @@ long		i;
 		
 					/* MAKE GROUP */
 					
-	if (theNode->BreathParticleGroup == -1)
+	if (!VerifyParticleGroup(theNode->BreathParticleGroup))
 	{
-new_pgroup:	
-		theNode->BreathParticleGroup = NewParticleGroup(0,							// magic num
+new_pgroup:
+		theNode->BreathParticleGroup = NewParticleGroup(
 														PARTICLE_TYPE_FALLINGSPARKS,	// type
 														PARTICLE_FLAGS_BOUNCE|PARTICLE_FLAGS_HURTPLAYER|PARTICLE_FLAGS_HOT,		// flags
 														400,						// gravity
@@ -896,22 +898,3 @@ new_pgroup:
 		}
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
