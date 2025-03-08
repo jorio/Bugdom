@@ -141,7 +141,7 @@ static void InitParticleGroup(ParticleGroupType* pg)
 {
 			/* INITIALIZE THE GROUP */
 
-	memset(pg, 0, sizeof(ParticleGroupType));
+	SDL_memset(pg, 0, sizeof(ParticleGroupType));
 
 	pg->pool = Pool_New(MAX_PARTICLES);
 

@@ -693,7 +693,7 @@ TQ3TriMeshData			*tmd;
 
 		tmd->hasVertexNormals = true;
 
-		memset(tmd->vertexNormals, 0, tmd->numPoints * sizeof(tmd->vertexNormals[0]));		// zero out all normals
+		SDL_memset(tmd->vertexNormals, 0, tmd->numPoints * sizeof(tmd->vertexNormals[0]));		// zero out all normals
 
 		for (i = j = 0; i < numNubs-1; i++, j+=2)
 		{

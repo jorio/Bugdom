@@ -34,7 +34,7 @@ void InitWindowStuff(void)
 {
 		/* SET FULLSCREEN MODE ACCORDING TO PREFS */
 
-	SetFullscreenMode();
+	SetFullscreenMode(true);
 
 		/* SHOW A COUPLE BLACK FRAMES BEFORE WE BEGIN */
 
@@ -216,114 +216,98 @@ void QD3D_OnWindowResized(int windowWidth, int windowHeight)
 }
 
 
-/******************* SET FULLSCREEN MODE FROM USER PREFS **************/
+/******************** GET DEFAULT WINDOW SIZE *******************/
 
-void SetFullscreenMode(void)
+void GetDefaultWindowSize(SDL_DisplayID display, int* width, int* height)
 {
-#if OSXPPC
-	static bool didSwitchOnce = false;		// called at start of game, so allow switching once only
+	const float aspectRatio = 16.0 / 9.0f;
+	const float screenCoverage = .8f;
 
-	if (didSwitchOnce)
-	{
-		puts("This version of the game does not allow hot-switching between windowed/fullscreen modes.");
-		return;
-	}
+	SDL_Rect displayBounds = { .x = 0, .y = 0, .w = 640, .h = 480 };
+	SDL_GetDisplayUsableBounds(display, &displayBounds);
 
-	didSwitchOnce = true;
-#endif
-
-	if (!gGamePrefs.fullscreen)
+	if (displayBounds.w > displayBounds.h)
 	{
-		SDL_SetWindowFullscreen(gSDLWindow, 0);
-	}
-	else if (gCommandLine.fullscreenWidth > 0 && gCommandLine.fullscreenHeight > 0)
-	{
-		SDL_DisplayMode mode;
-		mode.w = gCommandLine.fullscreenWidth;
-		mode.h = gCommandLine.fullscreenHeight;
-		mode.refresh_rate = gCommandLine.fullscreenRefreshRate;
-		mode.driverdata = nil;
-		mode.format = SDL_PIXELFORMAT_UNKNOWN;
-		SDL_SetWindowDisplayMode(gSDLWindow, &mode);
-		SDL_SetWindowFullscreen(gSDLWindow, SDL_WINDOW_FULLSCREEN);
+		*width = displayBounds.h * screenCoverage * aspectRatio;
+		*height = displayBounds.h * screenCoverage;
 	}
 	else
 	{
-#if OSXPPC
-		Byte* curatedModeIDs = NULL;
-		int numCuratedModes = CurateDisplayModes(0, &curatedModeIDs);
-		SDL_DisplayMode mode = {0};
-
-		int sdlModeID = 0;
-		if (gGamePrefs.curatedDisplayModeID < numCuratedModes)
-		{
-			sdlModeID = curatedModeIDs[gGamePrefs.curatedDisplayModeID];
-		}
-
-		if (0 == SDL_GetDisplayMode(0, sdlModeID, &mode))
-		{
-			SDL_SetWindowDisplayMode(gSDLWindow, &mode);
-			SDL_SetWindowFullscreen(gSDLWindow, SDL_WINDOW_FULLSCREEN);
-		}
-		else
-		{
-			SDL_SetWindowFullscreen(gSDLWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
-		}
-#else
-		SDL_SetWindowFullscreen(gSDLWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
-#endif
+		*width = displayBounds.w * screenCoverage;
+		*height = displayBounds.w * screenCoverage / aspectRatio;
 	}
-
-	// Some systems may not display textures properly in the first GL context created by the game
-	// unless we flush SDL events immediately after entering fullscreen mode.
-	SDL_PumpEvents();
-	SDL_FlushEvents(0, 0xFFFFFFFF);
 }
 
-/*************** GET CURATED LIST OF DISPLAY MODES **************/
-//
-// Returns the number of curated display modes that were found.
-// Sets bestModeOut to an array of IDs of SDL display modes.
-// You can those IDs to SDL_GetDisplayMode().
-//
+/******************** GET NUM DISPLAYS *******************/
 
-int CurateDisplayModes(int display, Byte** curatedModesOut)
+int GetNumDisplays(void)
 {
-	static Byte curatedModes[256] = {0};
-	int numCuratedModes = 0;
-	SDL_DisplayMode lastMode = {0};
-
-	int numDisplayModes = SDL_GetNumDisplayModes(display);
-
-	for (int i = numDisplayModes-1; i >= 0; i--)	// walk the list backwards so we get the lowest-quality modes first
-	{
-		SDL_DisplayMode mode;
-
-		if (0 != SDL_GetDisplayMode(display, i, &mode))
-			continue;
-
-		if (mode.w != lastMode.w || mode.h != lastMode.h)
-		{
-			if (numCuratedModes >= 256)
-				break;
-			curatedModes[numCuratedModes] = i;
-			numCuratedModes++;
-		}
-		else
-		{
-			// the resolution is already known, but this mode probably has a better refresh rate or bit depth
-			curatedModes[numCuratedModes-1] = i;
-		}
-
-		lastMode = mode;
-	}
-
-	// pass result to caller
-	if (curatedModesOut)
-	{
-		*curatedModesOut = curatedModes;
-	}
-
-	return numCuratedModes;
+	int numDisplays = 0;
+	SDL_DisplayID* displays = SDL_GetDisplays(&numDisplays);
+	SDL_free(displays);
+	return numDisplays;
 }
 
+/******************** MOVE WINDOW TO PREFERRED DISPLAY *******************/
+//
+// This works best in windowed mode.
+// Turn off fullscreen before calling this!
+//
+
+void MoveToPreferredDisplay(void)
+{
+	SDL_DisplayID currentDisplay = SDL_GetDisplayForWindow(gSDLWindow);
+	SDL_DisplayID desiredDisplay = gGamePrefs.displayNumMinus1 + 1;
+
+	if (currentDisplay != desiredDisplay)
+	{
+		int w = 640;
+		int h = 480;
+		GetDefaultWindowSize(desiredDisplay, &w, &h);
+		SDL_SetWindowSize(gSDLWindow, w, h);
+
+		SDL_SetWindowPosition(
+			gSDLWindow,
+			SDL_WINDOWPOS_CENTERED_DISPLAY(desiredDisplay),
+			SDL_WINDOWPOS_CENTERED_DISPLAY(desiredDisplay));
+		SDL_SyncWindow(gSDLWindow);
+	}
+}
+
+/*********************** SET FULLSCREEN MODE **********************/
+
+void SetFullscreenMode(bool enforceDisplayPref)
+{
+	if (!gGamePrefs.fullscreen)
+	{
+		SDL_SetWindowFullscreen(gSDLWindow, 0);
+		SDL_SyncWindow(gSDLWindow);
+
+		if (enforceDisplayPref)
+		{
+			MoveToPreferredDisplay();
+		}
+	}
+	else
+	{
+		if (enforceDisplayPref)
+		{
+			SDL_DisplayID currentDisplay = SDL_GetDisplayForWindow(gSDLWindow);
+			SDL_DisplayID desiredDisplay = gGamePrefs.displayNumMinus1 + 1;
+
+			if (currentDisplay != desiredDisplay)
+			{
+				// We must switch back to windowed mode for the preferred monitor to take effect
+				SDL_SetWindowFullscreen(gSDLWindow, false);
+				SDL_SyncWindow(gSDLWindow);
+				MoveToPreferredDisplay();
+			}
+		}
+
+		// Enter fullscreen mode
+		SDL_SetWindowFullscreen(gSDLWindow, true);
+		SDL_SyncWindow(gSDLWindow);
+	}
+
+	SDL_GL_SetSwapInterval(gGamePrefs.vsync);
+}

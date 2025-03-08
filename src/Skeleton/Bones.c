@@ -11,8 +11,6 @@
 
 #include "game.h"
 
-#include <string.h>				// strcasecmp
-
 
 /****************************/
 /*    PROTOTYPES            */
@@ -61,7 +59,7 @@ void LoadBonesReferenceModel(const FSSpec	*inSpec, SkeletonDefType *skeleton)
 
 	// We want to force clamp texture UVs on all skeleton models to avoid seams at the edges of
 	// alpha-tested textures. The only exception, which requires repeated texture UVs, is RootSwing.
-	bool forceClampUVs = 0 != strcasecmp("RootSwing.3dmf", inSpec->cName);
+	bool forceClampUVs = 0 != SDL_strcasecmp("RootSwing.3dmf", inSpec->cName);
 
 	Render_Load3DMFTextures(skeleton->associated3DMF, skeleton->textureNames, forceClampUVs);
 

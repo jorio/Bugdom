@@ -8,7 +8,6 @@
 /****************************/
 
 #include "game.h"
-#include <stdio.h>
 
 
 /****************************/
@@ -129,7 +128,7 @@ static void MakeLevelSelectObjects(void)
 	for (int i = 0; i < NUM_LEVELS; i++)
 	{
 		char caption[128];
-		snprintf(caption, sizeof(caption), "Level %d: %s", i+1, kLevelNames[i]);
+		SDL_snprintf(caption, sizeof(caption), "Level %d: %s", i+1, kLevelNames[i]);
 
 		tmd.coord.y -= LH;
 		TextMesh_Create(&tmd, caption);

@@ -14,8 +14,10 @@ extern	void GammaOn(void);
 extern	void GameScreenToBlack(void);
 
 void QD3D_OnWindowResized(int windowWidth, int windowHeight);
-void SetFullscreenMode(void);
 
 void DoSDLMaintenance(void);
 
-int CurateDisplayModes(int display, Byte** curatedModesOut);
+int GetNumDisplays(void);
+void GetDefaultWindowSize(SDL_DisplayID display, int* w, int* h);
+void MoveToPreferredDisplay(void);
+void SetFullscreenMode(bool enforceDisplayPref);

@@ -3,7 +3,6 @@
 // This file is part of Bugdom. https://github.com/jorio/bugdom
 
 #include "game.h"
-#include <stdio.h>
 
 static TQ3Point3D gModelDebug_modelCoord = { 0, 0, 0 };
 static float gCameraLookAtAccel = 9;
@@ -385,7 +384,7 @@ void DoModelDebug(void)
 			char titlebuf[512];
 			if (gDisplaySkeleton)
 			{
-				snprintf(titlebuf, sizeof(titlebuf), "Skeleton %d/%d [TAB], Anim %d/%d [ENTER]. Press [SPACE] for DGOs.",
+				SDL_snprintf(titlebuf, sizeof(titlebuf), "Skeleton %d/%d [TAB], Anim %d/%d [ENTER]. Press [SPACE] for DGOs.",
 						1+gCurrentSkeletonType,
 						MAX_SKELETON_TYPES,
 						1+gModel->Skeleton->AnimNum,
@@ -393,7 +392,7 @@ void DoModelDebug(void)
 			}
 			else
 			{
-				snprintf(titlebuf, sizeof(titlebuf), "3DMF Group %s (%d/%d) [TAB], DGO %d/%d [ENTER]. Press [SPACE] for skeletons.",
+				SDL_snprintf(titlebuf, sizeof(titlebuf), "3DMF Group %s (%d/%d) [TAB], DGO %d/%d [ENTER]. Press [SPACE] for skeletons.",
 						gModelFiles[gCurrentModelFile],
 						1+gCurrentModelFile,
 						gNumModelFiles,

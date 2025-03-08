@@ -11,7 +11,7 @@
 /****************************/
 
 #include "game.h"
-#include <stdio.h>
+#include <stdlib.h>
 
 
 /****************************/
@@ -410,7 +410,7 @@ char		path[256];
 
 	for (int i = 0; i < MAX_SPRITES; i++)
 	{
-		snprintf(path, sizeof(path), ":Images:Infobar:%d.tga", 128 + i);
+		SDL_snprintf(path, sizeof(path), ":Images:Infobar:%d.tga", 128 + i);
 
 		FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, path, &spec);
 		err = ReadTGA(&spec, &pixelData, &header, true);
@@ -623,7 +623,7 @@ static void EraseSprite(int spriteNum, int x, int y)
 
 	for (int row = 0; row < spriteHeight; row++)
 	{
-		memcpy(out, in, 4*spriteWidth);
+		SDL_memcpy(out, in, 4*spriteWidth);
 		out += INFOBAR_TEXTURE_WIDTH;
 		in += backgroundWidth;
 	}

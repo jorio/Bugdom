@@ -40,7 +40,7 @@ void InitSkeletonManager(void)
 {
 	CalcAccelerationSplineCurve();									// calc accel curve
 
-	memset(gLoadedSkeletonsList, 0, sizeof(gLoadedSkeletonsList));
+	SDL_memset(gLoadedSkeletonsList, 0, sizeof(gLoadedSkeletonsList));
 }
 
 

@@ -11,8 +11,6 @@
 /***************/
 
 #include "game.h"
-#include <stdio.h>
-#include <stdarg.h>
 
 
 /****************************/
@@ -49,10 +47,10 @@ void DoAlert(const char* format, ...)
 	char message[1024];
 	va_list args;
 	va_start(args, format);
-	vsnprintf(message, sizeof(message), format, args);
+	SDL_vsnprintf(message, sizeof(message), format, args);
 	va_end(args);
 
-	printf("BUGDOM ALERT: %s\n", message);
+	SDL_Log("BUGDOM ALERT: %s\n", message);
 	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", message, gSDLWindow);
 }
 
@@ -67,10 +65,10 @@ void DoFatalAlert(const char* format, ...)
 	char message[1024];
 	va_list args;
 	va_start(args, format);
-	vsnprintf(message, sizeof(message), format, args);
+	SDL_vsnprintf(message, sizeof(message), format, args);
 	va_end(args);
 
-	printf("BUGDOM FATAL ALERT: %s\n", message);
+	SDL_Log("BUGDOM FATAL ALERT: %s\n", message);
 	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Bugdom", message, gSDLWindow);
 	ExitToShell();
 }
@@ -104,7 +102,7 @@ static Boolean beenHere = false;
 	StopAllEffectChannels();
 	KillSong();
 
-	SDL_ShowCursor(1);
+	SDL_ShowCursor();
 	Pomme_FlushPtrTracking(false);
 	Render_EndScene();
 	Render_DeleteContext();

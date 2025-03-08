@@ -4,26 +4,37 @@ on: [workflow_dispatch]
 
 jobs:
   build-linux-appimage:
-    runs-on: ubuntu-20.04  # Use oldest available Ubuntu for maximum glibc compatibility
+    runs-on: ${{ matrix.platform.os }}
     timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:  # Use oldest available Ubuntu for maximum glibc compatibility
+          - { name: x86_64, os: ubuntu-22.04 }
+          - { name: aarch64, os: ubuntu-22.04-arm }
     steps:
       - uses: actions/checkout@v4
         with: {submodules: 'recursive'}
-      - name: Get build dependencies for SDL from APT  # cf. https://github.com/libsdl-org/SDL/blob/main/docs/README-linux.md
+      - name: Get build dependencies from APT
+        # cf. https://github.com/libsdl-org/SDL/blob/main/docs/README-linux.md
+        # + desktop-file-utils for appimagetool
         run: |
           sudo apt update
           sudo apt install -y libasound2-dev libpulse-dev \
-            libaudio-dev libjack-dev libsndio-dev libsamplerate0-dev libx11-dev libxext-dev \
-            libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libwayland-dev \
+            libaudio-dev libjack-dev libsndio-dev libx11-dev libxext-dev \
+            libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev \
             libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
-            libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev fcitx-libs-dev
+            libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev fcitx-libs-dev \
+            libpipewire-0.3-dev libwayland-dev libdecor-0-dev liburing-dev \
+            desktop-file-utils
+      - run: echo "ARTIFACT_NAME=$(python3 build.py --print-artifact-name)" >> $GITHUB_ENV
       - run: python3 build.py --dependencies
       - run: python3 build.py --configure
       - run: python3 build.py --build
       - run: python3 build.py --package
       - uses: actions/upload-artifact@v4
         with:
-          name: linux-build
+          name: ${{env.ARTIFACT_NAME}}
           path: dist/
           compression-level: 0
 
@@ -33,33 +44,33 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: {submodules: 'recursive'}
+      - run: |
+          $ARTIFACT_NAME = python3 build.py --print-artifact-name
+          echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $env:GITHUB_ENV
       - run: python3 build.py --dependencies
       - run: python3 build.py --configure -G 'Visual Studio 17 2022'
       - run: python3 build.py --build
       - run: python3 build.py --package
       - uses: actions/upload-artifact@v4
         with:
-          name: windows-build
+          name: ${{env.ARTIFACT_NAME}}
           path: dist/
           compression-level: 0
 
   build-macos:
-    runs-on: macos-11
+    runs-on: macos-latest  # as of January 2025, this still supports the macOS 10.13 deployment target
     timeout-minutes: 15
     env:
       CODE_SIGN_IDENTITY: ${{ secrets.APPLE_CODE_SIGN_IDENTITY }}
     steps:
-      - uses: apple-actions/import-codesign-certs@v2
+      - uses: apple-actions/import-codesign-certs@v3
         with:
           p12-file-base64: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_P12_BASE64 }}
           p12-password: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}
       - uses: actions/checkout@v4
         with: {submodules: 'recursive'}
       - name: Get artifact name
-        run: |
-          ARTIFACT_NAME="$(python3 build.py --print-artifact-name)"
-          echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
-          echo Artifact name = $ARTIFACT_NAME
+        run: echo "ARTIFACT_NAME=$(python3 build.py --print-artifact-name)" >> $GITHUB_ENV
       - run: python3 build.py --dependencies
       - run: python3 build.py --configure
       - run: python3 build.py --build
@@ -72,6 +83,6 @@ jobs:
         run: xcrun stapler staple "dist/$ARTIFACT_NAME"
       - uses: actions/upload-artifact@v4
         with:
-          name: mac-build
+          name: ${{env.ARTIFACT_NAME}}
           path: dist/
           compression-level: 0

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #define NUM_MOUSE_SENSITIVITY_LEVELS		5
 #define DEFAULT_MOUSE_SENSITIVITY_LEVEL		(NUM_MOUSE_SENSITIVITY_LEVELS/2)
@@ -91,7 +91,7 @@ void GetMouseDelta(float *dx, float *dy);
 
 void CaptureMouse(Boolean doCapture);
 
-SDL_GameController* TryOpenController(bool showMessageOnFailure);
+SDL_Gamepad* TryOpenGamepad(bool showMessageOnFailure);
 void OnJoystickRemoved(SDL_JoystickID which);
 TQ3Vector2D GetThumbStickVector(bool rightStick);
 

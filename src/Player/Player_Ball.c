@@ -146,11 +146,11 @@ float	rotY;
 
 	GAME_ASSERT(newObj->NumMeshes == oldObj->NumMeshes);
 
-	memcpy(newObj->OwnsMeshMemory, oldObj->OwnsMeshMemory, sizeof(oldObj->OwnsMeshMemory));
-	memcpy(newObj->OwnsMeshTexture, oldObj->OwnsMeshTexture, sizeof(oldObj->OwnsMeshTexture));
+	SDL_memcpy(newObj->OwnsMeshMemory, oldObj->OwnsMeshMemory, sizeof(oldObj->OwnsMeshMemory));
+	SDL_memcpy(newObj->OwnsMeshTexture, oldObj->OwnsMeshTexture, sizeof(oldObj->OwnsMeshTexture));
 
-	memset(oldObj->OwnsMeshMemory, 0, sizeof(oldObj->OwnsMeshMemory));		// prevent mesh memory from being freed when we delete oldObj
-	memset(oldObj->OwnsMeshTexture, 0, sizeof(oldObj->OwnsMeshTexture));
+	SDL_memset(oldObj->OwnsMeshMemory, 0, sizeof(oldObj->OwnsMeshMemory));		// prevent mesh memory from being freed when we delete oldObj
+	SDL_memset(oldObj->OwnsMeshTexture, 0, sizeof(oldObj->OwnsMeshTexture));
 
 	
 				/**********************/
@@ -346,7 +346,7 @@ float	dx, dy;
 	float vl = FastVectorLength2D(gDelta.x, gDelta.z);
 	if (vl > PLAYER_MAX_SPEED_BALL)
 	{
-//		printf("Regulate overkill gDelta x=%.0f z=%.0f\n", gDelta.x, gDelta.z);
+//		SDL_Log("Regulate overkill gDelta x=%.0f z=%.0f\n", gDelta.x, gDelta.z);
 		TQ3Vector2D gd2;
 		FastNormalizeVector2D(gDelta.x, gDelta.z, &gd2);
 		gDelta.x = gd2.x * PLAYER_MAX_SPEED_BALL;

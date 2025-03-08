@@ -2,11 +2,11 @@
 // (C) 2020 Iliyas Jorio
 // This file is part of Bugdom. https://github.com/jorio/bugdom
 
+#include <SDL3/SDL.h>
 #include "tween.h"
 
 #define _USE_MATH_DEFINES  // For MSVC/Win32
 #include <math.h>
-#include <string.h>
 
 void TweenFloats(
 		float(*easingFunction)(float),
@@ -19,11 +19,11 @@ void TweenFloats(
 {
 	if (elapsed <= 0)
 	{
-		memcpy(current, start, nFloats*sizeof(float));
+		SDL_memcpy(current, start, nFloats*sizeof(float));
 	}
 	else if (elapsed >= duration)
 	{
-		memcpy(current, target, nFloats*sizeof(float));
+		SDL_memcpy(current, target, nFloats*sizeof(float));
 	}
 	else
 	{

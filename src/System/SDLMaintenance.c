@@ -1,12 +1,10 @@
-// SDL MAINTENANCE.C
-// (C) 2020 Iliyas Jorio
+// SDL 3 MAINTENANCE.C
+// (C) 2025 Iliyas Jorio
 // This file is part of Bugdom. https://github.com/jorio/bugdom
 
 #include "game.h"
-#include "version.h"
-#include <stdio.h>
 
-char						gTypedAsciiKey = '\0';
+char					gTypedAsciiKey = '\0';
 
 static const uint32_t	kDebugTextUpdateInterval = 0;//50;
 static uint32_t			gDebugTextFrameAccumulator = 0;
@@ -33,10 +31,10 @@ static void UpdateDebugStats(void)
 			case 3: debugModeName = "show splines"; break;
 		}
 
-		snprintf(
+		SDL_snprintf(
 				gDebugTextBuffer, sizeof(gDebugTextBuffer),
 				"fps: %d\ntris: %d\nmeshes: %d+%d\ntiles: %ld/%ld%s\nnodes: %d\nheap: %dK, %dp\n\nx: %d\nz: %d\ny: %.3f %s%s\n%s\n%s\n\n\n\n\n\n\n\n\n"
-				"Bugdom %s\nOpenGL %s, %s @ %dx%d",
+				"Bugdom %s - SDL %s\nOpenGL %s, %s @ %dx%d",
 				(int)roundf(fps),
 				gRenderStats.triangles,
 				gRenderStats.meshesPass1,
@@ -54,7 +52,8 @@ static void UpdateDebugStats(void)
 				(gPlayerObj && gPlayerObj->MPlatform)? "M" : "",
 				debugModeName,
 				gLiquidCheat ? "Liquid cheat ON" : "",
-				PROJECT_VERSION,
+				GAME_VERSION,
+				SDL_GetRevision(),
 				glGetString(GL_VERSION),
 				glGetString(GL_RENDERER),
 				gWindowWidth,
@@ -88,58 +87,46 @@ void DoSDLMaintenance(void)
 	{
 		switch (event.type)
 		{
-			case SDL_QUIT:
+			case SDL_EVENT_QUIT:
+			case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
 				CleanQuit();
 				return;
 
-			case SDL_WINDOWEVENT:
-				switch (event.window.event)
-				{
-					case SDL_WINDOWEVENT_CLOSE:
-						CleanQuit();
-						return;
-
-					case SDL_WINDOWEVENT_FOCUS_LOST:
-						// On Mac, always restore system mouse accel if cmd-tabbing away from the game
-						SetMacLinearMouse(0);
-						break;
-						
-					case SDL_WINDOWEVENT_FOCUS_GAINED:
-						// On Mac, kill mouse accel when focus is regained only if the game has captured the mouse
-						if (SDL_GetRelativeMouseMode())
-							SetMacLinearMouse(1);
-						break;
-				}
+			case SDL_EVENT_WINDOW_FOCUS_LOST:
+				// On Mac, always restore system mouse accel if cmd-tabbing away from the game
+				SetMacLinearMouse(0);
 				break;
 
-			case SDL_TEXTINPUT:
+			case SDL_EVENT_WINDOW_FOCUS_GAINED:
+				// On Mac, kill mouse accel when focus is regained only if the game has captured the mouse
+				if (SDL_GetWindowRelativeMouseMode(gSDLWindow))
+					SetMacLinearMouse(1);
+				break;
+
+			case SDL_EVENT_TEXT_INPUT:
 				// The text event gives us UTF-8. Use the key only if it's a printable ASCII character.
 				if (event.text.text[0] >= ' ' && event.text.text[0] <= '~')
-				{
 					gTypedAsciiKey = event.text.text[0];
-				}
 				break;
 
-			case SDL_MOUSEMOTION:
+			case SDL_EVENT_MOUSE_MOTION:
 				if (!gEatMouse)
-				{
 					MouseSmoothing_OnMouseMotion(&event.motion);
-				}
 				break;
 
-			case SDL_JOYDEVICEADDED:	 // event.jdevice.which is the joy's INDEX (not an instance id!)
-				TryOpenController(false);
+			case SDL_EVENT_GAMEPAD_ADDED:
+				TryOpenGamepad(false);
 				break;
 
-			case SDL_JOYDEVICEREMOVED:	// event.jdevice.which is the joy's UNIQUE INSTANCE ID (not an index!)
-				OnJoystickRemoved(event.jdevice.which);
+			case SDL_EVENT_GAMEPAD_REMOVED:
+				OnJoystickRemoved(event.gdevice.which);
 				break;
 		}
 	}
 
 	// Ensure the clipping pane gets resized properly after switching in or out of fullscreen mode
 	int width, height;
-	SDL_GL_GetDrawableSize(gSDLWindow, &width, &height);
+	SDL_GetWindowSizeInPixels(gSDLWindow, &width, &height);
 	QD3D_OnWindowResized(width, height);
 
 	if (GetNewKeyState_SDL(SDL_SCANCODE_F8))

@@ -37,7 +37,7 @@ void SetMacLinearMouse(int linear)
 
 #else
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include <IOKit/hidsystem/IOHIDLib.h>
 #include <IOKit/hidsystem/IOHIDParameter.h>
 #include <IOKit/hidsystem/event_status_driver.h>

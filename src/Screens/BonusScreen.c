@@ -435,7 +435,7 @@ ObjNode	*clovers[MAX_CLOVERS_SHOWN];
 	if (n == 0)							// see if no clovers
 		return;
 
-	memset(clovers, 0, sizeof(clovers));	// clear clover pointers
+	SDL_memset(clovers, 0, sizeof(clovers));	// clear clover pointers
 
 	DrawBonusStuff(1);
 

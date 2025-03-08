@@ -34,8 +34,7 @@ A port of the sequel is also available: [Bugdom 2](https://github.com/jorio/Bugd
     [JA](docs/Instructions-JA.pdf)
     [SP](docs/Instructions-ES.pdf)
     [SV](docs/Instructions-SV.pdf)
-- [CHEATS.md](CHEATS.md) — Cheat codes!
-- [COMMANDLINE.md](COMMANDLINE.md) — Advanced command-line switches.
+- [SECRETS.md](SECRETS.md) — Cheat codes!
 
 ## License
 

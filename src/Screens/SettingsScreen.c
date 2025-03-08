@@ -16,15 +16,12 @@
 
 static const char* GenerateKiddieModeSubtitle(void);
 static const char* GenerateDetailSubtitle(void);
-
-#if !__APPLE__
 static const char* GenerateMSAASubtitle(void);
-#endif
 
-#if OSXPPC
-static const char* GeneratePPCFullscreenModeSubtitle(void);
-static const char* GeneratePPCDisplayModeSubtitle(void);
-#endif
+static void OnChangeFullscreenMode(void)
+{
+	SetFullscreenMode(true);
+}
 
 /****************************/
 /*    CONSTANTS             */
@@ -83,7 +80,6 @@ static const SettingEntry gSettingsMenu[] =
 		.choices = {"No", "Yes"},
 	},
 
-#if !OSXPPC
 	{
 		.kind = kCloverRange,
 		.ptr = &gGamePrefs.mouseSensitivityLevel,
@@ -91,7 +87,6 @@ static const SettingEntry gSettingsMenu[] =
 		.nChoices = NUM_MOUSE_SENSITIVITY_LEVELS,
 		.choices = {"1","2","3","4","5","6","7","8"},
 	},
-#endif
 
 	{
 		.kind = kCycler,
@@ -99,6 +94,15 @@ static const SettingEntry gSettingsMenu[] =
 		.label = "Dragonfly steering",
 		.nChoices = 4,
 		.choices = {"Normal", "Invert Y axis", "Invert X axis", "Invert X & Y"},
+	},
+
+
+	{
+		.kind = kCycler,
+		.ptr = &gGamePrefs.showBottomBar,
+		.label = "Bottom bar",
+		.nChoices = 2,
+		.choices = {"Hidden", "Visible"},
 	},
 
 #if _DEBUG
@@ -134,31 +138,9 @@ static SettingEntry gVideoMenu[] =
 		.kind = kCycler,
 		.ptr = &gGamePrefs.fullscreen,
 		.label = "Fullscreen",
-		.callback = SetFullscreenMode,
+		.callback = OnChangeFullscreenMode,
 		.nChoices = 2,
 		.choices = {"No", "Yes"},
-#if OSXPPC
-		.subtitle = GeneratePPCFullscreenModeSubtitle,
-#endif
-	},
-
-#if OSXPPC
-	{
-		.kind = kCycler,
-		.ptr = &gGamePrefs.curatedDisplayModeID,
-		.label = "Fullscreen mode",
-		.nChoices = 1,
-		.choices = {"0x0"},
-		.subtitle = GeneratePPCDisplayModeSubtitle,
-	},
-#endif
-
-	{
-		.kind = kCycler,
-		.ptr = &gGamePrefs.showBottomBar,
-		.label = "Bottom bar",
-		.nChoices = 2,
-		.choices = {"Hidden", "Visible"},
 	},
 
 	{
@@ -175,10 +157,9 @@ static SettingEntry gVideoMenu[] =
 		.ptr = &gGamePrefs.force4x3AspectRatio,
 		.label = "Aspect ratio",
 		.nChoices = 2,
-		.choices = {"Fit to screen", "4:3"},
+		.choices = {"Fit to screen", "Pillarboxed 4:3"},
 	},
 
-#if !(__APPLE__)
 	{
 		.kind = kCycler,
 		.ptr = &gGamePrefs.antialiasingLevel,
@@ -187,7 +168,25 @@ static SettingEntry gVideoMenu[] =
 		.choices = {"None", "MSAA 2x", "MSAA 4x", "MSAA 8x"},
 		.subtitle = GenerateMSAASubtitle,
 	},
-#endif
+
+	{
+		.kind = kCycler,
+		.ptr = &gGamePrefs.displayNumMinus1,
+		.label = "Display",
+		.callback = OnChangeFullscreenMode,
+		.nChoices = 1,  // filled in when entering settings screen
+		.choices =
+		{
+			"Display 1",
+			"Display 2",
+			"Display 3",
+			"Display 4",
+			"Display 5",
+			"Display 6",
+			"Display 7",
+			"Display 8",
+		},
+	},
 
 	// End sentinel
 	{
@@ -224,44 +223,12 @@ static const char* GenerateDetailSubtitle(void)
 	return gGamePrefs.lowDetail ? "The \223ATI Rage II\224 look" : NULL;
 }
 
-#if !(__APPLE__)
 static const char* GenerateMSAASubtitle(void)
 {
-	return gGamePrefs.antialiasingLevel != gAntialiasingLevelAppliedOnBoot
+	return gGamePrefs.antialiasingLevel != gCurrentAntialiasingLevel
 		? "Will apply when you restart the game"
 		: NULL;
 }
-#endif
-
-#if OSXPPC
-static const char* GeneratePPCFullscreenModeSubtitle(void)
-{
-	return gGamePrefs.fullscreen != gFullscreenModeAppliedOnBoot
-		? "Will apply when you restart the game"
-		: NULL;
-}
-
-static const char* GeneratePPCDisplayModeSubtitle(void)
-{
-	static bool initialized = false;
-	static Byte currentDisplayMode = 0;
-
-	if (!initialized)
-	{
-		initialized = true;
-		currentDisplayMode = gGamePrefs.curatedDisplayModeID;
-	}
-
-	if (gGamePrefs.curatedDisplayModeID != currentDisplayMode)
-	{
-		return "Will apply when you restart the game";
-	}
-	else
-	{
-		return NULL;
-	}
-}
-#endif
 
 /****************** SETUP SETTINGS SCREEN **************************/
 
@@ -446,7 +413,7 @@ static void FillCuratedDisplayModeOptions(void)
 		SDL_DisplayMode mode = {0};
 		SDL_GetDisplayMode(0, curatedModeIDs[i], &mode);
 
-		snprintf(modeNames[i], sizeof(modeNames[i]), "%dx%d, %dHz", mode.w, mode.h, mode.refresh_rate);
+		SDL_snprintf(modeNames[i], sizeof(modeNames[i]), "%dx%d, %dHz", mode.w, mode.h, mode.refresh_rate);
 		displayModeEntry->choices[i] = modeNames[i];
 	}
 }
@@ -460,6 +427,14 @@ void DoSettingsScreen(void)
 
 	SetupSettingsScreen("Settings", gSettingsMenu);
 	bool done = false;
+
+	for (int i = 0; gVideoMenu[i].kind != kEND_SENTINEL; i++)
+	{
+		if (gVideoMenu[i].ptr == &gGamePrefs.displayNumMinus1)
+		{
+			gVideoMenu[i].nChoices = SDL_min(8, GetNumDisplays());
+		}
+	}
 
 	while (!done)
 	{

@@ -3,7 +3,6 @@
 // This file is part of Bugdom. https://github.com/jorio/bugdom
 
 #include "game.h"
-#include <stdio.h>
 
 #define MAX_CODEPOINTS 256
 
@@ -180,7 +179,7 @@ static void ParseSFL(const char* data)
 	SkipLine(&data);
 
 	// Get line height (first int is font size)
-	nArgs = sscanf(data, "%d %f", &junk, &gLineHeight);
+	nArgs = SDL_sscanf(data, "%d %f", &junk, &gLineHeight);
 	GAME_ASSERT(nArgs == 2);
 	SkipLine(&data);
 
@@ -188,7 +187,7 @@ static void ParseSFL(const char* data)
 	SkipLine(&data);
 
 	// Get glyph count
-	nArgs = sscanf(data, "%d", &numGlyphs);
+	nArgs = SDL_sscanf(data, "%d", &numGlyphs);
 	GAME_ASSERT(nArgs == 1);
 	GAME_ASSERT(numGlyphs <= MAX_CODEPOINTS);
 	SkipLine(&data);
@@ -203,7 +202,7 @@ static void ParseSFL(const char* data)
 		int codepoint = 0;
 		AtlasGlyph g = {0};
 
-		nArgs = sscanf(
+		nArgs = SDL_sscanf(
 				data,
 				"%d %f %f %f %f %f %f %f",
 				&codepoint,

@@ -8,11 +8,9 @@
 /****************************/
 
 #include "game.h"
-#include <SDL.h>
-#include <SDL_opengl.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_opengl.h>
 #include <QD3D.h>
-#include <stdlib.h>		// qsort
-#include <stdio.h>
 
 
 #pragma mark -
@@ -224,7 +222,7 @@ static inline void SetColorMask(GLboolean enable)
 void DoFatalGLError(GLenum error, const char* file, int line)
 {
 	static char alertbuf[1024];
-	snprintf(alertbuf, sizeof(alertbuf), "OpenGL error 0x%x\nin %s:%d", error, file, line);
+	SDL_snprintf(alertbuf, sizeof(alertbuf), "OpenGL error 0x%x\nin %s:%d", error, file, line);
 	DoFatalAlert(alertbuf);
 }
 #endif
@@ -244,14 +242,14 @@ void Render_DeleteContext(void)
 {
 	if (gGLContext)
 	{
-		SDL_GL_DeleteContext(gGLContext);
+		SDL_GL_DestroyContext(gGLContext);
 		gGLContext = NULL;
 	}
 }
 
 void Render_SetDefaultModifiers(RenderModifiers* dest)
 {
-	memcpy(dest, &kDefaultRenderMods, sizeof(RenderModifiers));
+	SDL_memcpy(dest, &kDefaultRenderMods, sizeof(RenderModifiers));
 }
 
 void Render_InitState(const TQ3ColorRGBA* clearColor)
@@ -294,7 +292,7 @@ void Render_InitState(const TQ3ColorRGBA* clearColor)
 
 	// Set up mesh queue
 	gMeshQueueSize = 0;
-	memset(gMeshQueuePtrs, 0, sizeof(gMeshQueuePtrs));
+	SDL_memset(gMeshQueuePtrs, 0, sizeof(gMeshQueuePtrs));
 
 	// Set up fullscreen overlay quad
 	if (!gFullscreenQuad)
@@ -514,11 +512,11 @@ void Render_Load3DMFTextures(TQ3MetaFile* metaFile, GLuint* outTextureNames, boo
 
 void Render_StartFrame(void)
 {
-	int mkc = SDL_GL_MakeCurrent(gSDLWindow, gGLContext);
-	GAME_ASSERT_MESSAGE(mkc == 0, SDL_GetError());
+	bool didMakeCurrent = SDL_GL_MakeCurrent(gSDLWindow, gGLContext);
+	GAME_ASSERT_MESSAGE(didMakeCurrent, SDL_GetError());
 
 	// Clear rendering statistics
-	memset(&gRenderStats, 0, sizeof(gRenderStats));
+	SDL_memset(&gRenderStats, 0, sizeof(gRenderStats));
 
 	// Clear mesh queue
 	gMeshQueueSize = 0;
@@ -562,7 +560,7 @@ void Render_FlushQueue(void)
 	// SORT DRAW QUEUE ENTRIES
 	// Opaque meshes are sorted front-to-back,
 	// followed by transparent meshes, sorted back-to-front.
-	qsort(
+	SDL_qsort(
 			gMeshQueuePtrs,
 			gMeshQueueSize,
 			sizeof(gMeshQueuePtrs[0]),
@@ -716,7 +714,7 @@ void Render_SubmitMeshList(
 		const TQ3Point3D*		centerCoord)
 {
 	if (numMeshes <= 0)
-		printf("not drawing this!\n");
+		SDL_Log("not drawing this!\n");
 
 	GAME_ASSERT(gFrameStarted);
 	GAME_ASSERT(gMeshQueueSize + numMeshes <= MESHQUEUE_MAX_SIZE);

@@ -11,9 +11,6 @@
 /***************/
 
 #include "game.h"
-#include <time.h>
-#include <stdio.h>
-#include <string.h>
 
 
 /****************************/
@@ -39,7 +36,10 @@ static void ReadDataFromPlayfieldFile(void);
 #define PREFS_HEADER_LENGTH 16
 #define PREFS_FOLDER_NAME "Bugdom"
 #define PREFS_FILE_NAME "Prefs"
-const char PREFS_HEADER_STRING[PREFS_HEADER_LENGTH+1] = "NewBugdomPrefs05";		// Bump this every time prefs struct changes -- note: this will reset user prefs
+
+// Bump this every time prefs struct changes
+// Note: this will reset user prefs!
+const char PREFS_HEADER_STRING[PREFS_HEADER_LENGTH+1] = "NewBugdomPrefs06";
 
 
 		/* PLAYFIELD HEADER */
@@ -137,10 +137,10 @@ char		pathBuf[128];
 
 
 
-	snprintf(pathBuf, sizeof(pathBuf), ":Skeletons:%s.skeleton", modelName);
+	SDL_snprintf(pathBuf, sizeof(pathBuf), ":Skeletons:%s.skeleton", modelName);
 	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, pathBuf, &fsSpecSkeleton);
 
-	snprintf(pathBuf, sizeof(pathBuf), ":Skeletons:%s.3dmf", modelName);
+	SDL_snprintf(pathBuf, sizeof(pathBuf), ":Skeletons:%s.3dmf", modelName);
 	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, pathBuf, &fsSpec3DMF);
 
 
@@ -454,7 +454,7 @@ OSErr MakePrefsFSSpec(const char* filename, bool createFolder, FSSpec* spec)
 	InitPrefsFolder(createFolder);
 	
 	char path[256];
-	snprintf(path, sizeof(path), ":%s:%s", PREFS_FOLDER_NAME, filename);
+	SDL_snprintf(path, sizeof(path), ":%s:%s", PREFS_FOLDER_NAME, filename);
 
 	return FSMakeFSSpec(gPrefsFolderVRefNum, gPrefsFolderDirID, path, spec);
 }
@@ -588,7 +588,7 @@ static FSSpec MakeSaveGameFSSpec(int slot)
 	GAME_ASSERT(slot >= 0);
 	GAME_ASSERT(slot < NUM_SAVE_FILES);
 
-	snprintf(path, sizeof(path), "Save%c", slot + 'A');
+	SDL_snprintf(path, sizeof(path), "Save%c", slot + 'A');
 	MakePrefsFSSpec(path, true, &spec);
 
 	return spec;
@@ -603,12 +603,17 @@ SaveGameType 	saveData;
 short			fRefNum;
 FSSpec			spec;
 OSErr			err;
+SDL_Time		timestampNanoseconds = 0;
+
+			/* GET TIMESTAMP */
+
+	SDL_GetCurrentTime(&timestampNanoseconds);
 
 			/*************************/
 			/* CREATE SAVE GAME DATA */
 			/*************************/	
 
-	memset(&saveData, 0, sizeof(saveData));
+	SDL_memset(&saveData, 0, sizeof(saveData));
 	saveData.version		= SAVE_GAME_VERSION;				// save file version #
 	saveData.score 			= gScore;
 	saveData.realLevel		= gRealLevel+1;						// save @ beginning of next level
@@ -616,7 +621,7 @@ OSErr			err;
 	saveData.health			= gMyHealth;
 	saveData.ballTimer		= gBallTimer;
 	saveData.numGoldClovers	= gNumGoldClovers;
-	saveData.timestamp		= time(NULL);
+	saveData.timestamp		= timestampNanoseconds / 1e9;
 
 			/* CREATE & OPEN THE DATA FORK */
 
@@ -773,7 +778,7 @@ short	fRefNum;
 	gNumSuperTilesWide = gTerrainTileWidth/SUPERTILE_SIZE;	
 
 #if _DEBUG
-	printf("Terrain dimensions: %ld x %ld\n", gNumSuperTilesWide, gNumSuperTilesDeep);
+	SDL_Log("Terrain dimensions: %ld x %ld\n", gNumSuperTilesWide, gNumSuperTilesDeep);
 #endif
 
 			/* PRECALC THE TILE SPLIT MODE MATRIX */
@@ -1039,7 +1044,7 @@ short					**xlateTableHand,*xlateTbl;
 		if (spline->numNubs < 2)		// Need two nubs to make a line
 		{
 #if _DEBUG
-			printf("WARNING: Spline #%ld is empty\n", i);
+			SDL_Log("WARNING: Spline #%ld is empty\n", i);
 #endif
 
 			GAME_ASSERT(spline->numPoints == 0);

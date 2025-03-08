@@ -1,8 +1,8 @@
-Bugdom® @PROJECT_VERSION@
-© 1999 Pangea Software, Inc.
+@GAME_FULL_NAME@ - version @GAME_VERSION@
+@GAME_COPYRIGHT@
 
 Visit https://pangeasoft.net for the original makers of the game,
-or https://github.com/jorio/bugdom for information about this updated version.
+or https://github.com/jorio/@GAME_NAME@ for information about this updated version.
 
 This port is provided free of charge! If you'd like to support the development of
 Pangea game ports, feel free to visit https://jorio.itch.io and name your own price

@@ -12,18 +12,17 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - { name: Linux/GCC (ancient), os: ubuntu-20.04, extraflags: "--system-sdl" }
-          - { name: Linux/GCC, os: ubuntu-22.04, extraflags: "--system-sdl" }
-          - { name: Linux/Clang, os: ubuntu-22.04, extraflags: "--system-sdl", prefix: "CC=clang CXX=clang++"}
+          - { name: Linux/GCC, os: ubuntu-latest, extraflags: "--system-sdl" }
+          - { name: Linux/Clang, os: ubuntu-latest, extraflags: "--system-sdl", prefix: "CC=clang CXX=clang++"}
           - { name: Windows/VS2022, os: windows-2022, extraflags: "-G 'Visual Studio 17 2022'" }
-          - { name: Mac, os: macos-11 }
+          - { name: Mac, os: macos-latest }
 
     steps:
       - name: Install Linux build dependencies
         if: runner.os == 'Linux'
         run: |
           sudo apt update
-          sudo apt install libsdl2-dev
+          sudo apt install libsdl3-dev
 
       - uses: actions/checkout@v4
         with: {submodules: 'recursive'}

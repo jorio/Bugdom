@@ -10,7 +10,6 @@
 /***************/
 
 #include "game.h"
-#include <stdio.h>
 
 
 /****************************/
@@ -320,7 +319,7 @@ static	TQ3Param2D				uvs[NUM_VERTICES_IN_SUPERTILE];
 	GAME_ASSERT(gSupertileBudget <= MAX_SUPERTILES);
 
 #if _DEBUG
-	printf("Supertile budget: %ld\n", gSupertileBudget);
+	SDL_Log("Supertile budget: %ld\n", gSupertileBudget);
 #endif
 
 	if (gDoCeiling)
@@ -477,8 +476,8 @@ retryParseLODPref:
 
 			_Static_assert(sizeof(uvs) == sizeof(tmd->vertexUVs[0]) * NUM_VERTICES_IN_SUPERTILE, "supertile UV array size mismatch");
 
-			memcpy(tmd->triangles,		newTriangle,	sizeof(tmd->triangles[0]) * NUM_TRIS_IN_SUPERTILE);
-			memcpy(tmd->vertexUVs,		uvs,			sizeof(tmd->vertexUVs[0]) * NUM_VERTICES_IN_SUPERTILE);
+			SDL_memcpy(tmd->triangles,		newTriangle,	sizeof(tmd->triangles[0]) * NUM_TRIS_IN_SUPERTILE);
+			SDL_memcpy(tmd->vertexUVs,		uvs,			sizeof(tmd->vertexUVs[0]) * NUM_VERTICES_IN_SUPERTILE);
 
 			tmd->bBox.isEmpty = kQ3False;										// calc bounding box
 			tmd->bBox.min.x = tmd->bBox.min.y = tmd->bBox.min.z = 0;
@@ -735,7 +734,7 @@ static TQ3Vector3D	faceNormal[NUM_TRIS_IN_SUPERTILE];
 	
 					/* UPDATE TRIMESH DATA WITH NEW INFO */
 #if _DEBUG
-		memset(gTempTextureBuffer, 0xFF, SUPERTILE_TEXSIZE_MAX * SUPERTILE_TEXSIZE_MAX * sizeof(uint16_t));
+		SDL_memset(gTempTextureBuffer, 0xFF, SUPERTILE_TEXSIZE_MAX * SUPERTILE_TEXSIZE_MAX * sizeof(uint16_t));
 #endif
 
 		i = 0;
@@ -974,7 +973,7 @@ static TQ3Vector3D	faceNormal[NUM_TRIS_IN_SUPERTILE];
 			if (gTerrainTextureDetail == SUPERTILE_DETAIL_LOSSLESS
 					|| gTerrainTextureDetail == SUPERTILE_DETAIL_SEAMLESS)
 			{
-				memcpy(superTilePtr->textureData[layer][0], gTempTextureBuffer, sizeof(gTempTextureBuffer[0]) * gTextureSizePerLOD[0] * gTextureSizePerLOD[0]);
+				SDL_memcpy(superTilePtr->textureData[layer][0], gTempTextureBuffer, sizeof(gTempTextureBuffer[0]) * gTextureSizePerLOD[0] * gTextureSizePerLOD[0]);
 			}
 			else
 			{
@@ -1128,7 +1127,7 @@ const int bufWidth
 		case	TILE_FLIPXY_MASK | TILE_ROT2:
 				for (int y = 0; y < tileSize; y++)
 				{
-					memcpy(buffer, tileData, tileSize * sizeof(uint16_t));
+					SDL_memcpy(buffer, tileData, tileSize * sizeof(uint16_t));
 
 					buffer += bufWidth;						// next line in dest
 					tileData += tileSize;					// next line in src
@@ -1158,7 +1157,7 @@ const int bufWidth
 				tileData += tileSize*(tileSize-1);
 				for (int y = 0; y < tileSize; y++)
 				{
-					memcpy(buffer, tileData, tileSize * sizeof(uint16_t));
+					SDL_memcpy(buffer, tileData, tileSize * sizeof(uint16_t));
 
 					buffer += bufWidth;						// next line in dest
 					tileData -= tileSize;					// next line in src

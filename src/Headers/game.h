@@ -1,14 +1,12 @@
 #pragma once
 
 #include "Pomme.h"
-#include "QD3D.h"
-#include "QD3DMath.h"
-#include <SDL.h>
+#include <QD3D.h>
+#include <QD3DMath.h>
+#include <SDL3/SDL.h>
 
 #if _MSC_VER
 #define _Static_assert static_assert
-#define strncasecmp _strnicmp
-#define strcasecmp _stricmp
 #endif
 
 #ifdef __cplusplus
@@ -16,6 +14,7 @@ extern "C"
 {
 #endif
 
+#include "version.h"
 #include "pool.h"
 #include "globals.h"
 #include "renderer.h"
@@ -90,7 +89,6 @@ extern	Byte						gMyStartAim;
 extern	Byte						gPlayerMode;
 extern	Byte						gTotalSides;
 extern	CollisionRec				gCollisionList[];
-extern	CommandLineOptions			gCommandLine;
 extern	FSSpec						gDataSpec;
 extern	FenceDefType				*gFenceList;
 extern	NewObjectDefinitionType		gNewObjectDefinition;
@@ -117,7 +115,7 @@ extern	ObjNode						*gTheQueen;
 extern	PrefsType					gGamePrefs;
 extern	QD3DSetupOutputType			*gGameViewInfoPtr;
 extern	RenderStats					gRenderStats;
-extern	SDL_GameController*			gSDLController;
+extern	SDL_Gamepad					*gSDLGamepad;
 extern	SDL_Window					*gSDLWindow;
 extern	SplineDefType				**gSplineList;
 extern	TQ3BoundingBox				gObjectGroupBBoxList[MAX_3DMF_GROUPS][MAX_OBJECTS_IN_GROUP];
@@ -167,9 +165,8 @@ extern	float						gTerrainItemDeleteWindow_Far;
 extern	float						gTerrainItemDeleteWindow_Left;
 extern	float						gTerrainItemDeleteWindow_Near;
 extern	float						gTerrainItemDeleteWindow_Right;
-extern	int							gAntialiasingLevelAppliedOnBoot;
+extern	int							gCurrentAntialiasingLevel;
 extern	int							gDebugMode;
-extern	int							gFullscreenModeAppliedOnBoot;
 extern	int							gMaxItemsAllocatedInAPass;
 extern	int							gNumObjNodes;
 extern	int							gWindowHeight;

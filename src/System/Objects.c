@@ -76,7 +76,7 @@ void InitObjectManager(void)
 
 		/* INIT OBJECT POOL */
 
-	memset(gObjNodeMemory, 0, sizeof(gObjNodeMemory));
+	SDL_memset(gObjNodeMemory, 0, sizeof(gObjNodeMemory));
 
 	if (!gObjNodePool)
 		gObjNodePool = Pool_New(OBJ_BUDGET);
@@ -100,7 +100,7 @@ void InitObjectManager(void)
 
 		/* INIT NEW OBJ DEF */
 
-	memset(&gNewObjectDefinition, 0, sizeof(NewObjectDefinitionType));
+	SDL_memset(&gNewObjectDefinition, 0, sizeof(NewObjectDefinitionType));
 	gNewObjectDefinition.scale = 1;
 }
 

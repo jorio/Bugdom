@@ -1,5 +1,10 @@
 # Bugdom changelog
 
+- **1.3.5 (NOT RELEASED YET)**
+    - Ported to SDL 3
+    - New setting: preferred display
+    - **NOTE:** The Mac version now requires macOS 10.13.
+
 - **1.3.4 (January 3, 2024)**
     - Fixed framerate-dependent inconsistencies that were apparent at high framerates (100+ fps), including:
         - level 3: fish speed (after eating Rollie)

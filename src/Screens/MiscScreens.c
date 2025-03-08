@@ -95,7 +95,7 @@ int curState = kPauseChoice_Resume;
 
 	PauseAllChannels(true);
 
-	SDL_ShowCursor(1);
+	SDL_ShowCursor();
 
 	gGammaFadeFactor = 1.0f;
 	
@@ -267,7 +267,7 @@ int curState = kPauseChoice_Resume;
 	}
 
 
-	SDL_ShowCursor(0);
+	SDL_HideCursor();
 
 
 			/* CLEANUP */

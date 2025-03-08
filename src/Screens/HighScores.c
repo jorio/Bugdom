@@ -558,12 +558,12 @@ bool	advance = true;
 
 	if (c == CHAR_UP)
 	{
-		char* charsetCursor = strchr(kGamepadCharset, gNewName.name[gCursorPosition]);
+		char* charsetCursor = SDL_strchr(kGamepadCharset, gNewName.name[gCursorPosition]);
 		c = ' ';
 		if (charsetCursor && *charsetCursor)
 		{
 			if (*charsetCursor == kGamepadCharset[0])
-				c = kGamepadCharset[strlen(kGamepadCharset) - 1];
+				c = kGamepadCharset[SDL_strlen(kGamepadCharset) - 1];
 			else
 				c = charsetCursor[-1];
 		}
@@ -574,11 +574,11 @@ bool	advance = true;
 
 	if (c == CHAR_DOWN)
 	{
-		char* charsetCursor = strchr(kGamepadCharset, gNewName.name[gCursorPosition]);
+		char* charsetCursor = SDL_strchr(kGamepadCharset, gNewName.name[gCursorPosition]);
 		c = '\0';
 		if (charsetCursor && *charsetCursor)
 		{
-			if (*charsetCursor == kGamepadCharset[strlen(kGamepadCharset) - 1])
+			if (*charsetCursor == kGamepadCharset[SDL_strlen(kGamepadCharset) - 1])
 				c = kGamepadCharset[0];
 			else
 				c = charsetCursor[1];

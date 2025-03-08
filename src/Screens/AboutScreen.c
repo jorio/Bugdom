@@ -8,8 +8,6 @@
 /****************************/
 
 #include "game.h"
-#include "version.h"
-#include <stdio.h>
 
 
 /****************************/
@@ -25,11 +23,7 @@ static void MakeAboutScreenObjects(int slideNumber);
 /****************************/
 
 static const TQ3ColorRGBA kNameColor		= {0.6f, 1.0f, 0.8f, 1.0f};
-#if OSXPPC
-static const TQ3ColorRGBA kMouseColor		= {0,0,0,0};
-#else
 static const TQ3ColorRGBA kMouseColor		= {0.6f, 1.0f, 0.8f, 1.0f};
-#endif
 static const TQ3ColorRGBA kHeadingColor		= {1.0f, 1.0f, 1.0f, 1.0f};
 static const TQ3ColorRGBA kDimmedColor		= {0.6f, 0.6f, 0.6f, 1.0f};
 
@@ -207,23 +201,13 @@ static void MakeAboutScreenObjects(int slideNumber)
 
 		case 2:
 		{
-#if OSXPPC
-			TextMesh_Create(&tmd, "Keyboard Controls");
-#else
 			TextMesh_Create(&tmd, "Mouse & Keyboard Controls");
-#endif
 
 			tmd.scale = 0.2f;
 			tmd.align = TEXTMESH_ALIGN_LEFT;
 			float x = 0;
-#if OSXPPC
-			x = 30;
-			tmd.coord.x = 30;
-			tmd.coord.y = 75;
-#else
 			tmd.coord.x = -20;
 			tmd.coord.y = 75;
-#endif
 
 #define MAKE_CONTROL_TEXT(key, mouse, caption) \
 			tmd.coord.y -= 14;                   \
@@ -231,9 +215,7 @@ static void MakeAboutScreenObjects(int slideNumber)
 			tmd.coord.x = x-12+40;	tmd.color = kMouseColor;	TextMesh_Create(&tmd, mouse); \
 			tmd.coord.x = x-12-80;	tmd.color = kHeadingColor;	TextMesh_Create(&tmd, caption);
 
-#if !OSXPPC
 			MAKE_CONTROL_TEXT("Shift (when using mouse)"		, ""				, "Auto-Walk");
-#endif
 			MAKE_CONTROL_TEXT("Arrows"		, "or     Mouse"	, "Walk/Roll");
 #if __APPLE__
 			MAKE_CONTROL_TEXT("Option"		, "or     Left click"		, "Kick/Boost");
@@ -251,14 +233,12 @@ static void MakeAboutScreenObjects(int slideNumber)
 
 			tmd.coord.y -= 45;
 
-#if !OSXPPC
 			tmd.align = TEXTMESH_ALIGN_CENTER;
 			tmd.coord.x = 0;
 			tmd.color = TQ3ColorRGBA_FromInt(0xE0B000FF);
 			TextMesh_Create(&tmd, "We strongly recommend using the mouse and the shift key for motion.");
 			tmd.coord.y -= 14;
 			TextMesh_Create(&tmd, "This combo gives you the most accurate control over the player.");
-#endif
 			break;
 		}
 	}
@@ -292,7 +272,7 @@ static void MakeLegalScreenObjects(void)
 	tmd.scale = 0.3f;
 	//tmd.coord.y -= LH * 4;
 
-	TextMesh_Create(&tmd, "Bugdom " PROJECT_VERSION);
+	TextMesh_Create(&tmd, GAME_FULL_NAME " " GAME_VERSION);
 
 	tmd.scale = 0.2f;
 	tmd.coord.y = LH/2;
@@ -303,7 +283,7 @@ static void MakeLegalScreenObjects(void)
 	tmd.coord.y = -66;
 	tmd.scale *= .66f;
 	tmd.color = kDimmedColor;
-	TextMesh_Create(&tmd, "Original game: \251 1999 Pangea Software, Inc.   Modern version: \251 2024 Iliyas Jorio.");
+	TextMesh_Create(&tmd, "Original game: \251 1999 Pangea Software, Inc.   Modern version: \251 2025 Iliyas Jorio.");
 	tmd.coord.y -= LH * .66f;
 	TextMesh_Create(&tmd, "\223Bugdom\224 is a registered trademark of Pangea Software, Inc.");
 }

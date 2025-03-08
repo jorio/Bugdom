@@ -10,9 +10,8 @@
 /*    EXTERNALS             */
 /****************************/
 
-#include <SDL_opengl.h>
-#include <stdio.h>
 #include "game.h"
+#include <SDL3/SDL_opengl.h>
 
 
 /****************************/
@@ -153,7 +152,7 @@ QD3DSetupOutputType	*outputPtr;
 
 				/* SET UP OPENGL RENDERER PROPERTIES NOW THAT WE HAVE A CONTEXT */
 
-	SDL_GL_SetSwapInterval(gCommandLine.vsync);
+	SDL_GL_SetSwapInterval(gGamePrefs.vsync);
 
 	CreateLights(&setupDefPtr->lights);
 
@@ -406,7 +405,7 @@ uint8_t*				pixelData = nil;
 TGAHeader				header;
 OSErr					err;
 
-	snprintf(path, sizeof(path), ":Images:Textures:%d.tga", textureRezID);
+	SDL_snprintf(path, sizeof(path), ":Images:Textures:%d.tga", textureRezID);
 
 	FSMakeFSSpec(gDataSpec.vRefNum, gDataSpec.parID, path, &spec);
 
@@ -433,7 +432,7 @@ OSErr					err;
 
 			for (int y = 0; y < header.height; y++)
 			{
-				memcpy(potPixelData + y*potWidth*4, pixelData + y*header.width*4, header.width*4);
+				SDL_memcpy(potPixelData + y*potWidth*4, pixelData + y*header.width*4, header.width*4);
 			}
 
 			DisposePtr((Ptr) pixelData);
@@ -445,7 +444,7 @@ OSErr					err;
 #if OSXPPC
 	else if (POTCeil32(header.width) != header.width || POTCeil32(header.height) != header.height)
 	{
-		printf("WARNING: Non-POT texture #%d\n", textureRezID);
+		SDL_Log("WARNING: Non-POT texture #%d", textureRezID);
 	}
 #endif
 
@@ -569,9 +568,9 @@ void QD3D_CalcFramesPerSecond(void)
 		gFramesPerSecond = MIN_FPS;
 	}
 #if _DEBUG
-	else if (gSDLController)
+	else if (gSDLGamepad)
 	{
-		float analogSpeedUp = SDL_GameControllerGetAxis(gSDLController, SDL_CONTROLLER_AXIS_TRIGGERLEFT) / 32767.0f;
+		float analogSpeedUp = SDL_GetGamepadAxis(gSDLGamepad, SDL_GAMEPAD_AXIS_LEFT_TRIGGER) / 32767.0f;
 		if (analogSpeedUp > .25f)
 		{
 			gFramesPerSecond = MIN_FPS;

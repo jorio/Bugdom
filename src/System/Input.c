@@ -11,8 +11,6 @@
 /***************/
 
 #include "game.h"
-#include <stdio.h>
-#include <string.h>
 
 
 /**********************/
@@ -54,7 +52,7 @@ static struct
 #define MOUSE_DELTA_MAX 250
 #define MOUSE_DELTA_MAX_SQUARED (MOUSE_DELTA_MAX*MOUSE_DELTA_MAX)
 
-#define SDLKEYSTATEBUF_SIZE SDL_NUM_SCANCODES
+#define SDLKEYSTATEBUF_SIZE SDL_SCANCODE_COUNT
 
 static const float kMouseSensitivityTable[NUM_MOUSE_SENSITIVITY_LEVELS] =
 {
@@ -92,8 +90,7 @@ Boolean				gPlayerUsingKeyControl 	= false;
 
 TQ3Vector2D			gCameraControlDelta;
 
-SDL_GameController	*gSDLController = NULL;
-SDL_JoystickID		gSDLJoystickInstanceID = -1;		// ID of the joystick bound to gSDLController
+SDL_Gamepad			*gSDLGamepad = NULL;
 
 #if __APPLE__
 	#define DEFAULT_JUMP_SCANCODE1 SDL_SCANCODE_LGUI
@@ -109,34 +106,34 @@ SDL_JoystickID		gSDLJoystickInstanceID = -1;		// ID of the joystick bound to gSD
 
 KeyBinding gKeyBindings[kKey_MAX] =
 {
-[kKey_Pause				] = { "Pause",				SDL_SCANCODE_ESCAPE,	0,						0,					SDL_CONTROLLER_BUTTON_START, },
-[kKey_ToggleMusic		] = { "Toggle Music",		SDL_SCANCODE_M,			0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
-[kKey_SwivelCameraLeft	] = { "Swivel Camera Left",	SDL_SCANCODE_COMMA,		0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
-[kKey_SwivelCameraRight	] = { "Swivel Camera Right",SDL_SCANCODE_PERIOD,	0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
-[kKey_ZoomIn			] = { "Zoom In",			SDL_SCANCODE_2,			0,						0,					SDL_CONTROLLER_BUTTON_LEFTSHOULDER, },
-[kKey_ZoomOut			] = { "Zoom Out",			SDL_SCANCODE_1,			0,						0,					SDL_CONTROLLER_BUTTON_RIGHTSHOULDER, },
-[kKey_MorphPlayer		] = { "Morph Into Ball",	SDL_SCANCODE_SPACE,		0,						SDL_BUTTON_MIDDLE,	SDL_CONTROLLER_BUTTON_B, },
-[kKey_BuddyAttack		] = { "Buddy Attack",		SDL_SCANCODE_TAB,		0,						0,					SDL_CONTROLLER_BUTTON_Y, },
-[kKey_Jump				] = { "Jump / Boost",		DEFAULT_JUMP_SCANCODE1,	DEFAULT_JUMP_SCANCODE2,	SDL_BUTTON_RIGHT,	SDL_CONTROLLER_BUTTON_A, },
-[kKey_Kick				] = { "Kick / Boost",		DEFAULT_KICK_SCANCODE1, DEFAULT_KICK_SCANCODE2, SDL_BUTTON_LEFT,	SDL_CONTROLLER_BUTTON_X, },
-[kKey_AutoWalk			] = { "Auto-Walk",			SDL_SCANCODE_LSHIFT,	SDL_SCANCODE_RSHIFT,	0,					SDL_CONTROLLER_BUTTON_INVALID, },
-[kKey_Forward			] = { "Forward",			SDL_SCANCODE_UP,		SDL_SCANCODE_W,			0,					SDL_CONTROLLER_BUTTON_DPAD_UP, },
-[kKey_Backward			] = { "Backward",			SDL_SCANCODE_DOWN,		SDL_SCANCODE_S,			0,					SDL_CONTROLLER_BUTTON_DPAD_DOWN, },
-[kKey_Left				] = { "Left",				SDL_SCANCODE_LEFT,		SDL_SCANCODE_A,			0,					SDL_CONTROLLER_BUTTON_DPAD_LEFT, },
-[kKey_Right				] = { "Right",				SDL_SCANCODE_RIGHT,		SDL_SCANCODE_D,			0,					SDL_CONTROLLER_BUTTON_DPAD_RIGHT, },
-[kKey_UI_Confirm		] = { "DO_NOT_REBIND",		SDL_SCANCODE_RETURN,	SDL_SCANCODE_KP_ENTER,	0,					SDL_CONTROLLER_BUTTON_INVALID, },
-[kKey_UI_Cancel			] = { "DO_NOT_REBIND",		SDL_SCANCODE_ESCAPE,	0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
-[kKey_UI_Skip			] = { "DO_NOT_REBIND",		SDL_SCANCODE_SPACE,		0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
-[kKey_UI_PadConfirm		] = { "DO_NOT_REBIND",		0,						0,						0,					SDL_CONTROLLER_BUTTON_A, },
-[kKey_UI_PadCancel		] = { "DO_NOT_REBIND",		0,						0,						0,					SDL_CONTROLLER_BUTTON_B, },
-[kKey_UI_PadBack		] = { "DO_NOT_REBIND",		0,						0,						0,					SDL_CONTROLLER_BUTTON_BACK, },
-[kKey_UI_CharMM			] = { "DO_NOT_REBIND",		SDL_SCANCODE_UP,		0,						0,					SDL_CONTROLLER_BUTTON_DPAD_UP, },
-[kKey_UI_CharPP			] = { "DO_NOT_REBIND",		SDL_SCANCODE_DOWN,		0,						0,					SDL_CONTROLLER_BUTTON_DPAD_DOWN, },
-[kKey_UI_CharLeft		] = { "DO_NOT_REBIND",		SDL_SCANCODE_LEFT,		0,						0,					SDL_CONTROLLER_BUTTON_DPAD_LEFT, },
-[kKey_UI_CharRight		] = { "DO_NOT_REBIND",		SDL_SCANCODE_RIGHT,		0,						0,					SDL_CONTROLLER_BUTTON_DPAD_RIGHT, },
-[kKey_UI_CharDelete		] = { "DO_NOT_REBIND",		SDL_SCANCODE_BACKSPACE,	0,						0,					SDL_CONTROLLER_BUTTON_B, },
-[kKey_UI_CharDeleteFwd	] = { "DO_NOT_REBIND",		SDL_SCANCODE_DELETE,	0,						0,					SDL_CONTROLLER_BUTTON_INVALID, },
-[kKey_UI_CharOK			] = { "DO_NOT_REBIND",		SDL_SCANCODE_DELETE,	0,						0,					SDL_CONTROLLER_BUTTON_A, },
+[kKey_Pause				] = { "Pause",				SDL_SCANCODE_ESCAPE,	0,						0,					SDL_GAMEPAD_BUTTON_START, },
+[kKey_ToggleMusic		] = { "Toggle Music",		SDL_SCANCODE_M,			0,						0,					SDL_GAMEPAD_BUTTON_INVALID, },
+[kKey_SwivelCameraLeft	] = { "Swivel Camera Left",	SDL_SCANCODE_COMMA,		0,						0,					SDL_GAMEPAD_BUTTON_INVALID, },
+[kKey_SwivelCameraRight	] = { "Swivel Camera Right",SDL_SCANCODE_PERIOD,	0,						0,					SDL_GAMEPAD_BUTTON_INVALID, },
+[kKey_ZoomIn			] = { "Zoom In",			SDL_SCANCODE_2,			0,						0,					SDL_GAMEPAD_BUTTON_LEFT_SHOULDER, },
+[kKey_ZoomOut			] = { "Zoom Out",			SDL_SCANCODE_1,			0,						0,					SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER, },
+[kKey_MorphPlayer		] = { "Morph Into Ball",	SDL_SCANCODE_SPACE,		0,						SDL_BUTTON_MIDDLE,	SDL_GAMEPAD_BUTTON_EAST, },
+[kKey_BuddyAttack		] = { "Buddy Attack",		SDL_SCANCODE_TAB,		0,						0,					SDL_GAMEPAD_BUTTON_NORTH, },
+[kKey_Jump				] = { "Jump / Boost",		DEFAULT_JUMP_SCANCODE1,	DEFAULT_JUMP_SCANCODE2,	SDL_BUTTON_RIGHT,	SDL_GAMEPAD_BUTTON_SOUTH, },
+[kKey_Kick				] = { "Kick / Boost",		DEFAULT_KICK_SCANCODE1, DEFAULT_KICK_SCANCODE2, SDL_BUTTON_LEFT,	SDL_GAMEPAD_BUTTON_WEST, },
+[kKey_AutoWalk			] = { "Auto-Walk",			SDL_SCANCODE_LSHIFT,	SDL_SCANCODE_RSHIFT,	0,					SDL_GAMEPAD_BUTTON_INVALID, },
+[kKey_Forward			] = { "Forward",			SDL_SCANCODE_UP,		SDL_SCANCODE_W,			0,					SDL_GAMEPAD_BUTTON_DPAD_UP, },
+[kKey_Backward			] = { "Backward",			SDL_SCANCODE_DOWN,		SDL_SCANCODE_S,			0,					SDL_GAMEPAD_BUTTON_DPAD_DOWN, },
+[kKey_Left				] = { "Left",				SDL_SCANCODE_LEFT,		SDL_SCANCODE_A,			0,					SDL_GAMEPAD_BUTTON_DPAD_LEFT, },
+[kKey_Right				] = { "Right",				SDL_SCANCODE_RIGHT,		SDL_SCANCODE_D,			0,					SDL_GAMEPAD_BUTTON_DPAD_RIGHT, },
+[kKey_UI_Confirm		] = { "DO_NOT_REBIND",		SDL_SCANCODE_RETURN,	SDL_SCANCODE_KP_ENTER,	0,					SDL_GAMEPAD_BUTTON_INVALID, },
+[kKey_UI_Cancel			] = { "DO_NOT_REBIND",		SDL_SCANCODE_ESCAPE,	0,						0,					SDL_GAMEPAD_BUTTON_INVALID, },
+[kKey_UI_Skip			] = { "DO_NOT_REBIND",		SDL_SCANCODE_SPACE,		0,						0,					SDL_GAMEPAD_BUTTON_INVALID, },
+[kKey_UI_PadConfirm		] = { "DO_NOT_REBIND",		0,						0,						0,					SDL_GAMEPAD_BUTTON_SOUTH, },
+[kKey_UI_PadCancel		] = { "DO_NOT_REBIND",		0,						0,						0,					SDL_GAMEPAD_BUTTON_EAST, },
+[kKey_UI_PadBack		] = { "DO_NOT_REBIND",		0,						0,						0,					SDL_GAMEPAD_BUTTON_BACK, },
+[kKey_UI_CharMM			] = { "DO_NOT_REBIND",		SDL_SCANCODE_UP,		0,						0,					SDL_GAMEPAD_BUTTON_DPAD_UP, },
+[kKey_UI_CharPP			] = { "DO_NOT_REBIND",		SDL_SCANCODE_DOWN,		0,						0,					SDL_GAMEPAD_BUTTON_DPAD_DOWN, },
+[kKey_UI_CharLeft		] = { "DO_NOT_REBIND",		SDL_SCANCODE_LEFT,		0,						0,					SDL_GAMEPAD_BUTTON_DPAD_LEFT, },
+[kKey_UI_CharRight		] = { "DO_NOT_REBIND",		SDL_SCANCODE_RIGHT,		0,						0,					SDL_GAMEPAD_BUTTON_DPAD_RIGHT, },
+[kKey_UI_CharDelete		] = { "DO_NOT_REBIND",		SDL_SCANCODE_BACKSPACE,	0,						0,					SDL_GAMEPAD_BUTTON_EAST, },
+[kKey_UI_CharDeleteFwd	] = { "DO_NOT_REBIND",		SDL_SCANCODE_DELETE,	0,						0,					SDL_GAMEPAD_BUTTON_INVALID, },
+[kKey_UI_CharOK			] = { "DO_NOT_REBIND",		SDL_SCANCODE_DELETE,	0,						0,					SDL_GAMEPAD_BUTTON_SOUTH, },
 };
 
 
@@ -174,18 +171,13 @@ static inline void UpdateKeyState(KeyState* state, bool downNow)
 
 TQ3Vector2D GetThumbStickVector(bool rightStick)
 {
-#if NOJOYSTICK
-	// no-op
-	(void) rightStick;
-	return (TQ3Vector2D) {0,0};
-#else
-	if (!gSDLController)
+	if (!gSDLGamepad)
 	{
 		return (TQ3Vector2D) { 0, 0 };
 	}
 
-	Sint16 dxRaw = SDL_GameControllerGetAxis(gSDLController, rightStick ? SDL_CONTROLLER_AXIS_RIGHTX : SDL_CONTROLLER_AXIS_LEFTX);
-	Sint16 dyRaw = SDL_GameControllerGetAxis(gSDLController, rightStick ? SDL_CONTROLLER_AXIS_RIGHTY : SDL_CONTROLLER_AXIS_LEFTY);
+	Sint16 dxRaw = SDL_GetGamepadAxis(gSDLGamepad, rightStick ? SDL_GAMEPAD_AXIS_RIGHTX : SDL_GAMEPAD_AXIS_LEFTX);
+	Sint16 dyRaw = SDL_GetGamepadAxis(gSDLGamepad, rightStick ? SDL_GAMEPAD_AXIS_RIGHTY : SDL_GAMEPAD_AXIS_LEFTY);
 
 	float dx = dxRaw / 32767.0f;
 	float dy = dyRaw / 32767.0f;
@@ -220,7 +212,6 @@ TQ3Vector2D GetThumbStickVector(bool rightStick)
 
 		return (TQ3Vector2D) { cosf(angle) * magnitude, sinf(angle) * magnitude };
 	}
-#endif	// NOJOYSTICK
 }
 
 /********************** UPDATE INPUT ******************************/
@@ -244,7 +235,7 @@ void UpdateInput(void)
 
 		for (int i = 1; i < NUM_MOUSE_BUTTONS; i++)
 		{
-			bool downNow = mouseButtons & SDL_BUTTON(i);
+			bool downNow = mouseButtons & SDL_BUTTON_MASK(i);
 			UpdateKeyState(&gMouseButtonState[i], downNow);
 		}
 	}
@@ -270,7 +261,7 @@ void UpdateInput(void)
 	gCameraControlDelta.x = 0;
 	gCameraControlDelta.y = 0;
 
-	if (gSDLController)
+	if (gSDLGamepad)
 	{
 		TQ3Vector2D rsVec = GetThumbStickVector(true);
 		gCameraControlDelta.x -= rsVec.x * 3.0f;
@@ -290,16 +281,16 @@ void UpdateInput(void)
 static void ClearMouseState(void)
 {
 	MouseSmoothing_ResetState();
-	memset(gMouseButtonState, KEYSTATE_IGNOREHELD, sizeof(gMouseButtonState));
+	SDL_memset(gMouseButtonState, KEYSTATE_IGNOREHELD, sizeof(gMouseButtonState));
 }
 
 void ResetInputState(void)
 {
-	_Static_assert(1 == sizeof(KeyState), "sizeof(KeyState) has changed -- Rewrite this function without memset()!");
+	_Static_assert(1 == sizeof(KeyState), "sizeof(KeyState) has changed -- Rewrite this function without SDL_memset()!");
 
-	memset(gKeyStates, KEYSTATE_IGNOREHELD, kKey_MAX);
-	memset(gRawKeyboardState, KEYSTATE_IGNOREHELD, SDL_NUM_SCANCODES);
-	memset(gMouseButtonState, KEYSTATE_IGNOREHELD, sizeof(gMouseButtonState));
+	SDL_memset(gKeyStates, KEYSTATE_IGNOREHELD, kKey_MAX);
+	SDL_memset(gRawKeyboardState, KEYSTATE_IGNOREHELD, SDL_SCANCODE_COUNT);
+	SDL_memset(gMouseButtonState, KEYSTATE_IGNOREHELD, sizeof(gMouseButtonState));
 
 	MouseSmoothing_ResetState();
 	EatMouseEvents();
@@ -321,12 +312,8 @@ void UpdateKeyMap(void)
 {
 	SDL_PumpEvents();
 	int numkeys = 0;
-	const UInt8* keystate = SDL_GetKeyboardState(&numkeys);
-#if OSXPPC
-	uint32_t mouseButtons = 0;
-#else
+	const bool* keystate = SDL_GetKeyboardState(&numkeys);
 	uint32_t mouseButtons = SDL_GetMouseState(NULL, NULL);
-#endif
 
 	{
 		int minNumKeys = numkeys < SDLKEYSTATEBUF_SIZE ? numkeys : SDLKEYSTATEBUF_SIZE;
@@ -349,10 +336,10 @@ void UpdateKeyMap(void)
 			downNow |= 0 != keystate[kb->key2];
 
 		if (kb->mouseButton)
-			downNow |= 0 != (mouseButtons & SDL_BUTTON(kb->mouseButton));
+			downNow |= 0 != (mouseButtons & SDL_BUTTON_MASK(kb->mouseButton));
 
-		if (gSDLController && kb->gamepadButton != SDL_CONTROLLER_BUTTON_INVALID)
-			downNow |= 0 != SDL_GameControllerGetButton(gSDLController, kb->gamepadButton);
+		if (gSDLGamepad && kb->gamepadButton != SDL_GAMEPAD_BUTTON_INVALID)
+			downNow |= 0 != SDL_GetGamepadButton(gSDLGamepad, kb->gamepadButton);
 
 		UpdateKeyState(&gKeyStates[i], downNow);
 	}
@@ -362,16 +349,14 @@ void UpdateKeyMap(void)
 		/* WHILE WE'RE HERE LET'S DO SOME SPECIAL KEY CHECKS */
 		/*****************************************************/
 
-#if !(OSXPPC)	// broken on Tiger
 	if (GetNewKeyState_SDL(SDL_SCANCODE_RETURN)
 		&& (GetKeyState_SDL(SDL_SCANCODE_LALT) || GetKeyState_SDL(SDL_SCANCODE_RALT)))
 	{
 		gGamePrefs.fullscreen = gGamePrefs.fullscreen ? 0 : 1;
-		SetFullscreenMode();
+		SetFullscreenMode(false);
 
 		ResetInputState();
 	}
-#endif
 
 	if ((!gIsInGame || gIsGamePaused) && IsCmdQPressed())
 	{
@@ -429,7 +414,7 @@ Boolean IsCmdQPressed(void)
 {
 #if __APPLE__
 	return (GetKeyState_SDL(SDL_SCANCODE_LGUI) || GetKeyState_SDL(SDL_SCANCODE_RGUI))
-		&& GetNewKeyState_SDL(SDL_GetScancodeFromKey(SDLK_q));
+		&& GetNewKeyState_SDL(SDL_GetScancodeFromKey(SDLK_Q, NULL));
 #else
 	return false;
 #endif
@@ -454,12 +439,11 @@ void EatMouseEvents(void)
 void CaptureMouse(Boolean doCapture)
 {
 	SDL_PumpEvents();	// Prevent SDL from thinking mouse buttons are stuck as we switch into relative mode
-#if !OSXPPC
-	SDL_SetRelativeMouseMode(doCapture ? SDL_TRUE : SDL_FALSE);
-#endif
+	SDL_SetWindowMouseGrab(gSDLWindow, doCapture);
+	SDL_SetWindowRelativeMouseMode(gSDLWindow, doCapture);
 
 	if (doCapture)
-		SDL_ShowCursor(0);
+		SDL_HideCursor();
 
 	ClearMouseState();
 	EatMouseEvents();
@@ -497,7 +481,7 @@ void GetMouseDelta(float *dx, float *dy)
 
 		/* SEE IF OVERRIDE MOUSE WITH JOYSTICK MOVEMENT */
 
-	if (gSDLController)
+	if (gSDLGamepad)
 	{
 		TQ3Vector2D lsVec = GetThumbStickVector(false);
 		if (lsVec.x != 0 || lsVec.y != 0)
@@ -510,14 +494,8 @@ void GetMouseDelta(float *dx, float *dy)
 
 		/* GET MOUSE MOVEMENT */
 
-#if OSXPPC
-	*dx = 0;
-	*dy = 0;
-	return;
-#endif
-
 	const float mouseSensitivity = 1600.0f * kMouseSensitivityTable[gGamePrefs.mouseSensitivityLevel];
-	int mdx, mdy;
+	float mdx, mdy;
 	MouseSmoothing_GetDelta(&mdx, &mdy);
 
 	if (mdx != 0 && mdy != 0)
@@ -526,7 +504,7 @@ void GetMouseDelta(float *dx, float *dy)
 		if (mouseDeltaMagnitudeSquared > MOUSE_DELTA_MAX_SQUARED)
 		{
 #if _DEBUG
-			printf("Capping mouse delta %f\n", sqrtf(mouseDeltaMagnitudeSquared));
+			SDL_Log("Capping mouse delta %f\n", sqrtf(mouseDeltaMagnitudeSquared));
 #endif
 			TQ3Vector2D mouseDeltaVector = { mdx, mdy };
 			Q3Vector2D_Normalize(&mouseDeltaVector, &mouseDeltaVector);
@@ -540,80 +518,116 @@ void GetMouseDelta(float *dx, float *dy)
 	*dy = gFramesPerSecondFrac * mdy * mouseSensitivity;
 }
 
-SDL_GameController* TryOpenController(bool showMessage)
+static SDL_Gamepad* TryOpenGamepadFromJoystick(SDL_JoystickID joystickID)
 {
-#if NOJOYSTICK
-	// no-op
-	(void) showMessage;
-	return NULL;
-#else
-	if (gSDLController)
+	// First, check that it's not in use already
+	if (gSDLGamepad && SDL_GetGamepadID(gSDLGamepad) == joystickID)
 	{
-		printf("Already have a valid controller.\n");
-		return gSDLController;
+		return gSDLGamepad;
 	}
 
-	if (SDL_NumJoysticks() == 0)
+	// Don't open if we already have a gamepad
+	if (gSDLGamepad)
 	{
 		return NULL;
 	}
 
-	for (int i = 0; gSDLController == NULL && i < SDL_NumJoysticks(); ++i)
+	// If we can't get an SDL_Gamepad from that joystick, don't bother
+	if (!SDL_IsGamepad(joystickID))
 	{
-		if (SDL_IsGameController(i))
+		return NULL;
+	}
+
+	// Use this one
+	gSDLGamepad = SDL_OpenGamepad(joystickID);
+
+	SDL_Log("Opened joystick %d as gamepad: \"%s\"", joystickID, SDL_GetGamepadName(gSDLGamepad));
+
+//	gUserPrefersGamepad = true;
+
+	return gSDLGamepad;
+}
+
+SDL_Gamepad* TryOpenGamepad(bool showMessage)
+{
+	int numJoysticks = 0;
+	int numJoysticksAlreadyInUse = 0;
+
+	SDL_JoystickID* joysticks = SDL_GetJoysticks(&numJoysticks);
+	SDL_Gamepad* newGamepad = NULL;
+
+	for (int i = 0; i < numJoysticks; ++i)
+	{
+		SDL_JoystickID joystickID = joysticks[i];
+
+		// Usable as an SDL_Gamepad?
+		if (!SDL_IsGamepad(joystickID))
 		{
-			gSDLController = SDL_GameControllerOpen(i);
-			gSDLJoystickInstanceID = SDL_JoystickGetDeviceInstanceID(i);
+			continue;
+		}
+
+		// Already in use?
+		if (gSDLGamepad && SDL_GetGamepadID(gSDLGamepad) == joystickID)
+		{
+			numJoysticksAlreadyInUse++;
+			continue;
+		}
+
+		// Use this one
+		newGamepad = TryOpenGamepadFromJoystick(joystickID);
+		if (newGamepad)
+		{
+			break;
 		}
 	}
 
-	if (!gSDLController)
+	if (newGamepad)
 	{
-		printf("Joystick(s) found, but none is suitable as an SDL_GameController.\n");
+		// OK
+	}
+	else if (numJoysticksAlreadyInUse == numJoysticks)
+	{
+		// No-op; All joysticks already in use (or there might be zero joysticks)
+	}
+	else
+	{
+		SDL_Log("%d joysticks found, but none is suitable as an SDL_Gamepad.", numJoysticks);
 		if (showMessage)
 		{
 			char messageBuf[1024];
-			snprintf(messageBuf, sizeof(messageBuf),
-					 "The game does not support your controller yet (\"%s\").\n\n"
-					 "You can play with the keyboard and mouse instead. Sorry!",
-					 SDL_JoystickNameForIndex(0));
+			SDL_snprintf(messageBuf, sizeof(messageBuf),
+						 "The game does not support your controller yet (\"%s\").\n\n"
+						 "You can play with the keyboard and mouse instead. Sorry!",
+						 SDL_GetJoystickNameForID(joysticks[0]));
 			SDL_ShowSimpleMessageBox(
-					SDL_MESSAGEBOX_WARNING,
-					"Controller not supported",
-					messageBuf,
-					gSDLWindow);
+				SDL_MESSAGEBOX_WARNING,
+				"Controller not supported",
+				messageBuf,
+				gSDLWindow);
 		}
-		return NULL;
 	}
 
-	printf("Opened joystick %d as controller: %s\n", gSDLJoystickInstanceID, SDL_GameControllerName(gSDLController));
+	SDL_free(joysticks);
 
-	return gSDLController;
-#endif	// NOJOYSTICK
+	return newGamepad;
 }
 
 void OnJoystickRemoved(SDL_JoystickID which)
 {
-#if NOJOYSTICK
-	// no-op
-	(void) which;
-#else
-	if (NULL == gSDLController)		// don't care, I didn't open any controller
+	if (NULL == gSDLGamepad)		// don't care, I didn't open any controller
 		return;
 
-	if (which != gSDLJoystickInstanceID)	// don't care, this isn't the joystick I'm using
+	if (which != SDL_GetGamepadID(gSDLGamepad))	// don't care, this isn't the joystick I'm using
 		return;
 
-	printf("Current joystick was removed: %d\n", which);
+	SDL_Log("Current joystick was removed: %d", which);
 
 	// Nuke reference to this controller+joystick
-	SDL_GameControllerClose(gSDLController);
-	gSDLController = NULL;
-	gSDLJoystickInstanceID = -1;
+	SDL_CloseGamepad(gSDLGamepad);
+	gSDLGamepad = NULL;
 
 	// Try to open another joystick if any is connected.
-	TryOpenController(false);
-#endif	// NOJOYSTICK
+	TryOpenGamepad(false);
 }
 
 #pragma mark -
@@ -622,35 +636,35 @@ void OnJoystickRemoved(SDL_JoystickID which)
 
 TQ3Point2D GetMousePosition(void)
 {
-	int windowX = 0;
-	int windowY = 0;
+	float windowX = 0;
+	float windowY = 0;
 	SDL_GetMouseState(&windowX, &windowY);
 
 	// On macOS, the mouse position is relative to the window's "point size" on Retina screens.
 	int windowW = 1;
 	int windowH = 1;
-	SDL_GetWindowSize(gSDLWindow, &windowW, &windowH);
-	float dpiScaleX = (float) gWindowWidth / (float) windowW;		// gWindowWidth is in actual pixels
-	float dpiScaleY = (float) gWindowHeight / (float) windowH;		// gWindowHeight is in actual pixels
+	SDL_GetWindowSize(gSDLWindow, &windowW, &windowH);		// NOT InPixels!
+	float dpiScaleX = (float) gWindowWidth / windowW;		// gWindowWidth is in actual pixels
+	float dpiScaleY = (float) gWindowHeight / windowH;		// gWindowHeight is in actual pixels
 
 	return (TQ3Point2D) { windowX * dpiScaleX, windowY * dpiScaleY };
 }
 
 void InitAnalogCursor(void)
 {
-	memset(&gAnalogCursor, 0, sizeof(gAnalogCursor));
+	SDL_memset(&gAnalogCursor, 0, sizeof(gAnalogCursor));
 
 	gAnalogCursor.pos = GetMousePosition();
 }
 
 void ShutdownAnalogCursor(void)
 {
-	SDL_ShowCursor(0);
+	SDL_HideCursor();
 }
 
 bool MoveAnalogCursor(int* outMouseX, int* outMouseY)
 {
-	SDL_ShowCursor(1);
+	SDL_ShowCursor();
 
 	gAnalogCursor.didMove = false;
 

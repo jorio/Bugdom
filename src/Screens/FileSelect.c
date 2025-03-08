@@ -14,10 +14,8 @@
 /*    EXTERNALS             */
 /****************************/
 
+#include <SDL3/SDL_time.h>
 #include "game.h"
-#include <time.h>
-#include <ctype.h>
-#include <stdio.h>
 
 
 /****************************/
@@ -31,6 +29,14 @@ static int FileScreenMainLoop(void);
 /****************************/
 /*    CONSTANTS             */
 /****************************/
+
+const char* kMonths[13] =
+{
+	"???",
+	"Jan", "Feb", "Mar", "Apr",
+	"May", "Jun", "Jul", "Aug",
+	"Sep", "Oct", "Nov", "Dec",
+};
 
 const char* kLevelNames[NUM_LEVELS] =
 {
@@ -301,7 +307,7 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 	newFloppy->MeshList[1]->glTextureName = labelTexture;
 	newFloppy->OwnsMeshTexture[1] = true;
 
-	snprintf(textBuffer, sizeof(textBuffer), "File %c", 'A' + fileNumber);
+	SDL_snprintf(textBuffer, sizeof(textBuffer), "File %c", 'A' + fileNumber);
 
 
 	TextMeshDef tmd;
@@ -318,16 +324,17 @@ static void MakeFileObjects(const int fileNumber, bool createPickables)
 
 	if (saveDataValid)
 	{
-		snprintf(textBuffer, sizeof(textBuffer), "Level %d: %s", 1 + saveData.realLevel, kLevelNames[saveData.realLevel]);
+		SDL_snprintf(textBuffer, sizeof(textBuffer), "Level %d: %s", 1 + saveData.realLevel, kLevelNames[saveData.realLevel]);
 
 		tmd.coord.y	= y+70*gs;
 		tmd.scale	= .2f * gs;
 		TextMesh_Create(&tmd, textBuffer);
 
-		time_t timestamp = saveData.timestamp;
-		struct tm tm;
-		tm = *localtime(&timestamp);
-		strftime(textBuffer, sizeof(textBuffer), "%e %b %Y  %H:%M", &tm);
+		SDL_DateTime dt = {0};
+		SDL_TimeToDateTime(saveData.timestamp * 1e9, &dt, true);
+		SDL_snprintf(textBuffer, sizeof(textBuffer), "%s %d, %d  %d:%02d",
+					 kMonths[dt.month], dt.day, dt.year, dt.hour, dt.minute);
+
 		tmd.coord.y	-= 10*gs;
 		TextMesh_Create(&tmd, textBuffer);
 
@@ -379,7 +386,7 @@ static void SetupFileScreen(void)
 	}
 	else
 	{
-		snprintf(textBuffer, sizeof(textBuffer), "Entering level %d. Save where?", gRealLevel+2);
+		SDL_snprintf(textBuffer, sizeof(textBuffer), "Entering level %d. Save where?", gRealLevel+2);
 		tmd.scale	= .33f;
 		tmd.color = gTitleTextColor;
 		TextMesh_Create(&tmd, textBuffer);

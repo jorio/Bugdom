@@ -1,0 +1,37 @@
+#include <windows.h>
+
+// UTF-8
+#pragma code_page(65001)
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+//
+// IMPORTANT: The .ico should be UNCOMPRESSED, as a png-compressed .ico
+// may cause garbage AVs to flag the game as a false positive!
+IDI_ICON1 ICON DISCARDABLE "@GAME_TARGET@.ico"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     @PROJECT_VERSION_MAJOR@,@PROJECT_VERSION_MINOR@,@PROJECT_VERSION_PATCH@,0
+PRODUCTVERSION  @PROJECT_VERSION_MAJOR@,@PROJECT_VERSION_MINOR@,@PROJECT_VERSION_PATCH@,0
+FILEOS          VOS_NT_WINDOWS32
+FILETYPE        VFT_APP
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0" // US English cp1252 (hex)
+        BEGIN
+            VALUE "CompanyName",        "Pangea Software, Inc."
+            VALUE "ProductName",        "@GAME_FULL_NAME@"
+            VALUE "FileDescription",    "@GAME_FULL_NAME@"
+            VALUE "ProductVersion",     "@GAME_VERSION@"
+            VALUE "FileVersion",        "@GAME_VERSION@"
+            VALUE "InternalName",       "@GAME_TARGET@"
+            VALUE "OriginalFilename",   "@GAME_TARGET@.exe"
+            VALUE "LegalCopyright",     "@GAME_COPYRIGHT@"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252 // US English cp1252
+    END
+END

@@ -323,23 +323,13 @@ typedef struct
 {
 	Boolean	easyMode;
 	Boolean	playerRelativeKeys;
-	Boolean fullscreen;
-	Boolean lowDetail;
 	Byte	mouseSensitivityLevel;
+	Byte	dragonflyControl;
+	Boolean lowDetail;
 	Boolean	showBottomBar;
 	Boolean	force4x3AspectRatio;
+	Boolean fullscreen;
+	Byte	vsync;
 	Byte	antialiasingLevel;
-	Byte	dragonflyControl;
-#if OSXPPC
-	Byte	curatedDisplayModeID;
-#endif
+	Byte	displayNumMinus1;
 }PrefsType;
-
-typedef struct
-{
-	int		fullscreenWidth;
-	int		fullscreenHeight;
-	int		fullscreenRefreshRate;
-	int		msaa;
-	int		vsync;
-} CommandLineOptions;

@@ -525,7 +525,7 @@ static int GetSplinePointsPerSpan(int numNubs, const SplinePointType* nubs, int*
 	int total = 0;
 
 	if (outPointsPerSpan)
-		memset(outPointsPerSpan, 0, sizeof(outPointsPerSpan[0]) * numNubs);
+		SDL_memset(outPointsPerSpan, 0, sizeof(outPointsPerSpan[0]) * numNubs);
 
 	for (int i = 0; i < numNubs - 1; i++)
 	{
@@ -741,7 +741,7 @@ void PatchSplineLoop(SplineDefType* spline)
 		/* MAKE SPLINE WRAP AROUND A BIT TO AVOID ANGULAR PINCH AT SEAM */
 
 	SplinePointType* nubList_wrapping = (SplinePointType*) AllocPtr(sizeof(SplinePointType) * (numNubs + 2 * numWrapNubs));
-	memcpy(&nubList_wrapping[numWrapNubs], nubList, sizeof(SplinePointType) * numNubs);
+	SDL_memcpy(&nubList_wrapping[numWrapNubs], nubList, sizeof(SplinePointType) * numNubs);
 
 	int wrapBeg = numWrapNubs - 1;
 	int wrapEnd = numWrapNubs + numNubs;
@@ -765,7 +765,7 @@ void PatchSplineLoop(SplineDefType* spline)
 		/* MAKE SURE NEW SPLINE HASN'T STRAYED TOO FAR FROM FILE VALUES */
 
 	int oldNumPoints = spline->numPoints;
-	GAME_ASSERT(abs(newNumPoints - oldNumPoints) < 2);		// tolerate some wiggle room
+	GAME_ASSERT(SDL_abs(newNumPoints - oldNumPoints) < 2);		// tolerate some wiggle room
 	GAME_ASSERT(newNumPoints <= oldNumPoints);
 
 	int currentSpan = 0;
