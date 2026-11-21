@@ -18,6 +18,10 @@ int main(void)
     assert(WebConvertTextureRGBA(out, packed32, 2, 1, 0, WEB_PIXEL_ARGB8888, false));
     assert(memcmp(out, expected32, sizeof(expected32)) == 0);
 
+    const uint32_t abgr[] = {0x56341280};
+    assert(WebConvertTextureRGBA(out, abgr, 1, 1, 0, WEB_PIXEL_ABGR8888, false));
+    assert(memcmp(out, expected32, 4) == 0);
+
     const uint8_t rgb[] = {1,2,3, 4,5,6};
     assert(WebConvertTextureRGBA(out, rgb, 2, 1, 0, WEB_PIXEL_RGB8, false));
     assert(memcmp(out, (uint8_t[]){1,2,3,255,4,5,6,255}, 8) == 0);

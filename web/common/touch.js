@@ -2,7 +2,7 @@
  * The target supplies setAnalogMove(x,y), applyLookDelta(dx,dy), zoomBy(delta).
  * Pointer ownership stays here; game input stays behind that small interface. */
 'use strict';
-class BugdomTouchControls {
+class PangeaTouchControls {
   constructor(root, target) {
     this.root = root;
     this.target = target;

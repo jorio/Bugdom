@@ -362,9 +362,18 @@ void CalcCameraMatrixInfo(QD3DSetupOutputType *setupInfo)
 
 	glMatrixMode(GL_PROJECTION);
 
+	float fov = setupInfo->fov;
+#ifdef __EMSCRIPTEN__
+	// On portrait phones a fixed vertical FOV crops the sides of menus and of
+	// the playfield. Below 4:3, widen it so the 4:3 horizontal view stays visible.
+	const float minAspect = 4.0f / 3.0f;
+	if (setupInfo->aspectRatio > 0 && setupInfo->aspectRatio < minAspect)
+		fov = 2.0f * atanf(tanf(fov / 2.0f) * minAspect / setupInfo->aspectRatio);
+#endif
+
 	FillProjectionMatrix(
 			&gCameraViewToFrustumMatrix,
-			setupInfo->fov,
+			fov,
 			setupInfo->aspectRatio,
 			setupInfo->hither,
 			setupInfo->yon);

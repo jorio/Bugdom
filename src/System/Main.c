@@ -392,7 +392,11 @@ float fps;
 
 			/* SEE IF PAUSE GAME */
 
-		if (GetNewKeyState(kKey_Pause) || IsCmdQPressed())		// see if pause/abort
+		bool wantPause = GetNewKeyState(kKey_Pause) || IsCmdQPressed();	// see if pause/abort
+#ifdef __EMSCRIPTEN__
+		wantPause |= WebConsumePauseRequest();					// tab was hidden
+#endif
+		if (wantPause)
 		{
 			CaptureMouse(false);
 			DoPaused();

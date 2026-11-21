@@ -4,8 +4,8 @@ const { readFileSync } = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 const Context = vm.createContext({ performance });
-vm.runInContext(readFileSync(path.join(__dirname, '../touch.js'), 'utf8'), Context);
-const TouchControls = vm.runInContext('BugdomTouchControls', Context);
+vm.runInContext(readFileSync(path.join(__dirname, '../common/touch.js'), 'utf8'), Context);
+const TouchControls = vm.runInContext('PangeaTouchControls', Context);
 
 function fixture() {
   const events = [];

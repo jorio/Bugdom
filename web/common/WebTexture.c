@@ -6,7 +6,7 @@ bool WebConvertTextureRGBA(uint8_t* destination, const void* source,
 	int width, int height, int rowPixels, WebPixelFormat format, bool opaque)
 {
 	if (!source || !destination || width <= 0 || height <= 0) return false;
-	if (format < WEB_PIXEL_RGB8 || format > WEB_PIXEL_ARGB8888) return false;
+	if (format < WEB_PIXEL_RGB8 || format > WEB_PIXEL_ABGR8888) return false;
 	if (rowPixels == 0) rowPixels = width;
 	if (rowPixels < width || (size_t) rowPixels > SIZE_MAX / 4 / (size_t) height) return false;
 	for (int y = 0; y < height; y++)
@@ -23,7 +23,14 @@ bool WebConvertTextureRGBA(uint8_t* destination, const void* source,
 			dst[2] = (pixel & 31) * 255 / 31;
 			dst[3] = (pixel & 0x8000) ? 255 : 0;
 		}
-		else if (format == WEB_PIXEL_ARGB8888)
+		else if (format == WEB_PIXEL_ABGR8888)
+        {
+            uint32_t pixel;
+            memcpy(&pixel, (const uint8_t*)source + i * 4, sizeof(pixel));
+            dst[0] = pixel >> 8; dst[1] = pixel >> 16;
+            dst[2] = pixel >> 24; dst[3] = pixel;
+        }
+        else if (format == WEB_PIXEL_ARGB8888)
 		{
 			uint32_t pixel;
 			memcpy(&pixel, (const uint8_t*) source + i * 4, sizeof(pixel));

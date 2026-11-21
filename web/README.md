@@ -1,5 +1,7 @@
 # Experimental mobile web port
 
+The reusable browser layer lives in [`common/`](common/README.md), with game-specific configuration in `game.js` and the C engine adapter.
+
 This builds the original C/C++ game as WebAssembly with SDL3 and WebGL 1.
 Desktop builds retain their existing renderer and input path.
 

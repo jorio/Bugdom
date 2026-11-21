@@ -235,30 +235,7 @@ endif()
 # Link core dependencies
 target_link_libraries(${GAME_TARGET} PRIVATE Pomme)
 if(EMSCRIPTEN)
-	set_target_properties(${GAME_TARGET} PROPERTIES SUFFIX ".html" OUTPUT_NAME "index")
-	target_link_options(${GAME_TARGET} PRIVATE
-		-fexceptions
-		-sASYNCIFY=1
-		-sASYNCIFY_STACK_SIZE=131072
-		-sSTACK_SIZE=1048576
-		-sALLOW_MEMORY_GROWTH=1
-		-sINITIAL_MEMORY=134217728
-		-sLEGACY_GL_EMULATION=1
-		-sGL_UNSAFE_OPTS=0
-		-sFORCE_FILESYSTEM=1
-		-sEXIT_RUNTIME=1
-		"-sEXPORTED_RUNTIME_METHODS=['callMain','FS']"
-		-lidbfs.js
-		"SHELL:--preload-file \"${GAME_DATADIR}@/Data\""
-		"SHELL:--shell-file \"${CMAKE_SOURCE_DIR}/web/shell.html\""
-	)
-	set_property(TARGET ${GAME_TARGET} APPEND PROPERTY LINK_DEPENDS
-		"${CMAKE_SOURCE_DIR}/web/shell.html")
-	file(GLOB_RECURSE WEB_ASSETS CONFIGURE_DEPENDS "${GAME_DATADIR}/*")
-	set_property(TARGET ${GAME_TARGET} APPEND PROPERTY LINK_DEPENDS ${WEB_ASSETS})
-	configure_file(web/controls.js web/controls.js COPYONLY)
-	configure_file(web/touch.js web/touch.js COPYONLY)
-	configure_file(web/style.css web/style.css COPYONLY)
+	include(web/common/WebBuild.cmake)
 else()
 	target_link_libraries(${GAME_TARGET} PRIVATE OpenGL::GL)
 endif()

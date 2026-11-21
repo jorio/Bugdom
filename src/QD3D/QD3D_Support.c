@@ -275,9 +275,6 @@ void QD3D_DrawScene(QD3DSetupOutputType *setupInfo, void (*drawRoutine)(const QD
 {
 	GAME_ASSERT(setupInfo);
 	GAME_ASSERT(setupInfo->isActive);									// make sure it's legit
-#ifdef __EMSCRIPTEN__
-	WebPrepareFrame();
-#endif
 
 			/* START RENDERING */
 
@@ -340,9 +337,6 @@ void QD3D_DrawScene(QD3DSetupOutputType *setupInfo, void (*drawRoutine)(const QD
 	Render_EndFrame();
 
 	SDL_GL_SwapWindow(gSDLWindow);
-#ifdef __EMSCRIPTEN__
-	WebEndFrame();
-#endif
 }
 
 

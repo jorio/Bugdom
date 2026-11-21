@@ -11,10 +11,6 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
 #include <QD3D.h>
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#include "webtexture.h"
-#endif
 
 
 #pragma mark -
@@ -237,16 +233,6 @@ void Render_CreateContext(void)
 
 	GAME_ASSERT(gGLContext);
 
-#ifdef __EMSCRIPTEN__
-	// SDL3 creates WebGL directly, bypassing Browser.createContext and its
-	// legacy-GL initialization callback (Emscripten 4.0.20).
-	EM_ASM({
-		Browser.useWebGL = true;
-		Module['GL_MAX_TEXTURE_IMAGE_UNITS'] = 1;
-		GLImmediate.init();
-	});
-#endif
-
 	// On Windows, proc addresses are only valid for the current context,
 	// so we must get proc addresses everytime we recreate the context.
 	//Render_GetGLProcAddresses();
@@ -302,9 +288,7 @@ void Render_InitState(const TQ3ColorRGBA* clearColor)
 	// Set misc GL defaults that apply throughout the entire game
 	glAlphaFunc(GL_GREATER, 0.4999f);
 	glFrontFace(GL_CCW);
-#ifndef __EMSCRIPTEN__
 	glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-#endif
 
 	// Set up mesh queue
 	gMeshQueueSize = 0;
@@ -340,9 +324,7 @@ void Render_EnableFog(
 {
 	(void) camHither;
 
-#ifndef __EMSCRIPTEN__
 	glHint(GL_FOG_HINT,		GL_NICEST);
-#endif
 	glFogi(GL_FOG_MODE,		GL_LINEAR);
 	glFogf(GL_FOG_START,	fogHither * camYon);
 	glFogf(GL_FOG_END,		fogYon * camYon);
@@ -366,38 +348,6 @@ void Render_BindTexture(GLuint textureName)
 	}
 }
 
-#ifdef __EMSCRIPTEN__
-// WebGL only accepts RGB(A) byte order. Classic Mac pixmaps and terrain use
-// packed BGRA; also repack strided updates since WebGL 1 has no UNPACK_ROW_LENGTH.
-static uint8_t* RepackWebTexture(int width, int height, GLenum format, GLenum type,
-		const void* pixels, int stride, bool opaque)
-{
-	if (!pixels) return NULL;
-	WebPixelFormat sourceFormat;
-	if (type == GL_UNSIGNED_SHORT_1_5_5_5_REV && format == GL_BGRA)
-		sourceFormat = WEB_PIXEL_ARGB1555;
-	else if (type == GL_UNSIGNED_INT_8_8_8_8_REV && format == GL_BGRA)
-		sourceFormat = WEB_PIXEL_ARGB8888;
-	else
-	{
-		GAME_ASSERT(type == GL_UNSIGNED_BYTE);
-		switch (format)
-		{
-			case GL_RGB: sourceFormat = WEB_PIXEL_RGB8; break;
-			case GL_RGBA: sourceFormat = WEB_PIXEL_RGBA8; break;
-			case GL_BGR: sourceFormat = WEB_PIXEL_BGR8; break;
-			case GL_BGRA: sourceFormat = WEB_PIXEL_BGRA8; break;
-			default: DoFatalAlert("Unsupported WebGL texture format"); return NULL;
-		}
-	}
-	GAME_ASSERT(width > 0 && height > 0 && (size_t)width <= SIZE_MAX / 4 / (size_t)height);
-	uint8_t* rgba = SDL_malloc((size_t) width * height * 4);
-	GAME_ASSERT(rgba);
-	GAME_ASSERT(WebConvertTextureRGBA(rgba, pixels, width, height, stride, sourceFormat, opaque));
-	return rgba;
-}
-#endif
-
 GLuint Render_LoadTexture(
 		GLenum internalFormat,
 		int width,
@@ -408,15 +358,6 @@ GLuint Render_LoadTexture(
 		RendererTextureFlags flags)
 {
 	GAME_ASSERT(gGLContext);
-
-#ifdef __EMSCRIPTEN__
-	uint8_t* converted = RepackWebTexture(width, height, bufferFormat, bufferType, pixels, 0, internalFormat == GL_RGB);
-	pixels = converted;
-	internalFormat = bufferFormat = GL_RGBA;
-	bufferType = GL_UNSIGNED_BYTE;
-	// WebGL 1 requires clamp-to-edge for non-power-of-two textures.
-	if ((width & (width - 1)) || (height & (height - 1))) flags |= kRendererTextureFlags_ClampBoth;
-#endif
 
 	GLuint textureName;
 
@@ -447,9 +388,6 @@ GLuint Render_LoadTexture(
 			pixels);				// pointer to the actual texture pixels
 	CHECK_GL_ERROR();
 
-#ifdef __EMSCRIPTEN__
-	SDL_free(converted);
-#endif
 	return textureName;
 }
 
@@ -464,14 +402,6 @@ void Render_UpdateTexture(
 		const GLvoid* pixels,
 		int rowBytesInInput)
 {
-#ifdef __EMSCRIPTEN__
-	uint8_t* converted = RepackWebTexture(width, height, bufferFormat, bufferType, pixels, rowBytesInInput,
-		true); // Both callers (terrain and the HUD) update opaque RGB textures.
-	Render_BindTexture(textureName);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, converted);
-	SDL_free(converted);
-	CHECK_GL_ERROR();
-#else
 	GLint pUnpackRowLength = 0;
 
 	Render_BindTexture(textureName);
@@ -500,7 +430,6 @@ void Render_UpdateTexture(
 	{
 		glPixelStorei(GL_UNPACK_ROW_LENGTH, pUnpackRowLength);
 	}
-#endif
 }
 
 void Render_Load3DMFTextures(TQ3MetaFile* metaFile, GLuint* outTextureNames, bool forceClampUVs)
@@ -916,38 +845,7 @@ static void SendGeometry(const MeshQueueEntry* entry)
 	}
 
 	// Draw the mesh
-#ifdef __EMSCRIPTEN__
-	// The legacy client-array emulation only accepts 16-bit indices.
-	static uint16_t* webIndices = NULL;
-	static size_t webIndexCapacity = 0;
-	size_t count = (size_t) mesh->numTriangles * 3;
-	if (count > webIndexCapacity)
-	{
-		webIndices = SDL_realloc(webIndices, count * sizeof(*webIndices));
-		GAME_ASSERT(webIndices);
-		webIndexCapacity = count;
-	}
-	for (size_t i = 0; i < count; i++)
-	{
-		TQ3Uns32 index = mesh->triangles[i / 3].pointIndices[i % 3];
-		GAME_ASSERT(index <= UINT16_MAX);
-		webIndices[i] = (uint16_t) index;
-	}
-	if (gState.hasState_GL_LIGHTING)
-	{
-		GLfloat color[4] = {
-			mesh->diffuseColor.r * entry->mods->diffuseColor.r,
-			mesh->diffuseColor.g * entry->mods->diffuseColor.g,
-			mesh->diffuseColor.b * entry->mods->diffuseColor.b,
-			mesh->diffuseColor.a * entry->mods->diffuseColor.a * entry->mods->autoFadeFactor,
-		};
-		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, color);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, color);
-	}
-	glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_SHORT, webIndices);
-#else
 	glDrawElements(GL_TRIANGLES, mesh->numTriangles*3, GL_UNSIGNED_INT, mesh->triangles);
-#endif
 	CHECK_GL_ERROR();
 
 	// Pass 2 to draw transparent meshes without face culling (see above for an explanation)
@@ -957,11 +855,7 @@ static void SendGeometry(const MeshQueueEntry* entry)
 		glCullFace(GL_BACK);	// pass 2: draw frontfaces (cull backfaces)
 
 		// Draw the mesh again
-#ifdef __EMSCRIPTEN__
-		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_SHORT, webIndices);
-#else
 		glDrawElements(GL_TRIANGLES, mesh->numTriangles * 3, GL_UNSIGNED_INT, mesh->triangles);
-#endif
 		CHECK_GL_ERROR();
 	}
 }
@@ -1022,8 +916,15 @@ static void BeginShadingPass(const MeshQueueEntry* entry)
 		EnvironmentMapTriMesh(mesh, entry->transform);
 
 	// Apply gouraud or null illumination
-	SetState(GL_LIGHTING,
-			!( (statusBits & STATUS_BIT_NULLSHADER) || (mesh->texturingMode & kQ3TexturingModeExt_NullShaderFlag) ));
+	bool wantLighting = !( (statusBits & STATUS_BIT_NULLSHADER) || (mesh->texturingMode & kQ3TexturingModeExt_NullShaderFlag) );
+#ifdef __EMSCRIPTEN__
+	// Emulated lighting takes its color from the material only and ignores the
+	// color array, so a lit vertex-colored mesh would inherit the previous
+	// mesh's color and alpha. Draw those unlit to keep their own colors/fades.
+	if (mesh->hasVertexColors)
+		wantLighting = false;
+#endif
+	SetState(GL_LIGHTING, wantLighting);
 
 	// Apply fog or not
 	SetState(GL_FOG, gState.sceneHasFog && !(statusBits & STATUS_BIT_NOFOG));

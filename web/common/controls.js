@@ -5,14 +5,35 @@ const statusText = document.getElementById('status');
 const startButton = document.getElementById('start');
 const notice = document.getElementById('notice');
 const actions = ['up', 'down', 'left', 'right', 'jump', 'kick', 'roll', 'buddy',
-  'pause', 'confirm', 'cameraLeft', 'cameraRight', 'zoomIn', 'zoomOut'];
+  'pause', 'confirm', 'cameraLeft', 'cameraRight', 'zoomIn', 'zoomOut', 'pickup', 'jet', 'nextWeapon', 'prevWeapon', 'cameraMode'];
+// Game identity and action bindings live outside this reusable runtime.
+document.title = `${gameConfig.title} · Web`;
+document.getElementById('title').textContent = gameConfig.title;
+document.getElementById('tagline').textContent = gameConfig.tagline;
+document.getElementById('control-hint').textContent = gameConfig.hint;
+document.getElementById('credits').textContent = gameConfig.credits;
+const sourceLink = document.getElementById('source-link');
+sourceLink.href = gameConfig.source;
+sourceLink.textContent = 'Source & license';
+canvas.setAttribute('aria-label', `${gameConfig.title} game. Tap menu items to select them.`);
+for (const [index, action] of gameConfig.buttons.entries()) {
+  const button = document.createElement('button');
+  button.dataset.action = action.action;
+  button.setAttribute('aria-label', action.label);
+  if (!index) button.className = 'primary';
+  const icon = document.createElement('span');
+  icon.setAttribute('aria-hidden', 'true'); icon.textContent = action.icon;
+  const label = document.createElement('small'); label.textContent = action.label.toUpperCase();
+  button.append(icon, label);
+  document.getElementById('actions').append(button);
+}
 const sources = new Map();
 let started = false, playing = false, paused = false;
 let runtimeStopped = false;
 let touchEnabled = matchMedia('(pointer: coarse)').matches;
 let storageReady = false, syncing = false, syncAgain = false;
 let soundMuted = false;
-try { soundMuted = localStorage.getItem('bugdom.muted') === 'true'; } catch { /* Session-only preference. */ }
+try { soundMuted = localStorage.getItem(`${gameConfig.id}.muted`) === 'true'; } catch { /* Session-only preference. */ }
 function updateMuteButton() {
   const button = document.getElementById('mute');
   const label = soundMuted ? 'Unmute sound' : 'Mute sound';
@@ -21,7 +42,7 @@ function updateMuteButton() {
   button.setAttribute('aria-pressed', String(soundMuted));
 }
 updateMuteButton();
-const touch = new BugdomTouchControls(document.getElementById('touch-controls'), {
+const touch = new PangeaTouchControls(document.getElementById('touch-controls'), {
   setAnalogMove(x, y) { if (started) Module._WebSetStick(x, y); },
   applyLookDelta(dx, dy) { if (started) Module._WebAddCamera(dx * .006, dy * .004, 0); },
   zoomBy(delta) { if (started) Module._WebAddCamera(0, 0, delta * 2); }
@@ -84,9 +105,10 @@ var Module = {
   canvas,
   noInitialRun: true,
   preRun: [function () {
-    ENV.XDG_CONFIG_HOME = '/prefs';
-    FS.mkdirTree('/prefs');
-    FS.mount(IDBFS, {}, '/prefs');
+    const prefsRoot = gameConfig.prefsRoot;
+    ENV.XDG_CONFIG_HOME = prefsRoot;
+    FS.mkdirTree(prefsRoot);
+    FS.mount(IDBFS, {}, prefsRoot);
     addRunDependency('load-saves');
     FS.syncfs(true, error => {
       storageReady = !error;
@@ -98,7 +120,7 @@ var Module = {
     if (runtimeStopped) return;
     Module._WebSetMuted(soundMuted ? 1 : 0);
     statusText.textContent = 'Ready to explore.';
-    startButton.textContent = 'Play Bugdom';
+    startButton.textContent = `Play ${gameConfig.title}`;
     startButton.disabled = false;
   },
   setStatus(text) { if (text && !started && !runtimeStopped) statusText.textContent = text; },
@@ -170,7 +192,7 @@ document.querySelectorAll('[data-action]').forEach(button => {
   }
 });
 
-const keyboard = { KeyJ: 'jump', KeyK: 'kick' };
+const keyboard = gameConfig.keyboard;
 for (const type of ['keydown', 'keyup']) {
   window.addEventListener(type, event => {
     if (!started) return;
@@ -187,8 +209,7 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     releaseAll();
     if (started && playing && !paused) {
-      Module._WebSetButton(actions.indexOf('pause'), 1);
-      Module._WebSetButton(actions.indexOf('pause'), 0);
+      Module._WebRequestPause();
     }
     syncSaves();
   }
@@ -224,7 +245,7 @@ document.getElementById('mute').onclick = () => {
   soundMuted = !soundMuted;
   Module._WebSetMuted(soundMuted ? 1 : 0);
   updateMuteButton();
-  try { localStorage.setItem('bugdom.muted', String(soundMuted)); } catch { /* Session-only preference. */ }
+  try { localStorage.setItem(`${gameConfig.id}.muted`, String(soundMuted)); } catch { /* Session-only preference. */ }
   canvas.focus();
 };
 document.getElementById('fullscreen').onclick = async () => {
