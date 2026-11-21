@@ -11,6 +11,8 @@ logic. Keep fixes here synchronized across the ports.
   viewport sizing, master mute, save synchronization and the Asyncify yield.
 - `gl_compat.c` / `gl_compat.h` adapt the subset of desktop OpenGL used by these
   games to Emscripten's legacy client-array emulation (tested with 4.0.20).
+- `legacy_gl.js` repairs a pinned Emscripten texture-combiner shader bug; it has
+  standalone regression tests and is validated by actual level rendering.
 - `WebTexture.c` / `webtexture.h` perform independently testable pixel conversion.
 - `controls.js`, `touch.js`, `style.css`, and `shell.html` implement the browser UI.
 

@@ -7,7 +7,7 @@ import threading
 import time
 import unittest
 
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from serve import DevHandler
@@ -131,7 +131,13 @@ class BrowserTests(unittest.TestCase):
         deadline = time.monotonic() + 90
         while not p.evaluate('playing') and time.monotonic() < deadline:
             if p.locator('#confirm').is_visible():
-                p.locator('#confirm').tap()
+                try:
+                    p.locator('#confirm').tap(timeout=5000)
+                except PlaywrightTimeout:
+                    # The intro may finish between the visibility check and tap.
+                    # A synchronous asset load can also hold up the tap; keep polling
+                    # within the overall startup deadline, unless the runtime stopped.
+                    if p.evaluate('runtimeStopped'): raise
             p.wait_for_timeout(500)
         if shortcut: p.keyboard.up('1')
         self.assertTrue(p.evaluate('playing'), 'Level 1 did not start')

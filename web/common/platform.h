@@ -23,3 +23,5 @@ void WebGameResize(int width, int height);
 
 void WebSetGameplayActive(int active);
 int WebIsGameplayActive(void);
+
+void WebGetHUDInsets(float logicalWidth, float logicalHeight, float* top, float* right, float* bottom, float* left);

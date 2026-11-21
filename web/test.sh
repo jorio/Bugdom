@@ -7,3 +7,5 @@ trap 'rm -f "$test_binary"' EXIT
 "${CC:-cc}" -std=c17 -Wall -Wextra -Werror -fsanitize=address,undefined \
   -Iweb/common web/common/WebTexture.c web/tests/texture_test.c -o "$test_binary"
 "$test_binary"
+
+python3 web/tests/pwa_test.py

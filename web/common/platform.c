@@ -65,6 +65,17 @@ void WebGetSafeArea(float* top, float* right, float* bottom, float* left)
 	*bottom = webViewport[4]; *left = webViewport[5];
 }
 
+void WebGetHUDInsets(float logicalWidth, float logicalHeight, float* top, float* right, float* bottom, float* left)
+{
+    float sx = logicalWidth / fmaxf(1, webViewport[0]);
+    float sy = logicalHeight / fmaxf(1, webViewport[1]);
+    bool portrait = webViewport[1] > webViewport[0];
+    *top = (webViewport[2] + (portrait ? 64 : 4)) * sy;
+    *right = (webViewport[3] + (portrait ? 4 : 224)) * sx;
+    *bottom = (webViewport[4] + 4) * sy;
+    *left = (webViewport[5] + 4) * sx;
+}
+
 EMSCRIPTEN_KEEPALIVE void WebSetPointer(float x, float y, int down)
 {
 	pointerX = x;

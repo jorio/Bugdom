@@ -64,7 +64,7 @@ storage is unavailable, a message explains that only session saves are available
 
 Deploy `index.html`, `index.js`, `index.wasm`, `index.data`, `manifest.webmanifest`, `sw.js` and `web/` from
 `build-web/` together on any static host. Serve `.wasm` as `application/wasm` and
-enable compression for production. Assets are about 65 MB before transfer
+enable compression for production. Game assets are about 80 MB before transfer
 compression. No backend, cross-origin isolation or SharedArrayBuffer is required.
 Keep the original credits and CC BY-NC-SA 4.0 license; see [LICENSE.md](../LICENSE.md).
 
