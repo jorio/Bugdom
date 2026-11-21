@@ -14,6 +14,14 @@ SDL_MouseButtonFlags WebGetMouseState(float* x, float* y);
 bool WebRelativeMouseMode(SDL_Window* window, bool enabled);
 bool WebFullscreen(SDL_Window* window, bool enabled);
 SDL_FunctionPointer WebGLGetProcAddress(const char* name);
+void WebGLGetFloatv(GLenum pname, GLfloat* values);
+void WebGLActiveTexture(GLenum unit);
+void WebGLClientActiveTexture(GLenum unit);
+void WebGLTexGeni(GLenum coord, GLenum pname, GLint value);
+void WebGLVertexPointer(GLint size, GLenum type, GLsizei stride, const void* pointer);
+void WebGLNormalPointer(GLenum type, GLsizei stride, const void* pointer);
+void WebGLEnableClientState(GLenum cap);
+void WebGLDisableClientState(GLenum cap);
 void WebGLDrawElements(GLenum mode, GLsizei count, GLenum type, const void* indices);
 void WebGLColor4f(GLfloat r, GLfloat g, GLfloat b, GLfloat a);
 void WebGLColor4fv(const GLfloat* color);
@@ -39,6 +47,14 @@ void WebGLTexSubImage2D(GLenum target, GLint level, GLint x, GLint y, GLsizei wi
 #define SDL_SetWindowRelativeMouseMode WebRelativeMouseMode
 #define SDL_SetWindowFullscreen WebFullscreen
 #define glDrawElements WebGLDrawElements
+#define glGetFloatv WebGLGetFloatv
+#define glActiveTexture WebGLActiveTexture
+#define glClientActiveTexture WebGLClientActiveTexture
+#define glTexGeni WebGLTexGeni
+#define glVertexPointer WebGLVertexPointer
+#define glNormalPointer WebGLNormalPointer
+#define glEnableClientState WebGLEnableClientState
+#define glDisableClientState WebGLDisableClientState
 #define glColor4f WebGLColor4f
 #define glColor4fv WebGLColor4fv
 #define glColor3f WebGLColor3f

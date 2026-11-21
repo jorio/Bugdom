@@ -50,6 +50,10 @@ copies changes to the CSS and controls script. This is not a hot-reloading serve
 - Landscape is recommended. Browser fullscreen is optional; on iOS, use the
   browser's Add to Home Screen feature where fullscreen is unavailable.
 
+## PWA and TWA
+
+All web builds include an install manifest, app icons and a versioned offline service worker. See [PWA/TWA hosting and signing](common/PWA.md) for HTTPS, offline updates, and Android Digital Asset Links setup.
+
 ## Storage and hosting
 
 Preferences, high scores and the game's save slots are persisted in IndexedDB
@@ -58,7 +62,7 @@ add autosave. Storage belongs to the URL's origin, so `localhost`, a LAN IP and 
 production hostname have separate saves. Clearing site data removes them. If
 storage is unavailable, a message explains that only session saves are available.
 
-Deploy `index.html`, `index.js`, `index.wasm`, `index.data` and `web/` from
+Deploy `index.html`, `index.js`, `index.wasm`, `index.data`, `manifest.webmanifest`, `sw.js` and `web/` from
 `build-web/` together on any static host. Serve `.wasm` as `application/wasm` and
 enable compression for production. Assets are about 65 MB before transfer
 compression. No backend, cross-origin isolation or SharedArrayBuffer is required.

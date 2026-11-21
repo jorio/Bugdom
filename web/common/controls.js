@@ -16,6 +16,7 @@ const sourceLink = document.getElementById('source-link');
 sourceLink.href = gameConfig.source;
 sourceLink.textContent = 'Source & license';
 canvas.setAttribute('aria-label', `${gameConfig.title} game. Tap menu items to select them.`);
+document.getElementById('touch-controls').dataset.buttons = gameConfig.buttons.length;
 for (const [index, action] of gameConfig.buttons.entries()) {
   const button = document.createElement('button');
   button.dataset.action = action.action;

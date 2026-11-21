@@ -4,6 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#14251d">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="web/icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
   <title>Pangea Game · Web</title>
   <link rel="stylesheet" href="web/common/style.css">
 </head>
@@ -19,6 +24,8 @@
         <p id="status" role="status">Downloading game data…</p>
         <button id="start" disabled>Loading…</button>
         <p class="hint" id="control-hint"></p>
+        <button id="install" hidden>Install game</button>
+        <p id="pwa-status" class="hint" role="status"></p>
         <p class="hint">Landscape works best. Saves stay in this browser.</p>
         <small><span id="credits"></span><br><a id="source-link">Source &amp; license</a></small>
       </div>
@@ -43,9 +50,11 @@
     <button id="confirm" data-action="confirm" hidden>Continue</button>
     <p id="notice" role="status"></p>
   </main>
+  <script src="web/common/legacy_gl.js"></script>
   <script src="web/game.js"></script>
   <script src="web/common/touch.js"></script>
   <script src="web/common/controls.js"></script>
+  <script src="web/common/pwa.js"></script>
   {{{ SCRIPT }}}
 </body>
 </html>

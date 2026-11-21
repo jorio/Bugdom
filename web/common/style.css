@@ -45,3 +45,9 @@ a { color: #d8ed8c; }
   #actions { top: calc(112px + env(safe-area-inset-top, 0px)); }
   .gesture-hint { bottom: 205px; width: 220px; }
 }
+
+/* A five-action game still fits the same column on small landscape phones. */
+#touch-controls[data-buttons="5"] { --primary: 60px; --face: 48px; }
+@media (max-height: 360px) {
+  #touch-controls[data-buttons="5"] { --primary: 44px; --face: 44px; }
+}

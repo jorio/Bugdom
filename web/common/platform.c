@@ -14,6 +14,9 @@ static float cameraYaw, cameraPitch, cameraZoom;
 static float pointerX = -1, pointerY = -1;
 static bool pointerHeld, pointerPressed;
 static int webViewport[6] = {960, 540, 0, 0, 0, 0};
+static bool gameplayActive;
+void WebSetGameplayActive(int active) { gameplayActive = active != 0; }
+int WebIsGameplayActive(void) { return gameplayActive; }
 static bool soundMuted;
 static bool audioReady;
 static long normalOutputVolume;

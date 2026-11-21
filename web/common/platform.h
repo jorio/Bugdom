@@ -20,3 +20,6 @@ int WebConsumePauseRequest(void);
 void WebPresent(int playing, int paused);
 // Implemented by the small engine adapter in each game.
 void WebGameResize(int width, int height);
+
+void WebSetGameplayActive(int active);
+int WebIsGameplayActive(void);

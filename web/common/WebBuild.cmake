@@ -26,7 +26,17 @@
         "${CMAKE_SOURCE_DIR}/web/common/WebTexture.c"
         "${CMAKE_SOURCE_DIR}/web/common/gl_compat.c")
     target_include_directories(${GAME_TARGET} PRIVATE "${CMAKE_SOURCE_DIR}/web/common")
-    foreach(asset controls.js touch.js style.css)
+    foreach(asset controls.js touch.js style.css pwa.js legacy_gl.js)
         configure_file("web/common/${asset}" "web/common/${asset}" COPYONLY)
     endforeach()
     configure_file(web/game.js web/game.js COPYONLY)
+
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    # Run on incremental builds too: changing only CSS/config must refresh the
+    # service worker version without forcing a costly Wasm relink.
+    add_custom_target(web_pwa ALL
+        COMMAND ${Python3_EXECUTABLE} "${CMAKE_SOURCE_DIR}/web/common/pwa_build.py"
+            --build "${CMAKE_CURRENT_BINARY_DIR}" --web "${CMAKE_SOURCE_DIR}/web"
+        DEPENDS ${GAME_TARGET}
+        BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/sw.js" "${CMAKE_CURRENT_BINARY_DIR}/manifest.webmanifest"
+        VERBATIM)
