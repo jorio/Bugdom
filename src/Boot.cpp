@@ -80,6 +80,10 @@ static void Boot(int argc, char** argv)
 	const char* executablePath = argc > 0 ? argv[0] : NULL;
 
 	SDL_SetAppMetadata(GAME_FULL_NAME, GAME_VERSION, GAME_IDENTIFIER);
+#ifdef __EMSCRIPTEN__
+	SDL_SetHint(SDL_HINT_EMSCRIPTEN_ASYNCIFY, "0"); // Yield once per drawn frame ourselves.
+	SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0"); // Web.c latches even sub-frame menu taps.
+#endif
 #if _DEBUG
 	SDL_SetLogPriorities(SDL_LOG_PRIORITY_VERBOSE);
 #else
@@ -100,7 +104,11 @@ retryVideo:
 	}
 
 	// Create window
+#ifdef __EMSCRIPTEN__
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+#else
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+#endif
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
@@ -123,12 +131,20 @@ retryVideo:
 	int initialWidth = 640;
 	int initialHeight = 480;
 	GetDefaultWindowSize(display, &initialWidth, &initialHeight);
+#ifdef __EMSCRIPTEN__
+	initialWidth = 960;
+	initialHeight = 540;
+#endif
 
 	gSDLWindow = SDL_CreateWindow(
 		GAME_FULL_NAME " " GAME_VERSION,
 		initialWidth,
 		initialHeight,
-		SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY);
+		SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
+#ifndef __EMSCRIPTEN__
+		| SDL_WINDOW_HIGH_PIXEL_DENSITY
+#endif
+		);
 
 	MoveToPreferredDisplay();
 

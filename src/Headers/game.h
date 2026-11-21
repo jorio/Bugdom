@@ -34,6 +34,9 @@ extern "C"
 #include "3dmf.h"
 #include "file.h"
 #include "input.h"
+#ifdef __EMSCRIPTEN__
+#include "web.h"
+#endif
 #include "terrain.h"
 #include "myguy.h"
 #include "enemy.h"

@@ -392,7 +392,11 @@ float fps;
 
 			/* SEE IF PAUSE GAME */
 
-		if (GetNewKeyState(kKey_Pause) || IsCmdQPressed())		// see if pause/abort
+		bool wantPause = GetNewKeyState(kKey_Pause) || IsCmdQPressed();	// see if pause/abort
+#ifdef __EMSCRIPTEN__
+		wantPause |= WebConsumePauseRequest();					// tab was hidden
+#endif
+		if (wantPause)
 		{
 			CaptureMouse(false);
 			DoPaused();
@@ -507,6 +511,10 @@ QD3DSetupInputType	viewDef;
 	viewDef.view.paneClip.bottom	=	gGamePrefs.showBottomBar ? 60 : 0;
 	viewDef.view.paneClip.left		=	0;
 	viewDef.view.paneClip.right		=	0;
+#ifdef __EMSCRIPTEN__
+	// Mobile HUD bars overlay the scene instead of reserving a quarter of it.
+	viewDef.view.paneClip.top = viewDef.view.paneClip.bottom = 0;
+#endif
 
 	viewDef.view.clearColor 	= gLevelFogColor[gLevelType];	// set clear & fog color
 

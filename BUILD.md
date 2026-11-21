@@ -1,5 +1,7 @@
 # How to build Bugdom
 
+For the experimental browser/mobile web target, see [web/README.md](web/README.md).
+
 ## The easy way: build.py (automated build script)
 
 `build.py` can produce a game executable from a fresh clone of the repo in a single command. It will work on macOS, Windows and Linux, provided that your system has Python 3, CMake, and an adequate C++ compiler.

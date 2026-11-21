@@ -574,6 +574,9 @@ long				count;
 	GAME_ASSERT(count == sizeof(PrefsType));
 
 	FSClose(refNum);
+#ifdef __EMSCRIPTEN__
+	WebSyncFiles();
+#endif
 }
 
 #pragma mark -
@@ -651,6 +654,9 @@ SDL_Time		timestampNanoseconds = 0;
 	FSClose(fRefNum);
 
 			/* CHECK THAT WRITING WENT OK */
+#ifdef __EMSCRIPTEN__
+	WebSyncFiles();
+#endif
 
 	if (err != noErr || count != sizeof(SaveGameType))
 	{

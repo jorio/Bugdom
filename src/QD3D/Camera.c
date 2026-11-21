@@ -48,6 +48,9 @@ TQ3Matrix4x4		gWindowToFrustumCorrectAspect;
 
 static float		gCameraLookAtAccel,gCameraFromAccelY,gCameraFromAccel;
 static float		gCameraDistFromMe, gCameraHeightFactor,gCameraLookAtYOff;
+#ifdef __EMSCRIPTEN__
+static float gWebCameraOrbitDelta;
+#endif
 
 float				gPlayerToCameraAngle = 0.0f;
 
@@ -265,6 +268,12 @@ void ResetCameraSettings(void)
 void UpdateCamera(void)
 {
 float	fps = gFramesPerSecondFrac;
+#ifdef __EMSCRIPTEN__
+	float pitch, zoom;
+	WebConsumeCamera(&gWebCameraOrbitDelta, &pitch, &zoom);
+	gCameraDistFromMe = fminf(CAMERA_FARTHEST, fmaxf(CAMERA_CLOSEST, gCameraDistFromMe + zoom));
+	gCameraHeightFactor = fminf(1.5f, fmaxf(0.05f, gCameraHeightFactor + pitch));
+#endif
 	
 
 			/************************/
@@ -353,9 +362,18 @@ void CalcCameraMatrixInfo(QD3DSetupOutputType *setupInfo)
 
 	glMatrixMode(GL_PROJECTION);
 
+	float fov = setupInfo->fov;
+#ifdef __EMSCRIPTEN__
+	// On portrait phones a fixed vertical FOV crops the sides of menus and of
+	// the playfield. Below 4:3, widen it so the 4:3 horizontal view stays visible.
+	const float minAspect = 4.0f / 3.0f;
+	if (setupInfo->aspectRatio > 0 && setupInfo->aspectRatio < minAspect)
+		fov = 2.0f * atanf(tanf(fov / 2.0f) * minAspect / setupInfo->aspectRatio);
+#endif
+
 	FillProjectionMatrix(
 			&gCameraViewToFrustumMatrix,
-			setupInfo->fov,
+			fov,
 			setupInfo->aspectRatio,
 			setupInfo->hither,
 			setupInfo->yon);
@@ -526,10 +544,15 @@ float		fps = gFramesPerSecondFrac;
 	/* SEE IF USER ROTATE CAMERA */
 	/*****************************/
 
-	if (gCameraControlDelta.x != 0)
+	float orbitDelta = gCameraControlDelta.x * fps;
+#ifdef __EMSCRIPTEN__
+	orbitDelta += gWebCameraOrbitDelta;
+	gWebCameraOrbitDelta = 0;
+#endif
+	if (orbitDelta != 0)
 	{
 		TQ3Matrix4x4	m;
-		float			r = gCameraControlDelta.x * fps;
+		float			r = orbitDelta;
 		Q3Matrix4x4_SetRotateAboutPoint(&m, &to, 0, r, 0);
 		Q3Point3D_Transform(&from, &m, &from);	
 	}

@@ -24,6 +24,12 @@ option(SDL_STATIC "Static link SDL" OFF)
 
 option(SANITIZE "Build with asan/ubsan" OFF)
 
+if(EMSCRIPTEN)
+	set(BUILD_SDL_FROM_SOURCE ON)
+	set(SDL_STATIC ON CACHE BOOL "Static link SDL" FORCE)
+	set(SDL_TEST_LIBRARY OFF CACHE BOOL "Disable SDL test library" FORCE)
+endif()
+
 if(WIN32 OR APPLE)
 	# Don't warn
 elseif(SANITIZE)
@@ -82,11 +88,27 @@ if(NOT BUILD_SDL_FROM_SOURCE)
 	find_package(SDL3 CONFIG REQUIRED)
 	message("Found pre-built SDL3")
 else()
-	if(NOT DEFINED SDL3_DIR)
-		set(SDL3_DIR "${CMAKE_SOURCE_DIR}/extern/SDL")
+	if(NOT DEFINED SDL_SOURCE_DIR AND EXISTS "${SDL3_DIR}/CMakeLists.txt")
+		set(SDL_SOURCE_DIR "${SDL3_DIR}" CACHE PATH "SDL source checkout")
 	endif()
-	message("Building SDL3 from source: " ${SDL3_DIR})
-	add_subdirectory("${SDL3_DIR}" EXCLUDE_FROM_ALL)
+	set(SDL_SOURCE_DIR "${CMAKE_SOURCE_DIR}/extern/SDL" CACHE PATH "SDL source checkout")
+	# Build only the SDL flavor we link. Otherwise SDL3::SDL3 (used by Pomme)
+	# stays the shared library while the game links SDL3::SDL3-static, and
+	# CMake rejects the mix.
+	if(SDL_STATIC)
+		set(SDL_SHARED OFF CACHE BOOL "Build shared SDL" FORCE)
+	else()
+		set(SDL_SHARED ON CACHE BOOL "Build shared SDL" FORCE)
+	endif()
+	message("Building SDL3 from source: " ${SDL_SOURCE_DIR})
+	add_subdirectory("${SDL_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/SDL" EXCLUDE_FROM_ALL)
+	# Pomme calls find_package(SDL3), even when SDL is built in this tree.
+	# SDL 3.2's generated package re-includes export() files on a reconfigure.
+	# Supply a package that reuses the targets already added above instead.
+	set(SDL3_DIR "${CMAKE_CURRENT_BINARY_DIR}/SDL-in-tree")
+	file(MAKE_DIRECTORY "${SDL3_DIR}")
+	file(WRITE "${SDL3_DIR}/SDL3Config.cmake"
+		"if(NOT TARGET SDL3::SDL3)\n  message(FATAL_ERROR \"SDL3 must be added before Pomme\")\nendif()\nset(SDL3_FOUND TRUE)\n")
 endif()
 
 #------------------------------------------------------------------------------
@@ -95,7 +117,9 @@ endif()
 
 add_subdirectory(extern/Pomme)
 
-find_package(OpenGL REQUIRED)
+if(NOT EMSCRIPTEN)
+	find_package(OpenGL REQUIRED)
+endif()
 
 #------------------------------------------------------------------------------
 # EXECUTABLE TARGET
@@ -209,7 +233,12 @@ else()
 endif()
 
 # Link core dependencies
-target_link_libraries(${GAME_TARGET} PRIVATE Pomme OpenGL::GL)
+target_link_libraries(${GAME_TARGET} PRIVATE Pomme)
+if(EMSCRIPTEN)
+	include(web/common/WebBuild.cmake)
+else()
+	target_link_libraries(${GAME_TARGET} PRIVATE OpenGL::GL)
+endif()
 
 # Add required frameworks for KillMacMouseAcceleration
 if(APPLE)
@@ -282,8 +311,10 @@ else()
 	set(GAME_DATA_TARGET_LOCATION "$<TARGET_FILE_DIR:${GAME_TARGET}>/Data")
 endif()
 
-add_custom_command(TARGET ${GAME_TARGET} POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy_directory "${GAME_DATADIR}" "${GAME_DATA_TARGET_LOCATION}")
+if(NOT EMSCRIPTEN)
+	add_custom_command(TARGET ${GAME_TARGET} POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_directory "${GAME_DATADIR}" "${GAME_DATA_TARGET_LOCATION}")
+endif()
 
 if(APPLE)
 	set(INFO_PLIST "${GAME_DATA_TARGET_LOCATION}/../Info.plist")

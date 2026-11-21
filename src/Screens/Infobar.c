@@ -1265,10 +1265,56 @@ int		w,x;
 }
 
 
+#ifdef __EMSCRIPTEN__
+static void SetWebHUDQuad(TQ3TriMeshData* mesh, float left, float top, float right, float bottom)
+{
+	mesh->points[0] = (TQ3Point3D) {left, bottom, 0};
+	mesh->points[1] = (TQ3Point3D) {right, bottom, 0};
+	mesh->points[2] = (TQ3Point3D) {right, top, 0};
+	mesh->points[3] = (TQ3Point3D) {left, top, 0};
+}
+
+static void LayoutWebHUD(void)
+{
+	float safeTop, safeRight, safeBottom, safeLeft;
+	WebGetSafeArea(&safeTop, &safeRight, &safeBottom, &safeLeft);
+	TQ3Vector2D view = {gWindowWidth, gWindowHeight};
+	if (gGamePrefs.force4x3AspectRatio)
+		view = FitRectKeepAR(640, 480, gWindowWidth, gWindowHeight);
+	float xoff = (gWindowWidth - view.x) * .5f;
+	float yoff = (gWindowHeight - view.y) * .5f;
+	float sx = 640.0f / view.x;
+	float sy = 480.0f / view.y;
+	bool portrait = gWindowHeight > gWindowWidth;
+	float top = fmaxf(4, safeTop + (portrait ? 64 : 4) - yoff);
+	float height = fminf(38, view.y * .09f);
+	float right = view.x - fmaxf(4, safeRight + (portrait ? 4 : 224) - xoff);
+	SetWebHUDQuad(gInfobarTopMesh, fmaxf(4, safeLeft + 4 - xoff) * sx, top * sy,
+		right * sx, (top + height) * sy);
+
+	if (gGamePrefs.showBottomBar)
+	{
+		// The decorative strip reaches the actual bottom; the boss gauge stays
+		// clear of a home indicator when it is needed.
+		float bottom = view.y - (gBossHealthWasUpdated ? fmaxf(0, safeBottom - yoff) : 0);
+		SetWebHUDQuad(gInfobarBottomMesh, 0, (bottom - 20) * sy, 640, bottom * sy);
+	}
+	else
+	{
+		float bottom = view.y - fmaxf(0, safeBottom - yoff) - 4;
+		SetWebHUDQuad(gInfobarBottomMesh, (640-BOSS_WIDTH)/2, (bottom - 16) * sy,
+			(640+BOSS_WIDTH)/2, bottom * sy);
+	}
+}
+#endif
+
 void SubmitInfobarOverlay(void)
 {
 	if (!gInfobarTextureName)
 		return;
+#ifdef __EMSCRIPTEN__
+	LayoutWebHUD();
+#endif
 
 	// If the screen port has dirty pixels ("damaged"), update the texture
 	if (gInfobarTextureIsDirty)

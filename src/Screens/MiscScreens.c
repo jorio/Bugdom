@@ -148,7 +148,9 @@ int curState = kPauseChoice_Resume;
 		QD3D_DrawScene(gGameViewInfoPtr, DrawTerrain);
 		DoSDLMaintenance();
 		UpdateInput();
+#ifndef __EMSCRIPTEN__	// the web build already yields once per presented frame; SDL_Delay would spin
 		SDL_Delay(10);
+#endif
 
 
 		if (GetNewKeyState(kKey_Pause) || GetNewKeyState(kKey_UI_Cancel))						// see if ESC out

@@ -916,8 +916,15 @@ static void BeginShadingPass(const MeshQueueEntry* entry)
 		EnvironmentMapTriMesh(mesh, entry->transform);
 
 	// Apply gouraud or null illumination
-	SetState(GL_LIGHTING,
-			!( (statusBits & STATUS_BIT_NULLSHADER) || (mesh->texturingMode & kQ3TexturingModeExt_NullShaderFlag) ));
+	bool wantLighting = !( (statusBits & STATUS_BIT_NULLSHADER) || (mesh->texturingMode & kQ3TexturingModeExt_NullShaderFlag) );
+#ifdef __EMSCRIPTEN__
+	// Emulated lighting takes its color from the material only and ignores the
+	// color array, so a lit vertex-colored mesh would inherit the previous
+	// mesh's color and alpha. Draw those unlit to keep their own colors/fades.
+	if (mesh->hasVertexColors)
+		wantLighting = false;
+#endif
+	SetState(GL_LIGHTING, wantLighting);
 
 	// Apply fog or not
 	SetState(GL_FOG, gState.sceneHasFog && !(statusBits & STATUS_BIT_NOFOG));

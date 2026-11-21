@@ -236,6 +236,9 @@ void UpdateInput(void)
 		for (int i = 1; i < NUM_MOUSE_BUTTONS; i++)
 		{
 			bool downNow = mouseButtons & SDL_BUTTON_MASK(i);
+#ifdef __EMSCRIPTEN__
+			if (i == SDL_BUTTON_LEFT) downNow |= WebGetClick();
+#endif
 			UpdateKeyState(&gMouseButtonState[i], downNow);
 		}
 	}
@@ -328,6 +331,9 @@ void UpdateKeyMap(void)
 		const KeyBinding* kb = &gKeyBindings[i];
 		
 		bool downNow = false;
+#ifdef __EMSCRIPTEN__
+		downNow = WebGetKey(i);
+#endif
 
 		if (kb->key1 && kb->key1 < numkeys)
 			downNow |= 0 != keystate[kb->key1];
@@ -343,6 +349,9 @@ void UpdateKeyMap(void)
 
 		UpdateKeyState(&gKeyStates[i], downNow);
 	}
+#ifdef __EMSCRIPTEN__
+	WebClearPresses();
+#endif
 
 
 		/*****************************************************/
@@ -438,6 +447,12 @@ void EatMouseEvents(void)
 
 void CaptureMouse(Boolean doCapture)
 {
+#ifdef __EMSCRIPTEN__
+	(void) doCapture; // Touch and keyboard controls do not require pointer lock.
+	ClearMouseState();
+	EatMouseEvents();
+	return;
+#endif
 	SDL_PumpEvents();	// Prevent SDL from thinking mouse buttons are stuck as we switch into relative mode
 	SDL_SetWindowMouseGrab(gSDLWindow, doCapture);
 	SDL_SetWindowRelativeMouseMode(gSDLWindow, doCapture);
@@ -480,6 +495,17 @@ void GetMouseDelta(float *dx, float *dy)
 	}
 
 		/* SEE IF OVERRIDE MOUSE WITH JOYSTICK MOVEMENT */
+
+#ifdef __EMSCRIPTEN__
+	float touchX, touchY;
+	WebGetMovement(&touchX, &touchY);
+	if (touchX != 0 || touchY != 0)
+	{
+		*dx = gFramesPerSecondFrac * 1600.0f * touchX;
+		*dy = gFramesPerSecondFrac * 1600.0f * touchY;
+		return;
+	}
+#endif
 
 	if (gSDLGamepad)
 	{
@@ -636,6 +662,10 @@ void OnJoystickRemoved(SDL_JoystickID which)
 
 TQ3Point2D GetMousePosition(void)
 {
+#ifdef __EMSCRIPTEN__
+	TQ3Point2D touchPosition;
+	if (WebGetPointer(&touchPosition.x, &touchPosition.y)) return touchPosition;
+#endif
 	float windowX = 0;
 	float windowY = 0;
 	SDL_GetMouseState(&windowX, &windowY);

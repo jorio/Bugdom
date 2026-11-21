@@ -20,6 +20,9 @@ extern	Boolean PointsAreCloseEnough(TQ3Point3D *v1, TQ3Point3D *v2);
 extern	float IntersectionOfYAndPlane_Func(float x, float z, TQ3PlaneEquation *p);
 
 extern	Boolean IsPointInTriangle3D(const TQ3Point3D *point3D,	const TQ3Point3D *trianglePoints, TQ3Vector3D *normal);
+// Static SDL3 exports its own, unrelated MatrixMultiply (SDL_d3dmath.c).
+// Give ours a distinct link name so statically linked builds don't clash.
+#define MatrixMultiply Bugdom_MatrixMultiply
 void MatrixMultiply(TQ3Matrix4x4 *a, TQ3Matrix4x4 *b, TQ3Matrix4x4 *result);
 void SetLookAtMatrix(TQ3Matrix4x4 *m, const TQ3Vector3D *upVector, const TQ3Point3D *from, const TQ3Point3D *to);
 void SetLookAtMatrixAndTranslate(TQ3Matrix4x4 *m, const TQ3Vector3D *upVector, const TQ3Point3D *from, const TQ3Point3D *to);
