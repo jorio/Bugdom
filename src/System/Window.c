@@ -278,6 +278,10 @@ void MoveToPreferredDisplay(void)
 
 void SetFullscreenMode(bool enforceDisplayPref)
 {
+#ifdef __EMSCRIPTEN__
+	(void) enforceDisplayPref; // Browser fullscreen must be requested by a user gesture.
+	return;
+#endif
 	if (!gGamePrefs.fullscreen)
 	{
 		SDL_SetWindowFullscreen(gSDLWindow, 0);

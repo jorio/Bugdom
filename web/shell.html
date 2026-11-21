@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#14251d">
+  <title>Bugdom · Web</title>
+  <link rel="stylesheet" href="web/style.css">
+</head>
+<body>
+  <main id="game">
+    <div id="safe-area" aria-hidden="true"></div>
+    <canvas id="canvas" width="960" height="540" tabindex="0" aria-label="Bugdom game. Tap menu items to select them."></canvas>
+    <section id="welcome" aria-labelledby="title">
+      <div class="card">
+        <p class="eyebrow">PANGEA SOFTWARE’S 1999 CLASSIC</p>
+        <h1 id="title">Bugdom</h1>
+        <p>A small bug. A big adventure.</p>
+        <p id="status" role="status">Downloading game data…</p>
+        <button id="start" disabled>Loading…</button>
+        <p class="hint">Touch: left thumb to move, right thumb to look, pinch to zoom.<br>Keyboard: WASD / arrows, J jump, K kick, Space roll, Esc pause.</p>
+        <p class="hint">Landscape works best. Saves stay in this browser.</p>
+        <small>© Pangea Software · Art © Toucan Studio · Music © Mike Beckett<br>Desktop port by Iliyas Jorio · <a href="https://github.com/jorio/Bugdom">Source &amp; CC BY-NC-SA 4.0 license</a></small>
+      </div>
+    </section>
+    <div id="toolbar" hidden>
+      <button id="toggle-touch" aria-label="Touch controls" title="Touch controls" aria-pressed="false">✥</button>
+      <button id="mute" aria-label="Mute sound" title="Mute sound" aria-pressed="false">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M11 5 6 9H3v6h3l5 4Z"/>
+          <path class="sound-on" d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/>
+          <path class="sound-off" d="m16 9 5 6m0-6-5 6"/>
+        </svg>
+      </button>
+      <button id="fullscreen" aria-label="Full screen" title="Full screen">⛶</button>
+      <button data-action="pause" aria-label="Pause or back" title="Pause or back">Ⅱ</button>
+    </div>
+    <div id="touch-controls" hidden aria-label="Touch game controls">
+      <div data-touch-stick aria-hidden="true"><div class="stick-knob"></div></div>
+      <p class="gesture-hint">Left thumb to move · Right thumb to look · Pinch to zoom</p>
+      <div id="actions">
+        <button data-action="kick" class="primary" aria-label="Kick / boost"><span aria-hidden="true">✦</span><small>KICK</small></button>
+        <button data-action="jump" aria-label="Jump / boost"><span aria-hidden="true">⇈</span><small>JUMP</small></button>
+        <button data-action="roll" aria-label="Roll into ball"><span aria-hidden="true">◉</span><small>ROLL</small></button>
+        <button data-action="buddy" aria-label="Buddy attack"><span aria-hidden="true">❋</span><small>BUDDY</small></button>
+      </div>
+    </div>
+    <button id="confirm" data-action="confirm" hidden>Continue</button>
+    <p id="notice" role="status"></p>
+  </main>
+  <script src="web/touch.js"></script>
+  <script src="web/controls.js"></script>
+  {{{ SCRIPT }}}
+</body>
+</html>
